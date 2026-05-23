@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"senda/internal/wallpaper"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper"
 	"github.com/spf13/cobra"
 )
 

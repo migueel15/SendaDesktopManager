@@ -3,8 +3,9 @@ package awww
 import (
 	"fmt"
 	"os/exec"
-	"senda/internal/wallpaper"
 	"strconv"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper"
 )
 
 type Backend struct{}

@@ -1,9 +1,8 @@
 package main
 
 import (
-	"senda/internal/wallpaper"
-	"senda/internal/wallpaper/adapter/awww"
-
+	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper"
+	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper/adapter/awww"
 	"github.com/spf13/cobra"
 )
 
@@ -17,6 +16,7 @@ func main() {
 	}
 
 	rootCmd.AddCommand(NewWallpaperCmd(service))
+	rootCmd.AddCommand(shellCmd)
 
 	rootCmd.Execute()
 

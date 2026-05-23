@@ -1,0 +1,103 @@
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Quickshell.Services.Pipewire
+import Quickshell.Widgets
+import qs.common
+
+Scope {
+    id: root
+
+    // Bind the pipewire node so its volume will be tracked
+    PwObjectTracker {
+        objects: [Pipewire.defaultAudioSink]
+    }
+
+    Connections {
+        target: Pipewire.defaultAudioSink?.audio
+
+        function onVolumeChanged() {
+            root.shouldShowOsd = true;
+            hideTimer.restart();
+        }
+    }
+
+    property bool shouldShowOsd: false
+
+    Timer {
+        id: hideTimer
+        interval: 1000
+        onTriggered: root.shouldShowOsd = false
+    }
+
+    // The OSD window will be created and destroyed based on shouldShowOsd.
+    // PanelWindow.visible could be set instead of using a loader, but using
+    // a loader will reduce the memory overhead when the window isn't open.
+    LazyLoader {
+        active: root.shouldShowOsd
+
+        PanelWindow {
+            // Since the panel's screen is unset, it will be picked by the compositor
+            // when the window is created. Most compositors pick the current active monitor.
+
+            // anchors.top: true
+            // anchors.right: true
+            anchors.bottom: true
+            margins.bottom: screen.height / 50
+            // margins.top: 15
+            // margins.right: 10
+            exclusiveZone: 0
+
+            implicitWidth: 250
+            implicitHeight: 35
+            color: "transparent"
+
+            // An empty click mask prevents the window from blocking mouse events.
+            mask: Region {}
+
+            Rectangle {
+                anchors.fill: parent
+                // radius: height / 2
+                radius: 15
+                // color: "#80000000"
+                color: Theme.colors.background
+
+                RowLayout {
+                    anchors {
+                        fill: parent
+                        leftMargin: 10
+                        rightMargin: 15
+                    }
+
+                    IconImage {
+                        implicitSize: 18
+                        // source: Quickshell.iconPath("",true)
+                        source: Qt.resolvedUrl("../assets/volume.svg")
+                    }
+
+                    Rectangle {
+                        // Stretches to fill all left-over space
+                        Layout.fillWidth: true
+
+                        implicitHeight: 10
+                        radius: 20
+                        color: "#50ffffff"
+
+                        Rectangle {
+                            anchors {
+                                left: parent.left
+                                top: parent.top
+                                bottom: parent.bottom
+                            }
+
+                            color: Theme.colors.primary
+
+                            implicitWidth: parent.width * (Pipewire.defaultAudioSink?.audio.volume ?? 0)
+                            radius: parent.radius
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
