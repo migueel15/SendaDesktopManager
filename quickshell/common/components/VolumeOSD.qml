@@ -73,7 +73,7 @@ Scope {
                     IconImage {
                         implicitSize: 18
                         // source: Quickshell.iconPath("",true)
-                        source: Qt.resolvedUrl("../assets/volume.svg")
+                        source: Qt.resolvedUrl("../../assets/volume.svg")
                     }
 
                     Rectangle {

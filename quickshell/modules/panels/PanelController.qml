@@ -1,10 +1,10 @@
 import QtQuick
 import Quickshell
 import qs.common
-import qs.common.popups.ControlCenter
+import qs.modules.panels.ControlCenter
 
 PanelWindow {
-    id: popupController
+    id: panelController
 
     property var currentPopup: null
     property bool hasOpenPopup: currentPopup !== null
@@ -54,7 +54,7 @@ PanelWindow {
     // Click anywhere to close popup
     MouseArea {
         anchors.fill: parent
-        onPressed: popupController.closeCurrentPopup()
+        onPressed: panelController.closeCurrentPopup()
     }
 
     // Container for popup content
@@ -70,10 +70,10 @@ PanelWindow {
 
             onIsOpenChanged: {
                 if (isOpen) {
-                    popupController.currentPopup = controlCenterPopup;
+                    panelController.currentPopup = controlCenterPopup;
                     popupContent.forceActiveFocus();
-                } else if (popupController.currentPopup === controlCenterPopup) {
-                    popupController.currentPopup = null;
+                } else if (panelController.currentPopup === controlCenterPopup) {
+                    panelController.currentPopup = null;
                 }
             }
         }

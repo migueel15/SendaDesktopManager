@@ -4,7 +4,7 @@ import QtQuick.Controls
 import QtQuick.Controls.Material
 
 import qs.common
-import qs.common.services
+import qs.services
 
 Item {
     id: root

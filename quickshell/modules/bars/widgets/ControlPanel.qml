@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.common
-import qs.common.services
+import qs.services
 import qs.common.components
 
 Rectangle {

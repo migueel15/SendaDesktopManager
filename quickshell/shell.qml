@@ -1,15 +1,12 @@
 //@ pragma UseQApplication
 import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Controls.Material
 
-import qs.common
-import qs.common.bars
-import qs.common.bars.components
+import qs.modules.bars
+import qs.modules.bars.components
 import qs.common.components
-import qs.common.services
-import "common" as Common
+import qs.modules.panels
 
 import qs.modules.wallpaper
 
@@ -28,7 +25,7 @@ ShellRoot {
                 TopBar {
                     id: topBar
                     screen: modelData
-                    popupController: popupCtrl
+                    panelController: panelCtrl
                 }
                 // SideBar {
                 //     screen: modelData
@@ -46,8 +43,8 @@ ShellRoot {
                     screen: modelData
                 }
 
-                Common.PopupController {
-                    id: popupCtrl
+                PanelController {
+                    id: panelCtrl
                     screen: modelData
                 }
 

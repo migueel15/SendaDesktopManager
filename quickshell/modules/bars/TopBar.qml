@@ -3,14 +3,14 @@ import QtQuick.Layouts
 import QtQuick
 
 import qs.common
-import qs.common.widgets
-import qs.common.popups.ControlCenter
+import qs.modules.bars.widgets
+import qs.modules.panels.ControlCenter
 import Quickshell.Io
 
 PanelWindow {
     id: topbar
 
-    property var popupController: null
+    property var panelController: null
 
     exclusionMode: ExclusionMode.Auto
 
@@ -29,14 +29,14 @@ PanelWindow {
     Process {
         id: reloadProc
         running: false
-		command: ["bash", Qt.resolvedUrl("../../utils/reloadHyprland.sh").toString().replace("file://", "")]
+        command: ["bash", Qt.resolvedUrl("../../utils/reloadHyprland.sh").toString().replace("file://", "")]
 
-		onRunningChanged: {
-			if (!running) {
-				// Process finished, reset state
-				reloadProc.running = false;
-			}
-		}
+        onRunningChanged: {
+            if (!running) {
+                // Process finished, reset state
+                reloadProc.running = false;
+            }
+        }
     }
 
     RowLayout {
@@ -80,8 +80,8 @@ PanelWindow {
 
         ControlPanel {
             onClicked: {
-                if (popupController) {
-                    popupController.toggleControlCenter(topbar.width - 500 - 5, topbar.height + 5);
+                if (panelController) {
+                    panelController.toggleControlCenter(topbar.width - 500 - 5, topbar.height + 5);
                 }
             }
             Layout.rightMargin: 8

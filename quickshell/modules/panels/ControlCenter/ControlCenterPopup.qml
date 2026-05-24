@@ -1,13 +1,7 @@
 import QtQuick
-import Quickshell
-import QtQuick.Layouts
-import Quickshell.Io
-import Quickshell.Services.Pipewire
 
 import qs.common
-import qs.common.components
-import qs.common.widgets
-import qs.common.popups.ControlCenter.components
+import qs.modules.panels.ControlCenter.components
 
 Item {
     id: root

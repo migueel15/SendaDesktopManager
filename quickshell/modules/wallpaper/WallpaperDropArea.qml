@@ -1,7 +1,7 @@
 import Quickshell
 import QtQuick
 
-import qs.common.services
+import qs.services
 
 DropArea {
     id: dropArea
