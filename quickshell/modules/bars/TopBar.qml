@@ -4,88 +4,97 @@ import QtQuick
 
 import qs.common
 import qs.modules.bars.widgets
-import qs.modules.panels.ControlCenter
 import Quickshell.Io
 
-PanelWindow {
-    id: topbar
+Variants {
+    id: root
+    model: Quickshell.screens
 
-    property var panelController: null
+    required property var panelController
 
-    exclusionMode: ExclusionMode.Auto
+    delegate: PanelWindow {
+        id: topbar
 
-    focusable: false
-    aboveWindows: true
+        required property var modelData
+        screen: modelData
 
-    color: Theme.colors.background
-    anchors {
-        top: true
-        left: true
-        right: true
-    }
+        property var panelController: root.panelController
 
-    implicitHeight: Theme.barSize
+        exclusionMode: ExclusionMode.Auto
 
-    Process {
-        id: reloadProc
-        running: false
-        command: ["bash", Qt.resolvedUrl("../../utils/reloadHyprland.sh").toString().replace("file://", "")]
+        focusable: false
+        aboveWindows: true
 
-        onRunningChanged: {
-            if (!running) {
-                // Process finished, reset state
-                reloadProc.running = false;
+        color: Theme.colors.background
+        anchors {
+            top: true
+            left: true
+            right: true
+        }
+
+        implicitHeight: Theme.barSize
+
+        Process {
+            id: reloadProc
+            running: false
+            command: ["bash", Qt.resolvedUrl("../../utils/reloadHyprland.sh").toString().replace("file://", "")]
+
+            onRunningChanged: {
+                if (!running) {
+                    // Process finished, reset state
+                    reloadProc.running = false;
+                }
             }
         }
-    }
 
-    RowLayout {
-        height: parent.height
-        spacing: 15
-        Text {
-            color: Theme.colors.primary
-            leftPadding: 15
-            text: "󰣇"
-            font: Theme.font.base
+        RowLayout {
+            height: parent.height
+            spacing: 15
+            Text {
+                color: Theme.colors.primary
+                leftPadding: 15
+                text: "󰣇"
+                font: Theme.font.base
 
-            MouseArea {
-                anchors.fill: parent
+                MouseArea {
+                    anchors.fill: parent
 
+                    onClicked: {
+                        reloadProc.running = true;
+                    }
+                }
+            }
+            Workspaces {}
+        }
+
+        Clock {}
+
+        RowLayout {
+            spacing: 0
+            height: parent.height
+            anchors.right: parent.right
+
+            NowPlaying {
+                Layout.rightMargin: 8
+                Layout.leftMargin: 8
+            }
+
+            SystemTray {
+                Layout.rightMargin: 8
+                Layout.leftMargin: 8
+            }
+
+            Notifications {}
+
+            ControlPanel {
                 onClicked: {
-                    reloadProc.running = true;
+                    if (panelController) {
+                        panelController.toggleControlCenter(topbar.width - 500 - 5, topbar.height + 5);
+                    }
                 }
+                Layout.rightMargin: 8
+                Layout.leftMargin: 8
             }
-        }
-        Workspaces {}
-    }
-
-    Clock {}
-
-    RowLayout {
-        spacing: 0
-        height: parent.height
-        anchors.right: parent.right
-
-        NowPlaying {
-            Layout.rightMargin: 8
-            Layout.leftMargin: 8
-        }
-
-        SystemTray {
-            Layout.rightMargin: 8
-            Layout.leftMargin: 8
-        }
-
-        Notifications {}
-
-        ControlPanel {
-            onClicked: {
-                if (panelController) {
-                    panelController.toggleControlCenter(topbar.width - 500 - 5, topbar.height + 5);
-                }
-            }
-            Layout.rightMargin: 8
-            Layout.leftMargin: 8
         }
     }
 }

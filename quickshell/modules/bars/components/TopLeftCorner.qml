@@ -6,38 +6,40 @@ import QtQuick
 
 import qs.common
 import qs.common.components
-PanelWindow {
+
+Variants {
     id: root
+    model: Quickshell.screens
 
-    // implicitHeight: 39
-    // implicitWidth: 39
+    delegate: PanelWindow {
+        id: topLeftCorner
 
-    // exclusionMode: ExclusionMode.Overlay
-    // WlrLayershell.layer: WlrLayer.Overlay
-    exclusionMode: ExclusionMode.Auto
+        required property var modelData
+        screen: modelData
 
-    focusable: false
-    aboveWindows: true
+        focusable: false
+        aboveWindows: true
 
-    WlrLayershell.namespace: "NibrasShell:EdgeCorner"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-    mask: Region {}
+        WlrLayershell.namespace: "NibrasShell:EdgeCorner"
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+        mask: Region {}
 
-    color: "transparent"
+        color: "transparent"
 
-    anchors {
-        // right: true
-        top: true
-        // bottom: true
-        left: true
-    }
-
-    BarCorner {
-        id: topLeftBarCorner
         anchors {
-            top: parent.top
-            left: parent.left
+            // right: true
+            top: true
+            // bottom: true
+            left: true
         }
-        position: "top-left"
+
+        BarCorner {
+            id: topLeftBarCorner
+            anchors {
+                top: parent.top
+                left: parent.left
+            }
+            position: "top-left"
+        }
     }
 }

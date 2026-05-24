@@ -16,44 +16,21 @@ ShellRoot {
     Material.theme: Material.Dark
     Material.accent: Material.Purple
 
-    Variants {
-        model: Quickshell.screens
-        delegate: Component {
-            Item {
-                required property var modelData
-
-                TopBar {
-                    id: topBar
-                    screen: modelData
-                    panelController: panelCtrl
-                }
-                // SideBar {
-                //     screen: modelData
-                // }
-                TopRightCorner {
-                    screen: modelData
-                }
-                TopLeftCorner {
-                    screen: modelData
-                }
-                BottomLeftCorner {
-                    screen: modelData
-                }
-                BottomRightCorner {
-                    screen: modelData
-                }
-
-                PanelController {
-                    id: panelCtrl
-                    screen: modelData
-                }
-
-                VolumeOSD {}
-
-                WallpaperLayer {
-                    screen: modelData
-                }
-            }
-        }
+    TopBar {
+        id: topBar
+        panelController: panelCtrl
     }
+
+    TopRightCorner {}
+    TopLeftCorner {}
+    BottomLeftCorner {}
+    BottomRightCorner {}
+
+    PanelController {
+        id: panelCtrl
+    }
+
+    VolumeOSD {}
+
+    WallpaperLayer {}
 }
