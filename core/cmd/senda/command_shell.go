@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -37,17 +39,29 @@ var shellKillCmd = &cobra.Command{
 	},
 }
 
+var shellRestartCdm = &cobra.Command{
+	Use:   "restart",
+	Short: "restart quickshell instance",
+	Run: func(cmd *cobra.Command, args []string) {
+		restartShell()
+	},
+}
+
 func init() {
 	shellCmd.AddCommand(shellRunCmd)
 	shellCmd.AddCommand(shellKillCmd)
+	shellCmd.AddCommand(shellRestartCdm)
 }
 
 func runShellInteractive() {
 	// check if shell already launched
 	pid := readPidData()
-	if pid != -1 {
-		fmt.Println("Quickshell is already running")
-		return
+	if pid > 0 {
+		process, err := os.FindProcess(pid)
+		if err == nil && process.Signal(syscall.Signal(0)) == nil {
+			fmt.Println("Quickshell is already running")
+			return
+		}
 	}
 
 	cmd := exec.Command("qs", "-p", path)
@@ -96,33 +110,84 @@ func runShellInteractive() {
 	}
 }
 
-func closeShell() {
+func closeShell() bool {
 	pid := readPidData()
+	if pid <= 0 {
+		fmt.Println("Quickshell is not running")
+		removePidFile()
+		return true
+	}
 
 	process, err := os.FindProcess(pid)
 	if err != nil {
-		fmt.Println("error finding pid")
-	}
-	if err := process.Signal(syscall.SIGTERM); err != nil {
-		fmt.Println("error killing quickshell")
-		return
+		fmt.Println("error finding quickshell process:", err)
+		return false
 	}
 
-	fmt.Println("porceso terminado")
+	if err := process.Signal(syscall.Signal(0)); err != nil {
+		if errors.Is(err, syscall.ESRCH) {
+			fmt.Println("Quickshell is not running")
+			removePidFile()
+			return true
+		}
+
+		fmt.Println("error checking quickshell process:", err)
+		return false
+	}
+
+	if err := process.Signal(syscall.SIGTERM); err != nil {
+		if errors.Is(err, syscall.ESRCH) {
+			removePidFile()
+			return true
+		}
+
+		fmt.Println("error killing quickshell:", err)
+		return false
+	}
+
+	if !waitForProcessExit(process, 3*time.Second) {
+		fmt.Println("quickshell did not stop in time")
+		return false
+	}
+
+	removePidFile()
+	fmt.Println("proceso terminado")
+	return true
+}
+
+func restartShell() {
+	if !closeShell() {
+		return
+	}
+	runShellInteractive()
+}
+
+func waitForProcessExit(process *os.Process, timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if err := process.Signal(syscall.Signal(0)); errors.Is(err, syscall.ESRCH) || errors.Is(err, os.ErrProcessDone) {
+			return true
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	return false
 }
 
 func readPidData() int {
 	pidFile := getPidFilePath()
 	data, err := os.ReadFile(pidFile)
 	if err != nil {
-		fmt.Println("Error killing quickshell. Pid file not found")
+		if !os.IsNotExist(err) {
+			fmt.Println("Error reading quickshell pid:", err)
+		}
 		return -1
 	}
 
 	pidStr := strings.TrimSpace(string(data))
 
 	pid, err := strconv.Atoi(pidStr)
-	if err != nil {
+	if err != nil || pid <= 0 {
 		fmt.Println("Invalid quickshell pid")
 		return -1
 	}
@@ -142,12 +207,10 @@ func getPidFilePath() string {
 
 func writePidFile(childPid int) error {
 	pidFile := getPidFilePath()
-	println(pidFile)
 	return os.WriteFile(pidFile, []byte(strconv.Itoa(childPid)), 0o644)
 }
 
 func removePidFile() {
 	pidFile := getPidFilePath()
-	println("Removing", pidFile)
 	os.Remove(pidFile)
 }
