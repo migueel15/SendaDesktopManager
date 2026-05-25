@@ -5,6 +5,7 @@ import QtQuick
 import qs.common
 import qs.modules.bars.widgets
 import Quickshell.Io
+import Quickshell.Wayland
 
 Variants {
     id: root
@@ -14,6 +15,8 @@ Variants {
 
     delegate: PanelWindow {
         id: topbar
+
+        WlrLayershell.namespace: "Senda:TopBar"
 
         required property var modelData
         screen: modelData
@@ -26,10 +29,12 @@ Variants {
         aboveWindows: true
 
         color: Theme.colors.background
+
         anchors {
             top: true
             left: true
             right: true
+            // bottom: true
         }
 
         implicitHeight: Theme.barSize

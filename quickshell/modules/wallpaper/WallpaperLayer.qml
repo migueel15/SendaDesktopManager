@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Wayland
 import QtQuick
 
 import qs.modules.wallpaper
@@ -21,6 +22,9 @@ Variants {
 
     delegate: PanelWindow {
         id: wallpaperLayer
+
+        WlrLayershell.namespace: "Senda:Static:WallpaperLayer"
+
         required property var modelData
         screen: modelData
 

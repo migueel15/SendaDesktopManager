@@ -40,6 +40,7 @@ Scope {
         PanelWindow {
             // Since the panel's screen is unset, it will be picked by the compositor
             // when the window is created. Most compositors pick the current active monitor.
+            WlrLayershell.namespace: "senda-volume-osd"
 
             // anchors.top: true
             // anchors.right: true

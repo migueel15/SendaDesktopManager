@@ -27,7 +27,7 @@ Variants {
         focusable: false
         aboveWindows: true
 
-        WlrLayershell.namespace: "NibrasShell:EdgeCorner"
+        WlrLayershell.namespace: "Senda:EdgeCorner"
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         mask: Region {}
 

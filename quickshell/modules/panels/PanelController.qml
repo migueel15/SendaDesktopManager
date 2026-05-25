@@ -2,9 +2,12 @@ import QtQuick
 import Quickshell
 import qs.common
 import qs.modules.panels.ControlCenter
+import Quickshell.Wayland
 
 PanelWindow {
     id: panelController
+
+    WlrLayershell.namespace: "Senda:PopupController"
 
     property var currentPopup: null
     property bool hasOpenPopup: currentPopup !== null

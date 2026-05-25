@@ -2,6 +2,8 @@ import QtQuick
 
 import qs.common
 import qs.modules.panels.ControlCenter.components
+import Quickshell
+import Quickshell.Wayland
 
 Item {
     id: root
