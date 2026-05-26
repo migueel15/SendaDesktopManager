@@ -8,6 +8,8 @@ import qs.modules.bars.components
 import qs.common.components
 import qs.modules.panels
 
+import Quickshell.Wayland
+
 import qs.modules.wallpaper
 
 ShellRoot {
@@ -24,9 +26,10 @@ ShellRoot {
     TopRightCorner {}
     TopLeftCorner {}
     BottomLeftCorner {}
+
     BottomRightCorner {}
 
-    PanelController {
+    OverlayLayer {
         id: panelCtrl
     }
 

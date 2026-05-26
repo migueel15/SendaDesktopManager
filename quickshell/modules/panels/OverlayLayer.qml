@@ -1,13 +1,14 @@
 import QtQuick
 import Quickshell
 import qs.common
+import qs.common.components
 import qs.modules.panels.ControlCenter
 import Quickshell.Wayland
 
 PanelWindow {
-    id: panelController
+    id: overlayLayer
 
-    WlrLayershell.namespace: "Senda:PopupController"
+    WlrLayershell.namespace: "Senda:OverlayLayer"
 
     property var currentPopup: null
     property bool hasOpenPopup: currentPopup !== null
@@ -57,7 +58,7 @@ PanelWindow {
     // Click anywhere to close popup
     MouseArea {
         anchors.fill: parent
-        onPressed: panelController.closeCurrentPopup()
+        onPressed: overlayLayer.closeCurrentPopup()
     }
 
     // Container for popup content
@@ -73,10 +74,10 @@ PanelWindow {
 
             onIsOpenChanged: {
                 if (isOpen) {
-                    panelController.currentPopup = controlCenterPopup;
+                    overlayLayer.currentPopup = controlCenterPopup;
                     popupContent.forceActiveFocus();
-                } else if (panelController.currentPopup === controlCenterPopup) {
-                    panelController.currentPopup = null;
+                } else if (overlayLayer.currentPopup === controlCenterPopup) {
+                    overlayLayer.currentPopup = null;
                 }
             }
         }
