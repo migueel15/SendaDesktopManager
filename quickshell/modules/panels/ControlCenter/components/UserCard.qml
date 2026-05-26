@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Widgets
 import QtQuick.Layouts
 
 import qs.common
@@ -33,12 +34,19 @@ Rectangle {
             implicitWidth: imageArea.height
             color: "transparent"
             Layout.fillHeight: true
-            Rectangle {
+            ClippingWrapperRectangle {
                 id: image
                 radius: 100
                 anchors.fill: parent
-                color: Theme.colors.overlay
                 anchors.centerIn: parent
+
+                Image {
+                    source: "/var/lib/AccountsService/icons/miguel"
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectCrop
+                    smooth: true
+                    asynchronous: true
+                }
             }
         }
 

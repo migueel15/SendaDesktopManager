@@ -1,7 +1,6 @@
 import Quickshell
 import QtQuick.Layouts
 import QtQuick
-
 import qs.common
 import qs.services
 import qs.modules.bars.widgets
