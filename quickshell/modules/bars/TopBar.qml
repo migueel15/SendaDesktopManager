@@ -94,9 +94,7 @@ Variants {
 
             ControlPanel {
                 onClicked: {
-                    if (panelController) {
-                        panelController.toggleControlCenter(topbar.width - 500 - 5, topbar.height + 5);
-                    }
+                    OverlayService.setCurrentPanel("controlCenter");
                 }
                 Layout.rightMargin: 8
                 Layout.leftMargin: 8

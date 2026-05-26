@@ -26,14 +26,13 @@ ShellRoot {
     TopRightCorner {}
     TopLeftCorner {}
     BottomLeftCorner {}
-
     BottomRightCorner {}
+
+    VolumeOSD {}
 
     OverlayLayer {
         id: panelCtrl
     }
-
-    VolumeOSD {}
 
     WallpaperLayer {}
 }

@@ -6,11 +6,6 @@ Singleton {
 
     signal currentPanelUpdated
 
-    onCurrentPanelChanged: {
-        console.log("cambiado");
-        console.log(currentPanel.width);
-    }
-
     property var currentPanel: ""
 
     function setCurrentPanel(panel: string) {

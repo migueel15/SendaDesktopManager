@@ -15,8 +15,8 @@ Item {
     x: targetX ?? 0
     y: targetY ?? 0
 
-    height: targetHeight ?? implicitHeight
-    width: targetWidth ?? implicitWidth
+    height: targetHeight ?? contentContainer.height
+    width: targetWidth ?? contentContainer.width
 
     default property alias content: contentContainer.data
 
