@@ -17,6 +17,7 @@ func main() {
 
 	rootCmd.AddCommand(NewWallpaperCmd(service))
 	rootCmd.AddCommand(shellCmd)
+	rootCmd.AddCommand(userCmd)
 
 	rootCmd.Execute()
 
