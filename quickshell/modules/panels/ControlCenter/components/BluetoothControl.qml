@@ -20,7 +20,7 @@ Item {
     Column {
         id: column
         width: parent.width
-        spacing: 10
+        spacing: 5
 
         Rectangle {
             width: parent.width

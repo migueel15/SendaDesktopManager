@@ -4,6 +4,7 @@ import qs.common
 import qs.common.components
 import qs.services
 import qs.modules.panels.ControlCenter
+import qs.modules.panels.Dashboard
 import Quickshell.Wayland
 
 PanelWindow {
@@ -42,7 +43,12 @@ PanelWindow {
         ControlCenterPopup {
             name: "controlCenter"
             targetX: parent.width - 500 - 20
-            targetY: 30
+            targetY: 45
+        }
+
+        DashboardPanel {
+            id: dashboard
+            name: "dashboard"
         }
     }
 }

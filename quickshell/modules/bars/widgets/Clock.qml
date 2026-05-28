@@ -2,6 +2,7 @@ import Quickshell
 import QtQuick
 
 import qs.common
+import qs.services
 
 Rectangle {
     id: clockBackground
@@ -19,8 +20,14 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            clockText.isPrimary = !clockText.isPrimary;
+
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: event => {
+            if (event.button === Qt.LeftButton) {
+                OverlayService.setCurrentPanel("dashboard");
+            } else if (event.button === Qt.RightButton) {
+                clockText.isPrimary = !clockText.isPrimary;
+            }
         }
     }
 
