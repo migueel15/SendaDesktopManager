@@ -22,7 +22,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     // visible: hasOpenPopup
-    visible: OverlayService.currentPanel !== ""
+    visible: OverlayService.currentPanel
     color: "transparent"
 
     aboveWindows: true
@@ -42,7 +42,7 @@ PanelWindow {
 
         ControlCenterPopup {
             name: "controlCenter"
-            targetX: parent.width - 500 - 20
+            targetX: parent.width - 500 - 5
             targetY: 45
         }
 

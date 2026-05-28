@@ -10,6 +10,7 @@ import qs.modules.panels
 
 import Quickshell.Wayland
 
+import qs.modules.panels.Dashboard
 import qs.modules.wallpaper
 
 ShellRoot {
@@ -35,4 +36,12 @@ ShellRoot {
     }
 
     WallpaperLayer {}
+
+    DebugLayer {
+        screenName: "DP-3"
+
+        DashboardPanel {
+            name: "dashboard"
+        }
+    }
 }
