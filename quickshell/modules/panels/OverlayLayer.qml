@@ -41,14 +41,12 @@ PanelWindow {
         Keys.onEscapePressed: OverlayService.closeCurrentPanel()
 
         ControlCenterPopup {
-            name: "controlCenter"
             targetX: parent.width - 500 - 5
             targetY: 45
         }
 
         DashboardPanel {
             id: dashboard
-            name: "dashboard"
         }
     }
 }

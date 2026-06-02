@@ -1,32 +1,44 @@
 pragma Singleton
+pragma ComponentBehavior: Bound
 
 import QtQuick
 
 QtObject {
-    id: theme
+    id: root
 
     property string currentTheme: "mocha"
 
-    property QtObject colors: QtObject {
-        // property color background: "#1e1e2e"        // base
-        // property color surface: "#181825"           // mantle
-        //
-        property color background: "#11111B"           // mantle
-        property color surface: "#1e1e2e"        // base
-        property color surfaceVariant: "#313244"    // surface0
-        property color overlay: "#7f849c"    // surface0
-        property color white: "#ffffff"           // yellow
-        property color primary: "#89b4fa"           // blue
-        property color secondary: "#cba6f7"         // mauve
-        property color accent: "#fab387"            // peach
-        property color success: "#a6e3a1"           // green
-        property color warning: "#f9e2af"           // yellow
-        property color error: "#f38ba8"             // red
-        property color info: "#89b4fa"              // blue
-        property color text: "#cdd6f4"
+    readonly property Colors colors: Colors {}
+    readonly property FontSize fontSize: FontSize {}
+    readonly property Fonts font: Fonts {}
+    readonly property Workspaces workspaces: Workspaces {}
+    readonly property Notifications notifications: Notifications {}
+
+    component Colors: QtObject {
+        readonly property color background: "#11111B"
+        readonly property color surface: "#1e1e2e"
+        readonly property color surfaceVariant: "#313244"
+        readonly property color overlay: "#7f849c"
+        readonly property color white: "#ffffff"
+        readonly property color primary: "#89b4fa"
+        readonly property color secondary: "#cba6f7"
+        readonly property color accent: "#fab387"
+        readonly property color success: "#a6e3a1"
+        readonly property color warning: "#f9e2af"
+        readonly property color error: "#f38ba8"
+        readonly property color info: "#89b4fa"
+        readonly property color text: "#cdd6f4"
     }
 
-    property QtObject font: QtObject {
+    component FontSize: QtObject {
+        readonly property int small: 12
+        readonly property int normal: 14
+        readonly property int large: 16
+        readonly property int xLarge: 18
+        readonly property int giant: 19
+    }
+
+    component Fonts: QtObject {
         property font base: Qt.font({
             family: "CaskaydiaMono Nerd Font Propo",
             pixelSize: 19,
@@ -52,26 +64,21 @@ QtObject {
     property int barSize: 40
     property int barBorderRadius: 10
 
-    property QtObject workspaces: QtObject {
+    component Workspaces: QtObject {
         property string icon: ""
         property font font: Theme.font.icon
         property int spacing: 8
-        property string activeWorkspaceColor: Theme.colors.white
-        property string notFocusedWorkspaceColor: Theme.colors.primary
-        property string emptyWorkspaceColor: Theme.colors.overlay
+        property color activeWorkspaceColor: root.colors.white
+        property color notFocusedWorkspaceColor: root.colors.primary
+        property color emptyWorkspaceColor: root.colors.overlay
     }
 
-    property QtObject notifications: QtObject {
+    component Notifications: QtObject {
         property QtObject icon: QtObject {
             property string notification: "󱅫"
             property string none: "󰂚"
             property string dnd_none: "󰂛"
             property string dnd_notification: ""
         }
-        property font font: Theme.font.icon
-        property int spacing: 8
-        property string activeWorkspaceColor: Theme.colors.white
-        property string notFocusedWorkspaceColor: Theme.colors.primary
-        property string emptyWorkspaceColor: Theme.colors.overlay
     }
 }

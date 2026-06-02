@@ -9,5 +9,5 @@ Singleton {
     property bool enabled: false
     property string debugScreenName: "DP-3"
 
-    property var debugedPanels: ["dashboard"]
+    property var debugedPanels: ["dashboard", "controlCenter"]
 }

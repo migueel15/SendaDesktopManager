@@ -4,6 +4,7 @@ import qs.modules.panels.Dashboard
 
 SendaPanel {
     id: root
+    name: "dashboard"
 
     targetWidth: 700
     targetHeight: 480

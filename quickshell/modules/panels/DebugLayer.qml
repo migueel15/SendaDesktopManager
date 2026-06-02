@@ -1,7 +1,9 @@
 import Quickshell
 import QtQuick
 import qs.common
+
 import qs.modules.panels.Dashboard
+import qs.modules.panels.ControlCenter
 
 FloatingWindow {
     id: root
@@ -12,4 +14,6 @@ FloatingWindow {
 
     color: "transparent"
     visible: Debug.enabled
+
+    DashboardPanel {}
 }

@@ -16,8 +16,6 @@ Rectangle {
     color: Theme.colors.surface
     height: 60
     radius: 10
-
-    // Add z-index to ensure menu appears on top
     z: 10
 
     function closeSystemMenu() {
