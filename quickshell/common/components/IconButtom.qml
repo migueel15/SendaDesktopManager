@@ -16,7 +16,7 @@ Rectangle {
 
     implicitWidth: 40
     implicitHeight: 40
-    radius: 100
+    radius: Theme.rounding.full
     color: isHovered ? Theme.colors.surfaceVariant : Theme.colors.surface
 
     Behavior on color {

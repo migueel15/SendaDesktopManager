@@ -42,26 +42,19 @@ Scope {
             // when the window is created. Most compositors pick the current active monitor.
             WlrLayershell.namespace: "senda-volume-osd"
 
-            // anchors.top: true
-            // anchors.right: true
             anchors.bottom: true
             margins.bottom: screen.height / 50
-            // margins.top: 15
-            // margins.right: 10
             exclusiveZone: 0
 
             implicitWidth: 250
             implicitHeight: 35
             color: "transparent"
 
-            // An empty click mask prevents the window from blocking mouse events.
             mask: Region {}
 
             Rectangle {
                 anchors.fill: parent
-                // radius: height / 2
-                radius: 15
-                // color: "#80000000"
+                radius: Theme.rounding.full
                 color: Theme.colors.background
 
                 RowLayout {
@@ -73,17 +66,15 @@ Scope {
 
                     IconImage {
                         implicitSize: 18
-                        // source: Quickshell.iconPath("",true)
                         source: Qt.resolvedUrl("../../assets/volume.svg")
                     }
 
                     Rectangle {
-                        // Stretches to fill all left-over space
                         Layout.fillWidth: true
 
                         implicitHeight: 10
-                        radius: 20
-                        color: "#50ffffff"
+                        radius: Theme.rounding.full
+                        color: Theme.colors.surfaceVariant
 
                         Rectangle {
                             anchors {

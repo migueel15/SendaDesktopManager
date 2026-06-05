@@ -9,6 +9,7 @@ QtObject {
     property string currentTheme: "mocha"
 
     readonly property Colors colors: Colors {}
+    readonly property Rounding rounding: Rounding{}
     readonly property FontSize fontSize: FontSize {}
     readonly property Fonts font: Fonts {}
     readonly property Workspaces workspaces: Workspaces {}
@@ -28,6 +29,13 @@ QtObject {
         readonly property color error: "#f38ba8"
         readonly property color info: "#89b4fa"
         readonly property color text: "#cdd6f4"
+    }
+
+    component Rounding: QtObject {
+        readonly property int small: 6
+        readonly property int normal: 10
+        readonly property int large: 20
+        readonly property int full: 1000
     }
 
     component FontSize: QtObject {
@@ -62,7 +70,7 @@ QtObject {
     }
 
     property int barSize: 40
-    property int barBorderRadius: 10
+    property int barBorderRadius: Theme.rounding.normal
 
     component Workspaces: QtObject {
         property string icon: ""
@@ -70,7 +78,7 @@ QtObject {
         property int spacing: 8
         property color activeWorkspaceColor: root.colors.white
         property color notFocusedWorkspaceColor: root.colors.primary
-        property color emptyWorkspaceColor: root.colors.overlay
+        property color emptyWorkspaceColor: root.colors.surfaceVariant
     }
 
     component Notifications: QtObject {

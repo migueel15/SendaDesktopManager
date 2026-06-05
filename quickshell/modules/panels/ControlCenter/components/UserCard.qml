@@ -15,7 +15,7 @@ Rectangle {
     width: parent.width
     color: Theme.colors.surface
     height: 60
-    radius: 10
+    radius: Theme.rounding.normal
     z: 10
 
     function closeSystemMenu() {
@@ -34,7 +34,7 @@ Rectangle {
             Layout.fillHeight: true
             ClippingWrapperRectangle {
                 id: image
-                radius: 100
+                radius: Theme.rounding.full
                 anchors.fill: parent
                 anchors.centerIn: parent
 

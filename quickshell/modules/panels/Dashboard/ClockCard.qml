@@ -10,7 +10,7 @@ Rectangle {
     height: 175
 
     color: Theme.colors.surfaceVariant
-    radius: 10
+    radius: Theme.rounding.normal
 
     Column {
         anchors.centerIn: parent

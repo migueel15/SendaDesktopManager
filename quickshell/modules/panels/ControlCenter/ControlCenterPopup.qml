@@ -29,7 +29,7 @@ SendaPanel {
         id: container
         anchors.fill: parent
         color: "transparent"
-        radius: 10
+        radius: Theme.rounding.normal
         implicitHeight: mainContainer.implicitHeight
 
         MouseArea {

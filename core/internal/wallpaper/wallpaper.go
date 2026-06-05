@@ -48,7 +48,3 @@ type SetOptions struct {
 	Animation *Animation
 	Resize    *ResizeMode
 }
-
-type Backend interface {
-	Set(wallpaper Wallpaper, options SetOptions) error
-}

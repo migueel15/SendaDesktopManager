@@ -20,7 +20,7 @@ Rectangle {
         id: expandButton
         height: parent.height * 0.8
         width: 24
-        radius: 10
+        radius: Theme.rounding.normal
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
 
@@ -47,7 +47,7 @@ Rectangle {
 
         implicitWidth: layout.implicitWidth + 24
         height: parent.height * 0.8
-        radius: 10
+        radius: Theme.rounding.small
 
         opacity: expanded ? 1 : 0
         visible: opacity > 0

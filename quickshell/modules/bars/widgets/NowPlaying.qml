@@ -50,7 +50,6 @@ Rectangle {
 
     implicitWidth: hasTrack ? layout.implicitWidth + 24 : 0
     height: parent.height * 0.8
-    radius: 10
     color: Theme.colors.background
     visible: hasTrack
 

@@ -28,7 +28,7 @@ Item {
             width: parent.width
             height: 60
             color: Theme.colors.surface
-            radius: Theme.barBorderRadius
+            radius: Theme.rounding.normal
 
             MouseArea {
                 anchors.fill: parent
@@ -63,7 +63,7 @@ Item {
                             anchors.centerIn: parent
                             width: parent.width
                             height: 6
-                            radius: 3
+                            radius: Theme.rounding.full
                             color: Theme.colors.surfaceVariant
 
                             Rectangle {
@@ -77,7 +77,7 @@ Item {
                             Rectangle {
                                 width: 14
                                 height: 14
-                                radius: 7
+                                radius: Theme.rounding.full
                                 color: Theme.colors.white
                                 border.color: Theme.colors.primary
                                 border.width: 2
@@ -123,7 +123,7 @@ Item {
                 Rectangle {
                     width: 30
                     height: 30
-                    radius: 6
+                    radius: Theme.rounding.small
                     color: expandButtonMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
                     Text {
@@ -149,7 +149,7 @@ Item {
             height: devicesExpanded ? devicesColumn.implicitHeight + 20 : 0
             visible: height > 0
             color: Theme.colors.surface
-            radius: Theme.barBorderRadius
+            radius: Theme.rounding.normal
             clip: true
 
             Behavior on height {
@@ -174,7 +174,7 @@ Item {
                         width: devicesColumn.width
                         height: isValidSink ? 35 : 0
                         visible: isValidSink
-                        radius: 6
+                        radius: Theme.rounding.normal
                         color: deviceMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
                         property bool isActive: Audio.sink?.id === modelData.id

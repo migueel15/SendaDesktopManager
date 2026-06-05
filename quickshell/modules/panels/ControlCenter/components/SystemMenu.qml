@@ -13,7 +13,7 @@ Rectangle {
     width: 200
     height: isOpen ? contentColumn.implicitHeight : 0
     color: Theme.colors.surface
-    radius: 8
+    radius: Theme.rounding.normal
     clip: true
 
     visible: height > 0

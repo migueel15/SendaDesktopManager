@@ -26,7 +26,7 @@ Item {
             width: parent.width
             height: 60
             color: Theme.colors.surface
-            radius: Theme.barBorderRadius
+            radius: Theme.rounding.normal
 
             MouseArea {
                 anchors.fill: parent
@@ -71,7 +71,7 @@ Item {
                 Rectangle {
                     width: 30
                     height: 30
-                    radius: 6
+                    radius: Theme.rounding.small
                     color: expandButtonMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
                     Text {
@@ -96,7 +96,7 @@ Item {
             height: devicesExpanded ? devicesColumn.implicitHeight + 20 : 0
             visible: height > 0
             color: Theme.colors.surface
-            radius: Theme.barBorderRadius
+            radius: Theme.rounding.normal
             clip: true
 
             Behavior on height {
@@ -140,7 +140,7 @@ Item {
 
                         width: devicesColumn.width
                         height: 35
-                        radius: 6
+                        radius: Theme.rounding.normal
                         color: deviceMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
                         property bool isActive: Bluetooth.activeDevice?.address === modelData.address

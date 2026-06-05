@@ -76,7 +76,7 @@ Rectangle {
         implicitWidth: rowLayout.implicitWidth + 16
         height: parent.height * 0.8
 
-        radius: 10
+        radius: Theme.rounding.normal
 
         color: mouseArea.containsMouse ? Theme.colors.surfaceVariant : Theme.colors.background
 

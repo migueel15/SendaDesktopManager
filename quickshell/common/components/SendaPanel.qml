@@ -40,7 +40,7 @@ Item {
         anchors.fill: parent
 
         color: Theme.colors.background
-        radius: 10
+        radius: Theme.rounding.normal
 
         border.width: 1
         border.color: Theme.colors.surfaceVariant

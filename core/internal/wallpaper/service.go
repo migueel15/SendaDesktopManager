@@ -1,5 +1,9 @@
 package wallpaper
 
+type Backend interface {
+	Set(wallpaper Wallpaper, options SetOptions) error
+}
+
 type Service struct {
 	backend Backend
 }
