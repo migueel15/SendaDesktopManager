@@ -46,7 +46,7 @@ SendaPanel {
                 left: parent.left
                 right: parent.right
             }
-            spacing: 15
+            spacing: 10
 
             UserCard {
                 id: userCard

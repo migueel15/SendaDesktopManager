@@ -28,6 +28,9 @@ Item {
             color: Theme.colors.surface
             radius: Theme.rounding.normal
 
+            border.width: 1
+            border.color: Theme.colors.surfaceVariant
+
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton
@@ -97,6 +100,10 @@ Item {
             visible: height > 0
             color: Theme.colors.surface
             radius: Theme.rounding.normal
+
+            border.width: 1
+            border.color: Theme.colors.surfaceVariant
+
             clip: true
 
             Behavior on height {
@@ -136,14 +143,16 @@ Item {
                     model: Bluetooth.devices
 
                     delegate: Rectangle {
+                        id: element
                         required property var modelData
 
                         width: devicesColumn.width
                         height: 35
                         radius: Theme.rounding.normal
-                        color: deviceMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
                         property bool isActive: Bluetooth.activeDevice?.address === modelData.address
+
+                        color: deviceMouseArea.containsMouse || element.isActive ? Theme.colors.surfaceVariant : "transparent"
 
                         RowLayout {
                             anchors.fill: parent
@@ -154,7 +163,7 @@ Item {
                             Text {
                                 Layout.fillWidth: true
                                 text: Bluetooth.getDisplayName(modelData)
-                                color: parent.isActive ? Theme.colors.primary : Theme.colors.text
+                                color: element.isActive ? Theme.colors.primary : Theme.colors.text
                                 font: Theme.font.base
                                 elide: Text.ElideRight
                             }

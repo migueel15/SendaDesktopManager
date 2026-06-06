@@ -3,9 +3,11 @@ import Quickshell
 import Quickshell.Io
 import QtQuick.Layouts
 
+import Quickshell.Widgets
+
 import qs.common
 
-Rectangle {
+ClippingRectangle {
     id: systemMenu
 
     property bool isOpen: false
@@ -14,6 +16,10 @@ Rectangle {
     height: isOpen ? contentColumn.implicitHeight : 0
     color: Theme.colors.surface
     radius: Theme.rounding.normal
+
+    border.width: 1
+    border.color: Theme.colors.surfaceVariant
+
     clip: true
 
     visible: height > 0
@@ -58,7 +64,7 @@ Rectangle {
 
     Column {
         id: contentColumn
-        width: parent.width
+        anchors.fill: parent
         spacing: 0
 
         SystemMenuItem {

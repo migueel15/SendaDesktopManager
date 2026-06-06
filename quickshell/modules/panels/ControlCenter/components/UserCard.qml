@@ -16,6 +16,8 @@ Rectangle {
     color: Theme.colors.surface
     height: 60
     radius: Theme.rounding.normal
+    border.width: 1
+    border.color: Theme.colors.surfaceVariant
     z: 10
 
     function closeSystemMenu() {

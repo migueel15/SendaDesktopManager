@@ -11,7 +11,10 @@ Rectangle {
     property string text: ""
     property bool isHovered: mouseArea.containsMouse
 
-    signal clicked()
+    property bool first: false
+    property bool last: false
+
+    signal clicked
 
     width: parent.width
     height: 40

@@ -9,7 +9,7 @@ QtObject {
     property string currentTheme: "mocha"
 
     readonly property Colors colors: Colors {}
-    readonly property Rounding rounding: Rounding{}
+    readonly property Rounding rounding: Rounding {}
     readonly property FontSize fontSize: FontSize {}
     readonly property Fonts font: Fonts {}
     readonly property Workspaces workspaces: Workspaces {}
@@ -78,7 +78,7 @@ QtObject {
         property int spacing: 8
         property color activeWorkspaceColor: root.colors.white
         property color notFocusedWorkspaceColor: root.colors.primary
-        property color emptyWorkspaceColor: root.colors.surfaceVariant
+        property color emptyWorkspaceColor: root.colors.overlay
     }
 
     component Notifications: QtObject {

@@ -29,6 +29,8 @@ Item {
             height: 60
             color: Theme.colors.surface
             radius: Theme.rounding.normal
+            border.width: 1
+            border.color: Theme.colors.surfaceVariant
 
             MouseArea {
                 anchors.fill: parent
@@ -152,6 +154,9 @@ Item {
             radius: Theme.rounding.normal
             clip: true
 
+            border.width: 1
+            border.color: Theme.colors.surfaceVariant
+
             Behavior on height {
                 NumberAnimation {
                     duration: 200
@@ -175,9 +180,10 @@ Item {
                         height: isValidSink ? 35 : 0
                         visible: isValidSink
                         radius: Theme.rounding.normal
-                        color: deviceMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
                         property bool isActive: Audio.sink?.id === modelData.id
+
+                        color: deviceMouseArea.containsMouse || isActive ? Theme.colors.surfaceVariant : "transparent"
 
                         property bool isValidSink: modelData.isSink && !!modelData.audio
 
