@@ -9,8 +9,11 @@ Rectangle {
     width: 100
     height: 175
 
-    color: Theme.colors.surfaceVariant
+    color: Theme.colors.surface
     radius: Theme.rounding.normal
+
+    border.width: 1
+    border.color: Theme.colors.surfaceVariant
 
     Column {
         anchors.centerIn: parent
