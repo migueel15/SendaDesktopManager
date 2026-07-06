@@ -56,7 +56,7 @@ Singleton {
         });
     }
 
-    function loadActiveTask() {
+    function loadActiveTask(silent) {
         if (!ensureConfigured()) {
             return;
         }
@@ -70,7 +70,7 @@ Singleton {
             }
 
             setError(`GET /tasks/me/active failed (${status})`);
-        });
+        }, undefined, silent !== true);
     }
 
     function loadTaskEntries(taskId) {
@@ -197,8 +197,36 @@ Singleton {
     }
 
     function setActiveTask(task) {
-        activeTask = task && task.task_id ? task : null;
-        activeElapsedSeconds = activeTask?.elapsed_seconds ?? 0;
+        const nextActiveTask = task && task.task_id ? task : null;
+        const currentTaskId = activeTask?.task_id ?? -1;
+        const nextTaskId = nextActiveTask?.task_id ?? -1;
+
+        if (currentTaskId === nextTaskId) {
+            if (!nextActiveTask) {
+                return;
+            }
+
+            if (activeTask?.time_entry_id !== nextActiveTask.time_entry_id) {
+                activeTask = nextActiveTask;
+                activeElapsedSeconds = nextActiveTask.elapsed_seconds ?? 0;
+                durationVersion++;
+                return;
+            }
+
+            if (activeTask?.title !== nextActiveTask.title) {
+                activeTask = nextActiveTask;
+            }
+
+            const nextElapsedSeconds = Math.max(activeElapsedSeconds, nextActiveTask.elapsed_seconds ?? activeElapsedSeconds);
+            if (nextElapsedSeconds !== activeElapsedSeconds) {
+                activeElapsedSeconds = nextElapsedSeconds;
+                durationVersion++;
+            }
+            return;
+        }
+
+        activeTask = nextActiveTask;
+        activeElapsedSeconds = nextActiveTask?.elapsed_seconds ?? 0;
         durationVersion++;
     }
 
@@ -241,20 +269,25 @@ Singleton {
         return false;
     }
 
-    function request(method, path, body, onSuccess, onError, acceptedStatuses) {
+    function request(method, path, body, onSuccess, onError, acceptedStatuses, trackLoading) {
         const okStatuses = acceptedStatuses ?? [200, 201, 204];
+        const shouldTrackLoading = trackLoading !== false;
         const xhr = new XMLHttpRequest();
 
-        pendingRequests++;
-        loading = true;
+        if (shouldTrackLoading) {
+            pendingRequests++;
+            loading = true;
+        }
 
         xhr.onreadystatechange = () => {
             if (xhr.readyState !== XMLHttpRequest.DONE) {
                 return;
             }
 
-            pendingRequests = Math.max(0, pendingRequests - 1);
-            loading = pendingRequests > 0;
+            if (shouldTrackLoading) {
+                pendingRequests = Math.max(0, pendingRequests - 1);
+                loading = pendingRequests > 0;
+            }
 
             if (okStatuses.indexOf(xhr.status) === -1) {
                 if (onError) {
@@ -317,6 +350,6 @@ Singleton {
         interval: 30000
         running: root.bearerToken.trim().length > 0
         repeat: true
-        onTriggered: root.loadActiveTask()
+        onTriggered: root.loadActiveTask(true)
     }
 }
