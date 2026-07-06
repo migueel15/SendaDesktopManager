@@ -79,6 +79,11 @@ Variants {
             height: parent.height
             anchors.right: parent.right
 
+            ActiveTask {
+                Layout.rightMargin: 8
+                Layout.leftMargin: 8
+            }
+
             NowPlaying {
                 Layout.rightMargin: 8
                 Layout.leftMargin: 8
