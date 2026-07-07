@@ -12,6 +12,7 @@ Singleton {
 
     property var tasks: []
     property var activeTask: null
+    property var lastTrackedTask: null
     property var entriesByTask: ({})
 
     property bool loading: false
@@ -27,6 +28,12 @@ Singleton {
 
     readonly property bool hasActiveTask: activeTask !== null
     readonly property int activeTaskId: activeTask?.task_id ?? -1
+    readonly property bool hasLastTrackedTask: lastTrackedTask !== null
+    readonly property int lastTrackedTaskId: lastTrackedTask?.id ?? -1
+    readonly property bool hasTrackedTask: hasActiveTask || hasLastTrackedTask
+    readonly property int trackedTaskId: hasActiveTask ? activeTaskId : lastTrackedTaskId
+    readonly property string trackedTaskTitle: hasActiveTask ? activeTask?.title ?? "" : lastTrackedTask?.title ?? ""
+    readonly property bool trackedTaskPaused: !hasActiveTask && hasLastTrackedTask
     readonly property bool mutationInProgress: actionInProgress || creatingTask || deletingTaskId !== -1
 
     function refresh() {
@@ -52,6 +59,7 @@ Singleton {
             }
 
             tasks = payload;
+            syncLastTrackedTask();
             payload.forEach(task => loadTaskEntries(task.id));
         });
     }
@@ -92,6 +100,7 @@ Singleton {
         actionTaskId = taskId;
 
         request("POST", `/tasks/teams/${teamId}/tasks/${taskId}/entries`, null, () => {
+            setLastTrackedTaskById(taskId);
             actionInProgress = false;
             actionTaskId = -1;
             loadActiveTask();
@@ -112,9 +121,10 @@ Singleton {
         actionTaskId = taskId;
 
         request("POST", "/tasks/me/active/close", null, () => {
+            setLastTrackedTaskById(taskId);
             actionInProgress = false;
             actionTaskId = -1;
-            loadActiveTask();
+            setActiveTask(null);
             loadTaskEntries(taskId);
         }, (status, responseText) => {
             actionInProgress = false;
@@ -129,6 +139,46 @@ Singleton {
         }
 
         pauseTask(activeTask.task_id);
+    }
+
+    function resumeLastTrackedTask() {
+        if (!hasLastTrackedTask || hasActiveTask) {
+            return;
+        }
+
+        startTask(lastTrackedTask.id);
+    }
+
+    function stopTracking(taskId) {
+        if (!hasActiveTask) {
+            clearLastTrackedTask();
+            return;
+        }
+
+        const activeId = activeTask.task_id;
+        if (taskId !== undefined && taskId !== null && activeId !== taskId) {
+            clearLastTrackedTask();
+            return;
+        }
+
+        if (!ensureConfigured() || actionInProgress) {
+            return;
+        }
+
+        actionInProgress = true;
+        actionTaskId = activeId;
+
+        request("POST", "/tasks/me/active/close", null, () => {
+            actionInProgress = false;
+            actionTaskId = -1;
+            clearLastTrackedTask();
+            setActiveTask(null);
+            loadTaskEntries(activeId);
+        }, (status, responseText) => {
+            actionInProgress = false;
+            actionTaskId = -1;
+            setError(`POST stop task failed (${status})`);
+        });
     }
 
     function createTask(title) {
@@ -164,6 +214,9 @@ Singleton {
 
         request("DELETE", `/tasks/teams/${teamId}/tasks/${taskId}`, null, () => {
             deletingTaskId = -1;
+            if (lastTrackedTaskId === taskId) {
+                clearLastTrackedTask();
+            }
             removeTaskEntries(taskId);
             loadTasks();
         }, (status, responseText) => {
@@ -206,6 +259,8 @@ Singleton {
                 return;
             }
 
+            setLastTrackedTask(nextActiveTask);
+
             if (activeTask?.time_entry_id !== nextActiveTask.time_entry_id) {
                 activeTask = nextActiveTask;
                 activeElapsedSeconds = nextActiveTask.elapsed_seconds ?? 0;
@@ -227,7 +282,68 @@ Singleton {
 
         activeTask = nextActiveTask;
         activeElapsedSeconds = nextActiveTask?.elapsed_seconds ?? 0;
+        if (nextActiveTask) {
+            setLastTrackedTask(nextActiveTask);
+        }
         durationVersion++;
+    }
+
+    function findTask(taskId) {
+        return tasks.find(task => task.id === taskId) ?? null;
+    }
+
+    function normalizeTask(task) {
+        if (!task) {
+            return null;
+        }
+
+        const id = task.id ?? task.task_id;
+        if (id === undefined || id === null) {
+            return null;
+        }
+
+        return {
+            "id": id,
+            "title": task.title ?? `Task ${id}`,
+            "team_id": task.team_id ?? teamId
+        };
+    }
+
+    function setLastTrackedTask(task) {
+        const nextTask = normalizeTask(task);
+        if (!nextTask) {
+            return;
+        }
+
+        if (lastTrackedTask?.id === nextTask.id && lastTrackedTask?.title === nextTask.title && lastTrackedTask?.team_id === nextTask.team_id) {
+            return;
+        }
+
+        lastTrackedTask = nextTask;
+    }
+
+    function setLastTrackedTaskById(taskId) {
+        const task = findTask(taskId) ?? (activeTask?.task_id === taskId ? activeTask : null) ?? (lastTrackedTask?.id === taskId ? lastTrackedTask : null) ?? {
+            "id": taskId,
+            "title": `Task ${taskId}`,
+            "team_id": teamId
+        };
+        setLastTrackedTask(task);
+    }
+
+    function syncLastTrackedTask() {
+        if (!hasLastTrackedTask) {
+            return;
+        }
+
+        const task = findTask(lastTrackedTask.id);
+        if (task) {
+            setLastTrackedTask(task);
+        }
+    }
+
+    function clearLastTrackedTask() {
+        lastTrackedTask = null;
     }
 
     function setTaskEntries(taskId, entries) {
@@ -263,6 +379,7 @@ Singleton {
         loading = false;
         tasks = [];
         activeTask = null;
+        lastTrackedTask = null;
         activeElapsedSeconds = 0;
         entriesByTask = ({});
         setError("Missing Dorlab bearer token");

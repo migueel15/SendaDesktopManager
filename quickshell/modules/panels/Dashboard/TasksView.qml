@@ -30,8 +30,8 @@ Item {
                 }
 
                 Text {
-                    text: DorlabTasks.hasActiveTask ? `Activa: ${DorlabTasks.activeTask.title}` : "Sin tarea activa"
-                    color: DorlabTasks.hasActiveTask ? Theme.colors.primary : Theme.colors.overlay
+                    text: DorlabTasks.hasActiveTask ? `Activa: ${DorlabTasks.activeTask.title}` : DorlabTasks.hasLastTrackedTask ? `Pausada: ${DorlabTasks.lastTrackedTask.title}` : "Sin tarea activa"
+                    color: DorlabTasks.hasActiveTask ? Theme.colors.primary : DorlabTasks.hasLastTrackedTask ? Theme.colors.warning : Theme.colors.overlay
                     font: Theme.font.overlay
                     elide: Text.ElideRight
                     Layout.fillWidth: true
@@ -260,6 +260,7 @@ Item {
                 required property var modelData
 
                 readonly property bool isActive: DorlabTasks.activeTaskId === modelData.id
+                readonly property bool isPaused: DorlabTasks.trackedTaskPaused && DorlabTasks.lastTrackedTaskId === modelData.id
                 readonly property bool isBusy: DorlabTasks.actionInProgress && DorlabTasks.actionTaskId === modelData.id
                 readonly property bool isDeleting: DorlabTasks.deletingTaskId === modelData.id
                 readonly property bool playDisabled: DorlabTasks.hasActiveTask && !isActive
@@ -269,9 +270,9 @@ Item {
                 width: tasksList.width
                 height: 72
                 radius: Theme.rounding.normal
-                color: taskMouseArea.containsMouse || isActive ? Theme.colors.surfaceVariant : Theme.colors.surface
+                color: taskMouseArea.containsMouse || isActive || isPaused ? Theme.colors.surfaceVariant : Theme.colors.surface
                 border.width: 1
-                border.color: isActive ? Theme.colors.primary : Theme.colors.surfaceVariant
+                border.color: isActive ? Theme.colors.primary : isPaused ? Theme.colors.warning : Theme.colors.surfaceVariant
 
                 Behavior on color {
                     ColorAnimation {
@@ -295,8 +296,8 @@ Item {
                         Layout.preferredWidth: 8
                         Layout.fillHeight: true
                         radius: Theme.rounding.full
-                        color: taskRow.isActive ? Theme.colors.primary : Theme.colors.overlay
-                        opacity: taskRow.isActive ? 1 : 0.35
+                        color: taskRow.isActive ? Theme.colors.primary : taskRow.isPaused ? Theme.colors.warning : Theme.colors.overlay
+                        opacity: taskRow.isActive || taskRow.isPaused ? 1 : 0.35
                     }
 
                     ColumnLayout {
@@ -329,17 +330,17 @@ Item {
                     }
 
                     Rectangle {
-                        Layout.preferredWidth: taskRow.isActive ? activeLabel.implicitWidth + 14 : 0
+                        Layout.preferredWidth: taskRow.isActive || taskRow.isPaused ? activeLabel.implicitWidth + 14 : 0
                         Layout.preferredHeight: 22
                         Layout.alignment: Qt.AlignVCenter
-                        visible: taskRow.isActive
+                        visible: taskRow.isActive || taskRow.isPaused
                         radius: Theme.rounding.full
-                        color: Theme.colors.primary
+                        color: taskRow.isActive ? Theme.colors.primary : Theme.colors.warning
 
                         Text {
                             id: activeLabel
                             anchors.centerIn: parent
-                            text: "Activa"
+                            text: taskRow.isActive ? "Activa" : "Pausada"
                             color: Theme.colors.background
                             font: Theme.font.overlay
                         }
@@ -351,7 +352,7 @@ Item {
                         radius: Theme.rounding.full
                         color: actionMouseArea.containsMouse && actionMouseArea.enabled ? Theme.colors.primary : Theme.colors.surface
                         border.width: 1
-                        border.color: taskRow.isActive ? Theme.colors.primary : Theme.colors.surfaceVariant
+                        border.color: taskRow.isActive ? Theme.colors.primary : taskRow.isPaused ? Theme.colors.warning : Theme.colors.surfaceVariant
                         opacity: taskRow.isBusy || actionMouseArea.enabled ? 1 : 0.35
 
                         Text {
@@ -374,6 +375,33 @@ Item {
                                     DorlabTasks.startTask(taskRow.modelData.id);
                                 }
                             }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: taskRow.isActive || taskRow.isPaused ? 38 : 0
+                        Layout.preferredHeight: 38
+                        visible: taskRow.isActive || taskRow.isPaused
+                        radius: Theme.rounding.full
+                        color: stopMouseArea.containsMouse && stopMouseArea.enabled ? Theme.colors.error : Theme.colors.surface
+                        border.width: 1
+                        border.color: Theme.colors.error
+                        opacity: taskRow.isBusy || stopMouseArea.enabled ? 1 : 0.35
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: taskRow.isBusy ? "󰔟" : ""
+                            color: stopMouseArea.containsMouse && stopMouseArea.enabled ? Theme.colors.background : Theme.colors.error
+                            font: Theme.font.base
+                        }
+
+                        MouseArea {
+                            id: stopMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            enabled: !DorlabTasks.mutationInProgress
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: DorlabTasks.stopTracking(taskRow.modelData.id)
                         }
                     }
 
