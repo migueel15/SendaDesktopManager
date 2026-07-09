@@ -7,9 +7,12 @@ Singleton {
     id: root
 
     property string bearerToken: Quickshell.env("DORLAB_API_KEY")
-    property int teamId: 1
+    property int workspaceId: 1
+    property string workspaceName: "Workspace 1"
     property string baseUrl: "https://api.dorlab.net"
 
+    property var teams: []
+    property var tasksByTeam: ({})
     property var tasks: []
     property var activeTask: null
     property var lastTrackedTask: null
@@ -17,9 +20,14 @@ Singleton {
 
     property bool loading: false
     property bool actionInProgress: false
+    property bool creatingTeam: false
     property bool creatingTask: false
+    property int deletingTeamActionId: -1
+    property int creatingTeamId: -1
     property int actionTaskId: -1
+    property int actionTeamId: -1
     property int deletingTaskId: -1
+    property int deletingTeamId: -1
     property string error: ""
 
     property int activeElapsedSeconds: 0
@@ -28,13 +36,16 @@ Singleton {
 
     readonly property bool hasActiveTask: activeTask !== null
     readonly property int activeTaskId: activeTask?.task_id ?? -1
+    readonly property int activeTeamId: activeTask?.team_id ?? -1
     readonly property bool hasLastTrackedTask: lastTrackedTask !== null
     readonly property int lastTrackedTaskId: lastTrackedTask?.id ?? -1
+    readonly property int lastTrackedTeamId: lastTrackedTask?.team_id ?? -1
     readonly property bool hasTrackedTask: hasActiveTask || hasLastTrackedTask
     readonly property int trackedTaskId: hasActiveTask ? activeTaskId : lastTrackedTaskId
+    readonly property int trackedTeamId: hasActiveTask ? activeTeamId : lastTrackedTeamId
     readonly property string trackedTaskTitle: hasActiveTask ? activeTask?.title ?? "" : lastTrackedTask?.title ?? ""
     readonly property bool trackedTaskPaused: !hasActiveTask && hasLastTrackedTask
-    readonly property bool mutationInProgress: actionInProgress || creatingTask || deletingTaskId !== -1
+    readonly property bool mutationInProgress: actionInProgress || creatingTeam || creatingTask || deletingTeamActionId !== -1 || deletingTaskId !== -1
 
     function refresh() {
         if (!ensureConfigured()) {
@@ -42,25 +53,95 @@ Singleton {
         }
 
         error = "";
-        loadTasks();
+        loadTeams();
         loadActiveTask();
     }
 
-    function loadTasks() {
+    function loadTeams() {
         if (!ensureConfigured()) {
             return;
         }
 
-        request("GET", `/tasks/teams/${teamId}/tasks`, null, payload => {
+        request("GET", `/tasks/workspaces/${workspaceId}/teams`, null, payload => {
             if (!Array.isArray(payload)) {
+                teams = [];
+                tasksByTeam = ({});
                 tasks = [];
-                setError("Unexpected tasks response");
+                setError("Unexpected teams response");
                 return;
             }
 
-            tasks = payload;
+            teams = payload;
+
+            const nextTasksByTeam = {};
+            payload.forEach(team => nextTasksByTeam[String(team.id)] = tasksByTeam[String(team.id)] ?? []);
+            tasksByTeam = nextTasksByTeam;
+            rebuildTasks();
             syncLastTrackedTask();
-            payload.forEach(task => loadTaskEntries(task.id));
+
+            payload.forEach(team => loadTeamTasks(team));
+        });
+    }
+
+    function loadTeamTasks(team) {
+        if (!ensureConfigured() || !team || team.id === undefined || team.id === null) {
+            return;
+        }
+
+        request("GET", `/tasks/teams/${team.id}/tasks`, null, payload => {
+            if (!Array.isArray(payload)) {
+                setError(`Unexpected tasks response for team ${team.id}`);
+                return;
+            }
+
+            const teamTasks = payload.map(task => normalizeTask(task, team)).filter(task => task !== null);
+            setTeamTasks(team.id, teamTasks);
+            syncLastTrackedTask();
+            teamTasks.forEach(task => loadTaskEntries(task.id, task.team_id));
+        });
+    }
+
+    function createTeam(name) {
+        const trimmedName = (name ?? "").trim();
+        if (!ensureConfigured() || mutationInProgress || trimmedName.length === 0) {
+            return;
+        }
+
+        creatingTeam = true;
+        error = "";
+
+        const body = JSON.stringify({
+            "name": trimmedName,
+            "workspace_id": workspaceId
+        });
+
+        request("POST", `/tasks/workspaces/${workspaceId}/teams`, body, () => {
+            creatingTeam = false;
+            loadTeams();
+        }, (status, responseText) => {
+            creatingTeam = false;
+            setError(`POST create team failed (${status})`);
+        });
+    }
+
+    function deleteTeam(teamId) {
+        if (!ensureConfigured() || mutationInProgress || teamId === undefined || teamId === null || activeTeamId === teamId) {
+            return;
+        }
+
+        deletingTeamActionId = teamId;
+        error = "";
+
+        request("DELETE", `/tasks/workspaces/${workspaceId}/teams/${teamId}`, null, () => {
+            deletingTeamActionId = -1;
+            if (lastTrackedTeamId === teamId) {
+                clearLastTrackedTask();
+            }
+            removeTeamLocal(teamId);
+            loadTeams();
+        }, (status, responseText) => {
+            deletingTeamActionId = -1;
+            setError(`DELETE team failed (${status})`);
         });
     }
 
@@ -81,54 +162,62 @@ Singleton {
         }, undefined, silent !== true);
     }
 
-    function loadTaskEntries(taskId) {
-        if (!ensureConfigured() || taskId === undefined || taskId === null) {
+    function loadTaskEntries(taskId, teamId) {
+        if (!ensureConfigured() || taskId === undefined || taskId === null || teamId === undefined || teamId === null) {
             return;
         }
 
         request("GET", `/tasks/teams/${teamId}/tasks/${taskId}/entries`, null, payload => {
-            setTaskEntries(taskId, payload?.entries ?? []);
+            setTaskEntries(teamId, taskId, payload?.entries ?? []);
         });
     }
 
-    function startTask(taskId) {
-        if (!ensureConfigured() || actionInProgress || hasActiveTask || taskId === undefined || taskId === null) {
+    function startTask(taskOrId, teamId) {
+        const task = resolveTask(taskOrId, teamId);
+        if (!ensureConfigured() || actionInProgress || hasActiveTask || !task) {
             return;
         }
 
         actionInProgress = true;
-        actionTaskId = taskId;
+        actionTaskId = task.id;
+        actionTeamId = task.team_id;
 
-        request("POST", `/tasks/teams/${teamId}/tasks/${taskId}/entries`, null, () => {
-            setLastTrackedTaskById(taskId);
+        request("POST", `/tasks/teams/${task.team_id}/tasks/${task.id}/entries`, null, () => {
+            setLastTrackedTask(task);
             actionInProgress = false;
             actionTaskId = -1;
+            actionTeamId = -1;
             loadActiveTask();
-            loadTaskEntries(taskId);
+            loadTaskEntries(task.id, task.team_id);
         }, (status, responseText) => {
             actionInProgress = false;
             actionTaskId = -1;
+            actionTeamId = -1;
             setError(`POST start task failed (${status})`);
         });
     }
 
-    function pauseTask(taskId) {
-        if (!ensureConfigured() || actionInProgress || taskId === undefined || taskId === null) {
+    function pauseTask(taskOrId, teamId) {
+        const task = resolveTask(taskOrId, teamId) ?? resolveTask(activeTask?.task_id, activeTask?.team_id);
+        if (!ensureConfigured() || actionInProgress || !task) {
             return;
         }
 
         actionInProgress = true;
-        actionTaskId = taskId;
+        actionTaskId = task.id;
+        actionTeamId = task.team_id;
 
         request("POST", "/tasks/me/active/close", null, () => {
-            setLastTrackedTaskById(taskId);
+            setLastTrackedTask(task);
             actionInProgress = false;
             actionTaskId = -1;
+            actionTeamId = -1;
             setActiveTask(null);
-            loadTaskEntries(taskId);
+            loadTaskEntries(task.id, task.team_id);
         }, (status, responseText) => {
             actionInProgress = false;
             actionTaskId = -1;
+            actionTeamId = -1;
             setError(`POST pause task failed (${status})`);
         });
     }
@@ -138,7 +227,7 @@ Singleton {
             return;
         }
 
-        pauseTask(activeTask.task_id);
+        pauseTask(activeTask.task_id, activeTask.team_id);
     }
 
     function resumeLastTrackedTask() {
@@ -146,17 +235,19 @@ Singleton {
             return;
         }
 
-        startTask(lastTrackedTask.id);
+        startTask(lastTrackedTask);
     }
 
-    function stopTracking(taskId) {
+    function stopTracking(taskOrId, teamId) {
         if (!hasActiveTask) {
             clearLastTrackedTask();
             return;
         }
 
+        const task = resolveTask(taskOrId, teamId) ?? resolveTask(activeTask.task_id, activeTask.team_id);
         const activeId = activeTask.task_id;
-        if (taskId !== undefined && taskId !== null && activeId !== taskId) {
+        const activeTeam = activeTask.team_id;
+        if (task && (task.id !== activeId || task.team_id !== activeTeam)) {
             clearLastTrackedTask();
             return;
         }
@@ -167,27 +258,31 @@ Singleton {
 
         actionInProgress = true;
         actionTaskId = activeId;
+        actionTeamId = activeTeam;
 
         request("POST", "/tasks/me/active/close", null, () => {
             actionInProgress = false;
             actionTaskId = -1;
+            actionTeamId = -1;
             clearLastTrackedTask();
             setActiveTask(null);
-            loadTaskEntries(activeId);
+            loadTaskEntries(activeId, activeTeam);
         }, (status, responseText) => {
             actionInProgress = false;
             actionTaskId = -1;
+            actionTeamId = -1;
             setError(`POST stop task failed (${status})`);
         });
     }
 
-    function createTask(title) {
+    function createTask(teamId, title) {
         const trimmedTitle = (title ?? "").trim();
-        if (!ensureConfigured() || mutationInProgress || trimmedTitle.length === 0) {
+        if (!ensureConfigured() || mutationInProgress || teamId === undefined || teamId === null || trimmedTitle.length === 0) {
             return;
         }
 
         creatingTask = true;
+        creatingTeamId = teamId;
         error = "";
 
         const body = JSON.stringify({
@@ -197,39 +292,55 @@ Singleton {
 
         request("POST", `/tasks/teams/${teamId}/tasks`, body, () => {
             creatingTask = false;
-            loadTasks();
+            creatingTeamId = -1;
+            loadTeamTasks(findTeam(teamId) ?? {
+                "id": teamId,
+                "name": `Team ${teamId}`
+            });
         }, (status, responseText) => {
             creatingTask = false;
+            creatingTeamId = -1;
             setError(`POST create task failed (${status})`);
         });
     }
 
-    function deleteTask(taskId) {
-        if (!ensureConfigured() || mutationInProgress || taskId === undefined || taskId === null || activeTaskId === taskId) {
+    function deleteTask(taskOrId, teamId) {
+        const task = resolveTask(taskOrId, teamId);
+        if (!ensureConfigured() || mutationInProgress || !task || isActiveTask(task)) {
             return;
         }
 
-        deletingTaskId = taskId;
+        deletingTaskId = task.id;
+        deletingTeamId = task.team_id;
         error = "";
 
-        request("DELETE", `/tasks/teams/${teamId}/tasks/${taskId}`, null, () => {
+        request("DELETE", `/tasks/teams/${task.team_id}/tasks/${task.id}`, null, () => {
             deletingTaskId = -1;
-            if (lastTrackedTaskId === taskId) {
+            deletingTeamId = -1;
+            if (lastTrackedTaskId === task.id && lastTrackedTeamId === task.team_id) {
                 clearLastTrackedTask();
             }
-            removeTaskEntries(taskId);
-            loadTasks();
+            removeTaskEntries(task.team_id, task.id);
+            loadTeamTasks(findTeam(task.team_id) ?? {
+                "id": task.team_id,
+                "name": task.team_name ?? `Team ${task.team_id}`
+            });
         }, (status, responseText) => {
             deletingTaskId = -1;
+            deletingTeamId = -1;
             setError(`DELETE task failed (${status})`);
         });
     }
 
-    function taskTotalSeconds(taskId) {
-        const entries = entriesByTask[String(taskId)] ?? [];
+    function tasksForTeam(teamId) {
+        return tasksByTeam[String(teamId)] ?? [];
+    }
+
+    function taskTotalSeconds(teamId, taskId) {
+        const entries = entriesByTask[taskKey(teamId, taskId)] ?? [];
         let total = entries.reduce((acc, entry) => acc + (entry.duration_seconds ?? 0), 0);
 
-        if (activeTaskId === taskId) {
+        if (activeTeamId === teamId && activeTaskId === taskId) {
             total += activeElapsedSeconds;
         }
 
@@ -252,9 +363,11 @@ Singleton {
     function setActiveTask(task) {
         const nextActiveTask = task && task.task_id ? task : null;
         const currentTaskId = activeTask?.task_id ?? -1;
+        const currentTeamId = activeTask?.team_id ?? -1;
         const nextTaskId = nextActiveTask?.task_id ?? -1;
+        const nextTeamId = nextActiveTask?.team_id ?? -1;
 
-        if (currentTaskId === nextTaskId) {
+        if (currentTaskId === nextTaskId && currentTeamId === nextTeamId) {
             if (!nextActiveTask) {
                 return;
             }
@@ -288,47 +401,95 @@ Singleton {
         durationVersion++;
     }
 
-    function findTask(taskId) {
+    function setTeamTasks(teamId, teamTasks) {
+        let nextTasksByTeam = {};
+        for (const key in tasksByTeam) {
+            nextTasksByTeam[key] = tasksByTeam[key];
+        }
+
+        nextTasksByTeam[String(teamId)] = Array.isArray(teamTasks) ? teamTasks : [];
+        tasksByTeam = nextTasksByTeam;
+        rebuildTasks();
+    }
+
+    function rebuildTasks() {
+        const nextTasks = [];
+        teams.forEach(team => {
+            const teamTasks = tasksByTeam[String(team.id)] ?? [];
+            teamTasks.forEach(task => nextTasks.push(task));
+        });
+        tasks = nextTasks;
+    }
+
+    function findTeam(teamId) {
+        return teams.find(team => team.id === teamId) ?? null;
+    }
+
+    function isDeletingTeam(teamId) {
+        return deletingTeamActionId === teamId;
+    }
+
+    function teamName(team) {
+        return team?.name ?? team?.title ?? `Team ${team?.id ?? ""}`;
+    }
+
+    function findTask(taskId, teamId) {
+        if (teamId !== undefined && teamId !== null) {
+            return tasks.find(task => task.id === taskId && task.team_id === teamId) ?? null;
+        }
+
         return tasks.find(task => task.id === taskId) ?? null;
     }
 
-    function normalizeTask(task) {
+    function resolveTask(taskOrId, teamId) {
+        if (taskOrId === undefined || taskOrId === null) {
+            return null;
+        }
+
+        if (typeof taskOrId === "object") {
+            return normalizeTask(taskOrId, findTeam(taskOrId.team_id));
+        }
+
+        return findTask(taskOrId, teamId) ?? (teamId !== undefined && teamId !== null ? normalizeTask({
+                "id": taskOrId,
+                "team_id": teamId,
+                "title": `Task ${taskOrId}`
+            }, findTeam(teamId)) : null);
+    }
+
+    function normalizeTask(task, team) {
         if (!task) {
             return null;
         }
 
         const id = task.id ?? task.task_id;
-        if (id === undefined || id === null) {
+        const resolvedTeamId = task.team_id ?? team?.id;
+        if (id === undefined || id === null || resolvedTeamId === undefined || resolvedTeamId === null) {
             return null;
         }
 
+        const resolvedTeam = team ?? findTeam(resolvedTeamId);
         return {
             "id": id,
             "title": task.title ?? `Task ${id}`,
-            "team_id": task.team_id ?? teamId
+            "team_id": resolvedTeamId,
+            "team_name": task.team_name ?? teamName(resolvedTeam ?? {
+                "id": resolvedTeamId
+            })
         };
     }
 
     function setLastTrackedTask(task) {
-        const nextTask = normalizeTask(task);
+        const nextTask = normalizeTask(task, findTeam(task?.team_id));
         if (!nextTask) {
             return;
         }
 
-        if (lastTrackedTask?.id === nextTask.id && lastTrackedTask?.title === nextTask.title && lastTrackedTask?.team_id === nextTask.team_id) {
+        if (lastTrackedTask?.id === nextTask.id && lastTrackedTask?.team_id === nextTask.team_id && lastTrackedTask?.title === nextTask.title && lastTrackedTask?.team_name === nextTask.team_name) {
             return;
         }
 
         lastTrackedTask = nextTask;
-    }
-
-    function setLastTrackedTaskById(taskId) {
-        const task = findTask(taskId) ?? (activeTask?.task_id === taskId ? activeTask : null) ?? (lastTrackedTask?.id === taskId ? lastTrackedTask : null) ?? {
-            "id": taskId,
-            "title": `Task ${taskId}`,
-            "team_id": teamId
-        };
-        setLastTrackedTask(task);
     }
 
     function syncLastTrackedTask() {
@@ -336,7 +497,7 @@ Singleton {
             return;
         }
 
-        const task = findTask(lastTrackedTask.id);
+        const task = findTask(lastTrackedTask.id, lastTrackedTask.team_id);
         if (task) {
             setLastTrackedTask(task);
         }
@@ -346,22 +507,54 @@ Singleton {
         lastTrackedTask = null;
     }
 
-    function setTaskEntries(taskId, entries) {
+    function removeTeamLocal(teamId) {
+        teams = teams.filter(team => team.id !== teamId);
+
+        let nextTasksByTeam = {};
+        for (const key in tasksByTeam) {
+            if (key !== String(teamId)) {
+                nextTasksByTeam[key] = tasksByTeam[key];
+            }
+        }
+        tasksByTeam = nextTasksByTeam;
+
+        let nextEntriesByTask = {};
+        const keyPrefix = `${teamId}:`;
+        for (const key in entriesByTask) {
+            if (!key.startsWith(keyPrefix)) {
+                nextEntriesByTask[key] = entriesByTask[key];
+            }
+        }
+        entriesByTask = nextEntriesByTask;
+
+        rebuildTasks();
+        durationVersion++;
+    }
+
+    function isActiveTask(task) {
+        return !!task && activeTaskId === task.id && activeTeamId === task.team_id;
+    }
+
+    function taskKey(teamId, taskId) {
+        return `${teamId}:${taskId}`;
+    }
+
+    function setTaskEntries(teamId, taskId, entries) {
         let nextEntriesByTask = {};
         for (const key in entriesByTask) {
             nextEntriesByTask[key] = entriesByTask[key];
         }
 
-        nextEntriesByTask[String(taskId)] = Array.isArray(entries) ? entries : [];
+        nextEntriesByTask[taskKey(teamId, taskId)] = Array.isArray(entries) ? entries : [];
         entriesByTask = nextEntriesByTask;
         durationVersion++;
     }
 
-    function removeTaskEntries(taskId) {
+    function removeTaskEntries(teamId, taskId) {
         let nextEntriesByTask = {};
-        const taskKey = String(taskId);
+        const keyToRemove = taskKey(teamId, taskId);
         for (const key in entriesByTask) {
-            if (key !== taskKey) {
+            if (key !== keyToRemove) {
                 nextEntriesByTask[key] = entriesByTask[key];
             }
         }
@@ -377,6 +570,8 @@ Singleton {
 
         pendingRequests = 0;
         loading = false;
+        teams = [];
+        tasksByTeam = ({});
         tasks = [];
         activeTask = null;
         lastTrackedTask = null;
@@ -449,7 +644,7 @@ Singleton {
     }
 
     onBearerTokenChanged: refresh()
-    onTeamIdChanged: refresh()
+    onWorkspaceIdChanged: refresh()
 
     Component.onCompleted: refresh()
 

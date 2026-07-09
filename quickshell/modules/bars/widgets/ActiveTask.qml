@@ -88,7 +88,7 @@ Rectangle {
                 hoverEnabled: true
                 enabled: !DorlabTasks.mutationInProgress
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: DorlabTasks.stopTracking(DorlabTasks.trackedTaskId)
+                onClicked: DorlabTasks.stopTracking(DorlabTasks.trackedTaskId, DorlabTasks.trackedTeamId)
             }
         }
     }
