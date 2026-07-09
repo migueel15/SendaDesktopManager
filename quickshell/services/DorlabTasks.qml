@@ -8,7 +8,7 @@ Singleton {
 
     property string bearerToken: Quickshell.env("DORLAB_API_KEY")
     property int workspaceId: 1
-    property string workspaceName: "Workspace 1"
+    property string workspaceName: "Workspace Personal"
     property string baseUrl: "https://api.dorlab.net"
 
     property var teams: []
