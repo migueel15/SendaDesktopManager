@@ -5,6 +5,7 @@ import qs.common.components
 import qs.services
 import qs.modules.panels.ControlCenter
 import qs.modules.panels.Dashboard
+import qs.modules.panels.Tasks
 import Quickshell.Wayland
 
 PanelWindow {
@@ -48,5 +49,7 @@ PanelWindow {
         DashboardPanel {
             id: dashboard
         }
+
+        TasksPanel {}
     }
 }

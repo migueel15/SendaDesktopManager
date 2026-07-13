@@ -28,6 +28,8 @@ Singleton {
     property int actionTeamId: -1
     property int deletingTaskId: -1
     property int deletingTeamId: -1
+    property int updatingTaskId: -1
+    property int updatingTeamId: -1
     property string error: ""
 
     property int activeElapsedSeconds: 0
@@ -43,9 +45,9 @@ Singleton {
     readonly property bool hasTrackedTask: hasActiveTask || hasLastTrackedTask
     readonly property int trackedTaskId: hasActiveTask ? activeTaskId : lastTrackedTaskId
     readonly property int trackedTeamId: hasActiveTask ? activeTeamId : lastTrackedTeamId
-    readonly property string trackedTaskTitle: hasActiveTask ? activeTask?.title ?? "" : lastTrackedTask?.title ?? ""
+    readonly property string trackedTaskTitle: hasActiveTask ? taskTitle(activeTask) : taskTitle(lastTrackedTask)
     readonly property bool trackedTaskPaused: !hasActiveTask && hasLastTrackedTask
-    readonly property bool mutationInProgress: actionInProgress || creatingTeam || creatingTask || deletingTeamActionId !== -1 || deletingTaskId !== -1
+    readonly property bool mutationInProgress: actionInProgress || creatingTeam || creatingTask || deletingTeamActionId !== -1 || deletingTaskId !== -1 || updatingTaskId !== -1
 
     function refresh() {
         if (!ensureConfigured()) {
@@ -168,7 +170,8 @@ Singleton {
         }
 
         request("GET", `/tasks/teams/${teamId}/tasks/${taskId}/entries`, null, payload => {
-            setTaskEntries(teamId, taskId, payload?.entries ?? []);
+            const entries = Array.isArray(payload) ? payload : payload?.entries ?? [];
+            setTaskEntries(teamId, taskId, entries);
         });
     }
 
@@ -332,19 +335,184 @@ Singleton {
         });
     }
 
+    function updateTask(taskOrId, patch, teamId) {
+        const task = resolveTask(taskOrId, teamId);
+        if (!ensureConfigured() || mutationInProgress || !task || !patch) {
+            return;
+        }
+
+        const bodyData = {};
+        if (patch.title !== undefined) {
+            const trimmedTitle = String(patch.title ?? "").trim();
+            if (trimmedTitle.length > 0) {
+                bodyData.title = trimmedTitle;
+            }
+        }
+        if (patch.completed !== undefined) {
+            bodyData.completed = !!patch.completed;
+        }
+
+        if (Object.keys(bodyData).length === 0) {
+            return;
+        }
+
+        updatingTaskId = task.id;
+        updatingTeamId = task.team_id;
+        error = "";
+
+        request("PATCH", `/tasks/teams/${task.team_id}/tasks/${task.id}`, JSON.stringify(bodyData), payload => {
+            updatingTaskId = -1;
+            updatingTeamId = -1;
+            const updatedTask = normalizeTask(payload, findTeam(task.team_id));
+            if (updatedTask) {
+                replaceTask(updatedTask);
+            }
+        }, (status, responseText) => {
+            updatingTaskId = -1;
+            updatingTeamId = -1;
+            setError(`PATCH task failed (${status})`);
+        });
+    }
+
+    function toggleTaskCompleted(taskOrId, teamId) {
+        const task = resolveTask(taskOrId, teamId);
+        if (!task || isActiveTask(task)) {
+            return;
+        }
+
+        updateTask(task, {
+            "completed": !task.completed
+        });
+    }
+
+    function renameTask(taskOrId, title, teamId) {
+        updateTask(taskOrId, {
+            "title": title
+        }, teamId);
+    }
+
     function tasksForTeam(teamId) {
         return tasksByTeam[String(teamId)] ?? [];
     }
 
-    function taskTotalSeconds(teamId, taskId) {
-        const entries = entriesByTask[taskKey(teamId, taskId)] ?? [];
-        let total = entries.reduce((acc, entry) => acc + (entry.duration_seconds ?? 0), 0);
+    function pendingTasksForTeam(teamId, query) {
+        return filteredTasksForTeam(teamId, false, query);
+    }
 
-        if (activeTeamId === teamId && activeTaskId === taskId) {
+    function completedTasksForTeam(teamId, query) {
+        return filteredTasksForTeam(teamId, true, query);
+    }
+
+    function filteredTasksForTeam(teamId, completed, query) {
+        const normalizedQuery = (query ?? "").trim().toLowerCase();
+        return tasksForTeam(teamId).filter(task => {
+            if (!!task.completed !== completed) {
+                return false;
+            }
+
+            if (normalizedQuery.length === 0) {
+                return true;
+            }
+
+            return (task.title ?? "").toLowerCase().includes(normalizedQuery) || (task.team_name ?? "").toLowerCase().includes(normalizedQuery);
+        }).sort((a, b) => compareTasksByLastEntry(a, b));
+    }
+
+    function compareTasksByLastEntry(a, b) {
+        const bLast = taskLastEntryMs(b);
+        const aLast = taskLastEntryMs(a);
+        if (bLast !== aLast) {
+            return bLast - aLast;
+        }
+
+        return (a.title ?? "").localeCompare(b.title ?? "");
+    }
+
+    function taskLastEntryMs(task) {
+        if (!task) {
+            return 0;
+        }
+
+        if (sameId(activeTeamId, task.team_id) && sameId(activeTaskId, task.id)) {
+            return Date.now();
+        }
+
+        const entries = taskEntries(task.team_id, task.id);
+        let latest = 0;
+        entries.forEach(entry => {
+            const value = entryTimestampMs(entry);
+            if (!isNaN(value) && value > latest) {
+                latest = value;
+            }
+        });
+        return latest;
+    }
+
+    function taskTotalSeconds(teamId, taskId) {
+        const entries = taskEntries(teamId, taskId);
+        let total = entries.reduce((acc, entry) => acc + entryDurationSeconds(entry), 0);
+
+        if (sameId(activeTeamId, teamId) && sameId(activeTaskId, taskId)) {
             total += activeElapsedSeconds;
         }
 
         return total;
+    }
+
+    function entryDurationSeconds(entry) {
+        const duration = Number(entry?.duration_seconds);
+        if (!isNaN(duration) && isFinite(duration) && duration > 0) {
+            return duration;
+        }
+
+        const startedAt = parseDateMs(entry?.started_at);
+        const endedAt = parseDateMs(entry?.ended_at);
+        if (startedAt > 0 && endedAt > startedAt) {
+            return Math.floor((endedAt - startedAt) / 1000);
+        }
+
+        return 0;
+    }
+
+    function entryTimestampMs(entry) {
+        return Math.max(parseDateMs(entry?.ended_at), parseDateMs(entry?.started_at));
+    }
+
+    function parseDateMs(value) {
+        if (!value) {
+            return 0;
+        }
+
+        const normalized = String(value).replace(/(\.\d{3})\d+/, "$1");
+        const parsed = Date.parse(normalized);
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function taskTitle(task) {
+        const title = String(task?.title ?? task?.name ?? task?.task_title ?? task?.taskTitle ?? task?.Title ?? "").trim();
+        if (title.length > 0) {
+            return title;
+        }
+
+        const id = task?.id ?? task?.task_id ?? "";
+        return `Task ${id}`.trim();
+    }
+
+    function taskEntriesLabel(task) {
+        if (!task) {
+            return "00:00";
+        }
+
+        return formatDuration(taskTotalSeconds(task.team_id, task.id));
+    }
+
+    function taskLastEntryLabel(task) {
+        const lastMs = taskLastEntryMs(task);
+        if (lastMs <= 0) {
+            return "Sin time entries";
+        }
+
+        return Qt.formatDateTime(new Date(lastMs), "dd MMM HH:mm");
     }
 
     function formatDuration(totalSeconds) {
@@ -410,6 +578,30 @@ Singleton {
         nextTasksByTeam[String(teamId)] = Array.isArray(teamTasks) ? teamTasks : [];
         tasksByTeam = nextTasksByTeam;
         rebuildTasks();
+        durationVersion++;
+    }
+
+    function replaceTask(updatedTask) {
+        const teamKey = String(updatedTask.team_id);
+        const teamTasks = tasksByTeam[teamKey] ?? [];
+        const nextTeamTasks = teamTasks.map(task => sameId(task.id, updatedTask.id) ? updatedTask : task);
+        setTeamTasks(updatedTask.team_id, nextTeamTasks);
+
+        if (sameId(lastTrackedTaskId, updatedTask.id) && sameId(lastTrackedTeamId, updatedTask.team_id)) {
+            setLastTrackedTask(updatedTask);
+        }
+
+        if (sameId(activeTaskId, updatedTask.id) && sameId(activeTeamId, updatedTask.team_id)) {
+            activeTask = {
+                "task_id": activeTask.task_id,
+                "title": updatedTask.title,
+                "team_id": activeTask.team_id,
+                "time_entry_id": activeTask.time_entry_id,
+                "member_id": activeTask.member_id,
+                "started_at": activeTask.started_at,
+                "elapsed_seconds": activeTask.elapsed_seconds
+            };
+        }
     }
 
     function rebuildTasks() {
@@ -422,11 +614,11 @@ Singleton {
     }
 
     function findTeam(teamId) {
-        return teams.find(team => team.id === teamId) ?? null;
+        return teams.find(team => sameId(team.id, teamId)) ?? null;
     }
 
     function isDeletingTeam(teamId) {
-        return deletingTeamActionId === teamId;
+        return sameId(deletingTeamActionId, teamId);
     }
 
     function teamName(team) {
@@ -435,10 +627,10 @@ Singleton {
 
     function findTask(taskId, teamId) {
         if (teamId !== undefined && teamId !== null) {
-            return tasks.find(task => task.id === taskId && task.team_id === teamId) ?? null;
+            return tasks.find(task => sameId(task.id, taskId) && sameId(task.team_id, teamId)) ?? null;
         }
 
-        return tasks.find(task => task.id === taskId) ?? null;
+        return tasks.find(task => sameId(task.id, taskId)) ?? null;
     }
 
     function resolveTask(taskOrId, teamId) {
@@ -462,8 +654,8 @@ Singleton {
             return null;
         }
 
-        const id = task.id ?? task.task_id;
-        const resolvedTeamId = task.team_id ?? team?.id;
+        const id = normalizeId(task.id ?? task.task_id);
+        const resolvedTeamId = normalizeId(task.team_id ?? team?.id);
         if (id === undefined || id === null || resolvedTeamId === undefined || resolvedTeamId === null) {
             return null;
         }
@@ -471,8 +663,12 @@ Singleton {
         const resolvedTeam = team ?? findTeam(resolvedTeamId);
         return {
             "id": id,
-            "title": task.title ?? `Task ${id}`,
+            "title": root.taskTitle({
+                "id": id,
+                "title": task.title
+            }),
             "team_id": resolvedTeamId,
+            "completed": task.completed ?? false,
             "team_name": task.team_name ?? teamName(resolvedTeam ?? {
                 "id": resolvedTeamId
             })
@@ -485,7 +681,7 @@ Singleton {
             return;
         }
 
-        if (lastTrackedTask?.id === nextTask.id && lastTrackedTask?.team_id === nextTask.team_id && lastTrackedTask?.title === nextTask.title && lastTrackedTask?.team_name === nextTask.team_name) {
+        if (sameId(lastTrackedTask?.id, nextTask.id) && sameId(lastTrackedTask?.team_id, nextTask.team_id) && lastTrackedTask?.title === nextTask.title && lastTrackedTask?.team_name === nextTask.team_name) {
             return;
         }
 
@@ -532,11 +728,32 @@ Singleton {
     }
 
     function isActiveTask(task) {
-        return !!task && activeTaskId === task.id && activeTeamId === task.team_id;
+        return !!task && sameId(activeTaskId, task.id) && sameId(activeTeamId, task.team_id);
     }
 
     function taskKey(teamId, taskId) {
         return `${teamId}:${taskId}`;
+    }
+
+    function taskEntries(teamId, taskId) {
+        return entriesByTask[taskKey(teamId, taskId)] ?? entriesByTask[String(taskId)] ?? [];
+    }
+
+    function normalizeId(value) {
+        if (value === undefined || value === null || value === "") {
+            return null;
+        }
+
+        const numericValue = Number(value);
+        return isNaN(numericValue) || !isFinite(numericValue) ? value : numericValue;
+    }
+
+    function sameId(left, right) {
+        if (left === undefined || left === null || right === undefined || right === null) {
+            return false;
+        }
+
+        return String(left) === String(right);
     }
 
     function setTaskEntries(teamId, taskId, entries) {
@@ -545,7 +762,15 @@ Singleton {
             nextEntriesByTask[key] = entriesByTask[key];
         }
 
-        nextEntriesByTask[taskKey(teamId, taskId)] = Array.isArray(entries) ? entries : [];
+        const normalizedEntries = Array.isArray(entries) ? entries : [];
+        nextEntriesByTask[taskKey(teamId, taskId)] = normalizedEntries;
+        nextEntriesByTask[String(taskId)] = normalizedEntries;
+
+        const entryTaskId = normalizeId(normalizedEntries.find(entry => entry?.task_id !== undefined && entry?.task_id !== null)?.task_id);
+        if (entryTaskId !== null) {
+            nextEntriesByTask[taskKey(teamId, entryTaskId)] = normalizedEntries;
+            nextEntriesByTask[String(entryTaskId)] = normalizedEntries;
+        }
         entriesByTask = nextEntriesByTask;
         durationVersion++;
     }
