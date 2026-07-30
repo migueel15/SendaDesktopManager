@@ -72,6 +72,7 @@ Variants {
             Workspaces {}
 
             TasksToggle {}
+
         }
 
         Clock {}
@@ -91,7 +92,11 @@ Variants {
                 Layout.leftMargin: 8
             }
 
-            Notifications {}
+						Notifications {
+						}
+						KeyboardToggler {
+                Layout.leftMargin: 8
+						}
 
             ControlPanel {
                 onClicked: {
