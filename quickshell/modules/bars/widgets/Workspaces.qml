@@ -23,7 +23,7 @@ Rectangle {
             return [];
 
         const filtered = workspaces.filter(ws => {
-            return ws.monitor && ws.monitor.name === screenMonitor.name;
+            return ws.monitor && ws.monitor.name === screenMonitor.name && !ws.name.startsWith("special:");
         });
         return filtered;
     }
