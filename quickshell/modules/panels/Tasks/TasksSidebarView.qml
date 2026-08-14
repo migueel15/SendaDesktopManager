@@ -475,8 +475,13 @@ Item {
                     onAccepted: {
                         DorlabTasks.renameTask(taskRow.task, text);
                         taskRow.editingTitle = false;
+                        root.restorePanelFocus();
                     }
-                    Keys.onEscapePressed: taskRow.editingTitle = false
+                    Keys.onEscapePressed: event => {
+                        taskRow.editingTitle = false;
+                        root.restorePanelFocus();
+                        event.accepted = true;
+                    }
                 }
 
                 Text {
