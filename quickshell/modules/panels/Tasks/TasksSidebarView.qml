@@ -8,10 +8,96 @@ Item {
     id: root
 
     property string searchText: ""
+    property bool showSearch: false
     property bool showCreateTeamForm: false
+    property bool showHiddenTeams: false
     property int activeCreateTaskTeamId: -1
+    property string draggedTeamId: ""
+    property int dragTargetIndex: -1
+    property var hiddenTeams: {
+        DorlabTasks.layoutVersion;
+        DorlabTasks.teams;
+        return DorlabTasks.hiddenTeams();
+    }
+
+    function openSearch() {
+        showSearch = true;
+        Qt.callLater(() => searchBox.focusInput());
+    }
+
+    function restorePanelFocus() {
+        Qt.callLater(() => {
+            if (OverlayService.isOpen("tasks") && !root.showSearch) {
+                root.forceActiveFocus();
+            }
+        });
+    }
+
+    function closeSearch() {
+        searchText = "";
+        showSearch = false;
+        searchBox.releaseFocus();
+        restorePanelFocus();
+    }
+
+    function focusTaskCreateInput(teamId) {
+        for (let index = 0; index < teamRepeater.count; index += 1) {
+            const item = teamRepeater.itemAt(index);
+            if (item && DorlabTasks.sameId(item.modelData.id, teamId)) {
+                item.focusCreateInput();
+                return;
+            }
+        }
+    }
+
+    function updateDragTarget(slot) {
+        const draggedCenter = slot.y + slot.cardOffset + slot.height / 2;
+        let targetIndex = 0;
+        for (let index = 0; index < teamRepeater.count; index += 1) {
+            const item = teamRepeater.itemAt(index);
+            if (item && item !== slot && draggedCenter > item.y + item.height / 2) {
+                targetIndex += 1;
+            }
+        }
+        dragTargetIndex = targetIndex;
+    }
+
+    function finishTeamDrag(slot) {
+        const teamId = slot.modelData.id;
+        const targetIndex = dragTargetIndex;
+        slot.resetCardPosition();
+        teamsFlickable.interactive = true;
+        draggedTeamId = "";
+        dragTargetIndex = -1;
+        Qt.callLater(() => DorlabTasks.moveVisibleTeam(teamId, targetIndex));
+    }
+
+    function cancelTeamDrag(slot) {
+        slot.resetCardPosition();
+        teamsFlickable.interactive = true;
+        draggedTeamId = "";
+        dragTargetIndex = -1;
+    }
 
     Component.onCompleted: DorlabTasks.refresh()
+
+    Keys.onEscapePressed: OverlayService.closeCurrentPanel()
+
+    Shortcut {
+        sequence: "Ctrl+F"
+        enabled: OverlayService.isOpen("tasks")
+        onActivated: root.openSearch()
+    }
+
+    Connections {
+        target: OverlayService
+
+        function onCurrentPanelUpdated() {
+            if (!OverlayService.isOpen("tasks")) {
+                root.closeSearch();
+            }
+        }
+    }
 
     component IconAction: Rectangle {
         id: action
@@ -27,15 +113,16 @@ Item {
         Layout.preferredWidth: buttonSize
         Layout.preferredHeight: buttonSize
         radius: Theme.rounding.full
-        color: actionMouseArea.containsMouse && action.available ? action.accent : Theme.colors.surface
+        color: actionMouseArea.containsMouse && action.available ? Theme.colors.surfaceVariant : Theme.colors.surface
         border.width: 1
-        border.color: action.accent
+        border.color: actionMouseArea.containsMouse && action.available ? action.accent : Theme.colors.surfaceVariant
         opacity: action.available || action.busy ? 1 : 0.35
 
         Text {
             anchors.centerIn: parent
+            anchors.horizontalCenterOffset: !action.busy && action.icon === "󰐊" ? 1 : 0
             text: action.busy ? "󰔟" : action.icon
-            color: actionMouseArea.containsMouse && action.available ? Theme.colors.background : action.accent
+            color: action.accent
             font: Theme.font.icon
         }
 
@@ -70,6 +157,12 @@ Item {
             input.forceActiveFocus();
         }
 
+        function cancelForm() {
+            input.text = "";
+            form.cancelled();
+            root.restorePanelFocus();
+        }
+
         RowLayout {
             anchors.fill: parent
             anchors.margins: 8
@@ -86,14 +179,16 @@ Item {
                 selectedTextColor: Theme.colors.background
                 font: Theme.font.overlay
                 clip: true
+                leftPadding: 8
 
                 Text {
                     anchors.fill: parent
+                    anchors.leftMargin: input.leftPadding
                     verticalAlignment: Text.AlignVCenter
                     text: form.placeholder
                     color: Theme.colors.overlay
                     font: Theme.font.overlay
-                    visible: input.text.length === 0 && !input.activeFocus
+                    visible: input.text.length === 0
                 }
 
                 Keys.onReturnPressed: {
@@ -101,6 +196,10 @@ Item {
                         form.submitted(input.text);
                         input.text = "";
                     }
+                }
+                Keys.onEscapePressed: event => {
+                    form.cancelForm();
+                    event.accepted = true;
                 }
             }
 
@@ -118,15 +217,21 @@ Item {
                 icon: ""
                 accent: Theme.colors.overlay
                 available: !DorlabTasks.mutationInProgress
-                onClicked: {
-                    input.text = "";
-                    form.cancelled();
-                }
+                onClicked: form.cancelForm()
             }
         }
     }
 
     component SearchBox: Rectangle {
+        function focusInput() {
+            searchInput.forceActiveFocus();
+            searchInput.selectAll();
+        }
+
+        function releaseFocus() {
+            searchInput.focus = false;
+        }
+
         Layout.fillWidth: true
         Layout.preferredHeight: 42
         color: Theme.colors.background
@@ -158,6 +263,10 @@ Item {
                 font: Theme.font.overlay
                 clip: true
                 onTextChanged: root.searchText = text
+                Keys.onEscapePressed: event => {
+                    root.closeSearch();
+                    event.accepted = true;
+                }
 
                 Text {
                     anchors.fill: parent
@@ -451,6 +560,13 @@ Item {
             }
 
             IconAction {
+                visible: root.hiddenTeams.length > 0
+                icon: ""
+                accent: root.showHiddenTeams ? Theme.colors.primary : Theme.colors.text
+                onClicked: root.showHiddenTeams = !root.showHiddenTeams
+            }
+
+            IconAction {
                 icon: ""
                 accent: root.showCreateTeamForm ? Theme.colors.primary : Theme.colors.text
                 busy: DorlabTasks.creatingTeam
@@ -473,12 +589,86 @@ Item {
             }
         }
 
-        SearchBox {}
+        SearchBox {
+            id: searchBox
+
+            visible: root.showSearch
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: hiddenTeamsContent.implicitHeight + 20
+            visible: root.showHiddenTeams && root.hiddenTeams.length > 0
+            color: Theme.colors.surface
+            radius: Theme.rounding.normal
+            border.width: 1
+            border.color: Theme.colors.surfaceVariant
+
+            ColumnLayout {
+                id: hiddenTeamsContent
+
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 6
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: `Equipos ocultos (${root.hiddenTeams.length})`
+                        color: Theme.colors.text
+                        font: Theme.font.base
+                    }
+
+                    IconAction {
+                        buttonSize: 28
+                        icon: ""
+                        accent: Theme.colors.overlay
+                        onClicked: root.showHiddenTeams = false
+                    }
+                }
+
+                Repeater {
+                    model: root.hiddenTeams
+
+                    delegate: Rectangle {
+                        required property var modelData
+
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 38
+                        color: Theme.colors.background
+                        radius: Theme.rounding.normal
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 6
+                            spacing: 8
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: DorlabTasks.teamName(modelData)
+                                color: Theme.colors.text
+                                font: Theme.font.overlay
+                                elide: Text.ElideRight
+                            }
+
+                            IconAction {
+                                buttonSize: 28
+                                icon: ""
+                                onClicked: DorlabTasks.setTeamHidden(modelData.id, false)
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         InlineCreateForm {
             id: createTeamForm
             visible: root.showCreateTeamForm
-            placeholder: "Nuevo equipo"
+            placeholder: "Introduce el nombre del equipo..."
             busy: DorlabTasks.creatingTeam
             onSubmitted: value => {
                 DorlabTasks.createTeam(value);
@@ -510,10 +700,13 @@ Item {
         }
 
         Flickable {
+            id: teamsFlickable
+
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
             contentHeight: contentColumn.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
 
             ColumnLayout {
                 id: contentColumn
@@ -532,12 +725,20 @@ Item {
                 }
 
                 Repeater {
-                    model: DorlabTasks.teams
+                    id: teamRepeater
 
-                    delegate: Rectangle {
-                        id: teamCard
+                    model: {
+                        DorlabTasks.layoutVersion;
+                        DorlabTasks.teams;
+                        return DorlabTasks.orderedTeams(false);
+                    }
 
+                    delegate: Item {
+                        id: teamSlot
+
+                        required property int index
                         required property var modelData
+                        property real cardOffset: teamCard.y
                         property var pendingTasks: {
                             DorlabTasks.durationVersion;
                             root.searchText;
@@ -550,115 +751,234 @@ Item {
                         }
                         readonly property bool deleting: DorlabTasks.isDeletingTeam(modelData.id)
                         readonly property bool hasActiveTask: DorlabTasks.sameId(DorlabTasks.activeTeamId, modelData.id)
+                        readonly property bool searchActive: DorlabTasks.normalizeSearchText(root.searchText).length > 0
+                        readonly property bool hasSearchMatches: pendingTasks.length > 0 || completedTasks.length > 0
+                        readonly property bool storedCollapsed: {
+                            DorlabTasks.layoutVersion;
+                            return DorlabTasks.isTeamCollapsed(modelData.id);
+                        }
+                        readonly property bool creatingTask: DorlabTasks.sameId(root.activeCreateTaskTeamId, modelData.id)
+                        readonly property bool collapsed: storedCollapsed && !(searchActive && hasSearchMatches) && !creatingTask
+
+                        function resetCardPosition() {
+                            teamCard.y = 0;
+                        }
+
+                        function focusCreateInput() {
+                            taskCreateForm.focusInput();
+                        }
 
                         Layout.fillWidth: true
                         Layout.preferredHeight: teamContent.implicitHeight + 22
-                        radius: Theme.rounding.normal
-                        color: Theme.colors.surface
-                        border.width: 1
-                        border.color: hasActiveTask ? Theme.colors.primary : Theme.colors.surfaceVariant
+                        z: dragArea.drag.active ? 100 : 0
 
-                        ColumnLayout {
-                            id: teamContent
-                            anchors.fill: parent
-                            anchors.margins: 11
-                            spacing: 8
+                        Rectangle {
+                            id: teamCard
 
-                            RowLayout {
-                                Layout.fillWidth: true
+                            width: parent.width
+                            height: parent.height
+                            y: 0
+                            radius: Theme.rounding.normal
+                            color: Theme.colors.surface
+                            border.width: root.dragTargetIndex === teamSlot.index && root.draggedTeamId.length > 0 ? 2 : 1
+                            border.color: root.dragTargetIndex === teamSlot.index && root.draggedTeamId.length > 0 ? Theme.colors.primary : Theme.colors.surfaceVariant
+                            opacity: dragArea.drag.active ? 0.92 : 1
+
+                            onYChanged: {
+                                if (dragArea.drag.active) {
+                                    root.updateDragTarget(teamSlot);
+                                }
+                            }
+
+                            ColumnLayout {
+                                id: teamContent
+                                anchors.fill: parent
+                                anchors.margins: 11
                                 spacing: 8
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 6
+
+                                    Item {
+                                        Layout.preferredWidth: 28
+                                        Layout.preferredHeight: 32
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: ""
+                                            color: dragArea.containsMouse || dragArea.drag.active ? Theme.colors.primary : Theme.colors.overlay
+                                            font: Theme.font.icon
+                                        }
+
+                                        MouseArea {
+                                            id: dragArea
+
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            preventStealing: true
+                                            cursorShape: drag.active ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                                            drag.target: teamCard
+                                            drag.axis: Drag.YAxis
+                                            onPressed: {
+                                                root.draggedTeamId = String(teamSlot.modelData.id);
+                                                root.dragTargetIndex = teamSlot.index;
+                                                teamsFlickable.interactive = false;
+                                            }
+                                            onReleased: root.finishTeamDrag(teamSlot)
+                                            onCanceled: root.cancelTeamDrag(teamSlot)
+                                        }
+
+                                    }
+
+                                    Item {
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: headerLabels.implicitHeight
+
+                                        ColumnLayout {
+                                            id: headerLabels
+
+                                            anchors.fill: parent
+                                            spacing: 2
+
+                                            RowLayout {
+                                                Layout.fillWidth: true
+                                                spacing: 6
+
+                                                Text {
+                                                    Layout.minimumWidth: 14
+                                                    Layout.preferredWidth: 14
+                                                    Layout.maximumWidth: 14
+                                                    text: teamSlot.collapsed ? "" : ""
+                                                    color: Theme.colors.overlay
+                                                    font.family: Theme.font.icon.family
+                                                    font.pixelSize: 10
+                                                    horizontalAlignment: Text.AlignHCenter
+                                                }
+
+                                                Text {
+                                                    Layout.fillWidth: true
+                                                    text: DorlabTasks.teamName(teamSlot.modelData)
+                                                    color: Theme.colors.text
+                                                    font: Theme.font.base
+                                                    elide: Text.ElideRight
+                                                }
+                                            }
+
+                                            Text {
+                                                text: `${teamSlot.pendingTasks.length} pendientes · ${teamSlot.completedTasks.length} completadas`
+                                                color: Theme.colors.overlay
+                                                font: Theme.font.overlay
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: DorlabTasks.toggleTeamCollapsed(teamSlot.modelData.id)
+                                        }
+                                    }
+
+                                    IconAction {
+                                        buttonSize: 28
+                                        icon: ""
+                                        accent: Theme.colors.overlay
+                                        available: !teamSlot.hasActiveTask
+                                        onClicked: {
+                                            root.activeCreateTaskTeamId = -1;
+                                            DorlabTasks.setTeamHidden(teamSlot.modelData.id, true);
+                                        }
+                                    }
+
+                                    IconAction {
+                                        buttonSize: 28
+                                        icon: ""
+                                        accent: teamSlot.creatingTask ? Theme.colors.primary : Theme.colors.text
+                                        busy: DorlabTasks.creatingTask && DorlabTasks.sameId(DorlabTasks.creatingTeamId, teamSlot.modelData.id)
+                                        available: !DorlabTasks.mutationInProgress
+                                        onClicked: {
+                                            root.showCreateTeamForm = false;
+                                            root.activeCreateTaskTeamId = teamSlot.creatingTask ? -1 : teamSlot.modelData.id;
+                                            if (root.activeCreateTaskTeamId !== -1) {
+                                                DorlabTasks.setTeamCollapsed(teamSlot.modelData.id, false);
+                                                const teamId = teamSlot.modelData.id;
+                                                Qt.callLater(() => root.focusTaskCreateInput(teamId));
+                                            }
+                                        }
+                                    }
+
+                                    IconAction {
+                                        buttonSize: 28
+                                        icon: ""
+                                        accent: Theme.colors.error
+                                        busy: teamSlot.deleting
+                                        available: !DorlabTasks.mutationInProgress && !teamSlot.hasActiveTask
+                                        onClicked: DorlabTasks.deleteTeam(teamSlot.modelData.id)
+                                    }
+                                }
 
                                 ColumnLayout {
                                     Layout.fillWidth: true
-                                    spacing: 2
+                                    visible: !teamSlot.collapsed
+                                    spacing: 8
+
+                                    InlineCreateForm {
+                                        id: taskCreateForm
+
+                                        visible: teamSlot.creatingTask
+                                        placeholder: `Introduce el nombre de la tarea para ${DorlabTasks.teamName(teamSlot.modelData)}...`
+                                        busy: DorlabTasks.creatingTask && DorlabTasks.sameId(DorlabTasks.creatingTeamId, teamSlot.modelData.id)
+                                        onSubmitted: value => {
+                                            DorlabTasks.createTask(teamSlot.modelData.id, value);
+                                            root.activeCreateTaskTeamId = -1;
+                                        }
+                                        onCancelled: root.activeCreateTaskTeamId = -1
+                                    }
 
                                     Text {
                                         Layout.fillWidth: true
-                                        text: DorlabTasks.teamName(teamCard.modelData)
-                                        color: Theme.colors.text
-                                        font: Theme.font.base
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Text {
-                                        text: `${teamCard.pendingTasks.length} pendientes · ${teamCard.completedTasks.length} completadas`
+                                        visible: teamSlot.pendingTasks.length === 0 && teamSlot.completedTasks.length === 0
+                                        text: teamSlot.searchActive ? "Sin coincidencias" : "Sin tareas"
                                         color: Theme.colors.overlay
                                         font: Theme.font.overlay
                                     }
-                                }
 
-                                IconAction {
-                                    icon: ""
-                                    accent: DorlabTasks.sameId(root.activeCreateTaskTeamId, teamCard.modelData.id) ? Theme.colors.primary : Theme.colors.text
-                                    busy: DorlabTasks.creatingTask && DorlabTasks.sameId(DorlabTasks.creatingTeamId, teamCard.modelData.id)
-                                    available: !DorlabTasks.mutationInProgress
-                                    onClicked: {
-                                        root.showCreateTeamForm = false;
-                                        root.activeCreateTaskTeamId = DorlabTasks.sameId(root.activeCreateTaskTeamId, teamCard.modelData.id) ? -1 : teamCard.modelData.id;
+                                    Text {
+                                        Layout.fillWidth: true
+                                        visible: teamSlot.pendingTasks.length > 0
+                                        text: "Pendientes"
+                                        color: Theme.colors.primary
+                                        font: Theme.font.overlay
                                     }
-                                }
 
-                                IconAction {
-                                    icon: ""
-                                    accent: Theme.colors.error
-                                    busy: teamCard.deleting
-                                    available: !DorlabTasks.mutationInProgress && !teamCard.hasActiveTask
-                                    onClicked: DorlabTasks.deleteTeam(teamCard.modelData.id)
-                                }
-                            }
+                                    Repeater {
+                                        model: teamSlot.pendingTasks
 
-                            InlineCreateForm {
-                                visible: DorlabTasks.sameId(root.activeCreateTaskTeamId, teamCard.modelData.id)
-                                placeholder: `Nueva tarea en ${DorlabTasks.teamName(teamCard.modelData)}`
-                                busy: DorlabTasks.creatingTask && DorlabTasks.sameId(DorlabTasks.creatingTeamId, teamCard.modelData.id)
-                                onSubmitted: value => {
-                                    DorlabTasks.createTask(teamCard.modelData.id, value);
-                                    root.activeCreateTaskTeamId = -1;
-                                }
-                                onCancelled: root.activeCreateTaskTeamId = -1
-                            }
+                                        delegate: TaskRow {
+                                            required property var modelData
 
-                            Text {
-                                Layout.fillWidth: true
-                                visible: teamCard.pendingTasks.length === 0 && teamCard.completedTasks.length === 0
-                                text: "Sin tareas"
-                                color: Theme.colors.overlay
-                                font: Theme.font.overlay
-                            }
+                                            task: modelData
+                                        }
+                                    }
 
-                            Text {
-                                Layout.fillWidth: true
-                                visible: teamCard.pendingTasks.length > 0
-                                text: "Pendientes"
-                                color: Theme.colors.primary
-                                font: Theme.font.overlay
-                            }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        visible: teamSlot.completedTasks.length > 0
+                                        text: "Completadas"
+                                        color: Theme.colors.success
+                                        font: Theme.font.overlay
+                                    }
 
-                            Repeater {
-                                model: teamCard.pendingTasks
+                                    Repeater {
+                                        model: teamSlot.completedTasks
 
-                                delegate: TaskRow {
-                                    required property var modelData
+                                        delegate: TaskRow {
+                                            required property var modelData
 
-                                    task: modelData
-                                }
-                            }
-
-                            Text {
-                                Layout.fillWidth: true
-                                visible: teamCard.completedTasks.length > 0
-                                text: "Completadas"
-                                color: Theme.colors.success
-                                font: Theme.font.overlay
-                            }
-
-                            Repeater {
-                                model: teamCard.completedTasks
-
-                                delegate: TaskRow {
-                                    required property var modelData
-
-                                    task: modelData
+                                            task: modelData
+                                        }
+                                    }
                                 }
                             }
                         }

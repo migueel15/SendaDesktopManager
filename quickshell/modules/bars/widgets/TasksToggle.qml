@@ -31,6 +31,7 @@ Item {
 
         Text {
             anchors.centerIn: parent
+            anchors.horizontalCenterOffset: !action.busy && action.icon === "󰐊" ? 1 : 0
             text: action.busy ? "󰔟" : action.icon
             color: actionMouseArea.containsMouse && action.available ? Theme.colors.background : action.accent
             font: Theme.font.icon

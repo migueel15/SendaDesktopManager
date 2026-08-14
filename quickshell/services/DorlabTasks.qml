@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 
 Singleton {
     id: root
@@ -34,7 +35,10 @@ Singleton {
 
     property int activeElapsedSeconds: 0
     property int durationVersion: 0
+    property int layoutVersion: 0
     property int pendingRequests: 0
+    property bool layoutReady: false
+    property bool teamsInitialized: false
 
     readonly property bool hasActiveTask: activeTask !== null
     readonly property int activeTaskId: activeTask?.task_id ?? -1
@@ -48,6 +52,7 @@ Singleton {
     readonly property string trackedTaskTitle: hasActiveTask ? taskTitle(activeTask) : taskTitle(lastTrackedTask)
     readonly property bool trackedTaskPaused: !hasActiveTask && hasLastTrackedTask
     readonly property bool mutationInProgress: actionInProgress || creatingTeam || creatingTask || deletingTeamActionId !== -1 || deletingTaskId !== -1 || updatingTaskId !== -1
+    readonly property string layoutFilePath: Quickshell.stateDir + "/dorlab-tasks-layout.json"
 
     function refresh() {
         if (!ensureConfigured()) {
@@ -74,6 +79,8 @@ Singleton {
             }
 
             teams = payload;
+            teamsInitialized = true;
+            reconcileTeamLayout();
 
             const nextTasksByTeam = {};
             payload.forEach(team => nextTasksByTeam[String(team.id)] = tasksByTeam[String(team.id)] ?? []);
@@ -393,6 +400,181 @@ Singleton {
 
     function tasksForTeam(teamId) {
         return tasksByTeam[String(teamId)] ?? [];
+    }
+
+    function workspaceLayout() {
+        layoutVersion;
+        const workspaces = layoutAdapter.workspaces ?? {};
+        const saved = workspaces[String(workspaceId)] ?? {};
+        return {
+            "teamOrder": normalizedTeamIds(saved.teamOrder),
+            "hiddenTeamIds": normalizedTeamIds(saved.hiddenTeamIds),
+            "collapsedTeamIds": normalizedTeamIds(saved.collapsedTeamIds)
+        };
+    }
+
+    function normalizedTeamIds(values) {
+        if (!Array.isArray(values)) {
+            return [];
+        }
+
+        const result = [];
+        values.forEach(value => {
+            const id = String(value);
+            if (id.length > 0 && result.indexOf(id) === -1) {
+                result.push(id);
+            }
+        });
+        return result;
+    }
+
+    function orderedTeams(includeHidden) {
+        const layout = workspaceLayout();
+        const teamsById = {};
+        teams.forEach(team => teamsById[String(team.id)] = team);
+
+        const result = [];
+        const addedIds = [];
+        layout.teamOrder.forEach(id => {
+            if (teamsById[id] && addedIds.indexOf(id) === -1) {
+                result.push(teamsById[id]);
+                addedIds.push(id);
+            }
+        });
+        teams.forEach(team => {
+            const id = String(team.id);
+            if (addedIds.indexOf(id) === -1) {
+                result.push(team);
+                addedIds.push(id);
+            }
+        });
+
+        if (includeHidden === true) {
+            return result;
+        }
+
+        return result.filter(team => !isTeamHidden(team.id) || sameId(team.id, activeTeamId));
+    }
+
+    function hiddenTeams() {
+        return orderedTeams(true).filter(team => isTeamHidden(team.id) && !sameId(team.id, activeTeamId));
+    }
+
+    function isTeamHidden(teamId) {
+        return workspaceLayout().hiddenTeamIds.indexOf(String(teamId)) !== -1;
+    }
+
+    function isTeamCollapsed(teamId) {
+        return workspaceLayout().collapsedTeamIds.indexOf(String(teamId)) !== -1;
+    }
+
+    function toggleTeamCollapsed(teamId) {
+        const layout = workspaceLayout();
+        const id = String(teamId);
+        const collapsedIds = layout.collapsedTeamIds.slice();
+        const index = collapsedIds.indexOf(id);
+        if (index === -1) {
+            collapsedIds.push(id);
+        } else {
+            collapsedIds.splice(index, 1);
+        }
+        updateWorkspaceLayout({
+            "collapsedTeamIds": collapsedIds
+        });
+    }
+
+    function setTeamCollapsed(teamId, collapsed) {
+        if (isTeamCollapsed(teamId) !== collapsed) {
+            toggleTeamCollapsed(teamId);
+        }
+    }
+
+    function setTeamHidden(teamId, hidden) {
+        if (hidden && sameId(teamId, activeTeamId)) {
+            return;
+        }
+
+        const layout = workspaceLayout();
+        const id = String(teamId);
+        const hiddenIds = layout.hiddenTeamIds.slice();
+        const index = hiddenIds.indexOf(id);
+        if (hidden && index === -1) {
+            hiddenIds.push(id);
+        } else if (!hidden && index !== -1) {
+            hiddenIds.splice(index, 1);
+        } else {
+            return;
+        }
+        updateWorkspaceLayout({
+            "hiddenTeamIds": hiddenIds
+        });
+    }
+
+    function moveVisibleTeam(teamId, newVisibleIndex) {
+        const sourceId = String(teamId);
+        const visibleIds = orderedTeams(false).map(team => String(team.id));
+        const currentIndex = visibleIds.indexOf(sourceId);
+        if (currentIndex === -1) {
+            return;
+        }
+
+        visibleIds.splice(currentIndex, 1);
+        const targetIndex = Math.max(0, Math.min(visibleIds.length, Number(newVisibleIndex)));
+        visibleIds.splice(targetIndex, 0, sourceId);
+
+        const layout = workspaceLayout();
+        const effectivelyHiddenIds = layout.hiddenTeamIds.filter(id => !sameId(id, activeTeamId));
+        let visibleIndex = 0;
+        const nextOrder = orderedTeams(true).map(team => {
+            const id = String(team.id);
+            if (effectivelyHiddenIds.indexOf(id) !== -1) {
+                return id;
+            }
+            return visibleIds[visibleIndex++];
+        });
+
+        updateWorkspaceLayout({
+            "teamOrder": nextOrder
+        });
+    }
+
+    function updateWorkspaceLayout(patch) {
+        const workspaces = Object.assign({}, layoutAdapter.workspaces ?? {});
+        const workspaceKey = String(workspaceId);
+        const current = workspaceLayout();
+        workspaces[workspaceKey] = {
+            "teamOrder": patch.teamOrder ?? current.teamOrder,
+            "hiddenTeamIds": patch.hiddenTeamIds ?? current.hiddenTeamIds,
+            "collapsedTeamIds": patch.collapsedTeamIds ?? current.collapsedTeamIds
+        };
+        layoutAdapter.workspaces = workspaces;
+        layoutVersion++;
+        layoutSaveTimer.restart();
+    }
+
+    function reconcileTeamLayout() {
+        if (!layoutReady || !teamsInitialized) {
+            return;
+        }
+
+        const layout = workspaceLayout();
+        const currentIds = teams.map(team => String(team.id));
+        const order = layout.teamOrder.filter(id => currentIds.indexOf(id) !== -1);
+        currentIds.forEach(id => {
+            if (order.indexOf(id) === -1) {
+                order.push(id);
+            }
+        });
+        const hiddenIds = layout.hiddenTeamIds.filter(id => currentIds.indexOf(id) !== -1);
+        const collapsedIds = layout.collapsedTeamIds.filter(id => currentIds.indexOf(id) !== -1);
+
+        if (JSON.stringify(order) !== JSON.stringify(layout.teamOrder) || JSON.stringify(hiddenIds) !== JSON.stringify(layout.hiddenTeamIds) || JSON.stringify(collapsedIds) !== JSON.stringify(layout.collapsedTeamIds)) {
+            updateWorkspaceLayout({
+                "teamOrder": order,
+                "hiddenTeamIds": hiddenIds,
+                "collapsedTeamIds": collapsedIds
+            });
+        }
     }
 
     function pendingTasksForTeam(teamId, query) {
@@ -755,6 +937,7 @@ Singleton {
 
         rebuildTasks();
         durationVersion++;
+        reconcileTeamLayout();
     }
 
     function isActiveTask(task) {
@@ -832,6 +1015,7 @@ Singleton {
         lastTrackedTask = null;
         activeElapsedSeconds = 0;
         entriesByTask = ({});
+        teamsInitialized = false;
         setError("Missing Dorlab bearer token");
         return false;
     }
@@ -898,10 +1082,52 @@ Singleton {
         console.warn("DorlabTasks:", message);
     }
 
-    onBearerTokenChanged: refresh()
-    onWorkspaceIdChanged: refresh()
+    onBearerTokenChanged: {
+        teamsInitialized = false;
+        refresh();
+    }
+    onWorkspaceIdChanged: {
+        teamsInitialized = false;
+        refresh();
+    }
 
     Component.onCompleted: refresh()
+
+    FileView {
+        id: layoutFile
+
+        path: root.layoutFilePath
+        atomicWrites: true
+        watchChanges: true
+        printErrors: false
+        onLoaded: {
+            root.layoutReady = true;
+            root.layoutVersion++;
+            root.reconcileTeamLayout();
+        }
+        onLoadFailed: error => {
+            root.layoutReady = true;
+            root.layoutVersion++;
+            if (error === FileViewError.FileNotFound) {
+                root.reconcileTeamLayout();
+                layoutSaveTimer.restart();
+            }
+        }
+
+        JsonAdapter {
+            id: layoutAdapter
+
+            property int version: 1
+            property var workspaces: ({})
+        }
+    }
+
+    Timer {
+        id: layoutSaveTimer
+
+        interval: 200
+        onTriggered: layoutFile.writeAdapter()
+    }
 
     Timer {
         interval: 1000
