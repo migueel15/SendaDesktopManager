@@ -37,8 +37,16 @@ Singleton {
     property int durationVersion: 0
     property int layoutVersion: 0
     property int pendingRequests: 0
-    property bool layoutReady: false
-    property bool teamsInitialized: false
+    property string layoutLoadState: "loading"
+    property string teamsLoadState: "loading"
+    property string layoutSaveState: "clean"
+    property var layoutWorkspaces: ({})
+    property int layoutRevision: 0
+    property int savingLayoutRevision: -1
+    property int layoutLoadRetryCount: 0
+    property int layoutSaveRetryCount: 0
+    property bool layoutSaveInProgress: false
+    property bool serviceReady: false
 
     readonly property bool hasActiveTask: activeTask !== null
     readonly property int activeTaskId: activeTask?.task_id ?? -1
@@ -69,26 +77,33 @@ Singleton {
             return;
         }
 
+        teamsLoadState = "loading";
         request("GET", `/tasks/workspaces/${workspaceId}/teams`, null, payload => {
             if (!Array.isArray(payload)) {
                 teams = [];
                 tasksByTeam = ({});
                 tasks = [];
+                teamsLoadState = "error";
                 setError("Unexpected teams response");
                 return;
             }
 
             teams = payload;
-            teamsInitialized = true;
-            reconcileTeamLayout();
-
             const nextTasksByTeam = {};
             payload.forEach(team => nextTasksByTeam[String(team.id)] = tasksByTeam[String(team.id)] ?? []);
             tasksByTeam = nextTasksByTeam;
             rebuildTasks();
             syncLastTrackedTask();
-
             payload.forEach(team => loadTeamTasks(team));
+
+            // Publish the ready state only after the complete teams snapshot has
+            // been installed. This prevents reconciliation from observing a
+            // half-updated model during startup.
+            teamsLoadState = "loaded";
+            Qt.callLater(() => reconcileTeamLayout());
+        }, status => {
+            teamsLoadState = "error";
+            setError(`GET teams failed (${status})`);
         });
     }
 
@@ -402,9 +417,7 @@ Singleton {
         return tasksByTeam[String(teamId)] ?? [];
     }
 
-    function workspaceLayout() {
-        layoutVersion;
-        const workspaces = layoutAdapter.workspaces ?? {};
+    function normalizedWorkspaceLayout(workspaces) {
         const saved = workspaces[String(workspaceId)] ?? {};
         return {
             "teamOrder": normalizedTeamIds(saved.teamOrder),
@@ -413,18 +426,24 @@ Singleton {
         };
     }
 
+    function workspaceLayout() {
+        layoutVersion;
+        return normalizedWorkspaceLayout(layoutWorkspaces);
+    }
+
     function normalizedTeamIds(values) {
-        if (!Array.isArray(values)) {
+        if (values === undefined || values === null || typeof values.length !== "number") {
             return [];
         }
 
         const result = [];
-        values.forEach(value => {
+        for (let index = 0; index < values.length; index++) {
+            const value = values[index];
             const id = String(value);
             if (id.length > 0 && result.indexOf(id) === -1) {
                 result.push(id);
             }
-        });
+        }
         return result;
     }
 
@@ -539,7 +558,7 @@ Singleton {
     }
 
     function updateWorkspaceLayout(patch) {
-        const workspaces = Object.assign({}, layoutAdapter.workspaces ?? {});
+        const workspaces = Object.assign({}, layoutWorkspaces);
         const workspaceKey = String(workspaceId);
         const current = workspaceLayout();
         workspaces[workspaceKey] = {
@@ -547,17 +566,13 @@ Singleton {
             "hiddenTeamIds": patch.hiddenTeamIds ?? current.hiddenTeamIds,
             "collapsedTeamIds": patch.collapsedTeamIds ?? current.collapsedTeamIds
         };
-        layoutAdapter.workspaces = workspaces;
+        layoutWorkspaces = workspaces;
         layoutVersion++;
-        layoutSaveTimer.restart();
+        layoutRevision++;
+        requestLayoutSave();
     }
 
-    function reconcileTeamLayout() {
-        if (!layoutReady || !teamsInitialized) {
-            return;
-        }
-
-        const layout = workspaceLayout();
+    function reconciledTeamLayout(layout) {
         const currentIds = teams.map(team => String(team.id));
         const order = layout.teamOrder.filter(id => currentIds.indexOf(id) !== -1);
         currentIds.forEach(id => {
@@ -568,13 +583,114 @@ Singleton {
         const hiddenIds = layout.hiddenTeamIds.filter(id => currentIds.indexOf(id) !== -1);
         const collapsedIds = layout.collapsedTeamIds.filter(id => currentIds.indexOf(id) !== -1);
 
-        if (JSON.stringify(order) !== JSON.stringify(layout.teamOrder) || JSON.stringify(hiddenIds) !== JSON.stringify(layout.hiddenTeamIds) || JSON.stringify(collapsedIds) !== JSON.stringify(layout.collapsedTeamIds)) {
-            updateWorkspaceLayout({
-                "teamOrder": order,
-                "hiddenTeamIds": hiddenIds,
-                "collapsedTeamIds": collapsedIds
-            });
+        return {
+            "teamOrder": order,
+            "hiddenTeamIds": hiddenIds,
+            "collapsedTeamIds": collapsedIds
+        };
+    }
+
+    function reconcileTeamLayout() {
+        if (teamsLoadState !== "loaded" || (layoutLoadState !== "loaded" && layoutLoadState !== "missing")) {
+            return;
         }
+
+        const layout = workspaceLayout();
+        const reconciled = reconciledTeamLayout(layout);
+        if (JSON.stringify(reconciled) !== JSON.stringify(layout)) {
+            updateWorkspaceLayout(reconciled);
+        } else if (layoutLoadState === "missing") {
+            requestLayoutSave();
+        }
+    }
+
+    function requestLayoutSave() {
+        if (layoutLoadState === "loading" || layoutLoadState === "error") {
+            return;
+        }
+
+        layoutSaveState = "dirty";
+        layoutSaveRetryCount = 0;
+        layoutSaveRetryTimer.stop();
+        if (!layoutSaveInProgress) {
+            Qt.callLater(() => beginLayoutSave());
+        }
+    }
+
+    function beginLayoutSave() {
+        if (layoutSaveInProgress || layoutSaveState === "clean" || layoutLoadState === "loading" || layoutLoadState === "error") {
+            return;
+        }
+
+        layoutAdapter.version = 1;
+        layoutAdapter.workspaces = JSON.parse(JSON.stringify(layoutWorkspaces));
+        savingLayoutRevision = layoutRevision;
+        layoutSaveInProgress = true;
+        layoutSaveState = "saving";
+        layoutFile.writeAdapter();
+    }
+
+    function handleLayoutSaved() {
+        layoutSaveInProgress = false;
+        layoutSaveRetryCount = 0;
+        if (layoutLoadState === "missing") {
+            layoutLoadState = "loaded";
+        }
+
+        if (savingLayoutRevision === layoutRevision) {
+            layoutSaveState = "clean";
+        } else {
+            layoutSaveState = "dirty";
+            Qt.callLater(() => beginLayoutSave());
+        }
+    }
+
+    function handleLayoutSaveFailed(error) {
+        layoutSaveInProgress = false;
+        layoutSaveState = "error";
+        layoutSaveRetryCount++;
+        console.warn("DorlabTasks: layout save failed:", FileViewError.toString(error));
+        if (layoutSaveRetryCount <= 3) {
+            layoutSaveRetryTimer.restart();
+        }
+    }
+
+    function handleLayoutLoaded() {
+        layoutLoadRetryTimer.stop();
+        layoutLoadRetryCount = 0;
+        // JsonAdapter exposes JSON arrays as QML sequences. Deep-converting the
+        // payload gives the service ordinary JavaScript arrays, which are safe
+        // to normalize, compare and reorder.
+        const loadedWorkspaces = JSON.parse(JSON.stringify(layoutAdapter.workspaces ?? {}));
+        layoutWorkspaces = loadedWorkspaces;
+        layoutSaveState = "clean";
+        layoutVersion++;
+
+        // Keep this assignment last: changing it unlocks reconciliation.
+        layoutLoadState = "loaded";
+        Qt.callLater(() => reconcileTeamLayout());
+    }
+
+    function handleLayoutLoadFailed(error) {
+        if (error === FileViewError.FileNotFound && layoutLoadRetryCount < 3) {
+            layoutLoadRetryCount++;
+            layoutLoadRetryTimer.restart();
+            return;
+        }
+
+        layoutVersion++;
+        if (error === FileViewError.FileNotFound) {
+            layoutWorkspaces = ({});
+            layoutSaveState = "clean";
+            // As above, the ready state is the final part of the snapshot commit.
+            layoutLoadState = "missing";
+            Qt.callLater(() => reconcileTeamLayout());
+            return;
+        }
+
+        layoutLoadState = "error";
+        layoutSaveState = "error";
+        console.warn("DorlabTasks: layout load failed:", FileViewError.toString(error));
     }
 
     function pendingTasksForTeam(teamId, query) {
@@ -1015,7 +1131,7 @@ Singleton {
         lastTrackedTask = null;
         activeElapsedSeconds = 0;
         entriesByTask = ({});
-        teamsInitialized = false;
+        teamsLoadState = "error";
         setError("Missing Dorlab bearer token");
         return false;
     }
@@ -1083,36 +1199,34 @@ Singleton {
     }
 
     onBearerTokenChanged: {
-        teamsInitialized = false;
-        refresh();
+        if (serviceReady) {
+            teamsLoadState = "loading";
+            refresh();
+        }
     }
     onWorkspaceIdChanged: {
-        teamsInitialized = false;
-        refresh();
+        if (serviceReady) {
+            teamsLoadState = "loading";
+            refresh();
+        }
     }
 
-    Component.onCompleted: refresh()
+    Component.onCompleted: {
+        serviceReady = true;
+        refresh();
+    }
 
     FileView {
         id: layoutFile
 
         path: root.layoutFilePath
         atomicWrites: true
-        watchChanges: true
+        watchChanges: false
         printErrors: false
-        onLoaded: {
-            root.layoutReady = true;
-            root.layoutVersion++;
-            root.reconcileTeamLayout();
-        }
-        onLoadFailed: error => {
-            root.layoutReady = true;
-            root.layoutVersion++;
-            if (error === FileViewError.FileNotFound) {
-                root.reconcileTeamLayout();
-                layoutSaveTimer.restart();
-            }
-        }
+        onLoaded: root.handleLayoutLoaded()
+        onLoadFailed: error => root.handleLayoutLoadFailed(error)
+        onSaved: root.handleLayoutSaved()
+        onSaveFailed: error => root.handleLayoutSaveFailed(error)
 
         JsonAdapter {
             id: layoutAdapter
@@ -1123,10 +1237,17 @@ Singleton {
     }
 
     Timer {
-        id: layoutSaveTimer
+        id: layoutLoadRetryTimer
 
-        interval: 200
-        onTriggered: layoutFile.writeAdapter()
+        interval: 100
+        onTriggered: layoutFile.reload()
+    }
+
+    Timer {
+        id: layoutSaveRetryTimer
+
+        interval: 1000
+        onTriggered: root.beginLayoutSave()
     }
 
     Timer {

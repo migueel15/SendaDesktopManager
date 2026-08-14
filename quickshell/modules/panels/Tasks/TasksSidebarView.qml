@@ -79,8 +79,6 @@ Item {
         dragTargetIndex = -1;
     }
 
-    Component.onCompleted: DorlabTasks.refresh()
-
     Keys.onEscapePressed: OverlayService.closeCurrentPanel()
 
     Shortcut {
