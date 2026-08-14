@@ -403,8 +403,38 @@ Singleton {
         return filteredTasksForTeam(teamId, true, query);
     }
 
+    function normalizeSearchText(value) {
+        let normalized = String(value ?? "").trim().toLowerCase();
+
+        // Treat accents as their base character and ignore separators so that,
+        // for example, "ref loader" and "ref-loader" behave like "refloader".
+        if (typeof normalized.normalize === "function") {
+            normalized = normalized.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        return normalized.replace(/[\s._\-/]+/g, "");
+    }
+
+    function fuzzyMatches(value, normalizedQuery) {
+        const candidate = normalizeSearchText(value);
+        if (normalizedQuery.length === 0) {
+            return true;
+        }
+
+        let candidateIndex = 0;
+        for (let queryIndex = 0; queryIndex < normalizedQuery.length; queryIndex += 1) {
+            candidateIndex = candidate.indexOf(normalizedQuery[queryIndex], candidateIndex);
+            if (candidateIndex === -1) {
+                return false;
+            }
+            candidateIndex += 1;
+        }
+
+        return true;
+    }
+
     function filteredTasksForTeam(teamId, completed, query) {
-        const normalizedQuery = (query ?? "").trim().toLowerCase();
+        const normalizedQuery = normalizeSearchText(query);
         return tasksForTeam(teamId).filter(task => {
             if (!!task.completed !== completed) {
                 return false;
@@ -414,7 +444,7 @@ Singleton {
                 return true;
             }
 
-            return (task.title ?? "").toLowerCase().includes(normalizedQuery) || (task.team_name ?? "").toLowerCase().includes(normalizedQuery);
+            return fuzzyMatches(task.title, normalizedQuery) || fuzzyMatches(task.team_name, normalizedQuery);
         }).sort((a, b) => compareTasksByLastEntry(a, b));
     }
 
