@@ -1,4 +1,6 @@
 //@ pragma UseQApplication
+//@ pragma RespectSystemStyle
+//@ pragma DefaultEnv QT_QPA_PLATFORMTHEME=qt6ct
 import Quickshell
 import QtQuick
 import QtQuick.Controls.Material
