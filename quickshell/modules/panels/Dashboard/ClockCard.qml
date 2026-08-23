@@ -24,7 +24,7 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 Text {
                     text: {
-                        return String(systemClock?.date?.getHours());
+                        return String(systemClock?.date.getHours()).padStart(2, "0");
                     }
                     font.family: Theme.font.title.family
                     font.pixelSize: 50
@@ -37,7 +37,7 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 Text {
                     text: {
-                        return String(systemClock?.date?.getMinutes()).padStart(2, "0");
+                        return String(systemClock?.date.getMinutes()).padStart(2, "0");
                     }
 
                     font.family: Theme.font.title.family

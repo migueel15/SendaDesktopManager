@@ -15,30 +15,30 @@ import Quickshell.Wayland
 import qs.modules.wallpaper
 
 ShellRoot {
-    id: root
+	id: root
 
-    Material.theme: Material.Dark
-    Material.accent: Material.Purple
+	Material.theme: Material.Dark
+	Material.accent: Material.Purple
 
-    TopBar {
-        id: topBar
-        panelController: panelCtrl
-    }
+	TopBar {
+		id: topBar
+		panelController: panelCtrl
+	}
 
-    TopRightCorner {}
-    TopLeftCorner {}
-    BottomLeftCorner {}
-    BottomRightCorner {}
+	TopRightCorner {}
+	TopLeftCorner {}
+	BottomLeftCorner {}
+	BottomRightCorner {}
 
-    VolumeOSD {}
+	VolumeOSD {}
 
-    OverlayLayer {
-        id: panelCtrl
-    }
+	OverlayLayer {
+		id: panelCtrl
+	}
 
-    WallpaperLayer {}
+	WallpaperLayer {}
 
-    DebugLayer {
-        screenName: "DP-3"
-    }
+	DebugLayer {
+		screenName: "DP-3"
+	}
 }

@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Wayland
 import qs.services
 import qs.common.components
+import Quickshell.Io
 
 SendaPanel {
     id: root
