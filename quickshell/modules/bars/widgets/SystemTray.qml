@@ -64,17 +64,10 @@ Rectangle {
         Row {
             id: layout
             anchors.centerIn: parent
-            spacing: 8
+            spacing: 2 // TrayItem includes 3px of clickable padding on each side.
 
-            add: Transition {
-                NumberAnimation {
-                    properties: "scale"
-                    from: 0
-                    to: 1
-                    duration: 300
-                    easing.type: Easing.BezierSpline
-                }
-            }
+            // Items may register while the drawer is hidden. Keep their visual
+            // and input scale at 1 throughout insertion and layout changes.
 
             Repeater {
                 id: items

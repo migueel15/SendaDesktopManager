@@ -8,10 +8,17 @@ import Quickshell.Services.Pipewire
 Singleton {
 	id: root
 
+	readonly property var hiddenOutputDescriptions: [
+		"Loopback",
+		"Loopback Estéreo analógico"
+	]
+
 	readonly property var nodes: Pipewire.nodes.values.reduce((acc, node) => {
 			if (!node.isStream) {
 				if (node.isSink) {
-					acc.sinks.push(node);
+					if (!root.hiddenOutputDescriptions.includes(node.description || "")) {
+						acc.sinks.push(node);
+					}
 				} else if (node.audio) {
 					acc.sources.push(node);
 				}
@@ -26,6 +33,12 @@ Singleton {
 	readonly property PwNode source: Pipewire.defaultAudioSource
 	readonly property list<PwNode> sinks: nodes.sinks
 	readonly property list<PwNode> sources: nodes.sources
+	readonly property var outputNamesByDescription: ({
+		"AD104 High Definition Audio Controller": "Monitor Principal",
+		"AD104 High Definition Audio Controller Digital Stereo (HDMI 2)": "Monitor Principal",
+		"PRO X Wireless Gaming Headset Estéreo analógico": "Logitech PRO X",
+		"Beats Studio Buds + de Miguel": "Beats Studio Buds +"
+	})
 
 	readonly property alias volume: root._volume
 	property real _volume: root.normalizeVolume(sink?.audio?.volume)
@@ -356,15 +369,7 @@ Singleton {
 	}
 
 	function getDisplayName(node: PwNode): string {
-		if (node.nickname === "BenQ EX2710Q")
-		return "Monitor Principal";
-
-		if (node.nickname === "PRO X Wireless Gaming Headset")
-		return "Logitech PRO X";
-
-		if (node.description === "LE-Beats Studio Buds + de Miguel")
-		return "Beats Studio Buds +";
-
-		return node.nickname || node.description || "Unknown device";
+		const description = node?.description || "";
+		return root.outputNamesByDescription[description] || description || "Unknown device";
 	}
 }

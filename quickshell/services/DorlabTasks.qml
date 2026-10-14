@@ -169,7 +169,7 @@ Singleton {
         });
     }
 
-    function loadActiveTask(silent) {
+    function loadActiveTask() {
         if (!ensureConfigured()) {
             return;
         }
@@ -183,7 +183,7 @@ Singleton {
             }
 
             setError(`GET /tasks/me/active failed (${status})`);
-        }, undefined, silent !== true);
+        });
     }
 
     function loadTaskEntries(taskId, teamId) {
@@ -1260,10 +1260,4 @@ Singleton {
         }
     }
 
-    Timer {
-        interval: 30000
-        running: root.bearerToken.trim().length > 0
-        repeat: true
-        onTriggered: root.loadActiveTask(true)
-    }
 }

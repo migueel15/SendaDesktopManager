@@ -16,6 +16,12 @@ Item {
     implicitHeight: column.implicitHeight
 
     property bool devicesExpanded: false
+    property bool inputDevicesExpanded: false
+    readonly property font activeDeviceFont: Qt.font({
+        family: Theme.font.base.family,
+        pixelSize: Theme.fontSize.large,
+        weight: Theme.font.base.weight
+    })
     Material.theme: Material.Dark
     Material.accent: Theme.colors.primary
 
@@ -26,7 +32,7 @@ Item {
 
         Rectangle {
             width: parent.width
-            height: 60
+            height: 82
             color: Theme.colors.surface
             radius: Theme.rounding.normal
             border.width: 1
@@ -37,12 +43,20 @@ Item {
                 acceptedButtons: Qt.LeftButton
                 cursorShape: Qt.PointingHandCursor
 
-                onClicked: root.devicesExpanded = !root.devicesExpanded
+                onClicked: {
+                    if (!root.devicesExpanded) {
+                        root.inputDevicesExpanded = false;
+                    }
+                    root.devicesExpanded = !root.devicesExpanded;
+                }
             }
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 15
+                anchors.leftMargin: 15
+                anchors.rightMargin: 15
+                anchors.topMargin: 5
+                anchors.bottomMargin: 30
                 spacing: 10
 
                 // Volume icon and slider
@@ -139,9 +153,27 @@ Item {
                         id: expandButtonMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: root.devicesExpanded = !root.devicesExpanded
+                        onClicked: {
+                            if (!root.devicesExpanded) {
+                                root.inputDevicesExpanded = false;
+                            }
+                            root.devicesExpanded = !root.devicesExpanded;
+                        }
                     }
                 }
+            }
+
+            Text {
+                anchors.left: parent.left
+                anchors.leftMargin: 15
+                anchors.right: parent.right
+                anchors.rightMargin: 55
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 7
+                text: Audio.sink ? `Salida · ${Audio.getDisplayName(Audio.sink)}` : "Sin salida activa"
+                color: Theme.colors.primary
+                font: root.activeDeviceFont
+                elide: Text.ElideRight
             }
         }
 
@@ -210,6 +242,156 @@ Item {
                                 // Audio.changeDefaultSink(modelData);
                                 Audio.setAudioSink(modelData);
                                 root.devicesExpanded = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            width: parent.width
+            height: 64
+            color: Theme.colors.surface
+            radius: Theme.rounding.normal
+            border.width: 1
+            border.color: Theme.colors.surfaceVariant
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                cursorShape: Qt.PointingHandCursor
+
+                onClicked: {
+                    if (!root.inputDevicesExpanded) {
+                        root.devicesExpanded = false;
+                    }
+                    root.inputDevicesExpanded = !root.inputDevicesExpanded;
+                }
+            }
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+
+                    Text {
+                        text: "Entrada"
+                        color: Theme.colors.text
+                        font: Theme.font.base
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: Audio.source ? Audio.getDisplayName(Audio.source) : "Sin entrada activa"
+                        color: Theme.colors.primary
+                        font: root.activeDeviceFont
+                        elide: Text.ElideRight
+                    }
+                }
+
+                Rectangle {
+                    width: 30
+                    height: 30
+                    radius: Theme.rounding.small
+                    color: inputExpandButtonMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.inputDevicesExpanded ? "" : ""
+                        color: Theme.colors.text
+                        font: Theme.font.base
+                    }
+
+                    MouseArea {
+                        id: inputExpandButtonMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            if (!root.inputDevicesExpanded) {
+                                root.devicesExpanded = false;
+                            }
+                            root.inputDevicesExpanded = !root.inputDevicesExpanded;
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            width: parent.width
+            height: inputDevicesExpanded ? sourcesColumn.implicitHeight + 20 : 0
+            visible: height > 0
+            color: Theme.colors.surface
+            radius: Theme.rounding.normal
+            clip: true
+
+            border.width: 1
+            border.color: Theme.colors.surfaceVariant
+
+            Behavior on height {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutQuad
+                }
+            }
+
+            Column {
+                id: sourcesColumn
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 5
+
+                Text {
+                    width: sourcesColumn.width
+                    height: Audio.sources.length === 0 ? 35 : 0
+                    visible: Audio.sources.length === 0
+                    text: "No hay entradas disponibles"
+                    color: Theme.colors.text
+                    font: Theme.font.base
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Repeater {
+                    model: Audio.sources
+
+                    delegate: Rectangle {
+                        required property var modelData
+
+                        width: sourcesColumn.width
+                        height: isValidSource ? 35 : 0
+                        visible: isValidSource
+                        radius: Theme.rounding.normal
+
+                        property bool isActive: Audio.source?.id === modelData.id
+                        property bool isValidSource: !modelData.isSink && !modelData.isStream && !!modelData.audio
+
+                        color: sourceMouseArea.containsMouse || isActive ? Theme.colors.surfaceVariant : "transparent"
+
+                        Text {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            verticalAlignment: Text.AlignVCenter
+                            text: Audio.getDisplayName(modelData)
+                            color: parent.isActive ? Theme.colors.primary : Theme.colors.text
+                            font: Theme.font.base
+                            elide: Text.ElideRight
+                        }
+
+                        MouseArea {
+                            id: sourceMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+
+                            onClicked: {
+                                Audio.setAudioSource(modelData);
+                                root.inputDevicesExpanded = false;
                             }
                         }
                     }
