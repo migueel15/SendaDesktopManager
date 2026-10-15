@@ -4,15 +4,18 @@ import QtQuick
 import qs.common
 import qs.common.components
 import qs.common.components.icons
+import qs.common.components.barextension as BarComponents
 
 Rectangle {
     id: root
 
     readonly property Repeater items: items
     property bool expanded: false
-    readonly property real revealProgress: expanded ? 1 : 0
+    readonly property real extensionLift: root.expanded
+            ? 0
+            : Math.max(0, trayExtensionContent.contentHideThreshold - trayExtensionContent.height)
 
-    clip: true
+    clip: false
     visible: width > 0 && height > 0 // To avoid warnings about being visible with no size
 
     height: parent.height
@@ -42,7 +45,7 @@ Rectangle {
 
             Behavior on rotation {
                 NumberAnimation {
-                    duration: 180
+                    duration: root.expanded ? 180 : 360
                     easing.type: Easing.OutCubic
                 }
             }
@@ -56,98 +59,45 @@ Rectangle {
     }
 
     PopupWindow {
-        id: trayPopup
+        id: trayExtension
 
         anchor.window: root.QsWindow.window
         anchor.rect.x: {
             const window = root.QsWindow.window;
             if (!window) return 0;
             const point = expandButton.mapToItem(window.contentItem, 0, 0);
-            return point.x + expandButton.width - width;
+            return point.x + expandButton.width - implicitWidth;
         }
         anchor.rect.y: root.QsWindow.window
-                ? root.QsWindow.window.contentItem.height
+                ? root.QsWindow.window.contentItem.height - root.extensionLift
                 : 0
         anchor.rect.width: 1
         anchor.rect.height: 1
 
-        width: trayContent.implicitWidth
-        height: root.expanded ? Theme.barSize : 1
-        visible: root.expanded || height > 1
+        implicitWidth: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
+        implicitHeight: Math.max(1, trayExtensionContent.height)
+        visible: root.expanded || trayExtensionContent.height > 0.01
         color: "transparent"
 
-        Behavior on height {
-            NumberAnimation {
-                duration: root.expanded ? 110 : 220
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Item {
-            id: trayContent
-            width: parent.width
-            implicitWidth: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
-            height: parent.height
-
-            Canvas {
-                anchors.fill: parent
-
-                onPaint: {
-                    const ctx = getContext("2d");
-                    ctx.reset();
-                    ctx.fillStyle = Theme.colors.background;
-
-                    const left = Theme.barBorderRadius;
-                    const right = width - Theme.barBorderRadius;
-                    const r = Math.min(Theme.barBorderRadius, (right - left) / 2, height / 2);
-                    ctx.beginPath();
-                    ctx.moveTo(left, 0);
-                    ctx.lineTo(right, 0);
-                    ctx.lineTo(right, height - r);
-                    ctx.quadraticCurveTo(right, height, right - r, height);
-                    ctx.lineTo(left + r, height);
-                    ctx.quadraticCurveTo(left, height, left, height - r);
-                    ctx.lineTo(left, 0);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-
-                onWidthChanged: requestPaint()
-                onHeightChanged: requestPaint()
-            }
-
-            BarCorner {
-                x: 0
-                y: 0
-                position: "top-right"
-                shapeColor: Theme.colors.background
-                cornerRadius: Theme.barBorderRadius
-            }
-
-            BarCorner {
-                x: parent.width - Theme.barBorderRadius
-                y: 0
-                position: "top-left"
-                shapeColor: Theme.colors.background
-                cornerRadius: Theme.barBorderRadius
-            }
+        BarComponents.BarExtension {
+            id: trayExtensionContent
+            width: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
+            expanded: root.expanded
 
             Row {
                 id: layout
                 anchors.centerIn: parent
                 spacing: 2 // TrayItem includes 3px of clickable padding on each side.
-                opacity: root.revealProgress
+                opacity: trayExtensionContent.revealProgress
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: root.expanded ? 80 : 140
+                        duration: root.expanded ? 80 : 280
                         easing.type: Easing.OutQuad
                     }
                 }
 
-                // Items may register while the drawer is hidden. Keep their visual
-                // and input scale at 1 throughout insertion and layout changes.
-
+                // Keep tray items at scale 1 while they register or change layout.
                 Repeater {
                     id: items
                     model: SystemTray.items

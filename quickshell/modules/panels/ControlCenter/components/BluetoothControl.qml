@@ -20,7 +20,7 @@ Item {
         Rectangle {
             width: parent.width
             height: 92
-            radius: Theme.rounding.large
+            radius: Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant
@@ -120,7 +120,7 @@ Item {
             width: parent.width
             height: root.devicesExpanded ? devicesColumn.implicitHeight + 20 : 0
             visible: height > 0
-            radius: Theme.rounding.large
+            radius: Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant

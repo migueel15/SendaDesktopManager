@@ -102,7 +102,7 @@ SendaPanel {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 166
-            radius: Theme.rounding.large
+            radius: Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant
@@ -166,7 +166,7 @@ SendaPanel {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                radius: Theme.rounding.large
+                radius: Theme.rounding.normal
                 color: Theme.colors.surface
                 border.width: 1
                 border.color: DorlabTasks.hasActiveTask ? Theme.colors.primary : Theme.colors.surfaceVariant
@@ -239,7 +239,7 @@ SendaPanel {
                     Layout.fillWidth: true
                     Layout.fillHeight: false
                     Layout.preferredHeight: 154
-                    radius: Theme.rounding.large
+                    radius: Theme.rounding.normal
                     color: Theme.colors.surface
                     border.width: 1
                     border.color: Theme.colors.surfaceVariant
@@ -437,7 +437,7 @@ SendaPanel {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: Theme.rounding.large
+                    radius: Theme.rounding.normal
                     color: Theme.colors.surface
                     border.width: 1
                     border.color: Theme.colors.surfaceVariant

@@ -87,7 +87,7 @@ SendaPanel {
             Rectangle {
                 width: parent.width
                 height: 92
-                radius: Theme.rounding.large
+                radius: Theme.rounding.normal
                 color: Theme.colors.surface
                 border.width: 1
                 border.color: Theme.colors.surfaceVariant
@@ -185,7 +185,7 @@ SendaPanel {
                 width: parent.width
                 height: wifiControl.expanded ? networksColumn.implicitHeight + 20 : 0
                 visible: height > 0
-                radius: Theme.rounding.large
+                radius: Theme.rounding.normal
                 color: Theme.colors.surface
                 border.width: 1
                 border.color: Theme.colors.surfaceVariant
@@ -404,7 +404,7 @@ SendaPanel {
 
         Rectangle {
             anchors.fill: parent
-            radius: Theme.rounding.large
+            radius: Theme.rounding.normal
             color: dndControl.dndEnabled ? "#29283a" : Theme.colors.surface
             border.width: 1
             border.color: dndControl.dndEnabled ? Theme.colors.primary : Theme.colors.surfaceVariant

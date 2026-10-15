@@ -23,7 +23,7 @@ Item {
         Rectangle {
             width: parent.width
             height: outputColumn.implicitHeight + 24
-            radius: Theme.rounding.large
+            radius: Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant
@@ -142,7 +142,7 @@ Item {
             width: parent.width
             height: root.expandedSection === "output" ? sinksColumn.implicitHeight + 20 : 0
             visible: height > 0
-            radius: Theme.rounding.large
+            radius: Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant
@@ -212,7 +212,7 @@ Item {
         Rectangle {
             width: parent.width
             height: 64
-            radius: Theme.rounding.large
+            radius: Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant
@@ -271,7 +271,7 @@ Item {
             width: parent.width
             height: root.expandedSection === "input" ? sourcesColumn.implicitHeight + 20 : 0
             visible: height > 0
-            radius: Theme.rounding.large
+            radius: Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant

@@ -15,7 +15,7 @@ ClippingRectangle {
     width: parent.width
     height: isOpen ? contentColumn.implicitHeight + 20 : 0
     color: Theme.colors.surface
-    radius: Theme.rounding.large
+    radius: Theme.rounding.normal
 
     border.width: 1
     border.color: Theme.colors.surfaceVariant
