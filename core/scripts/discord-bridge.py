@@ -7,6 +7,7 @@ import asyncio
 import ctypes
 import fcntl
 import json
+import math
 import os
 import signal
 import socket
@@ -78,8 +79,34 @@ class Bridge:
         if not participant:
             return
         participants = {item["id"]: item for item in self.state["participants"]}
+        previous = participants.get(participant["id"], {})
+        voice_state = data.get("voice_state") or {}
+        participant["volume"] = data.get("volume", previous.get("volume", 100))
+        participant["mute"] = bool(data.get("mute", previous.get("mute", False)))
+        participant["pan"] = data.get("pan", previous.get("pan", {"left": 1.0, "right": 1.0}))
+        participant["server_mute"] = bool(voice_state.get("mute", previous.get("server_mute", False)))
+        participant["server_deaf"] = bool(voice_state.get("deaf", previous.get("server_deaf", False)))
+        participant["self_mute"] = bool(voice_state.get("self_mute", previous.get("self_mute", False)))
+        participant["self_deaf"] = bool(voice_state.get("self_deaf", previous.get("self_deaf", False)))
         participants[participant["id"]] = participant
         self.state["participants"] = list(participants.values())
+
+    def update_participant_settings(self, data):
+        user_id = str(data.get("user_id") or "")
+        if not user_id:
+            return
+        participants = []
+        for participant in self.state["participants"]:
+            if participant["id"] == user_id:
+                participant = dict(participant)
+                if "volume" in data:
+                    participant["volume"] = data["volume"]
+                if "mute" in data:
+                    participant["mute"] = bool(data["mute"])
+                if "pan" in data:
+                    participant["pan"] = data["pan"]
+            participants.append(participant)
+        self.state["participants"] = participants
 
     def remove_participant(self, data):
         user = data.get("user") or {}
@@ -272,7 +299,8 @@ class Bridge:
                 elif name == "GET_SELECTED_VOICE_CHANNEL":
                     previous_channel_id = (self.state["channel"] or {}).get("id")
                     self.state["channel"] = ({"id": data.get("id"), "name": data.get("name"),
-                        "guild": data.get("guild_name", "")} if data.get("id") else None)
+                        "guild": data.get("guild_name", ""), "guild_id": data.get("guild_id")}
+                        if data.get("id") else None)
                     if not data.get("id") or data.get("id") != previous_channel_id:
                         self.state["self_speaking"] = False
                         self.state["speaking"] = []
@@ -287,12 +315,18 @@ class Bridge:
                 elif name == "SELECT_VOICE_CHANNEL":
                     await self.command("GET_SELECTED_VOICE_CHANNEL")
                 elif name in ("GET_VOICE_SETTINGS", "SET_VOICE_SETTINGS"):
-                    self.state.update(mute=bool(data.get("mute")), deaf=bool(data.get("deaf")))
+                    for setting in ("mute", "deaf"):
+                        if setting in data:
+                            self.state[setting] = bool(data[setting])
+                elif name == "SET_USER_VOICE_SETTINGS":
+                    self.update_participant_settings(data)
                 elif msg.get("cmd") == "DISPATCH":
                     if evt == "VOICE_CHANNEL_SELECT":
                         await self.command("GET_SELECTED_VOICE_CHANNEL")
                     elif evt == "VOICE_SETTINGS_UPDATE":
-                        self.state.update(mute=bool(data.get("mute")), deaf=bool(data.get("deaf")))
+                        for setting in ("mute", "deaf"):
+                            if setting in data:
+                                self.state[setting] = bool(data[setting])
                     elif evt == "SPEAKING_START":
                         user_id = str(data.get("user_id") or "")
                         self.state["speaking"] = list(set(self.state["speaking"] + [user_id]))
@@ -357,16 +391,41 @@ class Bridge:
                     await asyncio.sleep(.05)
                 if self.state["channel"]:
                     raise RuntimeError(self.state["error"] or "Discord no confirmó la salida del canal")
+            elif action in ("set-user-volume", "set-user-mute"):
+                if not self.state["authenticated"]:
+                    raise RuntimeError("Discord no está autorizado; ejecuta senda discord authorize")
+                if not self.state["channel"]:
+                    raise RuntimeError("No estás en un canal de voz")
+                user_id = str(req.get("args", {}).get("user_id") or "")
+                participant = next((item for item in self.state["participants"] if item["id"] == user_id), None)
+                if not participant:
+                    raise RuntimeError("Ese usuario ya no está en el canal de voz")
+                self.state["error"] = ""
+                await self.broadcast()
+                if action == "set-user-volume":
+                    volume = float(req["args"]["volume"])
+                    if not math.isfinite(volume) or not 0 <= volume <= 200:
+                        raise RuntimeError("El volumen debe ser un número entre 0 y 200")
+                    await self.command("SET_USER_VOICE_SETTINGS", {"user_id": user_id, "volume": volume})
+                else:
+                    await self.command("SET_USER_VOICE_SETTINGS", {
+                        "user_id": user_id, "mute": bool(req["args"]["mute"])})
             elif action in ("mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen"):
                 if not self.state["authenticated"]:
                     raise RuntimeError("Discord no está autorizado; ejecuta senda discord authorize")
                 if action in ("mute", "unmute", "toggle-mute"):
                     field = "mute"
                     desired = not self.state["mute"] if action == "toggle-mute" else action == "mute"
+                    if action == "unmute" and self.state["deaf"]:
+                        await self.command("SET_VOICE_SETTINGS", {"mute": False})
+                        await asyncio.sleep(.15)
+                        await self.command("SET_VOICE_SETTINGS", {"deaf": False})
+                    else:
+                        await self.command("SET_VOICE_SETTINGS", {field: desired})
                 else:
                     field = "deaf"
                     desired = not self.state["deaf"] if action == "toggle-deafen" else action == "deafen"
-                await self.command("SET_VOICE_SETTINGS", {field: desired})
+                    await self.command("SET_VOICE_SETTINGS", {field: desired})
                 await asyncio.sleep(.15)
             elif action == "shutdown":
                 writer.write(b'{"ok":true}\n'); await writer.drain()
@@ -398,12 +457,15 @@ class Bridge:
             await server.serve_forever()
 
 
-def rpc(action):
+def rpc(action, parameters=None):
     try:
         with socket.socket(socket.AF_UNIX) as sock:
             sock.settimeout(3)
             sock.connect(str(SOCKET))
-            sock.sendall((json.dumps({"action": action}) + "\n").encode())
+            request = {"action": action}
+            if parameters is not None:
+                request["args"] = parameters
+            sock.sendall((json.dumps(request) + "\n").encode())
             chunks = b""
             while not chunks.endswith(b"\n"):
                 chunks += sock.recv(65536)
@@ -441,17 +503,34 @@ def bridge_available():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["daemon", "status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "shutdown"])
+    parser.add_argument("action", choices=["daemon", "status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "set-user-volume", "set-user-mute", "shutdown"])
+    parser.add_argument("parameters", nargs="*")
     args = parser.parse_args()
     if args.action == "daemon":
         asyncio.run(Bridge().run()); return
+    parameters = None
+    if args.action in ("set-user-volume", "set-user-mute"):
+        if len(args.parameters) != 2:
+            parser.error(f"{args.action} requiere el ID del usuario y un valor")
+        user_id, value = args.parameters
+        if args.action == "set-user-volume":
+            try:
+                parameters = {"user_id": user_id, "volume": float(value)}
+            except ValueError:
+                parser.error("el volumen debe ser un número entre 0 y 200")
+            if not math.isfinite(parameters["volume"]) or not 0 <= parameters["volume"] <= 200:
+                parser.error("el volumen debe ser un número entre 0 y 200")
+        else:
+            if value.lower() not in ("true", "false"):
+                parser.error("el mute debe ser true o false")
+            parameters = {"user_id": user_id, "mute": value.lower() == "true"}
     if args.action in ("connect", "authorize") and not bridge_available():
         if not start_daemon():
             result = {"ok": False, "error": "No se pudo iniciar el puente"}
         else:
-            result = rpc(args.action)
+            result = rpc(args.action, parameters)
     else:
-        result = rpc(args.action)
+        result = rpc(args.action, parameters)
     if args.action == "status":
         print(json.dumps(result.get("state", result), ensure_ascii=False))
     elif not result.get("ok"):

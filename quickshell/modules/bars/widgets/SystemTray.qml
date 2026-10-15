@@ -88,6 +88,7 @@ Rectangle {
             id: trayExtensionContent
             width: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
             expanded: root.expanded
+            conflictGroup: "tray-popups"
             autoHidePaused: root.trayMenuOpen
             onCloseRequested: root.expanded = false
 

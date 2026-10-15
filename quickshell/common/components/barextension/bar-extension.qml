@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import qs.common
+import qs.services
 
 Item {
 	id: root
@@ -15,10 +16,15 @@ Item {
 	property real contentHideThreshold: 3
 	property bool autoHideOnPointerExit: true
 	property int autoHideDelay: 1000
+	property bool autoHideStartsOnExpand: false
 	property bool autoHidePaused: false
-	property bool pointerEntered: false
+	property bool autoHideArmed: false
+	property string conflictGroup: ""
 
 	signal closeRequested()
+
+	Component.onCompleted: BarExtensionManager.registerExtension(root)
+	Component.onDestruction: BarExtensionManager.unregisterExtension(root)
 
 	readonly property real collapseLift: expanded ? 0 : Math.max(0, contentHideThreshold - height)
 	readonly property real curveWidth: Math.max(0, Math.min(cornerRadius, width / 4))
@@ -46,16 +52,25 @@ Item {
 	}
 
 	onExpandedChanged: {
+		if (expanded) BarExtensionManager.activate(root);
 		if (!expanded) {
 			autoHideTimer.stop();
-			pointerEntered = false;
+			autoHideArmed = false;
+		} else if (autoHideStartsOnExpand) {
+			autoHideArmed = true;
+			if (autoHideOnPointerExit && !autoHidePaused && !pointerHover.hovered)
+				autoHideTimer.restart();
 		}
+	}
+
+	onConflictGroupChanged: {
+		if (expanded) BarExtensionManager.activate(root);
 	}
 
 	onAutoHidePausedChanged: {
 		if (autoHidePaused) {
 			autoHideTimer.stop();
-		} else if (expanded && pointerEntered && !pointerHover.hovered && autoHideOnPointerExit) {
+		} else if (expanded && autoHideArmed && !pointerHover.hovered && autoHideOnPointerExit) {
 			autoHideTimer.restart();
 		}
 	}
@@ -65,9 +80,9 @@ Item {
 
 		onHoveredChanged: {
 			if (hovered) {
-				root.pointerEntered = true;
+				root.autoHideArmed = true;
 				autoHideTimer.stop();
-			} else if (root.expanded && root.pointerEntered && root.autoHideOnPointerExit && !root.autoHidePaused) {
+			} else if (root.expanded && root.autoHideArmed && root.autoHideOnPointerExit && !root.autoHidePaused) {
 				autoHideTimer.restart();
 			}
 		}
@@ -78,7 +93,7 @@ Item {
 		interval: Math.max(0, root.autoHideDelay)
 		repeat: false
 		onTriggered: {
-			if (root.expanded && root.pointerEntered && !root.autoHidePaused && !pointerHover.hovered)
+			if (root.expanded && root.autoHideArmed && !root.autoHidePaused && !pointerHover.hovered)
 				root.closeRequested();
 		}
 	}

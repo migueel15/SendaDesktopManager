@@ -23,6 +23,7 @@ func main() {
 	rootCmd.AddCommand(userCmd)
 	rootCmd.AddCommand(brightnessCmd)
 	rootCmd.AddCommand(discordCmd())
+	rootCmd.AddCommand(windowCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

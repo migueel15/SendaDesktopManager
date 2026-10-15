@@ -11,10 +11,25 @@ import (
 
 func discordCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:       "discord",
-		Short:     "Control the local Discord voice bridge",
-		Args:      cobra.ExactArgs(1),
-		ValidArgs: []string{"status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "shutdown"},
+		Use:   "discord <action> [arguments]",
+		Short: "Control the local Discord voice bridge",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("discord requires an action")
+			}
+			switch args[0] {
+			case "set-user-volume", "set-user-mute":
+				if len(args) != 3 {
+					return fmt.Errorf("%s requires a user ID and value", args[0])
+				}
+			default:
+				if len(args) != 1 {
+					return fmt.Errorf("%s does not accept arguments", args[0])
+				}
+			}
+			return nil
+		},
+		ValidArgs: []string{"status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "set-user-volume", "set-user-mute", "shutdown"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			script, err := discordBridgePath()
 			if err != nil {
@@ -24,7 +39,8 @@ func discordCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("python3 is required for the Discord bridge: %w", err)
 			}
-			process := exec.CommandContext(cmd.Context(), python, script, args[0])
+			processArgs := append([]string{script}, args...)
+			process := exec.CommandContext(cmd.Context(), python, processArgs...)
 			process.Stdout = os.Stdout
 			process.Stderr = os.Stderr
 			return process.Run()

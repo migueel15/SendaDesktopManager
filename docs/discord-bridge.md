@@ -12,7 +12,13 @@ senda discord connect
 
 Al iniciar Quickshell, el widget pone en marcha el puente local. El puente detecta la aparición del socket IPC de Discord y conecta automáticamente, incluso si Discord se abre después. Si falta autorización o Discord rechaza el token guardado, aparece un icono de Discord en la barra para volver a autorizar el acceso. Cuando la sesión está autorizada, el widget muestra los avatares del canal y ofrece botones de mute, deafen y salida de la llamada; el botón para salir aparece a la derecha del control de deafen mientras estás en un canal. Si Discord está cerrado, el widget permanece oculto.
 
-La autorización solicita `rpc.voice.read` y `rpc.voice.write`. El token se guarda en `$XDG_CACHE_HOME/senda/discord/token.json` (o `~/.cache/senda/discord/token.json`) con permisos de archivo `0600` y directorio `0700`. No se imprime en la CLI ni en los logs.
+El botón de mute se muestra activo mientras estás muteado o ensordecido. Al pulsarlo mientras estás ensordecido, el puente desactiva mute y deafen. Al pulsar solo el botón de deafen para salir del ensordecimiento, conserva el estado previo del micrófono.
+
+Al pasar el cursor sobre los avatares se abre una extensión con todos los participantes del canal. Cada fila muestra el avatar a la izquierda, el nombre y el botón de mute local a su derecha, y debajo un control de volumen individual de 0 a 200 %. Al pulsar el avatar de una fila, Discord abre el perfil de esa persona para acceder a su chat. Los iconos junto al nombre indican si la persona tiene el micrófono silenciado o el audio ensordecido, ya sea por sí misma o por el servidor. En el tramo de 0 a 100 %, el slider convierte la escala perceptual visible a la amplitud RPC con una curva de potencia 2,8, y aplica la conversión inversa al mostrar valores recibidos de Discord; de 100 a 200 % conserva una relación lineal. Los cambios se aplican al soltar el control y el indicador sigue el arrastre. Esta extensión comparte el grupo `tray-popups` con Spotify y se cierra medio segundo después de salir de ella y de la sección de avatares.
+
+Al pulsar un avatar pequeño de la barra, Discord abre el canal de voz actual. Al pulsar el avatar de una persona en la extensión, Discord abre su perfil para acceder al chat.
+
+La autorización solicita `rpc`, `rpc.voice.read` y `rpc.voice.write`. El token se guarda en `$XDG_CACHE_HOME/senda/discord/token.json` (o `~/.cache/senda/discord/token.json`) con permisos de archivo `0600` y directorio `0700`. No se imprime en la CLI ni en los logs.
 
 ## CLI e integración con scripts
 
@@ -26,7 +32,11 @@ senda discord deafen
 senda discord undeafen
 senda discord toggle-deafen
 senda discord leave        # salir del canal de voz actual
+senda discord set-user-volume <user-id> <0-200>
+senda discord set-user-mute <user-id> <true|false>
 ```
+
+Los dos últimos comandos cambian el volumen local o el mute de un participante del canal actual mediante `SET_USER_VOICE_SETTINGS`. Requieren una sesión RPC autorizada y que el usuario siga en el canal.
 
 El proceso del puente se inicia en segundo plano con `connect` o `authorize`; el widget ejecuta `connect` al cargar la barra. `status` no lo inicia. Los comandos responden con código distinto de cero si el puente no está disponible o Discord no está autorizado. La interfaz estable para scripts es la CLI; el socket interno usa JSON Lines en `$XDG_RUNTIME_DIR/senda-discord.sock`, modo `0600`, y no requiere conocer ni manejar el token.
 
@@ -35,3 +45,5 @@ El ejecutable `senda` localiza `core/scripts/discord-bridge.py` junto al checkou
 ## Limitaciones
 
 Discord debe estar abierto en la misma sesión de usuario y exponer su IPC local. La primera autorización y cualquier nueva autorización tras revocar/expirar el token requieren interacción con Discord. El token se conserva entre reinicios, pero puede caducar o revocarse; en ese caso hay que volver a autorizarlo desde el icono de la barra o con `senda discord authorize`.
+
+Discord restringe el acceso RPC a aplicaciones aprobadas y a sus testers; si la autorización falla por esa restricción, la aplicación debe tener acceso RPC concedido por Discord.
