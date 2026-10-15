@@ -38,7 +38,26 @@ SendaPanel {
         : Network.ethernetConnected ? "󰈀" : "󰖪";
 
     function focusSpotify() {
-        Quickshell.execDetached(["hyprctl", "dispatch", 'hl.dsp.focus({ window = "class:Spotify" })']);
+        const script = `focus_window() {
+            hyprctl dispatch 'hl.dsp.focus({ window = "class:Spotify" })'
+        }
+
+        if hyprctl -j clients | jq -e 'any(.[]; ((.class // "") | ascii_downcase) == "spotify")' >/dev/null; then
+            focus_window
+            exit
+        fi
+
+        spotify >/dev/null 2>&1 &
+        attempt=0
+        while [ "$attempt" -lt 60 ]; do
+            if hyprctl -j clients | jq -e 'any(.[]; ((.class // "") | ascii_downcase) == "spotify")' >/dev/null; then
+                focus_window
+                exit
+            fi
+            attempt=$((attempt + 1))
+            sleep 0.25
+        done`;
+        Quickshell.execDetached(["sh", "-c", script]);
     }
 
     function formatTrackTime(seconds) {
