@@ -38,6 +38,11 @@ ShellRoot {
 
 	WallpaperLayer {}
 
+	Loader {
+		active: true
+		source: Qt.resolvedUrl("modules/panels/notifications/notification-popup.qml")
+	}
+
 	DebugLayer {
 	}
 }
