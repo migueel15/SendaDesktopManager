@@ -82,14 +82,19 @@ Variants {
 			height: parent.height
 			anchors.right: parent.right
 
-			NowPlaying {
-				Layout.rightMargin: 8
+			DiscordVoice {
+				Layout.rightMargin: 6
 				Layout.leftMargin: 8
+			}
+
+			NowPlaying {
+				Layout.rightMargin: 6
+				Layout.leftMargin: 6
 			}
 
 			SystemTray {
 				Layout.rightMargin: 8
-				Layout.leftMargin: 8
+				Layout.leftMargin: 6
 			}
 
 			Notifications {

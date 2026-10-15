@@ -22,6 +22,7 @@ func main() {
 	rootCmd.AddCommand(streamAudioCmd)
 	rootCmd.AddCommand(userCmd)
 	rootCmd.AddCommand(brightnessCmd)
+	rootCmd.AddCommand(discordCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
