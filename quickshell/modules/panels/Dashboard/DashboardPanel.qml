@@ -20,9 +20,22 @@ SendaPanel {
     targetX: parent.width / 2 - root.width / 2
     targetY: 45
 
+    function isSpotifyPlayer(player) {
+        if (!player) return false;
+        const desktopEntry = (player.desktopEntry ?? "").toLowerCase();
+        const identity = (player.identity ?? "").toLowerCase();
+        const name = (player.name ?? "").toLowerCase();
+        const serviceName = (player.serviceName ?? "").toLowerCase();
+        return desktopEntry === "spotify" || identity.includes("spotify")
+            || name.includes("spotify") || serviceName.includes("spotify");
+    }
+
     readonly property var player: {
         const players = Mpris.players.values ?? [];
-        return players.find(item => item.playbackState === MprisPlaybackState.Playing)
+        const spotifyPlayers = players.filter(item => root.isSpotifyPlayer(item));
+        return spotifyPlayers.find(item => item.playbackState === MprisPlaybackState.Playing)
+            ?? spotifyPlayers.find(item => item.trackTitle || item.trackArtist)
+            ?? players.find(item => item.playbackState === MprisPlaybackState.Playing)
             ?? players.find(item => item.trackTitle || item.trackArtist)
             ?? null;
     }
