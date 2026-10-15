@@ -51,5 +51,10 @@ PanelWindow {
         }
 
         TasksPanel {}
+        Loader {
+            anchors.fill: parent
+            source: Qt.resolvedUrl("notifications/notifications-panel.qml")
+        }
     }
+
 }
