@@ -22,7 +22,7 @@ Rectangle {
     }
 
     function focusSpotify() {
-        Quickshell.execDetached(["hyprctl", "dispatch", "focuswindow", "class:spotify"]);
+        Quickshell.execDetached(["hyprctl", "dispatch", 'hl.dsp.focus({ window = "class:Spotify" })']);
     }
 
     readonly property var activePlayer: {
