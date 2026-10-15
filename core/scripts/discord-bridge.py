@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import ctypes
+import fcntl
 import json
 import os
 import signal
@@ -24,6 +25,7 @@ IN_IGNORED = 0x8000
 INOTIFY_MASK = IN_CREATE | IN_MOVED_TO | IN_DELETE | IN_MOVED_FROM
 RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
 SOCKET = RUNTIME / "senda-discord.sock"
+LOCK = RUNTIME / "senda-discord.lock"
 DATA = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "senda/discord"
 TOKEN = DATA / "token.json"
 
@@ -366,6 +368,14 @@ class Bridge:
 
     async def run(self):
         SOCKET.parent.mkdir(parents=True, exist_ok=True)
+        lock_fd = os.open(LOCK, os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            os.close(lock_fd)
+            return
+
+        self.lock_fd = lock_fd
         SOCKET.unlink(missing_ok=True)
         server = await asyncio.start_unix_server(self.handle, path=str(SOCKET))
         os.chmod(SOCKET, 0o600)
@@ -394,7 +404,6 @@ def rpc(action):
 def start_daemon():
     if bridge_available():
         return True
-    SOCKET.unlink(missing_ok=True)
     script = Path(__file__).resolve()
     subprocess.Popen([sys.executable, str(script), "daemon"], stdin=subprocess.DEVNULL,
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
