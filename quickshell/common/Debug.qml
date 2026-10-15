@@ -7,7 +7,7 @@ Singleton {
     id: root
 
     property bool enabled: false
-    property string debugScreenName: "DP-3"
+    property string debugScreenName: "DP-4"
 
     property var debugedPanels: ["dashboard", "controlCenter"]
 }

@@ -11,6 +11,8 @@ FloatingWindow {
     default property alias content: root.data
 
     screen: Quickshell.screens.find(s => s.name === root.screenName)
+    implicitWidth: screen?.width ?? 1920
+    implicitHeight: screen?.height ?? 1080
 
     color: "transparent"
     visible: Debug.enabled

@@ -39,6 +39,5 @@ ShellRoot {
 	WallpaperLayer {}
 
 	DebugLayer {
-		screenName: "DP-3"
 	}
 }
