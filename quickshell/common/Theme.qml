@@ -86,7 +86,6 @@ QtObject {
 			property string notification: "󱅫"
 			property string none: "󰂚"
 			property string dnd_none: "󰂛"
-			property string dnd_notification: "󱏧"
 		}
 	}
 }

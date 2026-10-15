@@ -175,9 +175,13 @@ Rectangle {
                 anchors.rightMargin: 6
                 spacing: 0
 
-                RowLayout {
-                    visible: (root.voiceState.participants || []).length > 0
-                    Layout.preferredHeight: parent.height
+                Row {
+                    id: participantAvatars
+                    readonly property int avatarCount: Math.min((root.voiceState.participants || []).length, 6)
+                    visible: avatarCount > 0
+                    Layout.preferredWidth: avatarCount > 0 ? avatarCount * 30 + (avatarCount - 1) * spacing : 0
+                    Layout.preferredHeight: 30
+                    Layout.alignment: Qt.AlignVCenter
                     spacing: -7
 
                     Repeater {
@@ -188,8 +192,8 @@ Rectangle {
                             required property var modelData
                             required property int index
                             readonly property bool isSpeaking: (root.voiceState.speaking || []).indexOf(modelData.id) !== -1
-                            Layout.preferredWidth: 30
-                            Layout.preferredHeight: 30
+                            width: 30
+                            height: 30
                             z: index
 
                             Rectangle {
@@ -227,6 +231,7 @@ Rectangle {
                                     visible: avatarImage.status !== Image.Ready
                                 }
                             }
+
                         }
                     }
                 }
@@ -297,6 +302,35 @@ Rectangle {
                         onClicked: root.invoke(root.voiceState.deaf ? "undeafen" : "deafen")
                     }
 
+                }
+
+                Rectangle {
+                    id: leaveButton
+                    visible: !!root.voiceState.channel
+                    enabled: visible && !commandProc.running
+                    Layout.preferredWidth: visible ? 32 : 0
+                    Layout.preferredHeight: parent.height
+                    color: "transparent"
+
+                    Text {
+                        anchors.centerIn: parent
+                        width: 24
+                        height: 24
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        text: "󰏵"
+                        color: Theme.colors.error
+                        font: Theme.font.base
+                    }
+
+                    MouseArea {
+                        id: leaveMouse
+                        anchors.fill: parent
+                        enabled: leaveButton.enabled
+                        acceptedButtons: Qt.LeftButton
+                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        onClicked: root.invoke("leave")
+                    }
                 }
             }
         }

@@ -402,6 +402,16 @@ SendaPanel {
         implicitHeight: 62
         property bool dndEnabled: false
 
+        Component.onCompleted: dndControl.dndEnabled = Notifications.dndEnabled
+
+        Connections {
+            target: Notifications
+
+            function onDndChanged(enabled) {
+                dndControl.dndEnabled = enabled;
+            }
+        }
+
         Rectangle {
             anchors.fill: parent
             radius: Theme.rounding.normal
@@ -498,32 +508,8 @@ SendaPanel {
             }
         }
 
-        Process {
-            id: dndStateProcess
-            running: true
-            command: ["swaync-client", "-D"]
-
-            stdout: StdioCollector {
-                onStreamFinished: dndControl.dndEnabled = text.trim().toLowerCase() === "true"
-            }
-        }
-
-        Process {
-            id: dndToggleProcess
-            running: false
-            command: ["swaync-client", dndControl.dndEnabled ? "-df" : "-dn"]
-            onExited: dndStateProcess.running = true
-        }
-
-        Timer {
-            interval: 3000
-            running: true
-            repeat: true
-            onTriggered: dndStateProcess.running = true
-        }
-
         function toggle() {
-            if (!dndToggleProcess.running) dndToggleProcess.running = true;
+            Notifications.toggleDnd();
         }
     }
 }

@@ -12,6 +12,7 @@ MouseArea {
 
     property int iconSize: 18
     property string observedIconSource: ""
+    readonly property bool menuOpen: menu.visible
     readonly property bool usingFallback: trayIcon.usingFallback
     readonly property string publishedIconSource: modelData.icon
     readonly property string desktopIconSource: findDesktopIconSource()

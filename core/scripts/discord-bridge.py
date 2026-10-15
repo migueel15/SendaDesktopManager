@@ -284,6 +284,8 @@ class Bridge:
                             await self.subscribe(event, {"channel_id": data["id"]})
                         for event in ("VOICE_STATE_CREATE", "VOICE_STATE_UPDATE", "VOICE_STATE_DELETE"):
                             await self.subscribe(event, {"channel_id": data["id"]})
+                elif name == "SELECT_VOICE_CHANNEL":
+                    await self.command("GET_SELECTED_VOICE_CHANNEL")
                 elif name in ("GET_VOICE_SETTINGS", "SET_VOICE_SETTINGS"):
                     self.state.update(mute=bool(data.get("mute")), deaf=bool(data.get("deaf")))
                 elif msg.get("cmd") == "DISPATCH":
@@ -343,6 +345,18 @@ class Bridge:
                 await self.connect_discord()
             elif action == "authorize":
                 await self.connect_discord(authorize=True)
+            elif action == "leave":
+                if not self.state["authenticated"]:
+                    raise RuntimeError("Discord no está autorizado; ejecuta senda discord authorize")
+                if not self.state["channel"]:
+                    raise RuntimeError("No estás en un canal de voz")
+                self.state["error"] = ""
+                await self.command("SELECT_VOICE_CHANNEL", {"channel_id": None})
+                deadline = asyncio.get_running_loop().time() + 3
+                while self.state["channel"] and asyncio.get_running_loop().time() < deadline:
+                    await asyncio.sleep(.05)
+                if self.state["channel"]:
+                    raise RuntimeError(self.state["error"] or "Discord no confirmó la salida del canal")
             elif action in ("mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen"):
                 if not self.state["authenticated"]:
                     raise RuntimeError("Discord no está autorizado; ejecuta senda discord authorize")
@@ -427,7 +441,7 @@ def bridge_available():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["daemon", "status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "shutdown"])
+    parser.add_argument("action", choices=["daemon", "status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "shutdown"])
     args = parser.parse_args()
     if args.action == "daemon":
         asyncio.run(Bridge().run()); return

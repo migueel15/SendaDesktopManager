@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 
 import qs.common
+import qs.services
 
 Rectangle {
     id: root
@@ -10,54 +11,19 @@ Rectangle {
     width: textIcon.implicitWidth
     color: "transparent"
 
-    property var currentIcon: Theme.notifications.icon.none
-
-    Component.onDestruction: {
-        swaync_daemon.running = false;
+    readonly property string currentIcon: {
+        if (Notifications.dndEnabled && !Notifications.hasNotifications)
+            return Theme.notifications.icon.dnd_none;
+        if (Notifications.hasNotifications)
+            return Theme.notifications.icon.notification;
+        return Theme.notifications.icon.none;
     }
-
-    Process {
-        id: swaync_daemon
-        running: true
-        command: ["swaync-client", "-swb"]
-        stdout: SplitParser {
-            onRead: line => {
-                try {
-                    const data = JSON.parse(line);
-                    const alt = data.alt;
-                    switch (alt) {
-                    case "none":
-                        root.currentIcon = Theme.notifications.icon.none;
-                        break;
-                    case "notification":
-                        root.currentIcon = Theme.notifications.icon.notification;
-                        break;
-                    case "dnd-none":
-                        root.currentIcon = Theme.notifications.icon.dnd_none;
-                        break;
-                    case "dnd-notification":
-                        root.currentIcon = Theme.notifications.icon.dnd_notification;
-                        break;
-                    default:
-                        break;
-                    }
-                } catch (e) {
-                    console.error("Error parsing:", e);
-                }
-            }
-        }
-    }
+    readonly property bool mutedWithPending: Notifications.dndEnabled && Notifications.hasNotifications
 
     Process {
         id: notifications_popup
         running: false
         command: ["swaync-client", "-t"]
-    }
-
-    Process {
-        id: dnd_toggle
-        running: false
-        command: ["swaync-client", "-d"]
     }
 
     MouseArea {
@@ -68,7 +34,7 @@ Rectangle {
             if (event.button === Qt.LeftButton) {
                 notifications_popup.running = true;
             } else if (event.button === Qt.RightButton) {
-                dnd_toggle.running = true;
+                Notifications.toggleDnd();
             }
         }
     }
@@ -79,5 +45,29 @@ Rectangle {
         color: Theme.colors.text
         font: Theme.font.base
         text: root.currentIcon
+    }
+
+    Rectangle {
+        visible: root.mutedWithPending
+        width: 24
+        height: 3
+        radius: 1
+        color: "#80000000"
+        rotation: 45
+        anchors.centerIn: textIcon
+        anchors.horizontalCenterOffset: -2
+        anchors.verticalCenterOffset: -1
+    }
+
+    Rectangle {
+        visible: root.mutedWithPending
+        width: 24
+        height: 2
+        radius: 1
+        color: Theme.colors.text
+        rotation: 45
+        anchors.centerIn: textIcon
+        anchors.horizontalCenterOffset: -1
+        anchors.verticalCenterOffset: -1
     }
 }

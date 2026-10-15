@@ -14,7 +14,7 @@ func discordCmd() *cobra.Command {
 		Use:       "discord",
 		Short:     "Control the local Discord voice bridge",
 		Args:      cobra.ExactArgs(1),
-		ValidArgs: []string{"status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "shutdown"},
+		ValidArgs: []string{"status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "shutdown"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			script, err := discordBridgePath()
 			if err != nil {

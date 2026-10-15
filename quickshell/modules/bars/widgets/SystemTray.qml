@@ -9,11 +9,16 @@ import qs.common.components.barextension as BarComponents
 Rectangle {
     id: root
 
-    readonly property Repeater items: items
+    readonly property Repeater items: itemsRepeater
     property bool expanded: false
-    readonly property real extensionLift: root.expanded
-            ? 0
-            : Math.max(0, trayExtensionContent.contentHideThreshold - trayExtensionContent.height)
+    readonly property real extensionLift: trayExtensionContent.collapseLift
+    readonly property bool trayMenuOpen: {
+        for (let i = 0; i < itemsRepeater.count; i++) {
+            const item = itemsRepeater.itemAt(i);
+            if (item && item.menuOpen) return true;
+        }
+        return false;
+    }
 
     clip: false
     visible: width > 0 && height > 0 // To avoid warnings about being visible with no size
@@ -66,7 +71,7 @@ Rectangle {
             const window = root.QsWindow.window;
             if (!window) return 0;
             const point = expandButton.mapToItem(window.contentItem, 0, 0);
-            return point.x + expandButton.width - implicitWidth;
+            return point.x + expandButton.width - implicitWidth + 20;
         }
         anchor.rect.y: root.QsWindow.window
                 ? root.QsWindow.window.contentItem.height - root.extensionLift
@@ -83,23 +88,17 @@ Rectangle {
             id: trayExtensionContent
             width: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
             expanded: root.expanded
+            autoHidePaused: root.trayMenuOpen
+            onCloseRequested: root.expanded = false
 
             Row {
                 id: layout
                 anchors.centerIn: parent
                 spacing: 2 // TrayItem includes 3px of clickable padding on each side.
-                opacity: trayExtensionContent.revealProgress
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: root.expanded ? 80 : 280
-                        easing.type: Easing.OutQuad
-                    }
-                }
 
                 // Keep tray items at scale 1 while they register or change layout.
                 Repeater {
-                    id: items
+                    id: itemsRepeater
                     model: SystemTray.items
                     delegate: TrayItem {}
                 }

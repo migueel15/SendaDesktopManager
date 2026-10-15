@@ -11,10 +11,16 @@ Item {
 	property real expandedHeight: Theme.barSize
 	property color backgroundColor: Theme.colors.background
 	property real cornerRadius: Theme.barBorderRadius
-	property real contentFadeDistance: 4
-	property real contentHideThreshold: 2
+	property real contentFadeDistance: 50
+	property real contentHideThreshold: 3
+	property bool autoHideOnPointerExit: true
+	property int autoHideDelay: 1000
+	property bool autoHidePaused: false
+	property bool pointerEntered: false
 
-	readonly property real revealProgress: expanded ? 1 : 0
+	signal closeRequested()
+
+	readonly property real collapseLift: expanded ? 0 : Math.max(0, contentHideThreshold - height)
 	readonly property real curveWidth: Math.max(0, Math.min(cornerRadius, width / 4))
 	readonly property real curveHeight: {
 		const halfHeight = Math.max(0, height / 2);
@@ -36,6 +42,44 @@ Item {
 		NumberAnimation {
 			duration: heightBehavior.targetValue > 0 ? 310 : 310
 			easing.type: Easing.OutCubic
+		}
+	}
+
+	onExpandedChanged: {
+		if (!expanded) {
+			autoHideTimer.stop();
+			pointerEntered = false;
+		}
+	}
+
+	onAutoHidePausedChanged: {
+		if (autoHidePaused) {
+			autoHideTimer.stop();
+		} else if (expanded && pointerEntered && !pointerHover.hovered && autoHideOnPointerExit) {
+			autoHideTimer.restart();
+		}
+	}
+
+	HoverHandler {
+		id: pointerHover
+
+		onHoveredChanged: {
+			if (hovered) {
+				root.pointerEntered = true;
+				autoHideTimer.stop();
+			} else if (root.expanded && root.pointerEntered && root.autoHideOnPointerExit && !root.autoHidePaused) {
+				autoHideTimer.restart();
+			}
+		}
+	}
+
+	Timer {
+		id: autoHideTimer
+		interval: Math.max(0, root.autoHideDelay)
+		repeat: false
+		onTriggered: {
+			if (root.expanded && root.pointerEntered && !root.autoHidePaused && !pointerHover.hovered)
+				root.closeRequested();
 		}
 	}
 
@@ -89,6 +133,8 @@ Item {
 		x: root.curveWidth
 		width: Math.max(0, root.width - 2 * root.curveWidth)
 		height: root.height
-		opacity: Math.pow(Math.max(0, Math.min(1, (root.height - root.contentHideThreshold) / Math.max(1, root.contentFadeDistance))), 2)
+		opacity: root.contentFadeDistance <= 0
+		? 1
+		: Math.max(0, Math.min(1, root.height / Math.min(root.contentFadeDistance, Math.max(1, root.expandedHeight))))
 	}
 }

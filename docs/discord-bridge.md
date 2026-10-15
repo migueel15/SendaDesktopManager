@@ -10,7 +10,7 @@ Abre Discord y ejecuta:
 senda discord connect
 ```
 
-Al iniciar Quickshell, el widget pone en marcha el puente local. El puente detecta la aparición del socket IPC de Discord y conecta automáticamente, incluso si Discord se abre después. Si falta autorización o Discord rechaza el token guardado, aparece un icono de Discord en la barra para volver a autorizar el acceso. Cuando la sesión está autorizada, el widget muestra los avatares del canal y ofrece botones de mute y deafen; si Discord está cerrado, permanece oculto.
+Al iniciar Quickshell, el widget pone en marcha el puente local. El puente detecta la aparición del socket IPC de Discord y conecta automáticamente, incluso si Discord se abre después. Si falta autorización o Discord rechaza el token guardado, aparece un icono de Discord en la barra para volver a autorizar el acceso. Cuando la sesión está autorizada, el widget muestra los avatares del canal y ofrece botones de mute, deafen y salida de la llamada; el botón para salir aparece a la derecha del control de deafen mientras estás en un canal. Si Discord está cerrado, el widget permanece oculto.
 
 La autorización solicita `rpc.voice.read` y `rpc.voice.write`. El token se guarda en `$XDG_CACHE_HOME/senda/discord/token.json` (o `~/.cache/senda/discord/token.json`) con permisos de archivo `0600` y directorio `0700`. No se imprime en la CLI ni en los logs.
 
@@ -25,6 +25,7 @@ senda discord toggle-mute
 senda discord deafen
 senda discord undeafen
 senda discord toggle-deafen
+senda discord leave        # salir del canal de voz actual
 ```
 
 El proceso del puente se inicia en segundo plano con `connect` o `authorize`; el widget ejecuta `connect` al cargar la barra. `status` no lo inicia. Los comandos responden con código distinto de cero si el puente no está disponible o Discord no está autorizado. La interfaz estable para scripts es la CLI; el socket interno usa JSON Lines en `$XDG_RUNTIME_DIR/senda-discord.sock`, modo `0600`, y no requiere conocer ni manejar el token.
