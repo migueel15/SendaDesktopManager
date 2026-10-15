@@ -15,6 +15,17 @@ Singleton {
     readonly property string icon: root.enabled ? (root.connected ? "󰂱" : "󰂯") : "󰂲"
     readonly property list<BluetoothDevice> devices: Bluetooth.defaultAdapter?.devices.values ?? []
 
+    function setEnabled(enabled: bool): void {
+        const adapter = Bluetooth.defaultAdapter;
+        if (adapter && adapter.enabled !== enabled) {
+            adapter.enabled = enabled;
+        }
+    }
+
+    function toggleEnabled(): void {
+        root.setEnabled(!root.enabled);
+    }
+
     function connectDevice(device: BluetoothDevice): void {
         if (!device || device.connected) {
             return;

@@ -3,46 +3,40 @@ import Quickshell
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.icons
 
 Rectangle {
     id: menuItem
 
     property string icon: ""
     property string text: ""
-    property bool isHovered: mouseArea.containsMouse
-
-    property bool first: false
-    property bool last: false
 
     signal clicked
 
     width: parent.width
-    height: 40
-    color: isHovered ? Theme.colors.surfaceVariant : "transparent"
-
-    Behavior on color {
-        ColorAnimation {
-            duration: 150
-        }
-    }
+    height: 38
+    radius: Theme.rounding.normal
+    color: mouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 15
-        anchors.rightMargin: 15
-        spacing: 10
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
+        spacing: 0
 
         Text {
-            text: menuItem.icon
-            font.pixelSize: 18
+            Layout.fillWidth: true
+            text: menuItem.text
+            font: Theme.font.overlay
             color: Theme.colors.text
+            elide: Text.ElideRight
         }
 
-        Text {
-            text: menuItem.text
-            font: Theme.font.base
-            color: Theme.colors.text
-            Layout.fillWidth: true
+        IconSlot {
+            icon: menuItem.icon
+            iconColor: Theme.colors.overlay
+            gapBefore: 8
+            gapAfter: 0
         }
     }
 

@@ -11,6 +11,8 @@ Rectangle {
     id: userCard
 
     property string uptime: ""
+    signal powerMenuToggleRequested
+    signal powerMenuCloseRequested
 
     width: parent.width
     color: Theme.colors.surface
@@ -21,7 +23,7 @@ Rectangle {
     z: 10
 
     function closeSystemMenu() {
-        systemMenu.close();
+        powerMenuCloseRequested();
     }
 
     RowLayout {
@@ -108,17 +110,10 @@ Rectangle {
                 }
                 IconButtom {
                     icon: ""
-                    onClick: () => systemMenu.toggle()
+                    onClick: () => userCard.powerMenuToggleRequested()
                 }
             }
         }
     }
 
-    // System menu popup
-    SystemMenu {
-        id: systemMenu
-        anchors.top: parent.bottom
-        anchors.right: parent.right
-        anchors.topMargin: 5
-    }
 }

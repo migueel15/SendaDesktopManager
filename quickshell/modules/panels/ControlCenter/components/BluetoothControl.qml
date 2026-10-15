@@ -1,141 +1,148 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
-import QtQuick.Controls.Material
 
 import qs.common
+import qs.common.components.icons
 import qs.services
 
 Item {
     id: root
 
-    implicitWidth: parent.width
+    implicitWidth: 220
     implicitHeight: column.implicitHeight
-
     property bool devicesExpanded: false
-
-    Material.theme: Material.Dark
-    Material.accent: Theme.colors.primary
 
     Column {
         id: column
         width: parent.width
-        spacing: 5
+        spacing: 6
 
         Rectangle {
             width: parent.width
-            height: 60
+            height: 92
+            radius: Theme.rounding.large
             color: Theme.colors.surface
-            radius: Theme.rounding.normal
-
             border.width: 1
             border.color: Theme.colors.surfaceVariant
 
-            MouseArea {
+            ColumnLayout {
                 anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                cursorShape: Qt.PointingHandCursor
-
-                onClicked: root.devicesExpanded = !root.devicesExpanded
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: 15
-                spacing: 10
+                anchors.margins: 12
+                spacing: 8
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: 0
 
-                    Text {
-                        text: Bluetooth.icon
-                        color: Bluetooth.enabled ? Theme.colors.primary : Theme.colors.text
-                        font: Theme.font.base
+                    IconSlot {
+                        icon: Bluetooth.icon
+                        iconColor: Bluetooth.enabled ? Theme.colors.primary : Theme.colors.overlay
+                        gapAfter: 8
                     }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 1
+
+                        Text {
+                            text: "Bluetooth"
+                            color: Theme.colors.overlay
+                            font: Theme.font.overlay
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: Bluetooth.activeDevice ? Bluetooth.getDisplayName(Bluetooth.activeDevice) : (Bluetooth.enabled ? "Sin dispositivo" : "Desactivado")
+                            color: Theme.colors.text
+                            font: Theme.font.overlay
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.leftMargin: 8
+                        width: 38
+                        height: 22
+                        radius: Theme.rounding.full
+                        color: Bluetooth.enabled ? Theme.colors.primary : Theme.colors.surfaceVariant
+
+                        Rectangle {
+                            width: 16
+                            height: 16
+                            y: 3
+                            x: Bluetooth.enabled ? parent.width - width - 3 : 3
+                            radius: Theme.rounding.full
+                            color: Theme.colors.background
+
+                            Behavior on x { NumberAnimation { duration: 120 } }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Bluetooth.toggleEnabled()
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 5
 
                     Text {
                         Layout.fillWidth: true
-                        text: Bluetooth.activeDevice ? Bluetooth.getDisplayName(Bluetooth.activeDevice) : "Bluetooth"
-                        color: Theme.colors.text
-                        font: Theme.font.base
+                        text: !Bluetooth.available ? "Adaptador no disponible" : Bluetooth.activeDevice ? `Conectado${Bluetooth.getBatteryLabel(Bluetooth.activeDevice) ? ` · ${Bluetooth.getBatteryLabel(Bluetooth.activeDevice)}` : ""}` : "Gestionar dispositivos"
+                        color: Bluetooth.activeDevice ? Theme.colors.success : Theme.colors.overlay
+                        font: Theme.font.overlay
                         elide: Text.ElideRight
                     }
 
-                    Text {
-                        text: Bluetooth.activeDevice ? Bluetooth.getBatteryLabel(Bluetooth.activeDevice) : ""
-                        color: Theme.colors.primary
-                        font: Theme.font.base
-                        visible: text.length > 0
-                        Layout.alignment: Qt.AlignRight
-                    }
-                }
-
-                Rectangle {
-                    width: 30
-                    height: 30
-                    radius: Theme.rounding.small
-                    color: expandButtonMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.devicesExpanded ? "" : ""
-                        color: Theme.colors.text
-                        font: Theme.font.base
-                    }
-
-                    MouseArea {
-                        id: expandButtonMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
+                    IconSlot {
+                        icon: root.devicesExpanded ? "" : ""
+                        iconColor: Theme.colors.overlay
+                        iconFont: Theme.font.icon
+                        gapBefore: 0
+                        gapAfter: 0
+                        interactive: true
                         onClicked: root.devicesExpanded = !root.devicesExpanded
                     }
                 }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onClicked: root.devicesExpanded = !root.devicesExpanded
             }
         }
 
         Rectangle {
             width: parent.width
-            height: devicesExpanded ? devicesColumn.implicitHeight + 20 : 0
+            height: root.devicesExpanded ? devicesColumn.implicitHeight + 20 : 0
             visible: height > 0
+            radius: Theme.rounding.large
             color: Theme.colors.surface
-            radius: Theme.rounding.normal
-
             border.width: 1
             border.color: Theme.colors.surfaceVariant
-
             clip: true
 
             Behavior on height {
-                NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.OutQuad
-                }
+                NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
             }
 
             Column {
                 id: devicesColumn
                 anchors.fill: parent
                 anchors.margins: 10
-                spacing: 5
+                spacing: 3
 
                 Text {
                     width: devicesColumn.width
-                    height: Bluetooth.available ? 0 : 35
-                    visible: !Bluetooth.available
-                    text: "Bluetooth no disponible"
-                    color: Theme.colors.text
-                    font: Theme.font.base
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                Text {
-                    width: devicesColumn.width
-                    height: Bluetooth.available && Bluetooth.devices.length === 0 ? 35 : 0
-                    visible: Bluetooth.available && Bluetooth.devices.length === 0
-                    text: "No hay dispositivos"
-                    color: Theme.colors.text
-                    font: Theme.font.base
+                    height: !Bluetooth.available || Bluetooth.enabled && Bluetooth.devices.length === 0 ? 36 : 0
+                    visible: height > 0
+                    text: !Bluetooth.available ? "Bluetooth no disponible" : "No hay dispositivos guardados"
+                    color: Theme.colors.overlay
+                    font: Theme.font.overlay
                     verticalAlignment: Text.AlignVCenter
                 }
 
@@ -143,54 +150,43 @@ Item {
                     model: Bluetooth.devices
 
                     delegate: Rectangle {
-                        id: element
                         required property var modelData
+                        readonly property bool activeDevice: Bluetooth.activeDevice?.address === modelData.address
 
                         width: devicesColumn.width
-                        height: 35
+                        height: 38
                         radius: Theme.rounding.normal
-
-                        property bool isActive: Bluetooth.activeDevice?.address === modelData.address
-
-                        color: deviceMouseArea.containsMouse || element.isActive ? Theme.colors.surfaceVariant : "transparent"
+                        color: activeDevice || deviceMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 10
                             anchors.rightMargin: 10
-                            spacing: 10
+                            spacing: 8
 
                             Text {
                                 Layout.fillWidth: true
                                 text: Bluetooth.getDisplayName(modelData)
-                                color: element.isActive ? Theme.colors.primary : Theme.colors.text
-                                font: Theme.font.base
+                                color: activeDevice ? Theme.colors.primary : Theme.colors.text
+                                font: Theme.font.overlay
                                 elide: Text.ElideRight
                             }
 
                             Text {
-                                text: modelData.connected ? (() => {
-                                        const batteryLabel = Bluetooth.getBatteryLabel(modelData);
-                                        return batteryLabel ? `Conectado · ${batteryLabel}` : "Conectado";
-                                    })() : ""
-                                color: Theme.colors.primary
-                                font: Theme.font.base
-                                visible: modelData.connected
+                                text: modelData.connected ? (Bluetooth.getBatteryLabel(modelData) || "Conectado") : "Desconectado"
+                                color: modelData.connected ? Theme.colors.success : Theme.colors.overlay
+                                font: Theme.font.overlay
                             }
                         }
 
                         MouseArea {
-                            id: deviceMouseArea
+                            id: deviceMouse
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-
                             onClicked: {
-                                if (modelData.connected) {
-                                    Bluetooth.disconnectDevice(modelData);
-                                } else {
-                                    Bluetooth.connectDevice(modelData);
-                                }
+                                if (modelData.connected) Bluetooth.disconnectDevice(modelData);
+                                else Bluetooth.connectDevice(modelData);
                                 root.devicesExpanded = false;
                             }
                         }

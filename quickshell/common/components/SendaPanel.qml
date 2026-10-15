@@ -23,7 +23,7 @@ Item {
     height: targetHeight + padding * 2 ?? container.height
     width: targetWidth ?? container.width
 
-    visible: OverlayService.currentPanel === name || Debug.enabled && Debug.debugedPanels.includes(name)
+    visible: OverlayService.currentPanel === name || Debug.enabled && Debug.panel === name
 
     MouseArea {
         anchors.fill: parent

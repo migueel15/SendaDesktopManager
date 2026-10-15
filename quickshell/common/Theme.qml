@@ -48,22 +48,22 @@ QtObject {
 
 	component Fonts: QtObject {
 		property font base: Qt.font({
-				family: "CaskaydiaMono Nerd Font Propo",
+				family: "CaskaydiaMono Nerd Font",
 				pixelSize: 19,
 				weight: Font.Normal
 		})
 		property font title: Qt.font({
-				family: "CaskaydiaMono Nerd Font Propo",
+				family: "CaskaydiaMono Nerd Font",
 				pixelSize: 17,
 				weight: Font.Bold
 		})
 		property font overlay: Qt.font({
-				family: "CaskaydiaMono Nerd Font Propo",
+				family: "CaskaydiaMono Nerd Font",
 				pixelSize: 13,
 				weight: Font.Normal
 		})
 		property font icon: Qt.font({
-				family: "CaskaydiaMono Nerd Font Propo",
+				family: "CaskaydiaMono Nerd Font",
 				pixelSize: 13,
 				weight: Font.Normal
 		})

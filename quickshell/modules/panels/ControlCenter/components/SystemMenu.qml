@@ -12,10 +12,10 @@ ClippingRectangle {
 
     property bool isOpen: false
 
-    width: 200
-    height: isOpen ? contentColumn.implicitHeight : 0
+    width: parent.width
+    height: isOpen ? contentColumn.implicitHeight + 20 : 0
     color: Theme.colors.surface
-    radius: Theme.rounding.normal
+    radius: Theme.rounding.large
 
     border.width: 1
     border.color: Theme.colors.surfaceVariant
@@ -65,7 +65,8 @@ ClippingRectangle {
     Column {
         id: contentColumn
         anchors.fill: parent
-        spacing: 0
+        anchors.margins: 10
+        spacing: 3
 
         SystemMenuItem {
             icon: ""

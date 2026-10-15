@@ -1,12 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Services.Pipewire
 import Quickshell
-import Quickshell.Io
-import QtQuick.Controls
-import QtQuick.Controls.Material
+import Quickshell.Services.Pipewire
 
 import qs.common
+import qs.common.components.icons
 import qs.services
 
 Item {
@@ -15,233 +13,195 @@ Item {
     implicitWidth: parent.width
     implicitHeight: column.implicitHeight
 
-    property bool devicesExpanded: false
-    property bool inputDevicesExpanded: false
-    readonly property font activeDeviceFont: Qt.font({
-        family: Theme.font.base.family,
-        pixelSize: Theme.fontSize.large,
-        weight: Theme.font.base.weight
-    })
-    Material.theme: Material.Dark
-    Material.accent: Theme.colors.primary
+    property string expandedSection: ""
 
     Column {
         id: column
         width: parent.width
-        spacing: 5
+        spacing: 6
 
         Rectangle {
             width: parent.width
-            height: 82
+            height: outputColumn.implicitHeight + 24
+            radius: Theme.rounding.large
             color: Theme.colors.surface
-            radius: Theme.rounding.normal
             border.width: 1
             border.color: Theme.colors.surfaceVariant
 
-            MouseArea {
+            Column {
+                id: outputColumn
                 anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                cursorShape: Qt.PointingHandCursor
+                anchors.margins: 12
+                spacing: 8
 
-                onClicked: {
-                    if (!root.devicesExpanded) {
-                        root.inputDevicesExpanded = false;
-                    }
-                    root.devicesExpanded = !root.devicesExpanded;
-                }
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 15
-                anchors.rightMargin: 15
-                anchors.topMargin: 5
-                anchors.bottomMargin: 30
-                spacing: 10
-
-                // Volume icon and slider
                 RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 10
+                    id: outputHeader
+                    width: parent.width
+                    spacing: 0
+
+                    IconSlot {
+                        id: outputIcon
+                        icon: Audio.icon
+                        iconColor: Theme.colors.primary
+                        gapAfter: 8
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.rightMargin: 8
+                        spacing: 1
+
+                        Text {
+                            text: "Salida"
+                            color: Theme.colors.overlay
+                            font: Theme.font.overlay
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: Audio.sink ? Audio.getDisplayName(Audio.sink) : "Sin salida activa"
+                            color: Theme.colors.text
+                            font: Theme.font.overlay
+                            elide: Text.ElideRight
+                        }
+                    }
 
                     Text {
-                        text: Audio.icon
+                        id: outputPercentage
+                        text: `${Math.round((Audio.volume || 0) * 100)}%`
                         color: Theme.colors.primary
-                        font: Theme.font.base
+                        font: Theme.font.overlay
                     }
 
-                    // Volume slider
-                    Item {
-                        Layout.fillWidth: true
-                        height: 20
+                    IconSlot {
+                        id: outputArrow
+                        icon: root.expandedSection === "output" ? "" : ""
+                        iconColor: Theme.colors.overlay
+                        iconFont: Theme.font.icon
+                        gapBefore: 8
+                        gapAfter: 0
+                        interactive: true
+                        onClicked: root.expandedSection = root.expandedSection === "output" ? "" : "output"
+                    }
+                }
+
+                Item {
+                    x: outputIcon.x + outputIcon.width
+                    width: outputPercentage.x + outputPercentage.width - x
+                    height: 14
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width
+                        height: 6
+                        radius: Theme.rounding.full
+                        color: Theme.colors.surfaceVariant
 
                         Rectangle {
-                            anchors.centerIn: parent
-                            width: parent.width
-                            height: 6
-                            radius: Theme.rounding.full
-                            color: Theme.colors.surfaceVariant
-
-                            Rectangle {
-                                width: parent.width * (Audio.volume || 0)
-                                height: parent.height
-                                radius: parent.radius
-                                color: Theme.colors.primary
-                            }
-
-                            // Slider handle (circle)
-                            Rectangle {
-                                width: 14
-                                height: 14
-                                radius: Theme.rounding.full
-                                color: Theme.colors.white
-                                border.color: Theme.colors.primary
-                                border.width: 2
-                                x: (parent.width * (Audio.volume || 0)) - width / 2
-                                y: parent.height / 2 - height / 2
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onPressed: mouse => updateVolume(mouse.x)
-                            onPositionChanged: mouse => {
-                                if (pressed) {
-                                    updateVolume(mouse.x);
-                                }
-                            }
-
-                            function updateVolume(x) {
-                                if (Pipewire.defaultAudioSink) {
-                                    const volume = Math.max(0, Math.min(1, x / width));
-                                    Audio.setVolume(volume);
-                                }
-                            }
-
-                            onWheel: wheel => {
-                                if (wheel.angleDelta.y > 0) {
-                                    Audio.increaseVolume();
-                                } else {
-                                    Audio.decreaseVolume();
-                                }
-                            }
+                            width: parent.width * (Audio.volume || 0)
+                            height: parent.height
+                            radius: parent.radius
+                            color: Theme.colors.primary
                         }
                     }
 
-                    Text {
-                        text: Math.round((Audio.volume || 0) * 100) + "%"
-                        color: Theme.colors.text
-                        font: Theme.font.base
-                    }
-                }
-
-                // Expand button
-                Rectangle {
-                    width: 30
-                    height: 30
-                    radius: Theme.rounding.small
-                    color: expandButtonMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.devicesExpanded ? "" : ""
-                        color: Theme.colors.text
-                        font: Theme.font.base
+                    Rectangle {
+                        width: 14
+                        height: 14
+                        radius: Theme.rounding.full
+                        color: Theme.colors.white
+                        border.color: Theme.colors.primary
+                        border.width: 2
+                        x: (parent.width * (Audio.volume || 0)) - width / 2
+                        y: parent.height / 2 - height / 2
                     }
 
                     MouseArea {
-                        id: expandButtonMouseArea
                         anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            if (!root.devicesExpanded) {
-                                root.inputDevicesExpanded = false;
-                            }
-                            root.devicesExpanded = !root.devicesExpanded;
+                        cursorShape: Qt.PointingHandCursor
+                        onPressed: mouse => root.updateVolume(mouse.x, width)
+                        onPositionChanged: mouse => {
+                            if (pressed) root.updateVolume(mouse.x, width);
+                        }
+                        onWheel: wheel => {
+                            if (wheel.angleDelta.y > 0) Audio.increaseVolume();
+                            else Audio.decreaseVolume();
                         }
                     }
                 }
             }
 
-            Text {
-                anchors.left: parent.left
-                anchors.leftMargin: 15
-                anchors.right: parent.right
-                anchors.rightMargin: 55
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 7
-                text: Audio.sink ? `Salida · ${Audio.getDisplayName(Audio.sink)}` : "Sin salida activa"
-                color: Theme.colors.primary
-                font: root.activeDeviceFont
-                elide: Text.ElideRight
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onClicked: root.expandedSection = root.expandedSection === "output" ? "" : "output"
             }
         }
 
-        // Devices list
         Rectangle {
             width: parent.width
-            height: devicesExpanded ? devicesColumn.implicitHeight + 20 : 0
+            height: root.expandedSection === "output" ? sinksColumn.implicitHeight + 20 : 0
             visible: height > 0
+            radius: Theme.rounding.large
             color: Theme.colors.surface
-            radius: Theme.rounding.normal
-            clip: true
-
             border.width: 1
             border.color: Theme.colors.surfaceVariant
+            clip: true
 
             Behavior on height {
-                NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.OutQuad
-                }
+                NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
             }
 
             Column {
-                id: devicesColumn
+                id: sinksColumn
                 anchors.fill: parent
                 anchors.margins: 10
-                spacing: 5
+                spacing: 3
 
                 Repeater {
                     model: Audio.sinks
 
                     delegate: Rectangle {
                         required property var modelData
+                        readonly property bool validSink: modelData.isSink && !!modelData.audio
+                        readonly property bool activeSink: Audio.sink?.id === modelData.id
 
-                        width: devicesColumn.width
-                        height: isValidSink ? 35 : 0
-                        visible: isValidSink
+                        width: sinksColumn.width
+                        height: validSink ? 38 : 0
+                        visible: validSink
                         radius: Theme.rounding.normal
+                        color: activeSink || sinkMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
-                        property bool isActive: Audio.sink?.id === modelData.id
-
-                        color: deviceMouseArea.containsMouse || isActive ? Theme.colors.surfaceVariant : "transparent"
-
-                        property bool isValidSink: modelData.isSink && !!modelData.audio
-
-                        Text {
+                        RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 10
                             anchors.rightMargin: 10
-                            verticalAlignment: Text.AlignVCenter
-                            text: {
-                                Audio.getDisplayName(modelData);
+                            spacing: 0
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: Audio.getDisplayName(modelData)
+                                color: activeSink ? Theme.colors.primary : Theme.colors.text
+                                font: Theme.font.overlay
+                                elide: Text.ElideRight
                             }
-                            color: parent.isActive ? Theme.colors.primary : Theme.colors.text
-                            font: Theme.font.base
-                            elide: Text.ElideRight
+
+                            IconSlot {
+                                icon: activeSink ? "" : ""
+                                iconColor: Theme.colors.primary
+                                gapBefore: 8
+                                gapAfter: 0
+                            }
                         }
 
                         MouseArea {
-                            id: deviceMouseArea
+                            id: sinkMouse
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-
                             onClicked: {
-                                // Audio.changeDefaultSink(modelData);
                                 Audio.setAudioSink(modelData);
-                                root.devicesExpanded = false;
+                                root.expandedSection = "";
                             }
                         }
                     }
@@ -252,151 +212,136 @@ Item {
         Rectangle {
             width: parent.width
             height: 64
+            radius: Theme.rounding.large
             color: Theme.colors.surface
-            radius: Theme.rounding.normal
             border.width: 1
             border.color: Theme.colors.surfaceVariant
 
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                cursorShape: Qt.PointingHandCursor
-
-                onClicked: {
-                    if (!root.inputDevicesExpanded) {
-                        root.devicesExpanded = false;
-                    }
-                    root.inputDevicesExpanded = !root.inputDevicesExpanded;
-                }
-            }
-
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 10
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                spacing: 0
+
+                IconSlot {
+                    icon: "󰍬"
+                    iconColor: Theme.colors.primary
+                    gapAfter: 8
+                }
 
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 2
+                    Layout.rightMargin: 8
+                    spacing: 1
 
                     Text {
                         text: "Entrada"
-                        color: Theme.colors.text
-                        font: Theme.font.base
+                        color: Theme.colors.overlay
+                        font: Theme.font.overlay
                     }
 
                     Text {
                         Layout.fillWidth: true
                         text: Audio.source ? Audio.getDisplayName(Audio.source) : "Sin entrada activa"
-                        color: Theme.colors.primary
-                        font: root.activeDeviceFont
+                        color: Theme.colors.text
+                        font: Theme.font.overlay
                         elide: Text.ElideRight
                     }
                 }
 
-                Rectangle {
-                    width: 30
-                    height: 30
-                    radius: Theme.rounding.small
-                    color: inputExpandButtonMouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.inputDevicesExpanded ? "" : ""
-                        color: Theme.colors.text
-                        font: Theme.font.base
-                    }
-
-                    MouseArea {
-                        id: inputExpandButtonMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            if (!root.inputDevicesExpanded) {
-                                root.devicesExpanded = false;
-                            }
-                            root.inputDevicesExpanded = !root.inputDevicesExpanded;
-                        }
-                    }
+                IconSlot {
+                    icon: root.expandedSection === "input" ? "" : ""
+                    iconColor: Theme.colors.overlay
+                    iconFont: Theme.font.icon
+                    gapBefore: 8
+                    gapAfter: 0
+                    interactive: true
+                    onClicked: root.expandedSection = root.expandedSection === "input" ? "" : "input"
                 }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onClicked: root.expandedSection = root.expandedSection === "input" ? "" : "input"
             }
         }
 
         Rectangle {
             width: parent.width
-            height: inputDevicesExpanded ? sourcesColumn.implicitHeight + 20 : 0
+            height: root.expandedSection === "input" ? sourcesColumn.implicitHeight + 20 : 0
             visible: height > 0
+            radius: Theme.rounding.large
             color: Theme.colors.surface
-            radius: Theme.rounding.normal
-            clip: true
-
             border.width: 1
             border.color: Theme.colors.surfaceVariant
+            clip: true
 
             Behavior on height {
-                NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.OutQuad
-                }
+                NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
             }
 
             Column {
                 id: sourcesColumn
                 anchors.fill: parent
                 anchors.margins: 10
-                spacing: 5
-
-                Text {
-                    width: sourcesColumn.width
-                    height: Audio.sources.length === 0 ? 35 : 0
-                    visible: Audio.sources.length === 0
-                    text: "No hay entradas disponibles"
-                    color: Theme.colors.text
-                    font: Theme.font.base
-                    verticalAlignment: Text.AlignVCenter
-                }
+                spacing: 3
 
                 Repeater {
                     model: Audio.sources
 
                     delegate: Rectangle {
                         required property var modelData
+                        readonly property bool validSource: !modelData.isSink && !modelData.isStream && !!modelData.audio
+                        readonly property bool activeSource: Audio.source?.id === modelData.id
 
                         width: sourcesColumn.width
-                        height: isValidSource ? 35 : 0
-                        visible: isValidSource
+                        height: validSource ? 38 : 0
+                        visible: validSource
                         radius: Theme.rounding.normal
+                        color: activeSource || sourceMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
-                        property bool isActive: Audio.source?.id === modelData.id
-                        property bool isValidSource: !modelData.isSink && !modelData.isStream && !!modelData.audio
-
-                        color: sourceMouseArea.containsMouse || isActive ? Theme.colors.surfaceVariant : "transparent"
-
-                        Text {
+                        RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 10
                             anchors.rightMargin: 10
-                            verticalAlignment: Text.AlignVCenter
-                            text: Audio.getDisplayName(modelData)
-                            color: parent.isActive ? Theme.colors.primary : Theme.colors.text
-                            font: Theme.font.base
-                            elide: Text.ElideRight
+                            spacing: 0
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: Audio.getDisplayName(modelData)
+                                color: activeSource ? Theme.colors.primary : Theme.colors.text
+                                font: Theme.font.overlay
+                                elide: Text.ElideRight
+                            }
+
+                            IconSlot {
+                                icon: activeSource ? "" : ""
+                                iconColor: Theme.colors.primary
+                                gapBefore: 8
+                                gapAfter: 0
+                            }
                         }
 
                         MouseArea {
-                            id: sourceMouseArea
+                            id: sourceMouse
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-
                             onClicked: {
                                 Audio.setAudioSource(modelData);
-                                root.inputDevicesExpanded = false;
+                                root.expandedSection = "";
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    function updateVolume(position, trackWidth) {
+        if (Pipewire.defaultAudioSink) {
+            Audio.setVolume(Math.max(0, Math.min(1, position / trackWidth)));
         }
     }
 }

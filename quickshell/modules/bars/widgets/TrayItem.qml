@@ -11,14 +11,13 @@ MouseArea {
     required property SystemTrayItem modelData
 
     property int iconSize: 18
+    property string observedIconSource: ""
     readonly property bool usingFallback: trayIcon.usingFallback
     readonly property string publishedIconSource: modelData.icon
-    readonly property bool publishedIconIsNamed: publishedIconSource.startsWith("image://icon/")
-            || publishedIconSource.startsWith("file:")
     readonly property string desktopIconSource: findDesktopIconSource()
-    readonly property string preferredIconSource: !publishedIconIsNamed && desktopIconSource !== ""
-            ? desktopIconSource
-            : publishedIconSource
+    readonly property string preferredIconSource: publishedIconSource !== ""
+            ? publishedIconSource
+            : desktopIconSource
     readonly property string secondaryIconSource: preferredIconSource === publishedIconSource
             ? desktopIconSource
             : publishedIconSource
@@ -27,6 +26,8 @@ MouseArea {
     implicitWidth: iconSize + 6
     implicitHeight: iconSize + 6
     cursorShape: Qt.PointingHandCursor
+
+    Component.onCompleted: observedIconSource = publishedIconSource
 
     function openMenu() {
         const window = root.QsWindow.window;
@@ -83,8 +84,13 @@ MouseArea {
         }
 
         function onIconChanged() {
-            // Some applications update the contents without changing the URL.
-            Qt.callLater(trayIcon.reload);
+            // A changed URL triggers source reload by itself. Reload explicitly
+            // only when an app updates the icon contents behind the same URL.
+            if (root.observedIconSource === root.publishedIconSource) {
+                Qt.callLater(trayIcon.reload);
+            } else {
+                root.observedIconSource = root.publishedIconSource;
+            }
         }
     }
 
