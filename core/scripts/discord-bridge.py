@@ -14,6 +14,7 @@ import socket
 import struct
 import subprocess
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
@@ -487,7 +488,7 @@ def start_daemon():
     for _ in range(40):
         if bridge_available():
             return True
-        import time; time.sleep(.05)
+        time.sleep(.05)
     return False
 
 
@@ -503,7 +504,7 @@ def bridge_available():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["daemon", "status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "set-user-volume", "set-user-mute", "shutdown"])
+    parser.add_argument("action", choices=["daemon", "status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "set-user-volume", "set-user-mute", "reset-user", "shutdown"])
     parser.add_argument("parameters", nargs="*")
     args = parser.parse_args()
     if args.action == "daemon":
@@ -524,11 +525,21 @@ def main():
             if value.lower() not in ("true", "false"):
                 parser.error("el mute debe ser true o false")
             parameters = {"user_id": user_id, "mute": value.lower() == "true"}
+    elif args.action == "reset-user":
+        if len(args.parameters) != 1:
+            parser.error("reset-user requiere el ID del usuario")
+        parameters = {"user_id": args.parameters[0]}
     if args.action in ("connect", "authorize") and not bridge_available():
         if not start_daemon():
             result = {"ok": False, "error": "No se pudo iniciar el puente"}
         else:
             result = rpc(args.action, parameters)
+    elif args.action == "reset-user":
+        user_id = parameters["user_id"]
+        result = rpc("set-user-volume", {"user_id": user_id, "volume": 100})
+        if result.get("ok"):
+            time.sleep(.2)
+            result = rpc("set-user-mute", {"user_id": user_id, "mute": False})
     else:
         result = rpc(args.action, parameters)
     if args.action == "status":

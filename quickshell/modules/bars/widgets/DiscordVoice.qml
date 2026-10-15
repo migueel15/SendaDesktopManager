@@ -441,7 +441,7 @@ Rectangle {
                 Column {
                     id: participantList
                     width: participantListViewport.width
-                    spacing: 7
+                    spacing: 3
 
                     Repeater {
                         model: root.voiceState.participants || []
@@ -547,57 +547,101 @@ Rectangle {
                                 spacing: 2
 
                                 RowLayout {
+                                    id: participantHeader
                                     Layout.fillWidth: true
-                                    spacing: 4
+                                    spacing: 0
 
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: participantRow.modelData.name || "Usuario"
-                                        color: Theme.colors.text
-                                        font: Theme.font.overlay
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Text {
-                                        visible: participantRow.isSelfMuted || participantRow.isServerMuted
-                                        text: "󰍭"
-                                        color: participantRow.isServerMuted ? Theme.colors.error : Theme.colors.overlay
-                                        font: Theme.font.base
-                                    }
-
-                                    Text {
-                                        visible: participantRow.isSelfDeaf || participantRow.isServerDeaf
-                                        text: "󰋋"
-                                        color: participantRow.isServerDeaf ? Theme.colors.error : Theme.colors.overlay
-                                        font: Theme.font.base
-                                    }
-
-                                    Rectangle {
-                                        Layout.preferredWidth: 24
-                                        Layout.preferredHeight: 22
-                                        color: "transparent"
+                                    Row {
+                                        id: participantIdentity
+                                        Layout.fillWidth: false
+                                        Layout.preferredWidth: implicitWidth
+                                        spacing: 0
 
                                         Text {
-                                            anchors.centerIn: parent
-                                            text: participantRow.isMuted ? "󰖁" : "󰕾"
-                                            color: participantRow.isMuted ? Theme.colors.error : Theme.colors.text
+                                            property string fullName: participantRow.modelData.name || "Usuario"
+                                            text: fullName.length > 20 ? fullName.slice(0, 17) + "..." : fullName
+                                            color: Theme.colors.text
+                                            font: Theme.font.overlay
+                                            wrapMode: Text.NoWrap
+                                        }
+
+                                        Item {
+                                            id: resetUserButton
+                                            width: 16
+                                            height: 16
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "󰑐"
+                                                color: Theme.colors.overlay
+                                                font: Theme.font.icon
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                enabled: !participantSettingProc.running
+                                                acceptedButtons: Qt.LeftButton
+                                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                onClicked: {
+                                                    participantSettingProc.command = [
+                                                        SendaManager.binaryPath,
+                                                        "discord",
+                                                        "reset-user",
+                                                        String(participantRow.modelData.id)
+                                                    ];
+                                                    participantSettingProc.running = true;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Item { Layout.fillWidth: true }
+
+                                    RowLayout {
+                                        id: participantActions
+                                        spacing: 4
+
+                                        Text {
+                                            visible: participantRow.isSelfMuted || participantRow.isServerMuted
+                                            text: "󰍭"
+                                            color: participantRow.isServerMuted ? Theme.colors.error : Theme.colors.overlay
                                             font: Theme.font.base
                                         }
 
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            enabled: !participantSettingProc.running
-                                            acceptedButtons: Qt.LeftButton
-                                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                            onClicked: {
-                                                participantSettingProc.command = [
-                                                    SendaManager.binaryPath,
-                                                    "discord",
-                                                    "set-user-mute",
-                                                    String(participantRow.modelData.id),
-                                                    participantRow.isMuted ? "false" : "true"
-                                                ];
-                                                participantSettingProc.running = true;
+                                        Text {
+                                            visible: participantRow.isSelfDeaf || participantRow.isServerDeaf
+                                            text: "󰋋"
+                                            color: participantRow.isServerDeaf ? Theme.colors.error : Theme.colors.overlay
+                                            font: Theme.font.base
+                                        }
+
+                                        Rectangle {
+                                            Layout.preferredWidth: 24
+                                            Layout.preferredHeight: 22
+                                            color: "transparent"
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: participantRow.isMuted ? "󰖁" : "󰕾"
+                                                color: participantRow.isMuted ? Theme.colors.error : Theme.colors.text
+                                                font: Theme.font.base
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                enabled: !participantSettingProc.running
+                                                acceptedButtons: Qt.LeftButton
+                                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                onClicked: {
+                                                    participantSettingProc.command = [
+                                                        SendaManager.binaryPath,
+                                                        "discord",
+                                                        "set-user-mute",
+                                                        String(participantRow.modelData.id),
+                                                        participantRow.isMuted ? "false" : "true"
+                                                    ];
+                                                    participantSettingProc.running = true;
+                                                }
                                             }
                                         }
                                     }

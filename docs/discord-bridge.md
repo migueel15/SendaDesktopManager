@@ -34,9 +34,10 @@ senda discord toggle-deafen
 senda discord leave        # salir del canal de voz actual
 senda discord set-user-volume <user-id> <0-200>
 senda discord set-user-mute <user-id> <true|false>
+senda discord reset-user <user-id>
 ```
 
-Los dos últimos comandos cambian el volumen local o el mute de un participante del canal actual mediante `SET_USER_VOICE_SETTINGS`. Requieren una sesión RPC autorizada y que el usuario siga en el canal.
+Los comandos de volumen y mute cambian los ajustes locales de un participante del canal actual mediante `SET_USER_VOICE_SETTINGS`. `reset-user` restaura el volumen a 100 y desactiva el mute local si estaba aplicado. Requieren una sesión RPC autorizada y que el usuario siga en el canal.
 
 El proceso del puente se inicia en segundo plano con `connect` o `authorize`; el widget ejecuta `connect` al cargar la barra. `status` no lo inicia. Los comandos responden con código distinto de cero si el puente no está disponible o Discord no está autorizado. La interfaz estable para scripts es la CLI; el socket interno usa JSON Lines en `$XDG_RUNTIME_DIR/senda-discord.sock`, modo `0600`, y no requiere conocer ni manejar el token.
 

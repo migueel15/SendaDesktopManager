@@ -22,6 +22,10 @@ func discordCmd() *cobra.Command {
 				if len(args) != 3 {
 					return fmt.Errorf("%s requires a user ID and value", args[0])
 				}
+			case "reset-user":
+				if len(args) != 2 {
+					return fmt.Errorf("%s requires a user ID", args[0])
+				}
 			default:
 				if len(args) != 1 {
 					return fmt.Errorf("%s does not accept arguments", args[0])
@@ -29,7 +33,7 @@ func discordCmd() *cobra.Command {
 			}
 			return nil
 		},
-		ValidArgs: []string{"status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "set-user-volume", "set-user-mute", "shutdown"},
+		ValidArgs: []string{"status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "set-user-volume", "set-user-mute", "reset-user", "shutdown"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			script, err := discordBridgePath()
 			if err != nil {

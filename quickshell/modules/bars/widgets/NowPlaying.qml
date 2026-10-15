@@ -30,6 +30,30 @@ Rectangle {
         Quickshell.execDetached([SendaManager.binaryPath, "window", "focus", "spotify"]);
     }
 
+    function openSpotifyUrl(url) {
+        if (url) Quickshell.execDetached(["spotify", `--uri=${url}`]);
+    }
+
+    function openSpotifyArtist() {
+        const artist = root.activePlayer?.trackArtist || "";
+        if (artist) root.openSpotifyUrl(`spotify:search:${encodeURIComponent(artist)}`);
+    }
+
+    function openSpotifyTrack() {
+        const metadata = root.activePlayer?.metadata ?? {};
+        const trackId = String(metadata["mpris:trackid"] ?? metadata["xesam:url"] ?? "");
+        const spotifyTrack = trackId.match(/(?:spotify:track:|\/track\/)([A-Za-z0-9]+)/);
+        if (spotifyTrack) {
+            root.openSpotifyUrl(`spotify:track:${spotifyTrack[1]}`);
+            return;
+        }
+
+        const title = root.activePlayer?.trackTitle || "";
+        const artist = root.activePlayer?.trackArtist || "";
+        const query = [title, artist].filter(Boolean).join(" ");
+        if (query) root.openSpotifyUrl(`spotify:search:${encodeURIComponent(query)}`);
+    }
+
     function formatTrackTime(seconds) {
         const totalSeconds = Math.max(0, Math.floor(seconds || 0));
         const totalMinutes = Math.floor(totalSeconds / 60);
@@ -281,6 +305,13 @@ Rectangle {
                             }
                             visible: trackArt.status === Image.Ready
                         }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.LeftButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.openSpotifyTrack()
+                        }
                     }
 
                     ColumnLayout {
@@ -295,6 +326,13 @@ Rectangle {
                             font.pixelSize: 14
                             font.weight: Font.Bold
                             elide: Text.ElideRight
+
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.LeftButton
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.openSpotifyTrack()
+                            }
                         }
 
                         Text {
@@ -303,6 +341,13 @@ Rectangle {
                             color: Theme.colors.overlay
                             font: Theme.font.overlay
                             elide: Text.ElideRight
+
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.LeftButton
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.openSpotifyArtist()
+                            }
                         }
                     }
                 }
