@@ -24,6 +24,7 @@ func main() {
 	rootCmd.AddCommand(brightnessCmd)
 	rootCmd.AddCommand(discordCmd())
 	rootCmd.AddCommand(windowCmd())
+	rootCmd.AddCommand(notificationsCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
