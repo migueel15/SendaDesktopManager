@@ -6,6 +6,7 @@ import qs.services
 import qs.modules.panels.ControlCenter
 import qs.modules.panels.Dashboard
 import qs.modules.panels.Tasks
+import qs.modules.panels.notifications
 import Quickshell.Wayland
 
 PanelWindow {
@@ -31,6 +32,8 @@ PanelWindow {
 
     MouseArea {
         anchors.fill: parent
+        // This is only the backdrop click target; keep panel content above it.
+        z: -1
         onPressed: OverlayService.closeCurrentPanel()
     }
 
@@ -51,10 +54,7 @@ PanelWindow {
         }
 
         TasksPanel {}
-        Loader {
-            anchors.fill: parent
-            source: Qt.resolvedUrl("notifications/notifications-panel.qml")
-        }
+        NotificationsPanel {}
     }
 
 }

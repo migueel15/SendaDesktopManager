@@ -9,7 +9,6 @@ Item {
     height: parent.height
     implicitWidth: iconText.implicitWidth
 
-    readonly property bool panelOpen: OverlayService.isOpen("notifications")
     readonly property string currentIcon: Notifications.dndEnabled
         ? (Notifications.hasNotifications ? Theme.notifications.icon.notification : Theme.notifications.icon.dnd_none)
         : (Notifications.hasNotifications ? Theme.notifications.icon.notification : Theme.notifications.icon.none)
@@ -20,8 +19,7 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => {
             if (event.button === Qt.LeftButton) {
-                if (root.panelOpen) OverlayService.closeCurrentPanel();
-                else OverlayService.setCurrentPanel("notifications");
+                OverlayService.setCurrentPanel("notifications");
             } else if (event.button === Qt.RightButton) {
                 Notifications.toggleDnd();
             }
