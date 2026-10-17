@@ -22,10 +22,6 @@ const (
 	checksumsAsset   = "checksums.txt"
 )
 
-// managedEntries are the entries of the Quickshell tarball that replace the
-// matching entries in DataDir during an update.
-var managedEntries = []string{"quickshell", "scripts", "version"}
-
 // updateCmd returns the command that updates senda and its Quickshell files
 // to the latest GitHub release.
 func updateCmd() *cobra.Command {
@@ -45,7 +41,7 @@ func runUpdate(cmd *cobra.Command) error {
 	if version.Version == "dev" {
 		return errors.New("esta compilación es de desarrollo; no se puede actualizar")
 	}
-	if paths.Setting("SENDA_HOME") != "" {
+	if os.Getenv("SENDA_HOME") != "" {
 		return errors.New("SENDA_HOME está definido para desarrollo; la actualización está deshabilitada")
 	}
 
@@ -105,23 +101,7 @@ func runUpdate(cmd *cobra.Command) error {
 		return err
 	}
 
-	dataDir := paths.DataDir()
-	if err := os.MkdirAll(dataDir, 0o755); err != nil {
-		return fmt.Errorf("crear %s: %w", dataDir, err)
-	}
-
-	// The staging directory lives inside DataDir so that renames stay on one
-	// filesystem and are atomic.
-	stage, err := os.MkdirTemp(dataDir, ".update-stage-")
-	if err != nil {
-		return fmt.Errorf("crear directorio de preparación: %w", err)
-	}
-	defer os.RemoveAll(stage)
-
-	if err := release.ExtractDataTarball(tarPath, stage); err != nil {
-		return err
-	}
-	if err := installManaged(dataDir, stage); err != nil {
+	if err := release.InstallData(tarPath, paths.DataDir()); err != nil {
 		return err
 	}
 
@@ -181,55 +161,4 @@ func resolveExecutable() (string, error) {
 		return "", fmt.Errorf("resolver el binario %s: %w", exe, err)
 	}
 	return resolved, nil
-}
-
-// installManaged swaps the managed entries from stage into dataDir. Each old
-// entry is renamed to "<name>.old" first, and the old copies are removed once
-// every entry is in place. A failure restores the previous entries.
-func installManaged(dataDir string, stage string) error {
-	for _, name := range managedEntries {
-		if _, err := os.Lstat(filepath.Join(stage, name)); err != nil {
-			return fmt.Errorf("el paquete de Quickshell no contiene %s", name)
-		}
-	}
-
-	var moved, placed []string
-	rollback := func() {
-		for _, name := range placed {
-			os.RemoveAll(filepath.Join(dataDir, name))
-		}
-		for _, name := range moved {
-			dst := filepath.Join(dataDir, name)
-			os.Rename(dst+".old", dst)
-		}
-	}
-
-	for _, name := range managedEntries {
-		dst := filepath.Join(dataDir, name)
-		old := dst + ".old"
-
-		if err := os.RemoveAll(old); err != nil {
-			rollback()
-			return fmt.Errorf("limpiar %s: %w", old, err)
-		}
-		if _, err := os.Lstat(dst); err == nil {
-			if err := os.Rename(dst, old); err != nil {
-				rollback()
-				return fmt.Errorf("mover %s: %w", dst, err)
-			}
-			moved = append(moved, name)
-		}
-
-		if err := os.Rename(filepath.Join(stage, name), dst); err != nil {
-			rollback()
-			return fmt.Errorf("instalar %s: %w", dst, err)
-		}
-		placed = append(placed, name)
-	}
-
-	// Best effort: any leftover .old copy is removed at the next update.
-	for _, name := range moved {
-		os.RemoveAll(filepath.Join(dataDir, name) + ".old")
-	}
-	return nil
 }
