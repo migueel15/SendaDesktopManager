@@ -217,13 +217,22 @@ class Bridge:
 
         # Connect immediately if Discord was already open before the watcher started.
         await self.try_connect()
+        retry_delay = 1
 
         try:
             while True:
                 ready = loop.create_future()
                 loop.add_reader(fd, lambda: None if ready.done() else ready.set_result(None))
                 try:
-                    await ready
+                    try:
+                        await asyncio.wait_for(ready, timeout=retry_delay)
+                    except asyncio.TimeoutError:
+                        # Discord may create its IPC socket before its RPC endpoint is
+                        # ready. Keep checking so startup ordering cannot strand the widget.
+                        if not self.writer:
+                            await self.try_connect()
+                            retry_delay = min(retry_delay * 2, 30)
+                        continue
                 finally:
                     loop.remove_reader(fd)
 
@@ -253,6 +262,7 @@ class Bridge:
                             should_connect = True
                     if should_connect:
                         asyncio.create_task(self.try_connect())
+                        retry_delay = 1
         finally:
             loop.remove_reader(fd)
             os.close(fd)
