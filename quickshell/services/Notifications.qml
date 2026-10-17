@@ -391,12 +391,27 @@ Singleton {
     }
 
     function dismissAll() {
-        const count = unreadNotifications.length;
-        const ids = unreadNotifications.map((item) => {
-            return item.id;
-        });
-        for (let i = 0; i < ids.length; i++) dismiss(ids[i])
-        return count;
+        const notifications = unreadNotifications;
+        if (notifications.length === 0)
+            return 0;
+
+        const live = liveNotifications;
+        const ids = notifications.map((item) => String(item.id));
+
+        unreadNotifications = [];
+        liveNotifications = ({});
+        recentServerIds = ({});
+        pausedPopups = ({});
+        activePopups.clear();
+
+        for (let i = 0; i < ids.length; i++) {
+            notificationDismissed(ids[i]);
+            if (live[ids[i]])
+                live[ids[i]].dismiss();
+        }
+
+        persist();
+        return ids.length;
     }
 
     function toggleDnd() {
