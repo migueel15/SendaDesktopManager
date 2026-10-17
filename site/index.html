@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Senda es un gestor de escritorio para Wayland: una CLI y una barra Quickshell, actualmente para Arch Linux con Hyprland.">
+  <title>Senda - Gestor de escritorio para Wayland</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1115;
+      --surface: #171a21;
+      --border: #2a2f3a;
+      --text: #e6e9ef;
+      --muted: #a4acbb;
+      --accent: #7aa2f7;
+      --code-bg: #0b0d11;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 1.0625rem;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 3rem 1.25rem 4rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 2.75rem);
+      margin: 0 0 0.5rem;
+      line-height: 1.2;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin: 2.5rem 0 1rem;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: 1.2rem;
+      margin: 0 0 1rem;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    ul {
+      padding-left: 1.25rem;
+      margin: 0;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+
+    .install-row {
+      display: flex;
+      align-items: stretch;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    pre {
+      flex: 1 1 320px;
+      margin: 0;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      white-space: pre;
+    }
+
+    button {
+      flex: 0 0 auto;
+      min-width: 7.5rem;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--accent);
+      font: inherit;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    button[hidden] {
+      display: none;
+    }
+
+    .note {
+      color: var(--muted);
+      margin-top: 1rem;
+    }
+
+    footer {
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 480px) {
+      main {
+        padding-top: 2rem;
+      }
+
+      .install-row {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Senda</h1>
+      <p class="lead">
+        Senda es un gestor de escritorio para Wayland: una CLI y una barra Quickshell,
+        actualmente para Arch Linux con Hyprland.
+      </p>
+      <p>
+        Código fuente:
+        <a href="https://github.com/migueel15/SendaDesktopManager">github.com/migueel15/SendaDesktopManager</a>
+      </p>
+    </header>
+
+    <section>
+      <h2>Qué incluye</h2>
+      <ul>
+        <li>Control de fondos de pantalla.</li>
+        <li>Notificaciones.</li>
+        <li>Widget de voz de Discord.</li>
+        <li>Gestión del foco de ventanas.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Instalación</h2>
+      <div class="panel">
+        <div class="install-row">
+          <pre><code id="install-command">curl --proto '=https' --tlsv1.2 -fsSL https://migueel15.github.io/SendaDesktopManager/install.sh | sh</code></pre>
+          <button type="button" id="copy-button">Copiar</button>
+        </div>
+        <p class="note" id="copy-status" role="status" aria-live="polite"></p>
+      </div>
+      <p class="note">
+        Tras instalar, ejecuta <code>senda setup</code>.
+      </p>
+    </section>
+
+    <footer>
+      Esta página no usa cookies, analítica ni recursos externos.
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      var button = document.getElementById('copy-button');
+      var command = document.getElementById('install-command');
+      var status = document.getElementById('copy-status');
+
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+        button.hidden = true;
+        return;
+      }
+
+      var timer = null;
+
+      button.addEventListener('click', function () {
+        navigator.clipboard.writeText(command.textContent.trim()).then(function () {
+          status.textContent = 'Copiado';
+          clearTimeout(timer);
+          timer = setTimeout(function () {
+            status.textContent = '';
+          }, 2000);
+        }, function () {
+          status.textContent = 'No se pudo copiar';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
