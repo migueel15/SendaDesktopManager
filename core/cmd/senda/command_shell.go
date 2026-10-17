@@ -14,10 +14,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/spf13/cobra"
 )
-
-var path = "/home/miguel/repos/SendaDesktopManager/quickshell/"
 
 const dorlabAPIKeyEnv = "DORLAB_API_KEY"
 
@@ -67,8 +66,8 @@ func runShellInteractive() {
 		}
 	}
 
-	cmd := exec.Command("qs", "-p", path)
-	cmd.Env = append(os.Environ(), loadQuickshellEnv()...)
+	cmd := exec.Command("qs", "-p", paths.QuickshellDir())
+	cmd.Env = append(os.Environ(), quickshellEnv()...)
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -219,25 +218,32 @@ func removePidFile() {
 	os.Remove(pidFile)
 }
 
-func loadQuickshellEnv() []string {
-	dotEnvPath := filepath.Join(filepath.Dir(filepath.Clean(path)), ".env")
-	dorlabAPIKey, ok, err := readDotEnvValue(dotEnvPath, dorlabAPIKeyEnv)
+// quickshellEnv exposes the running senda binary to QML and loads the
+// private DORLAB_API_KEY from the user's config directory.
+func quickshellEnv() []string {
+	var env []string
+	if executable, err := os.Executable(); err == nil {
+		env = append(env, "SENDA_BIN="+executable)
+	}
+
+	envFile := paths.EnvFile()
+	dorlabAPIKey, ok, err := readDotEnvValue(envFile, dorlabAPIKeyEnv)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			log.Println("error reading .env:", err)
 		} else {
-			log.Println(".env not found at", dotEnvPath)
+			log.Println(".env not found at", envFile)
 		}
-		return nil
+		return env
 	}
 
 	if !ok || dorlabAPIKey == "" {
-		log.Println(dorlabAPIKeyEnv, "not found in", dotEnvPath)
-		return nil
+		log.Println(dorlabAPIKeyEnv, "not found in", envFile)
+		return env
 	}
 
-	log.Println("loaded", dorlabAPIKeyEnv, "from", dotEnvPath)
-	return []string{dorlabAPIKeyEnv + "=" + dorlabAPIKey}
+	log.Println("loaded", dorlabAPIKeyEnv, "from", envFile)
+	return append(env, dorlabAPIKeyEnv+"="+dorlabAPIKey)
 }
 
 func readDotEnvValue(filePath string, key string) (string, bool, error) {

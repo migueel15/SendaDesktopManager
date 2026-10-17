@@ -6,7 +6,7 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property var binaryPath: "/home/miguel/repos/SendaDesktopManager/core/dist/senda"
+    readonly property string binaryPath: Quickshell.env("SENDA_BIN") || "senda"
 
     function setWallpaper(screen, path, x, y) {
         const position = `${x},${y}`;

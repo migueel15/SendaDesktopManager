@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/spf13/cobra"
 )
 
@@ -57,7 +58,7 @@ func discordBridgePath() (string, error) {
 	if override := os.Getenv("SENDA_DISCORD_BRIDGE"); override != "" {
 		return override, nil
 	}
-	var candidates []string
+	candidates := []string{paths.DiscordBridgeScript()}
 	if executable, err := os.Executable(); err == nil {
 		dir := filepath.Dir(executable)
 		candidates = append(candidates, filepath.Join(dir, "discord-bridge.py"), filepath.Join(dir, "..", "scripts", "discord-bridge.py"))
