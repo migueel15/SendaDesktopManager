@@ -32,11 +32,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
-        working-directory: ${{ runner.temp }}/release
         run: |
+          cd "$GITHUB_WORKSPACE"
+          assets="$RUNNER_TEMP/release"
           gh release create "$TAG" \
-            "senda-$TAG-linux-amd64" \
-            "senda-quickshell-$TAG.tar.gz" \
-            checksums.txt \
+            "$assets/senda-$TAG-linux-amd64" \
+            "$assets/senda-quickshell-$TAG.tar.gz" \
+            "$assets/checksums.txt" \
             --title "$TAG" \
             --generate-notes
