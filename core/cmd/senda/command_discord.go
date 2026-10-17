@@ -55,7 +55,7 @@ func discordCmd() *cobra.Command {
 }
 
 func discordBridgePath() (string, error) {
-	if override := os.Getenv("SENDA_DISCORD_BRIDGE"); override != "" {
+	if override := paths.Setting("SENDA_DISCORD_BRIDGE"); override != "" {
 		return override, nil
 	}
 	candidates := []string{paths.DiscordBridgeScript()}

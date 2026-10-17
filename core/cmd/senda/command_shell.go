@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"log"
@@ -218,84 +217,19 @@ func removePidFile() {
 	os.Remove(pidFile)
 }
 
-// quickshellEnv exposes the running senda binary to QML and loads the
-// private DORLAB_API_KEY from the user's config directory.
+// quickshellEnv exposes the running senda binary to QML and passes the
+// private DORLAB_API_KEY from the environment or the config file.
 func quickshellEnv() []string {
 	var env []string
 	if executable, err := os.Executable(); err == nil {
 		env = append(env, "SENDA_BIN="+executable)
 	}
 
-	envFile := paths.EnvFile()
-	dorlabAPIKey, ok, err := readDotEnvValue(envFile, dorlabAPIKeyEnv)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			log.Println("error reading .env:", err)
-		} else {
-			log.Println(".env not found at", envFile)
-		}
-		return env
+	if key := paths.Setting(dorlabAPIKeyEnv); key != "" {
+		log.Println("loaded", dorlabAPIKeyEnv)
+		env = append(env, dorlabAPIKeyEnv+"="+key)
+	} else {
+		log.Println(dorlabAPIKeyEnv, "not set in the environment or", paths.ConfigFile())
 	}
-
-	if !ok || dorlabAPIKey == "" {
-		log.Println(dorlabAPIKeyEnv, "not found in", envFile)
-		return env
-	}
-
-	log.Println("loaded", dorlabAPIKeyEnv, "from", envFile)
-	return append(env, dorlabAPIKeyEnv+"="+dorlabAPIKey)
-}
-
-func readDotEnvValue(filePath string, key string) (string, bool, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return "", false, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		line = strings.TrimPrefix(line, "export ")
-		name, value, ok := strings.Cut(line, "=")
-		if !ok || strings.TrimSpace(name) != key {
-			continue
-		}
-
-		return parseDotEnvValue(value), true, nil
-	}
-
-	if err := scanner.Err(); err != nil {
-		return "", false, err
-	}
-
-	return "", false, nil
-}
-
-func parseDotEnvValue(value string) string {
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return ""
-	}
-
-	if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
-		return value[1 : len(value)-1]
-	}
-
-	if strings.HasPrefix(value, "\"") {
-		unquoted, err := strconv.Unquote(value)
-		if err == nil {
-			return unquoted
-		}
-	}
-
-	if commentIndex := strings.Index(value, " #"); commentIndex >= 0 {
-		value = value[:commentIndex]
-	}
-
-	return strings.TrimSpace(value)
+	return env
 }

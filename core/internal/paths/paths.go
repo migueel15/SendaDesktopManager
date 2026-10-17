@@ -1,19 +1,28 @@
 package paths
 
 import (
+	"log"
 	"os"
 	"path/filepath"
+	"sync"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 )
 
 const appName = "senda"
 
-// ConfigDir holds user settings and secrets, such as the .env file.
+// configErrorOnce ensures a broken config file is reported once per process,
+// because Setting is called from several places.
+var configErrorOnce sync.Once
+
+// ConfigDir holds the user's settings file and its secrets.
 func ConfigDir() string {
 	return filepath.Join(xdgDir("XDG_CONFIG_HOME", ".config"), appName)
 }
 
 // DataDir holds the files Senda needs to run but that are not user settings.
-// SENDA_HOME overrides it, which is how a development checkout is used.
+// SENDA_HOME overrides it, which is how a development checkout is used. It is
+// read only from the environment, never from the config file.
 func DataDir() string {
 	if home := os.Getenv("SENDA_HOME"); home != "" {
 		return home
@@ -31,9 +40,27 @@ func DiscordBridgeScript() string {
 	return filepath.Join(DataDir(), "scripts", "discord-bridge.py")
 }
 
-// EnvFile holds DORLAB_API_KEY and other private values.
-func EnvFile() string {
-	return filepath.Join(ConfigDir(), ".env")
+// ConfigFile holds KEY=VALUE settings, including private values such as
+// DORLAB_API_KEY, so it is created with owner-only permissions.
+func ConfigFile() string {
+	return filepath.Join(ConfigDir(), "config")
+}
+
+// Setting returns the value of name. An environment variable takes precedence
+// over the config file, and both are empty when the setting is not defined.
+func Setting(name string) string {
+	if value := os.Getenv(name); value != "" {
+		return value
+	}
+
+	values, err := config.Load(ConfigFile())
+	if err != nil {
+		configErrorOnce.Do(func() {
+			log.Println("error reading config:", err)
+		})
+		return ""
+	}
+	return values[name]
 }
 
 // VersionFile records the release whose files are installed in DataDir.
