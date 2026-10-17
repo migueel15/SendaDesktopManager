@@ -10,7 +10,7 @@ Abre Discord y ejecuta:
 senda discord connect
 ```
 
-Al iniciar Quickshell, el widget pone en marcha el puente local. El puente detecta la aparición del socket IPC de Discord y conecta automáticamente, incluso si Discord se abre después. Si falta autorización o Discord rechaza el token guardado, aparece un icono de Discord en la barra para volver a autorizar el acceso. Cuando la sesión está autorizada, el widget muestra los avatares del canal y ofrece botones de mute, deafen y salida de la llamada; el botón para salir aparece a la derecha del control de deafen mientras estás en un canal. Si Discord está cerrado, el widget permanece oculto.
+Al iniciar Quickshell, el widget pone en marcha el puente local. El puente conecta automáticamente si Discord ya está abierto, detecta la aparición de su socket IPC si se abre después y vuelve a comprobar la conexión mientras Discord todavía no está listo, aumentando la espera desde 1 segundo hasta un máximo de 30 segundos. Así cubre también el caso en que Discord cree el socket antes de que su endpoint RPC acepte conexiones. Si falta autorización o Discord rechaza el token guardado, aparece un icono de Discord en la barra para volver a autorizar el acceso. Cuando la sesión está autorizada, el widget muestra los avatares del canal y ofrece botones de mute, deafen y salida de la llamada; el botón para salir aparece a la derecha del control de deafen mientras estás en un canal. Si Discord está cerrado, el widget permanece oculto.
 
 El botón de mute se muestra activo mientras estás muteado o ensordecido. Al pulsarlo mientras estás ensordecido, el puente desactiva mute y deafen. Al pulsar solo el botón de deafen para salir del ensordecimiento, conserva el estado previo del micrófono.
 
