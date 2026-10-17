@@ -10,15 +10,17 @@ The project is currently in an early stage. For now, it includes basic wallpaper
 - Support for wallpaper transitions
 - Initial support for transition position
 - Modular backend-based architecture
-- Current wallpaper backend: `swww`
+- Current wallpaper backend: `awww`
 
 ## Requirements
 
 - Linux
 - Wayland
-- `swww`
+- `awww`, available in `PATH`
 
-If you are using the current wallpaper backend, make sure `awww-daemon` is running before setting a wallpaper.
+The wallpaper backend is `awww` (see `core/internal/wallpaper/adapter/awww/awww.go`). Senda runs `awww img` for each wallpaper change. Senda does not start the `awww` daemon.
 
-```bash
-swww-daemon
+## Instalación
+
+- [Instalación](../docs/installation.md): instalador, `senda update` y estado de `senda setup`.
+- [Configuración](../docs/configuration.md): archivo `KEY=VALUE`, ubicación y claves que se leen.

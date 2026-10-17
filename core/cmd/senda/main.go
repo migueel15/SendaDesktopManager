@@ -25,6 +25,9 @@ func main() {
 	rootCmd.AddCommand(discordCmd())
 	rootCmd.AddCommand(windowCmd())
 	rootCmd.AddCommand(notificationsCmd)
+	rootCmd.AddCommand(versionCmd())
+	rootCmd.AddCommand(updateCmd())
+	rootCmd.AddCommand(setupCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

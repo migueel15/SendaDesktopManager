@@ -41,7 +41,7 @@ Los comandos de volumen y mute cambian los ajustes locales de un participante de
 
 El proceso del puente se inicia en segundo plano con `connect` o `authorize`; el widget ejecuta `connect` al cargar la barra. `status` no lo inicia. Los comandos responden con código distinto de cero si el puente no está disponible o Discord no está autorizado. La interfaz estable para scripts es la CLI; el socket interno usa JSON Lines en `$XDG_RUNTIME_DIR/senda-discord.sock`, modo `0600`, y no requiere conocer ni manejar el token.
 
-El ejecutable `senda` localiza `core/scripts/discord-bridge.py` junto al checkout o desde el directorio de trabajo. Para otra instalación, configura `SENDA_DISCORD_BRIDGE` con la ruta absoluta del script. Se requiere Python 3 y no hay dependencias de paquetes externas.
+El ejecutable `senda` usa `SENDA_DISCORD_BRIDGE` si está definido, en el entorno o en el archivo de configuración `$XDG_CONFIG_HOME/senda/config` (ver [configuration.md](configuration.md)). Si no, busca `discord-bridge.py` en este orden: el directorio de datos `$XDG_DATA_HOME/senda/scripts/` (o `SENDA_HOME/scripts/` si `SENDA_HOME` está definido), junto al binario, en `../scripts/` respecto al binario, y en el directorio de trabajo (`core/scripts/` o `scripts/`). Para otra instalación, configura `SENDA_DISCORD_BRIDGE` con la ruta absoluta del script. Se requiere Python 3 y no hay dependencias de paquetes externas.
 
 ## Limitaciones
 
