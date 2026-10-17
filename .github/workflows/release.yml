@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions: {}
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: core/go.mod
+
+      - name: Package release assets
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          core/scripts/package-release.sh "$TAG" "$RUNNER_TEMP/release"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        working-directory: ${{ runner.temp }}/release
+        run: |
+          gh release create "$TAG" \
+            "senda-$TAG-linux-amd64" \
+            "senda-quickshell-$TAG.tar.gz" \
+            checksums.txt \
+            --title "$TAG" \
+            --generate-notes
