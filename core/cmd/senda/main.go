@@ -26,6 +26,7 @@ func main() {
 	rootCmd.AddCommand(windowCmd())
 	rootCmd.AddCommand(notificationsCmd)
 	rootCmd.AddCommand(versionCmd())
+	rootCmd.AddCommand(updateCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
