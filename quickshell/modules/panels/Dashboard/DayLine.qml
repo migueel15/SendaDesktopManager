@@ -19,7 +19,7 @@ Item {
     readonly property real sunriseTime: root.sunKnown ? new Date(SendaWeather.current.sunrise).getTime() : root.dayStart
     readonly property real sunsetTime: root.sunKnown ? new Date(SendaWeather.current.sunset).getTime() : root.dayStart
 
-    readonly property int arcHeight: 12
+    readonly property int arcHeight: 18
     readonly property var arcSteps: [...Array(31).keys()]
 
     readonly property var timedEvents: SendaCalendar.eventsOn(root.today).filter(event => !event.allDay)
@@ -46,7 +46,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.topMargin: 16
+        anchors.topMargin: 20
         height: 2
         radius: 1
         color: Theme.colors.surfaceVariant
