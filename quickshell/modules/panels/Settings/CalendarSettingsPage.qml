@@ -12,17 +12,16 @@ Flickable {
     // Calendar IDs currently checked in the list below.
     property var selectedCalendars: []
 
-    // Whether the own-client fields are open. Only matters when the build ships
-    // its own client.
+    // The own-client fields stay hidden until the user asks for them.
     property bool showOwnClient: false
 
     contentHeight: column.implicitHeight
     clip: true
 
-    function syncFields() {
-        if (clientIdField.text === "") {
-            clientIdField.text = SendaSettings.values.SENDA_GOOGLE_CLIENT_ID ?? "";
-        }
+    function openOwnClient() {
+        clientIdField.text = "";
+        clientSecretField.text = "";
+        root.showOwnClient = true;
     }
 
     function syncCalendarSelection() {
@@ -46,19 +45,12 @@ Flickable {
     Connections {
         target: SendaSettings
 
-        function onValuesChanged() {
-            root.syncFields();
-        }
-
         function onCalendarsChanged() {
             root.syncCalendarSelection();
         }
     }
 
-    Component.onCompleted: {
-        root.syncFields();
-        root.syncCalendarSelection();
-    }
+    Component.onCompleted: root.syncCalendarSelection()
 
     ColumnLayout {
         id: column
@@ -83,17 +75,16 @@ Flickable {
             }
         }
 
-        // Own OAuth client. Releases ship with one, so this stays hidden until
-        // the user asks for it. Builds without an embedded client show it at once.
+        // Own OAuth client. Hidden by default; the button opens two empty fields.
         SettingsButton {
-            visible: SendaSettings.embeddedClient && !root.showOwnClient
-            label: "Usar mi propio cliente de Google"
-            onClicked: root.showOwnClient = true
+            visible: !root.showOwnClient
+            label: "Crear mis propias credenciales"
+            onClicked: root.openOwnClient()
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            visible: root.showOwnClient || !SendaSettings.embeddedClient
+            visible: root.showOwnClient
             spacing: 12
 
             Text {
