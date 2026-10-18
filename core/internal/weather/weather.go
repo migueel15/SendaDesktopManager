@@ -64,6 +64,10 @@ type Current struct {
 	Max         float64 `json:"max"`
 	Condition   string  `json:"condition"`
 	Label       string  `json:"label"`
+	// Sunrise and Sunset are local times in the place's time zone, as
+	// YYYY-MM-DDTHH:MM, which is how Open-Meteo returns them with timezone=auto.
+	Sunrise string `json:"sunrise"`
+	Sunset  string `json:"sunset"`
 }
 
 type geocodingResponse struct {
@@ -84,6 +88,8 @@ type forecastResponse struct {
 	Daily struct {
 		TemperatureMax []float64 `json:"temperature_2m_max"`
 		TemperatureMin []float64 `json:"temperature_2m_min"`
+		Sunrise        []string  `json:"sunrise"`
+		Sunset         []string  `json:"sunset"`
 	} `json:"daily"`
 }
 
@@ -126,7 +132,7 @@ func (c *Client) Current(ctx context.Context, latitude, longitude float64) (Curr
 		"latitude":      {strconv.FormatFloat(latitude, 'f', -1, 64)},
 		"longitude":     {strconv.FormatFloat(longitude, 'f', -1, 64)},
 		"current":       {"temperature_2m,weather_code"},
-		"daily":         {"temperature_2m_max,temperature_2m_min"},
+		"daily":         {"temperature_2m_max,temperature_2m_min,sunrise,sunset"},
 		"forecast_days": {"1"},
 		"timezone":      {"auto"},
 	}, &response); err != nil {
@@ -136,6 +142,9 @@ func (c *Client) Current(ctx context.Context, latitude, longitude float64) (Curr
 	if len(response.Daily.TemperatureMax) == 0 || len(response.Daily.TemperatureMin) == 0 {
 		return Current{}, errors.New("forecast response has no daily range")
 	}
+	if len(response.Daily.Sunrise) == 0 || len(response.Daily.Sunset) == 0 {
+		return Current{}, errors.New("forecast response has no sunrise or sunset")
+	}
 	key, label := Condition(response.Current.WeatherCode)
 	return Current{
 		Temperature: response.Current.Temperature,
@@ -143,6 +152,8 @@ func (c *Client) Current(ctx context.Context, latitude, longitude float64) (Curr
 		Max:         response.Daily.TemperatureMax[0],
 		Condition:   key,
 		Label:       label,
+		Sunrise:     response.Daily.Sunrise[0],
+		Sunset:      response.Daily.Sunset[0],
 	}, nil
 }
 
