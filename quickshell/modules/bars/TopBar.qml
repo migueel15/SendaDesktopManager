@@ -79,7 +79,14 @@ Variants {
 		}
 
 		Clock {
+			id: barClock
 			screenName: topbar.screenName
+		}
+
+		UpdateNotice {
+			anchors.verticalCenter: parent.verticalCenter
+			anchors.right: barClock.left
+			anchors.rightMargin: 12
 		}
 
 		RowLayout {
