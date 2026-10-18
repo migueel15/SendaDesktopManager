@@ -21,6 +21,13 @@ const (
 	keyWeatherLocation    = "SENDA_WEATHER_LOCATION"
 	keyWeatherLat         = "SENDA_WEATHER_LAT"
 	keyWeatherLon         = "SENDA_WEATHER_LON"
+	keyUIFontScale        = "SENDA_UI_FONT_SCALE"
+)
+
+// Bounds of the interface font scale, in percent. 100 is the default size.
+const (
+	minUIFontScale = 80
+	maxUIFontScale = 150
 )
 
 // editableSettings is the only set of keys the settings panel may write. Any
@@ -33,6 +40,7 @@ var editableSettings = map[string]bool{
 	keyWeatherLocation:    true,
 	keyWeatherLat:         true,
 	keyWeatherLon:         true,
+	keyUIFontScale:        true,
 }
 
 func configCmd() *cobra.Command {
@@ -63,6 +71,7 @@ func configGetCmd() *cobra.Command {
 					keyWeatherLocation: values[keyWeatherLocation],
 					keyWeatherLat:      values[keyWeatherLat],
 					keyWeatherLon:      values[keyWeatherLon],
+					keyUIFontScale:     values[keyUIFontScale],
 				},
 				"googleClientSecretConfigured": values[keyGoogleClientSecret] != "",
 				"embeddedGoogleClient":         googlecalendar.HasEmbeddedCredentials(),
@@ -119,6 +128,8 @@ func validateSetting(key, value string) error {
 		return validateCoordinate(key, strings.TrimSpace(value), 90)
 	case keyWeatherLon:
 		return validateCoordinate(key, strings.TrimSpace(value), 180)
+	case keyUIFontScale:
+		return validateFontScale(strings.TrimSpace(value))
 	}
 	return nil
 }
@@ -141,4 +152,17 @@ func defaultLocationName() string {
 		return place.Name
 	}
 	return ""
+}
+
+// validateFontScale accepts an empty value, which restores the default, or a
+// whole percentage within the allowed range.
+func validateFontScale(value string) error {
+	if value == "" {
+		return nil
+	}
+	percent, err := strconv.Atoi(value)
+	if err != nil || percent < minUIFontScale || percent > maxUIFontScale {
+		return fmt.Errorf("%s must be a whole number between %d and %d", keyUIFontScale, minUIFontScale, maxUIFontScale)
+	}
+	return nil
 }

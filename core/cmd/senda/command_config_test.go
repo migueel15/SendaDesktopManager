@@ -59,3 +59,17 @@ func TestReadChangesReturnsWhileStdinStaysOpen(t *testing.T) {
 		t.Fatal("readChanges() waited for EOF on stdin")
 	}
 }
+
+func TestReadChangesValidatesFontScale(t *testing.T) {
+	if _, err := readChanges(strings.NewReader(`{"SENDA_UI_FONT_SCALE":"110"}`)); err != nil {
+		t.Fatalf("readChanges() rejected a valid scale: %v", err)
+	}
+	if _, err := readChanges(strings.NewReader(`{"SENDA_UI_FONT_SCALE":""}`)); err != nil {
+		t.Fatalf("readChanges() rejected an empty scale, which restores the default: %v", err)
+	}
+	for _, input := range []string{`{"SENDA_UI_FONT_SCALE":"79"}`, `{"SENDA_UI_FONT_SCALE":"151"}`, `{"SENDA_UI_FONT_SCALE":"1.1"}`, `{"SENDA_UI_FONT_SCALE":"grande"}`} {
+		if _, err := readChanges(strings.NewReader(input)); err == nil {
+			t.Fatalf("readChanges(%s) accepted an invalid scale", input)
+		}
+	}
+}
