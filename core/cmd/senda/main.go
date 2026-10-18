@@ -24,6 +24,7 @@ func main() {
 	rootCmd.AddCommand(brightnessCmd)
 	rootCmd.AddCommand(discordCmd())
 	rootCmd.AddCommand(calendarCmd())
+	rootCmd.AddCommand(configCmd())
 	rootCmd.AddCommand(windowCmd())
 	rootCmd.AddCommand(notificationsCmd)
 	rootCmd.AddCommand(versionCmd())
