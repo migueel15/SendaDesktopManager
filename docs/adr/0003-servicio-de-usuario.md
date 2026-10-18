@@ -13,7 +13,7 @@ Tras `senda setup`, el usuario tenía que añadir `senda shell run` a la configu
 1. `senda setup` instala, habilita y arranca la unidad de usuario `senda.service` en `$XDG_CONFIG_HOME/systemd/user/`. Se llama `senda`, no `senda-shell`, porque gestionará todo lo que Senda ejecuta en segundo plano. Hoy ejecuta `senda shell run`.
 2. La unidad usa `WantedBy=default.target` y un `ExecStartPre` que espera al entorno de Hyprland, con `Restart=on-failure` y sin límite de arranques. Se descarta `graphical-session.target` porque Hyprland sin UWSM no lo activa.
 3. `senda update` reinicia la unidad. Si se ejecuta desde dentro de ella (lanzada por Quickshell), usa `--no-block`, porque el reinicio termina también ese proceso.
-4. `senda shell run|kill|restart` delegan en systemd cuando la unidad existe; `shell run` dentro de la unidad (con `INVOCATION_ID`) ejecuta Quickshell en primer plano.
+4. `senda shell run|kill|restart` delegan en systemd cuando la unidad existe; `shell run` dentro de la unidad (detectado por su cgroup) ejecuta Quickshell en primer plano.
 5. `senda uninstall` elimina la unidad, el binario y los directorios de datos, configuración y estado. No toca los paquetes de pacman.
 6. Se mantiene que ni el instalador ni `setup` editan la configuración de Hyprland ni requieren root.
 

@@ -68,10 +68,26 @@ func Installed() bool {
 	return err == nil
 }
 
-// RunningUnderSystemd reports whether this process was started by systemd as
-// part of a unit, which sets INVOCATION_ID.
+// RunningUnderSystemd reports whether this process runs inside senda.service.
+// INVOCATION_ID is not enough: any program started from another unit, such as
+// a terminal, inherits it. The cgroup names the unit that owns the process.
 func RunningUnderSystemd() bool {
-	return os.Getenv("INVOCATION_ID") != ""
+	data, err := os.ReadFile("/proc/self/cgroup")
+	if err != nil {
+		return false
+	}
+	return inUnitCgroup(string(data))
+}
+
+// inUnitCgroup reports whether a /proc/<pid>/cgroup listing places the
+// process in senda.service.
+func inUnitCgroup(cgroup string) bool {
+	for _, line := range strings.Split(cgroup, "\n") {
+		if strings.HasSuffix(strings.TrimSpace(line), "/"+Name) {
+			return true
+		}
+	}
+	return false
 }
 
 // Install writes the unit for exe, enables it and (re)starts it so the

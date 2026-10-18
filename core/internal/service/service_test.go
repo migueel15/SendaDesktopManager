@@ -33,3 +33,17 @@ func TestUnitPathUsesXDGConfigHome(t *testing.T) {
 		t.Errorf("UnitPath() = %q, want %q", got, want)
 	}
 }
+
+func TestInUnitCgroup(t *testing.T) {
+	cases := map[string]bool{
+		"0::/user.slice/user-1000.slice/user@1000.service/app.slice/senda.service\n":     true,
+		"0::/user.slice/user-1000.slice/user@1000.service/app.slice/t3code.service\n":    false,
+		"0::/user.slice/user-1000.slice/user@1000.service/app.slice/app-kitty-1.scope\n": false,
+		"0::/user.slice/user-1000.slice/user@1000.service/app.slice/my-senda.service\n":  false,
+	}
+	for cgroup, want := range cases {
+		if got := inUnitCgroup(cgroup); got != want {
+			t.Errorf("inUnitCgroup(%q) = %v, want %v", cgroup, got, want)
+		}
+	}
+}

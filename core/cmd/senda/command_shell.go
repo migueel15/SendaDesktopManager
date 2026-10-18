@@ -43,8 +43,11 @@ var shellKillCmd = &cobra.Command{
 	Short: "kill Quickshell instance",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if service.Installed() {
-			return service.Stop()
+			if err := service.Stop(); err != nil {
+				return err
+			}
 		}
+		// Also stop an instance started by hand, outside the service.
 		closeShell()
 		return nil
 	},
