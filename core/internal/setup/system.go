@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"syscall"
 	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/discordbridge"
+	"github.com/migueel15/SendaDesktopManager/core/internal/service"
 )
 
 // SystemPacman is the Pacman implementation that runs the real pacman and sudo.
@@ -39,10 +39,10 @@ func (SystemPacman) Install(pkgs []string) error {
 	return cmd.Run()
 }
 
-// StartShell restarts Quickshell: it stops any instance already running, and
-// the Discord bridge, so the freshly installed files are loaded, then starts
-// `exe shell run` detached from this process, the same way update restarts it.
-// Quickshell starts the installed bridge again. It does not wait for the child.
+// StartShell stops any Quickshell instance already running, and the Discord
+// bridge, so the freshly installed files are loaded, then installs and
+// (re)starts senda.service, which runs `exe shell run` at every login.
+// Quickshell starts the installed bridge again.
 func StartShell(exe string) error {
 	if err := exec.Command(exe, "shell", "kill").Run(); err != nil {
 		return fmt.Errorf("detener Quickshell: %w", err)
@@ -50,11 +50,5 @@ func StartShell(exe string) error {
 	if err := discordbridge.Stop(discordbridge.SocketPath(), 3*time.Second); err != nil {
 		fmt.Fprintln(os.Stderr, "aviso:", err)
 	}
-
-	shell := exec.Command(exe, "shell", "run")
-	shell.Stdin = nil
-	shell.Stdout = nil
-	shell.Stderr = nil
-	shell.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
-	return shell.Start()
+	return service.Install(exe)
 }

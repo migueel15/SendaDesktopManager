@@ -42,8 +42,8 @@ type Options struct {
 const checksumsAsset = "checksums.txt"
 
 // Run performs the setup steps in order and stops at the first failed
-// prerequisite. It never edits Hyprland files; the user adds the autostart
-// line by hand.
+// prerequisite. It never edits Hyprland files: autostart is handled by the
+// senda.service user unit.
 func Run(ctx context.Context, opts Options) error {
 	if opts.In == nil {
 		opts.In = strings.NewReader("")
@@ -74,13 +74,11 @@ func Run(ctx context.Context, opts Options) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(opts.Out, "Añade a la configuración de Hyprland el arranque de: %s shell run\n", exe)
-	fmt.Fprintln(opts.Out, "setup no modifica ningún archivo de Hyprland; añade esa línea tú mismo")
-
 	if err := opts.StartShell(exe); err != nil {
-		return fmt.Errorf("iniciar Quickshell: %w", err)
+		return fmt.Errorf("instalar el servicio de Senda: %w", err)
 	}
-	fmt.Fprintln(opts.Out, "Quickshell iniciado")
+	fmt.Fprintln(opts.Out, "Servicio senda.service instalado y activo; Senda arrancará en cada inicio de sesión")
+	fmt.Fprintln(opts.Out, "Si tu configuración de Hyprland lanza 'senda shell run', quita esa línea")
 	return nil
 }
 
@@ -204,7 +202,7 @@ func dirExists(path string) bool {
 }
 
 // resolveExecutable returns the real path of the running binary, following
-// symlinks so the path printed for autostart is the one actually executed.
+// symlinks so the unit runs the file that is actually installed.
 func resolveExecutable(executable func() (string, error)) (string, error) {
 	exe, err := executable()
 	if err != nil {
