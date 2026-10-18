@@ -63,7 +63,7 @@ Rectangle {
         spacing: 16
 
         ColumnLayout {
-            Layout.preferredWidth: 330
+            Layout.preferredWidth: 260
             Layout.fillHeight: true
             spacing: 6
 
