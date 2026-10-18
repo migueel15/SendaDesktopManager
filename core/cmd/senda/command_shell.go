@@ -30,8 +30,10 @@ var shellRunCmd = &cobra.Command{
 	Short: "run Quickshell instance",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// With the service installed, an interactive run asks systemd to
-		// start it, so there is only ever one supervised instance.
-		if service.Installed() && !service.RunningUnderSystemd() {
+		// start it, so there is only ever one supervised instance. A
+		// development checkout (SENDA_HOME) runs its own shell instead, so the
+		// installed release is not started in its place.
+		if service.Installed() && !service.RunningUnderSystemd() && os.Getenv("SENDA_HOME") == "" {
 			return service.Start()
 		}
 		return runShellInteractive()
