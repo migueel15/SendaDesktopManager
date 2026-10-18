@@ -35,7 +35,13 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
 
-        color: Theme.colors.background
+        color: Theme.colors.surface
+
+        // Hovering the button keeps the tray open; it closes after leaving,
+        // the same way the Spotify and Discord widgets do.
+        HoverHandler {
+            id: expandButtonHover
+        }
 
         IconSlot {
             anchors.centerIn: parent
@@ -97,7 +103,9 @@ Rectangle {
             width: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
             expanded: root.expanded
             conflictGroup: "tray-popups"
-            autoHidePaused: root.trayMenuOpen
+            autoHideStartsOnExpand: true
+            autoHideDelay: 500
+            autoHidePaused: root.trayMenuOpen || expandButtonHover.hovered
             onCloseRequested: root.expanded = false
 
             Row {
