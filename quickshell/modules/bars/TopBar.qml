@@ -86,8 +86,8 @@ Variants {
 		UpdateNotice {
 			screenName: topbar.screenName
 			anchors.verticalCenter: parent.verticalCenter
-			anchors.right: barClock.left
-			anchors.rightMargin: 12
+			anchors.left: barClock.right
+			anchors.leftMargin: 12
 		}
 
 		RowLayout {
