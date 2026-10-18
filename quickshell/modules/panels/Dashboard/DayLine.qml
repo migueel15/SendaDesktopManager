@@ -34,15 +34,6 @@ Item {
         return Qt.formatTime(new Date(time), "HH:mm");
     }
 
-    // Says what the light is doing, so the line never shows up without context.
-    readonly property string lightStatus: {
-        if (!root.sunKnown) return "Sin datos de amanecer y atardecer";
-        const current = root.now.getTime();
-        if (current < root.sunriseTime) return `Noche · amanece a las ${root.clock(root.sunriseTime)}`;
-        if (current > root.sunsetTime) return "Noche · el sol ya se ha puesto";
-        return `Luz · se pone a las ${root.clock(root.sunsetTime)}`;
-    }
-
     Timer {
         interval: 60000
         running: true
@@ -50,23 +41,12 @@ Item {
         onTriggered: root.now = new Date()
     }
 
-    Text {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        elide: Text.ElideRight
-        text: root.lightStatus
-        color: Theme.colors.text
-        font.family: Theme.font.overlay.family
-        font.pixelSize: 11
-    }
-
     Rectangle {
         id: track
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.topMargin: 30
+        anchors.topMargin: 16
         height: 2
         radius: 1
         color: Theme.colors.surfaceVariant

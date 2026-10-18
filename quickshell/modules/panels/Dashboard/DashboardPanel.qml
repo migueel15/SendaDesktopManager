@@ -113,7 +113,7 @@ SendaPanel {
                     Item { Layout.fillHeight: true }
                     DayLine {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 56
+                        Layout.preferredHeight: 44
                     }
                 }
 
