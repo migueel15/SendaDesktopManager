@@ -24,7 +24,7 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => {
             if (event.button === Qt.LeftButton) {
-                OverlayService.setCurrentPanel("dashboard");
+                OverlayService.setCurrentPanel("dashboard", Window.window.screen.name);
             } else if (event.button === Qt.RightButton) {
                 clockText.isPrimary = !clockText.isPrimary;
             }

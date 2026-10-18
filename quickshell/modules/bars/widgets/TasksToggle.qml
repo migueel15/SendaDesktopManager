@@ -69,7 +69,7 @@ Item {
 			anchors.fill: parent
 			hoverEnabled: true
 			cursorShape: Qt.PointingHandCursor
-			onClicked: OverlayService.setCurrentPanel("tasks")
+			onClicked: OverlayService.setCurrentPanel("tasks", Window.window.screen.name)
 		}
 
 		RowLayout {

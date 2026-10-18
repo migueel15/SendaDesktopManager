@@ -23,7 +23,11 @@ Item {
     height: targetHeight + padding * 2 ?? container.height
     width: targetWidth ?? container.width
 
-    visible: OverlayService.currentPanel === name || Debug.enabled && Debug.panel === name
+    // True on the monitor the panel was opened from.
+    readonly property bool onOpenScreen: Window.window !== null && Window.window.screen !== null
+        && Window.window.screen.name === OverlayService.currentScreen
+
+    visible: OverlayService.currentPanel === name && root.onOpenScreen || Debug.enabled && Debug.panel === name
 
     MouseArea {
         anchors.fill: parent

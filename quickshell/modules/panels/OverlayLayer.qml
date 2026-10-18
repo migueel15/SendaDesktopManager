@@ -13,6 +13,11 @@ import Quickshell.Wayland
 PanelWindow {
     id: overlayLayer
 
+    // One layer per monitor, so a click on any monitor closes an open panel.
+    // Panels themselves only show on the monitor they were opened from.
+    required property var modelData
+    screen: modelData
+
     WlrLayershell.namespace: "Senda:OverlayLayer"
 
     anchors {
@@ -25,7 +30,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     // visible: hasOpenPopup
-    visible: OverlayService.currentPanel
+    visible: OverlayService.currentPanel !== ""
     color: "transparent"
 
     aboveWindows: true

@@ -105,7 +105,7 @@ Variants {
 
 			ControlPanel {
 				onClicked: {
-					OverlayService.setCurrentPanel("controlCenter");
+					OverlayService.setCurrentPanel("controlCenter", Window.window.screen.name);
 				}
 				Layout.rightMargin: 8
 				Layout.leftMargin: 8

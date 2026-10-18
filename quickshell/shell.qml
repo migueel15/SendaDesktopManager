@@ -32,8 +32,11 @@ ShellRoot {
 
 	VolumeOSD {}
 
-	OverlayLayer {
+	Variants {
 		id: panelCtrl
+		model: Quickshell.screens
+
+		OverlayLayer {}
 	}
 
 	WallpaperLayer {}
