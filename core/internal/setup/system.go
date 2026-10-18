@@ -36,9 +36,15 @@ func (SystemPacman) Install(pkgs []string) error {
 	return cmd.Run()
 }
 
-// StartShell starts `exe shell run` detached from this process, the same way
-// update restarts Quickshell. It does not wait for the child.
+// StartShell restarts Quickshell: it stops any instance already running, so
+// the freshly installed files are loaded, then starts `exe shell run` detached
+// from this process, the same way update restarts it. It does not wait for the
+// child.
 func StartShell(exe string) error {
+	if err := exec.Command(exe, "shell", "kill").Run(); err != nil {
+		return fmt.Errorf("detener Quickshell: %w", err)
+	}
+
 	shell := exec.Command(exe, "shell", "run")
 	shell.Stdin = nil
 	shell.Stdout = nil
