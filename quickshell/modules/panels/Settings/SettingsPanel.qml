@@ -37,7 +37,7 @@ SendaPanel {
         spacing: 16
 
         ColumnLayout {
-            Layout.preferredWidth: 170
+            Layout.preferredWidth: root.width * 0.2
             Layout.fillHeight: true
             spacing: 4
 
