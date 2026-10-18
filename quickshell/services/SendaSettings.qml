@@ -29,6 +29,8 @@ Singleton {
     property bool noticeIsError: false
     // Shown when the pending save finishes without an error.
     property string pendingSuccess: ""
+    // JSON sent on stdin by the save process, once it has started.
+    property string pendingInput: ""
 
     readonly property bool busy: configProcess.running || statusProcess.running || calendarsProcess.running
         || saveProcess.running || loginProcess.running || logoutProcess.running || searchProcess.running
@@ -52,8 +54,10 @@ Singleton {
             return;
         }
         root.pendingSuccess = successMessage;
+        // The JSON is written once the process has started, because writing
+        // before that loses the data and `config set` then receives nothing.
+        root.pendingInput = JSON.stringify(changes);
         root.start(saveProcess, [root.binaryPath, "config", "set"]);
-        saveProcess.write(JSON.stringify(changes));
     }
 
     // Saves the OAuth client. The secret is optional when one is already stored.
@@ -174,6 +178,7 @@ Singleton {
     Process {
         id: saveProcess
         stdinEnabled: true
+        onStarted: saveProcess.write(root.pendingInput)
         stderr: StdioCollector {
             id: saveErrors
         }
