@@ -37,7 +37,10 @@ SendaPanel {
         spacing: 16
 
         ColumnLayout {
+            // Fixed at 20% of the window, so the sections never take over the content.
             Layout.preferredWidth: root.width * 0.2
+            Layout.minimumWidth: root.width * 0.2
+            Layout.maximumWidth: root.width * 0.2
             Layout.fillHeight: true
             spacing: 4
 
@@ -104,6 +107,7 @@ SendaPanel {
 
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.minimumWidth: 0
             Layout.fillHeight: true
             spacing: 10
 
