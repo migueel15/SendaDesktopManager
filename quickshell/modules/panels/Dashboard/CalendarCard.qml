@@ -45,6 +45,12 @@ Rectangle {
         root.shownMonth = new Date(root.shownMonth.getFullYear(), root.shownMonth.getMonth() + offset, 1);
     }
 
+    function goToToday() {
+        root.today = root.startOfDay(new Date());
+        root.shownMonth = new Date(root.today.getFullYear(), root.today.getMonth(), 1);
+        root.selectedDay = root.today;
+    }
+
     // Loads the six visible weeks whenever the grid moves.
     onGridStartChanged: SendaCalendar.loadRange(root.gridStart, root.dayAt(42))
 
@@ -105,6 +111,33 @@ Rectangle {
                         anchors.margins: -6
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.moveMonth(1)
+                    }
+                }
+
+                Rectangle {
+                    Layout.preferredWidth: todayLabel.implicitWidth + 14
+                    Layout.preferredHeight: 22
+                    radius: Theme.rounding.small
+                    color: todayMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+                    border.width: 1
+                    border.color: Theme.colors.surfaceVariant
+
+                    Text {
+                        id: todayLabel
+                        anchors.centerIn: parent
+                        text: "Hoy"
+                        color: Theme.colors.primary
+                        font.family: Theme.font.overlay.family
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                    }
+
+                    MouseArea {
+                        id: todayMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.goToToday()
                     }
                 }
             }
