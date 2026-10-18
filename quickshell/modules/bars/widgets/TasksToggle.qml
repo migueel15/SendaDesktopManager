@@ -83,12 +83,16 @@ Item {
 			anchors.rightMargin: 8
 			spacing: 8
 
-			Text {
+			Item {
 				Layout.preferredWidth: 24
-				horizontalAlignment: Text.AlignHCenter
-				text: "󰄭"
-				color: root.open ? Theme.colors.primary : Theme.colors.text
-				font: Theme.font.base
+				Layout.fillHeight: true
+
+				Text {
+					anchors.centerIn: parent
+					text: "󰄭"
+					color: root.open ? Theme.colors.primary : Theme.colors.text
+					font: Theme.font.base
+				}
 			}
 
 			Rectangle {
