@@ -41,7 +41,7 @@ Rectangle {
 
             Text {
                 Layout.fillWidth: true
-                text: "TU ESPACIO"
+                text: "EL TIEMPO"
                 color: Theme.colors.overlay
                 font.family: Theme.font.overlay.family
                 font.pixelSize: 11
