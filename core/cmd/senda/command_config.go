@@ -91,14 +91,11 @@ func configSetCmd() *cobra.Command {
 	}
 }
 
+// readChanges decodes one JSON object and stops reading after it. The caller
+// may keep stdin open, so reading to EOF would block.
 func readChanges(input io.Reader) (map[string]string, error) {
-	data, err := io.ReadAll(io.LimitReader(input, 1<<16))
-	if err != nil {
-		return nil, err
-	}
-
 	var changes map[string]string
-	if err := json.Unmarshal(data, &changes); err != nil {
+	if err := json.NewDecoder(io.LimitReader(input, 1<<16)).Decode(&changes); err != nil {
 		return nil, fmt.Errorf("stdin must be a JSON object of string values: %w", err)
 	}
 	for key, value := range changes {

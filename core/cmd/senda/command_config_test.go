@@ -1,8 +1,10 @@
 package main
 
 import (
+	"io"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestReadChangesAcceptsEditableSettings(t *testing.T) {
@@ -32,5 +34,28 @@ func TestReadChangesValidatesCoordinates(t *testing.T) {
 func TestReadChangesRejectsNonObjectJSON(t *testing.T) {
 	if _, err := readChanges(strings.NewReader(`["SENDA_WEATHER_LAT"]`)); err == nil {
 		t.Fatal("readChanges() accepted a JSON array")
+	}
+}
+
+func TestReadChangesReturnsWhileStdinStaysOpen(t *testing.T) {
+	reader, writer := io.Pipe()
+	defer writer.Close()
+
+	done := make(chan error, 1)
+	go func() {
+		_, err := readChanges(reader)
+		done <- err
+	}()
+
+	if _, err := writer.Write([]byte(`{"SENDA_WEATHER_LAT":"39.4"}`)); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("readChanges() error = %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("readChanges() waited for EOF on stdin")
 	}
 }

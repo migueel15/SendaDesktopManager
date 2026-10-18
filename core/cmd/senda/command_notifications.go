@@ -89,13 +89,18 @@ func newNotificationsCmd() *cobra.Command {
 }
 
 func callNotificationsIPC(cmd *cobra.Command, function string, args ...string) (string, error) {
+	return callShellIPC(cmd, "notifications", function, args...)
+}
+
+// callShellIPC calls a function on an IpcHandler target of the running shell.
+func callShellIPC(cmd *cobra.Command, target string, function string, args ...string) (string, error) {
 	pid := readPidData()
 	if pid <= 0 || !isProcessRunning(pid) {
 		cmd.SilenceUsage = true
 		return "", fmt.Errorf("Senda shell is not running; start it with `senda shell run` and try again")
 	}
 
-	processArgs := []string{"ipc", "--pid", fmt.Sprint(pid), "call", "notifications", function}
+	processArgs := []string{"ipc", "--pid", fmt.Sprint(pid), "call", target, function}
 	processArgs = append(processArgs, args...)
 	process := exec.CommandContext(cmd.Context(), "qs", processArgs...)
 	output, err := process.Output()
@@ -104,7 +109,7 @@ func callNotificationsIPC(cmd *cobra.Command, function string, args ...string) (
 		if _, ok := err.(*exec.Error); ok {
 			return "", fmt.Errorf("Quickshell IPC is unavailable: `qs` could not be started")
 		}
-		return "", fmt.Errorf("could not call notifications IPC on Senda shell PID %d; confirm its IPC target is available", pid)
+		return "", fmt.Errorf("could not call %s IPC on Senda shell PID %d; confirm its IPC target is available", target, pid)
 	}
 	return string(output), nil
 }

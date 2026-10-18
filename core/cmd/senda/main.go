@@ -26,6 +26,7 @@ func main() {
 	rootCmd.AddCommand(calendarCmd())
 	rootCmd.AddCommand(configCmd())
 	rootCmd.AddCommand(weatherCmd())
+	rootCmd.AddCommand(settingsCmd())
 	rootCmd.AddCommand(windowCmd())
 	rootCmd.AddCommand(notificationsCmd)
 	rootCmd.AddCommand(versionCmd())
