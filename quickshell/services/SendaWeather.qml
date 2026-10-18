@@ -18,10 +18,16 @@ Singleton {
     // { temperature, min, max, condition, label } when status is "ready".
     property var current: null
 
+    // A request made while another one runs is queued, so the newest location
+    // is always the one that is shown.
+    property bool refreshQueued: false
+
     function refresh() {
         if (weatherProcess.running) {
+            root.refreshQueued = true;
             return;
         }
+        root.refreshQueued = false;
         weatherProcess.command = [root.binaryPath, "weather", "current"];
         weatherProcess.running = true;
     }
@@ -39,6 +45,10 @@ Singleton {
         }
 
         onExited: exitCode => {
+            if (root.refreshQueued) {
+                root.refresh();
+                return;
+            }
             if (exitCode === 0) {
                 try {
                     const data = JSON.parse(weatherOutput.text);

@@ -82,7 +82,6 @@ Singleton {
             SENDA_WEATHER_LAT: String(place.latitude),
             SENDA_WEATHER_LON: String(place.longitude)
         }, "Ubicación guardada");
-        SendaWeather.refresh();
     }
 
     function connectGoogle() {
@@ -187,6 +186,9 @@ Singleton {
                 root.notice = root.pendingSuccess;
                 root.noticeIsError = false;
                 root.refresh();
+                // The weather reads the saved location, so it can only be
+                // requested once the save has finished.
+                SendaWeather.refresh();
             } else {
                 root.showError(saveErrors.text, "No se pudo guardar la configuración");
             }
