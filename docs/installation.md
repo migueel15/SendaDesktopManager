@@ -7,10 +7,10 @@ Senda se distribuye como binario precompilado para Linux x86_64 desde las releas
 La página de instalación publica este comando:
 
 ```sh
-curl --proto '=https' --tlsv1.2 -fsSL https://migueel15.github.io/SendaDesktopManager/install.sh | bash
+curl --proto '=https' --tlsv1.2 -fsSL https://senda.dorlab.net/install.sh | bash
 ```
 
-Estado de esta URL: GitHub Pages todavía no está habilitado para el repositorio. Además, el workflow [pages.yml](../.github/workflows/pages.yml) solo publica el contenido de `site/`, y hoy `site/` contiene únicamente `index.html`, así que `install.sh` no se publica en esa URL. Hasta que se resuelva, el script puede obtenerse del repositorio (`install.sh` en la raíz).
+La URL se sirve con GitHub Pages en el dominio personalizado `senda.dorlab.net`, configurado mediante `site/CNAME`. El workflow [pages.yml](../.github/workflows/pages.yml) copia `install.sh` dentro de `site/` antes de publicar.
 
 ### Qué hace `install.sh`
 
