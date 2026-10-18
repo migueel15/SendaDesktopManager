@@ -15,7 +15,7 @@ SendaPanel {
 
     padding: 16
     targetWidth: 700
-    targetHeight: 480
+    targetHeight: 720
 
     targetX: parent.width / 2 - root.width / 2
     targetY: 45
@@ -45,10 +45,6 @@ SendaPanel {
         if (hour < 20) return "Buenas tardes";
         return "Buenas noches";
     }
-    readonly property string networkLabel: Network.wifiConnected ? "Wi-Fi conectado"
-        : Network.ethernetConnected ? "Ethernet conectado" : "Sin conexión de red";
-    readonly property string networkIcon: Network.wifiConnected ? "󰖩"
-        : Network.ethernetConnected ? "󰈀" : "󰖪";
 
     function focusSpotify() {
         Quickshell.execDetached([SendaManager.binaryPath, "window", "focus", "spotify"]);
@@ -137,6 +133,11 @@ SendaPanel {
                     }
                 }
             }
+        }
+
+        CalendarCard {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 232
         }
 
         RowLayout {
@@ -415,65 +416,9 @@ SendaPanel {
                     }
                 }
 
-                Rectangle {
+                WeatherCard {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: Theme.rounding.normal
-                    color: Theme.colors.surface
-                    border.width: 1
-                    border.color: Theme.colors.surfaceVariant
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 15
-                        spacing: 10
-
-                        Text {
-                            text: "TU ESPACIO"
-                            color: Theme.colors.overlay
-                            font.family: Theme.font.overlay.family
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 9
-                            Text {
-                                text: Battery.isLaptop ? Battery.icon : root.networkIcon
-                                color: Battery.isLaptop && Battery.batteryPercentage < 0.2 ? Theme.colors.warning : Theme.colors.primary
-                                font.family: Theme.font.title.family
-                                font.pixelSize: 18
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: Battery.isLaptop ? `${Battery.label}${Battery.isCharging ? " · cargando" : ""}` : root.networkLabel
-                                color: Theme.colors.text
-                                font.family: Theme.font.overlay.family
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 9
-                            Text {
-                                text: Audio.muted ? "󰖁" : "󰕾"
-                                color: Audio.muted ? Theme.colors.warning : Theme.colors.secondary
-                                font.family: Theme.font.title.family
-                                font.pixelSize: 18
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: Audio.muted ? "Audio silenciado" : `Volumen  ${Math.round(Audio.volume * 100)}%`
-                                color: Theme.colors.text
-                                font.family: Theme.font.overlay.family
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
                 }
             }
         }
