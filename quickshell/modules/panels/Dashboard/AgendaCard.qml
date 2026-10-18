@@ -27,6 +27,25 @@ Rectangle {
         return event.allDay ? "Todo el día" : Qt.formatTime(new Date(event.start), "HH:mm");
     }
 
+    // Width of the date and time column, measured from the widest text it can
+    // show, so every event title starts at the same x position.
+    TextMetrics {
+        id: fullDateMetrics
+        font.family: Theme.font.overlay.family
+        font.pixelSize: 11
+        font.weight: Font.Bold
+        text: "mié 28 oct"
+    }
+
+    TextMetrics {
+        id: allDayMetrics
+        font.family: Theme.font.overlay.family
+        font.pixelSize: 11
+        text: "Todo el día"
+    }
+
+    readonly property int dateColumnWidth: Math.ceil(Math.max(fullDateMetrics.advanceWidth, allDayMetrics.advanceWidth)) + 4
+
     radius: Theme.rounding.normal
     color: Theme.colors.surface
     border.width: 1
@@ -97,33 +116,37 @@ Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.leftMargin: 8
                     anchors.rightMargin: 8
-                    spacing: 10
+                    spacing: 0
 
                     ColumnLayout {
-                        Layout.preferredWidth: 78
+                        Layout.preferredWidth: root.dateColumnWidth
+                        Layout.minimumWidth: root.dateColumnWidth
+                        Layout.maximumWidth: root.dateColumnWidth
                         spacing: 0
 
                         Text {
                             Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignLeft
                             text: root.dayLabel(modelData)
                             color: Theme.colors.primary
                             font.family: Theme.font.overlay.family
                             font.pixelSize: 11
                             font.weight: Font.Bold
-                            elide: Text.ElideRight
                         }
                         Text {
                             Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignLeft
                             text: root.timeLabel(modelData)
                             color: Theme.colors.overlay
                             font.family: Theme.font.overlay.family
                             font.pixelSize: 11
-                            elide: Text.ElideRight
                         }
                     }
 
                     Text {
                         Layout.fillWidth: true
+                        Layout.leftMargin: 12
+                        horizontalAlignment: Text.AlignLeft
                         text: modelData.title
                         color: Theme.colors.text
                         font.family: Theme.font.base.family
