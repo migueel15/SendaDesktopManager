@@ -5,6 +5,7 @@ import qs.common.components
 import qs.services
 import qs.modules.panels.ControlCenter
 import qs.modules.panels.Dashboard
+import qs.modules.panels.Settings
 import qs.modules.panels.Tasks
 import qs.modules.panels.notifications
 import Quickshell.Wayland
@@ -54,6 +55,7 @@ PanelWindow {
         }
 
         TasksPanel {}
+        SettingsPanel {}
         NotificationsPanel {}
     }
 
