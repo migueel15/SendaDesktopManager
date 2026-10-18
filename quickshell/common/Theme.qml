@@ -8,6 +8,26 @@ QtObject {
 
 	property string currentTheme: "mocha"
 
+	// Spanish names for days and months, whatever the system locale is.
+	readonly property var locale: Qt.locale("es_ES")
+
+	// Interface text scale. 1.0 is the default size; the settings panel changes
+	// it through SENDA_UI_FONT_SCALE.
+	property real fontScale: 1.0
+
+	// Scales a font size in pixels by the interface scale.
+	function scaled(size) {
+		return Math.round(size * root.fontScale);
+	}
+
+	// Takes the percentage from the settings file. Empty or invalid values fall
+	// back to 100%, and the range matches the one the CLI accepts.
+	function setFontScale(percent) {
+		const value = parseInt(percent, 10);
+		const valid = !isNaN(value) && value >= 80 && value <= 150;
+		root.fontScale = valid ? value / 100 : 1.0;
+	}
+
 	readonly property Colors colors: Colors {}
 	readonly property Rounding rounding: Rounding {}
 	readonly property FontSize fontSize: FontSize {}
@@ -49,22 +69,22 @@ QtObject {
 	component Fonts: QtObject {
 		property font base: Qt.font({
 				family: "CaskaydiaMono Nerd Font",
-				pixelSize: 19,
+				pixelSize: root.scaled(19),
 				weight: Font.Normal
 		})
 		property font title: Qt.font({
 				family: "CaskaydiaMono Nerd Font",
-				pixelSize: 17,
+				pixelSize: root.scaled(17),
 				weight: Font.Bold
 		})
 		property font overlay: Qt.font({
 				family: "CaskaydiaMono Nerd Font",
-				pixelSize: 13,
+				pixelSize: root.scaled(13),
 				weight: Font.Normal
 		})
 		property font icon: Qt.font({
 				family: "CaskaydiaMono Nerd Font",
-				pixelSize: 13,
+				pixelSize: root.scaled(13),
 				weight: Font.Normal
 		})
 	}

@@ -323,7 +323,7 @@ Rectangle {
                             text: root.activePlayer?.trackTitle || "Sin título"
                             color: Theme.colors.text
                             font.family: Theme.font.overlay.family
-                            font.pixelSize: 14
+                            font.pixelSize: Theme.scaled(14)
                             font.weight: Font.Bold
                             elide: Text.ElideRight
 

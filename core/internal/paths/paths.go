@@ -30,6 +30,18 @@ func DataDir() string {
 	return filepath.Join(xdgDir("XDG_DATA_HOME", ".local/share"), appName)
 }
 
+// StateDir holds state that must survive restarts but is not a user setting,
+// such as the Google Calendar refresh token.
+func StateDir() string {
+	return filepath.Join(xdgDir("XDG_STATE_HOME", ".local/state"), appName)
+}
+
+// GoogleCalendarTokenFile stores the Google Calendar refresh token. It is
+// created with owner-only permissions.
+func GoogleCalendarTokenFile() string {
+	return filepath.Join(StateDir(), "google-calendar.json")
+}
+
 // QuickshellDir is the Quickshell project that `senda shell run` starts.
 func QuickshellDir() string {
 	return filepath.Join(DataDir(), "quickshell")

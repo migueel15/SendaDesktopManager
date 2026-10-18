@@ -6,7 +6,7 @@ Senda guarda los valores del usuario en un único archivo `KEY=VALUE`.
 
 El archivo es `$XDG_CONFIG_HOME/senda/config`. Si `XDG_CONFIG_HOME` no está definido o no es una ruta absoluta, se usa `~/.config/senda/config`.
 
-Senda no crea este archivo todavía. El código lo lee si existe y, si no existe, usa valores vacíos. Cuando exista, debe tener permisos `0600`, porque puede contener secretos como `DORLAB_API_KEY`.
+Senda lo lee si existe; si no existe, usa valores vacíos. `senda config set` lo crea con permisos `0600`, porque puede contener secretos como `DORLAB_API_KEY`.
 
 ## Formato
 
@@ -35,6 +35,17 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 |---|---|
 | `DORLAB_API_KEY` | Se pasa a Quickshell como variable de entorno al ejecutar `senda shell run`. |
 | `SENDA_DISCORD_BRIDGE` | Ruta absoluta a `discord-bridge.py`. Tiene prioridad sobre la ubicación automática del script (ver [discord-bridge.md](discord-bridge.md)). |
+| `SENDA_GOOGLE_CLIENT_ID` | ID de tu propio cliente OAuth de escritorio. Si está vacío, se usa el cliente incluido en la release. Ver [google-calendar.md](google-calendar.md). |
+| `SENDA_GOOGLE_CLIENT_SECRET` | Secreto de ese cliente. Nunca se imprime; `senda config get` solo indica si está definido. |
+| `SENDA_GOOGLE_CALENDARS` | IDs de calendarios separados por comas. Vacío significa los calendarios que Google marca como visibles. |
+| `SENDA_WEATHER_LOCATION` | Nombre de la localidad elegida, solo para mostrarlo. |
+| `SENDA_WEATHER_LAT` y `SENDA_WEATHER_LON` | Coordenadas de la localidad, entre -90 y 90 y entre -180 y 180. |
+
+Si no hay localidad elegida, el clima usa la capital del país de tu zona horaria del sistema (`/etc/localtime`), por ejemplo Madrid para `Europe/Madrid`. Las zonas que no corresponden a un país concreto, como UTC, no tienen valor por defecto. Elegir una localidad en el panel sustituye al valor por defecto.
+
+Estas claves las escribe el panel de configuración (`senda settings`) con `senda config set`. También puedes editarlas a mano; el archivo se mantiene con permisos `0600`.
+
+El refresh token de Google no está en este archivo. Se guarda en `$XDG_STATE_HOME/senda/google-calendar.json` (por defecto `~/.local/state/senda/google-calendar.json`), también con permisos `0600`. Se borra con `senda calendar logout`.
 
 El archivo `.env` ya no se lee.
 

@@ -15,7 +15,7 @@ SendaPanel {
 
     padding: 16
     targetWidth: 700
-    targetHeight: 480
+    targetHeight: 720
 
     targetX: parent.width / 2 - root.width / 2
     targetY: 45
@@ -45,10 +45,11 @@ SendaPanel {
         if (hour < 20) return "Buenas tardes";
         return "Buenas noches";
     }
-    readonly property string networkLabel: Network.wifiConnected ? "Wi-Fi conectado"
-        : Network.ethernetConnected ? "Ethernet conectado" : "Sin conexión de red";
-    readonly property string networkIcon: Network.wifiConnected ? "󰖩"
-        : Network.ethernetConnected ? "󰈀" : "󰖪";
+    // Login name of the session, with its first letter capitalized.
+    readonly property string userName: {
+        const user = Quickshell.env("USER") ?? "";
+        return user.charAt(0).toUpperCase() + user.slice(1);
+    }
 
     function focusSpotify() {
         Quickshell.execDetached([SendaManager.binaryPath, "window", "focus", "spotify"]);
@@ -98,23 +99,21 @@ SendaPanel {
                     spacing: 4
 
                     Text {
-                        text: root.greeting
+                        text: root.userName ? `${root.greeting}, ${root.userName}` : root.greeting
                         color: Theme.colors.primary
                         font.family: Theme.font.title.family
-                        font.pixelSize: 18
+                        font.pixelSize: Theme.scaled(18)
                         font.weight: Font.Bold
                     }
                     Text {
-                        text: Qt.formatDate(systemClock.date, "dddd, d 'de' MMMM")
+                        text: Theme.locale.toString(systemClock.date, "dddd, d 'de' MMMM")
                         color: Theme.colors.overlay
                         font.family: Theme.font.overlay.family
                     }
                     Item { Layout.fillHeight: true }
-                    Text {
-                        text: "Un buen día empieza a tu ritmo."
-                        color: Theme.colors.text
-                        font.family: Theme.font.base.family
-                        font.pixelSize: 14
+                    DayLine {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 44
                     }
                 }
 
@@ -129,14 +128,19 @@ SendaPanel {
 
                     Text {
                         anchors.centerIn: parent
-                        text: Qt.formatTime(systemClock.date, "HH:mm")
+                        text: Theme.locale.toString(systemClock.date, "HH:mm")
                         color: Theme.colors.text
                         font.family: Theme.font.title.family
-                        font.pixelSize: 58
+                        font.pixelSize: Theme.scaled(58)
                         font.weight: Font.Bold
                     }
                 }
             }
+        }
+
+        CalendarCard {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 232
         }
 
         RowLayout {
@@ -144,71 +148,9 @@ SendaPanel {
             Layout.fillHeight: true
             spacing: 12
 
-            Rectangle {
+            AgendaCard {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                radius: Theme.rounding.normal
-                color: Theme.colors.surface
-                border.width: 1
-                border.color: DorlabTasks.hasActiveTask ? Theme.colors.primary : Theme.colors.surfaceVariant
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 8
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Text {
-                            text: "󰃰"
-                            color: Theme.colors.secondary
-                            font.family: Theme.font.title.family
-                            font.pixelSize: 20
-                        }
-                        Text {
-                            Layout.fillWidth: true
-                            text: "EN LO QUE ESTÁS"
-                            color: Theme.colors.overlay
-                            font.family: Theme.font.overlay.family
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                        }
-                        Rectangle {
-                            visible: DorlabTasks.hasActiveTask
-                            width: 7
-                            height: 7
-                            radius: 4
-                            color: Theme.colors.success
-                        }
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        verticalAlignment: Text.AlignVCenter
-                        text: DorlabTasks.hasTrackedTask
-                            ? DorlabTasks.trackedTaskTitle
-                            : "Espacio para tu próxima idea"
-                        color: Theme.colors.text
-                        font.family: Theme.font.title.family
-                        font.pixelSize: 19
-                        font.weight: Font.Bold
-                        wrapMode: Text.WordWrap
-                        maximumLineCount: 3
-                        elide: Text.ElideRight
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: DorlabTasks.hasTrackedTask
-                            ? `${DorlabTasks.hasActiveTask ? "EN MARCHA" : "EN PAUSA"}  ·  ${DorlabTasks.hasActiveTask ? DorlabTasks.formatDuration(DorlabTasks.activeElapsedSeconds) : "reanuda cuando quieras"}`
-                            : "Un paso pequeño también cuenta."
-                        color: DorlabTasks.hasActiveTask ? Theme.colors.success : Theme.colors.overlay
-                        font.family: Theme.font.overlay.family
-                        font.pixelSize: 11
-                        elide: Text.ElideRight
-                    }
-                }
             }
 
             ColumnLayout {
@@ -268,7 +210,7 @@ SendaPanel {
                                     text: "󰝚"
                                     color: Theme.colors.overlay
                                     font.family: Theme.font.title.family
-                                    font.pixelSize: 27
+                                    font.pixelSize: Theme.scaled(27)
                                     visible: albumArt.status !== Image.Ready
                                 }
                                 MouseArea {
@@ -289,7 +231,7 @@ SendaPanel {
                                     text: root.player?.trackTitle || "Silencio también es música"
                                     color: Theme.colors.text
                                     font.family: Theme.font.title.family
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.scaled(14)
                                     font.weight: Font.Bold
                                     elide: Text.ElideRight
                                 }
@@ -299,7 +241,7 @@ SendaPanel {
                                     text: root.player?.trackArtist || "No hay reproducción activa"
                                     color: Theme.colors.overlay
                                     font.family: Theme.font.overlay.family
-                                    font.pixelSize: 11
+                                    font.pixelSize: Theme.scaled(11)
                                     elide: Text.ElideRight
                                 }
 
@@ -317,13 +259,13 @@ SendaPanel {
                                             text: root.formatTrackTime(seekArea.pressed ? seekArea.previewPosition : (root.player?.position ?? 0))
                                             color: Theme.colors.overlay
                                             font.family: Theme.font.overlay.family
-                                            font.pixelSize: 11
+                                            font.pixelSize: Theme.scaled(11)
                                         }
                                         Text {
                                             text: root.formatTrackTime(root.player?.length ?? 0)
                                             color: Theme.colors.overlay
                                             font.family: Theme.font.overlay.family
-                                            font.pixelSize: 11
+                                            font.pixelSize: Theme.scaled(11)
                                         }
                                     }
 
@@ -398,7 +340,7 @@ SendaPanel {
                                                 text: modelData.icon
                                                 color: Theme.colors.text
                                                 font.family: Theme.font.title.family
-                                                font.pixelSize: 17
+                                                font.pixelSize: Theme.scaled(17)
                                             }
                                             MouseArea {
                                                 id: controlMouse
@@ -415,65 +357,9 @@ SendaPanel {
                     }
                 }
 
-                Rectangle {
+                WeatherCard {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: Theme.rounding.normal
-                    color: Theme.colors.surface
-                    border.width: 1
-                    border.color: Theme.colors.surfaceVariant
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 15
-                        spacing: 10
-
-                        Text {
-                            text: "TU ESPACIO"
-                            color: Theme.colors.overlay
-                            font.family: Theme.font.overlay.family
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 9
-                            Text {
-                                text: Battery.isLaptop ? Battery.icon : root.networkIcon
-                                color: Battery.isLaptop && Battery.batteryPercentage < 0.2 ? Theme.colors.warning : Theme.colors.primary
-                                font.family: Theme.font.title.family
-                                font.pixelSize: 18
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: Battery.isLaptop ? `${Battery.label}${Battery.isCharging ? " · cargando" : ""}` : root.networkLabel
-                                color: Theme.colors.text
-                                font.family: Theme.font.overlay.family
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
-                            }
-                        }
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 9
-                            Text {
-                                text: Audio.muted ? "󰖁" : "󰕾"
-                                color: Audio.muted ? Theme.colors.warning : Theme.colors.secondary
-                                font.family: Theme.font.title.family
-                                font.pixelSize: 18
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: Audio.muted ? "Audio silenciado" : `Volumen  ${Math.round(Audio.volume * 100)}%`
-                                color: Theme.colors.text
-                                font.family: Theme.font.overlay.family
-                                font.pixelSize: 11
-                                elide: Text.ElideRight
-                            }
-                        }
-                    }
                 }
             }
         }

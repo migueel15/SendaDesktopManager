@@ -6,6 +6,10 @@
 #
 # Usage: package-release.sh <tag> <output-dir>
 #   <tag> must look like vX.Y.Z (for example v0.1.0).
+#
+# Requires SENDA_GOOGLE_CLIENT_ID and SENDA_GOOGLE_CLIENT_SECRET. They are
+# compiled into the binary so the release works without each user creating a
+# Google Cloud project. Never print them.
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
@@ -29,18 +33,23 @@ REPO_ROOT="$(cd "$CORE_DIR/.." && pwd)"
 mkdir -p "$OUTPUT_ARG"
 OUT_DIR="$(cd "$OUTPUT_ARG" && pwd)"
 
+: "${SENDA_GOOGLE_CLIENT_ID:?SENDA_GOOGLE_CLIENT_ID must be set to build a release}"
+: "${SENDA_GOOGLE_CLIENT_SECRET:?SENDA_GOOGLE_CLIENT_SECRET must be set to build a release}"
+
 BINARY_NAME="senda-$TAG-linux-amd64"
 TARBALL_NAME="senda-quickshell-$TAG.tar.gz"
 
 STAGE_DIR="$(mktemp -d)"
 trap 'rm -rf "$STAGE_DIR"' EXIT
 
-# 1. Static binary. The version is injected at link time.
+# 1. Static binary. The version and the Google OAuth client are injected at
+#    link time.
+GOOGLE_PKG="github.com/migueel15/SendaDesktopManager/core/internal/googlecalendar"
 echo "Building $BINARY_NAME..."
 (
   cd "$CORE_DIR"
   CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags "-X github.com/migueel15/SendaDesktopManager/core/internal/version.Version=$TAG" \
+    -ldflags "-X github.com/migueel15/SendaDesktopManager/core/internal/version.Version=$TAG -X ${GOOGLE_PKG}.embeddedClientID=$SENDA_GOOGLE_CLIENT_ID -X ${GOOGLE_PKG}.embeddedClientSecret=$SENDA_GOOGLE_CLIENT_SECRET" \
     -o "$OUT_DIR/$BINARY_NAME" \
     ./cmd/senda
 )

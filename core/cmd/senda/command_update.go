@@ -25,16 +25,41 @@ const (
 )
 
 // updateCmd returns the command that updates senda and its Quickshell files
-// to the latest GitHub release.
+// to the latest GitHub release. With --check it only reports whether a newer
+// release exists.
 func updateCmd() *cobra.Command {
-	return &cobra.Command{
+	var check bool
+	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "update senda and the Quickshell files to the latest release",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if check {
+				return runCheck(cmd)
+			}
 			return runUpdate(cmd)
 		},
 	}
+	cmd.Flags().BoolVar(&check, "check", false, "print as JSON whether a newer release exists, without changing anything")
+	return cmd
+}
+
+// availableUpdate reports whether latest differs from the installed build.
+// Development builds never report an update, because they cannot be updated.
+func availableUpdate(current string, latest string) bool {
+	return current != "dev" && latest != "" && latest != current
+}
+
+func runCheck(cmd *cobra.Command) error {
+	tag, err := release.LatestTag(cmd.Context(), latestReleaseAPI)
+	if err != nil {
+		return err
+	}
+	return writeJSON(cmd, map[string]any{
+		"current":   version.Version,
+		"latest":    tag,
+		"available": availableUpdate(version.Version, tag),
+	})
 }
 
 func runUpdate(cmd *cobra.Command) error {

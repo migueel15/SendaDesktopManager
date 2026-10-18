@@ -6,6 +6,9 @@ import qs.services
 Item {
     id: root
 
+    // Name of the monitor the bar sits on; panels open there.
+    property string screenName: ""
+
     height: parent.height
     implicitWidth: iconText.implicitWidth
 
@@ -19,7 +22,7 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => {
             if (event.button === Qt.LeftButton) {
-                OverlayService.setCurrentPanel("notifications");
+                OverlayService.setCurrentPanel("notifications", root.screenName);
             } else if (event.button === Qt.RightButton) {
                 Notifications.toggleDnd();
             }

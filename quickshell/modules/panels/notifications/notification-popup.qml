@@ -228,7 +228,7 @@ Variants {
                 text: card.notification ? (card.notification.summary || "") : ""
                 color: Theme.colors.text
                 font.family: Theme.font.title.family
-                font.pixelSize: 15
+                font.pixelSize: Theme.scaled(15)
                 font.weight: Font.DemiBold
                 wrapMode: Text.Wrap
                 maximumLineCount: 2
@@ -280,7 +280,7 @@ Variants {
         function timestampLabel(value) {
             if (value === undefined || value === null || value === "") return "";
             const date = new Date(value);
-            return isNaN(date.getTime()) ? "" : Qt.formatDateTime(date, "HH:mm");
+            return isNaN(date.getTime()) ? "" : Theme.locale.toString(date, "HH:mm");
         }
     }
     }

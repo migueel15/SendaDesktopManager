@@ -5,12 +5,19 @@ import qs.common.components
 import qs.services
 import qs.modules.panels.ControlCenter
 import qs.modules.panels.Dashboard
+import qs.modules.panels.Settings
 import qs.modules.panels.Tasks
 import qs.modules.panels.notifications
 import Quickshell.Wayland
 
 PanelWindow {
     id: overlayLayer
+
+    // One layer per monitor, so a click on any monitor closes an open panel.
+    // Panels themselves only show on the monitor they were opened from.
+    required property var modelData
+    screen: modelData
+    readonly property string screenName: modelData.name
 
     WlrLayershell.namespace: "Senda:OverlayLayer"
 
@@ -24,7 +31,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     // visible: hasOpenPopup
-    visible: OverlayService.currentPanel
+    visible: OverlayService.currentPanel !== ""
     color: "transparent"
 
     aboveWindows: true
@@ -45,16 +52,25 @@ PanelWindow {
         Keys.onEscapePressed: OverlayService.closeCurrentPanel()
 
         ControlCenterPopup {
+            screenName: overlayLayer.screenName
             targetX: parent.width - 500 - 5
             targetY: 45
         }
 
         DashboardPanel {
             id: dashboard
+            screenName: overlayLayer.screenName
         }
 
-        TasksPanel {}
-        NotificationsPanel {}
+        TasksPanel {
+            screenName: overlayLayer.screenName
+        }
+        SettingsPanel {
+            screenName: overlayLayer.screenName
+        }
+        NotificationsPanel {
+            screenName: overlayLayer.screenName
+        }
     }
 
 }
