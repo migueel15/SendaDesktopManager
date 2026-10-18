@@ -4,6 +4,8 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
+import qs.common
+
 Singleton {
     id: root
 
@@ -840,7 +842,7 @@ Singleton {
             return "Sin time entries";
         }
 
-        return Qt.formatDateTime(new Date(lastMs), "dd MMM HH:mm");
+        return Theme.locale.toString(new Date(lastMs), "dd MMM HH:mm");
     }
 
     function formatDuration(totalSeconds) {

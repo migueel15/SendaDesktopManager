@@ -104,7 +104,7 @@ Rectangle {
                 Text {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignHCenter
-                    text: root.capitalize(Qt.formatDate(root.shownMonth, "MMMM yyyy"))
+                    text: root.capitalize(Theme.locale.toString(root.shownMonth, "MMMM yyyy"))
                     color: Theme.colors.text
                     font.family: Theme.font.title.family
                     font.pixelSize: Theme.scaled(13)
@@ -230,7 +230,7 @@ Rectangle {
 
             Text {
                 Layout.fillWidth: true
-                text: root.capitalize(Qt.formatDate(root.selectedDay, "dddd d 'de' MMMM"))
+                text: root.capitalize(Theme.locale.toString(root.selectedDay, "dddd d 'de' MMMM"))
                 color: Theme.colors.primary
                 font.family: Theme.font.title.family
                 font.pixelSize: Theme.scaled(14)
@@ -285,7 +285,7 @@ Rectangle {
 
                         Text {
                             Layout.preferredWidth: 58
-                            text: modelData.allDay ? "Todo el día" : Qt.formatTime(new Date(modelData.start), "HH:mm")
+                            text: modelData.allDay ? "Todo el día" : Theme.locale.toString(new Date(modelData.start), "HH:mm")
                             color: Theme.colors.secondary
                             font.family: Theme.font.overlay.family
                             font.pixelSize: Theme.scaled(11)

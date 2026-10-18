@@ -106,7 +106,7 @@ SendaPanel {
                         font.weight: Font.Bold
                     }
                     Text {
-                        text: Qt.formatDate(systemClock.date, "dddd, d 'de' MMMM")
+                        text: Theme.locale.toString(systemClock.date, "dddd, d 'de' MMMM")
                         color: Theme.colors.overlay
                         font.family: Theme.font.overlay.family
                     }
@@ -128,7 +128,7 @@ SendaPanel {
 
                     Text {
                         anchors.centerIn: parent
-                        text: Qt.formatTime(systemClock.date, "HH:mm")
+                        text: Theme.locale.toString(systemClock.date, "HH:mm")
                         color: Theme.colors.text
                         font.family: Theme.font.title.family
                         font.pixelSize: Theme.scaled(58)

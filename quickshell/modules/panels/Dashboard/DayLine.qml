@@ -32,7 +32,7 @@ Item {
     }
 
     function clock(time) {
-        return Qt.formatTime(new Date(time), "HH:mm");
+        return Theme.locale.toString(new Date(time), "HH:mm");
     }
 
     // Event under the pointer and its horizontal center, for the tooltip.

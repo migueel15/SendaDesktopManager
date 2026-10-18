@@ -367,7 +367,7 @@ SendaPanel {
         function timestampLabel(value) {
             if (value === undefined || value === null || value === "") return "";
             const date = new Date(value);
-            return isNaN(date.getTime()) ? "" : Qt.formatDateTime(date, "HH:mm");
+            return isNaN(date.getTime()) ? "" : Theme.locale.toString(date, "HH:mm");
         }
     }
 }

@@ -20,11 +20,11 @@ Rectangle {
         const days = Math.round((root.startOfDay(date) - root.startOfDay(new Date())) / 86400000);
         if (days === 0) return "Hoy";
         if (days === 1) return "Mañana";
-        return Qt.formatDate(date, "ddd d MMM");
+        return Theme.locale.toString(date, "ddd d MMM");
     }
 
     function timeLabel(event) {
-        return event.allDay ? "Todo el día" : Qt.formatTime(new Date(event.start), "HH:mm");
+        return event.allDay ? "Todo el día" : Theme.locale.toString(new Date(event.start), "HH:mm");
     }
 
     // Width of the date and time column, measured from the widest text it can

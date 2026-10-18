@@ -52,7 +52,7 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             Text {
                 text: {
-                    return String(Qt.formatDate(systemClock.date, "MMM dd"));
+                    return String(Theme.locale.toString(systemClock.date, "MMM dd"));
                 }
 
                 font.family: Theme.font.title.family

@@ -8,6 +8,9 @@ QtObject {
 
 	property string currentTheme: "mocha"
 
+	// Spanish names for days and months, whatever the system locale is.
+	readonly property var locale: Qt.locale("es_ES")
+
 	// Interface text scale. 1.0 is the default size; the settings panel changes
 	// it through SENDA_UI_FONT_SCALE.
 	property real fontScale: 1.0
