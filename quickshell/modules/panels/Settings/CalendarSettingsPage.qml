@@ -12,6 +12,10 @@ Flickable {
     // Calendar IDs currently checked in the list below.
     property var selectedCalendars: []
 
+    // Whether the own-client fields are open. Only matters when the build ships
+    // its own client.
+    property bool showOwnClient: false
+
     contentHeight: column.implicitHeight
     clip: true
 
@@ -79,38 +83,50 @@ Flickable {
             }
         }
 
-        Text {
-            Layout.fillWidth: true
-            text: SendaSettings.embeddedClient && SendaSettings.values.SENDA_GOOGLE_CLIENT_ID === ""
-                ? "Esta versión incluye el cliente de Google de Senda; solo tienes que conectar tu cuenta. Opcional: introduce tu propio ID y secreto para usar tu cliente."
-                : "Usa el ID y el secreto de tu cliente OAuth de escritorio. El secreto no se vuelve a mostrar."
-            color: Theme.colors.overlay
-            font.family: Theme.font.overlay.family
-            font.pixelSize: 11
-            wrapMode: Text.WordWrap
-        }
-
-        SettingsField {
-            id: clientIdField
-            Layout.fillWidth: true
-            placeholder: "ID de cliente"
-            onAccepted: clientSecretField.forceActiveFocus()
-        }
-
-        SettingsField {
-            id: clientSecretField
-            Layout.fillWidth: true
-            secret: true
-            placeholder: SendaSettings.secretConfigured ? "Secreto guardado; escribe uno nuevo para cambiarlo" : "Secreto del cliente"
-        }
-
+        // Own OAuth client. Releases ship with one, so this stays hidden until
+        // the user asks for it. Builds without an embedded client show it at once.
         SettingsButton {
-            label: "Guardar credenciales"
-            primary: true
-            enabled: !SendaSettings.busy && clientIdField.text.trim() !== ""
-            onClicked: {
-                SendaSettings.saveGoogleClient(clientIdField.text, clientSecretField.text);
-                clientSecretField.text = "";
+            visible: SendaSettings.embeddedClient && !root.showOwnClient
+            label: "Usar mi propio cliente de Google"
+            onClicked: root.showOwnClient = true
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: root.showOwnClient || !SendaSettings.embeddedClient
+            spacing: 12
+
+            Text {
+                Layout.fillWidth: true
+                text: "Usa el ID y el secreto de tu cliente OAuth de escritorio. El secreto no se vuelve a mostrar."
+                color: Theme.colors.overlay
+                font.family: Theme.font.overlay.family
+                font.pixelSize: 11
+                wrapMode: Text.WordWrap
+            }
+
+            SettingsField {
+                id: clientIdField
+                Layout.fillWidth: true
+                placeholder: "ID de cliente"
+                onAccepted: clientSecretField.forceActiveFocus()
+            }
+
+            SettingsField {
+                id: clientSecretField
+                Layout.fillWidth: true
+                secret: true
+                placeholder: SendaSettings.secretConfigured ? "Secreto guardado; escribe uno nuevo para cambiarlo" : "Secreto del cliente"
+            }
+
+            SettingsButton {
+                label: "Guardar credenciales"
+                primary: true
+                enabled: !SendaSettings.busy && clientIdField.text.trim() !== ""
+                onClicked: {
+                    SendaSettings.saveGoogleClient(clientIdField.text, clientSecretField.text);
+                    clientSecretField.text = "";
+                }
             }
         }
 
