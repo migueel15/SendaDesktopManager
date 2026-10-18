@@ -5,45 +5,26 @@ import qs.common
 import qs.common.components
 import qs.services
 
-// Settings for Google Calendar and the weather location. Opened with
-// `senda settings` or from the dashboard. Every change goes through the CLI.
+// Settings window with a sidebar of sections. Every change goes through the
+// senda CLI. Opened with `senda settings` or from the dashboard.
 SendaPanel {
     id: root
     name: "settings"
 
     padding: 16
-    targetWidth: 560
-    targetHeight: 560
+    targetWidth: 680
+    targetHeight: 520
 
     targetX: parent.width / 2 - root.width / 2
     targetY: 45
 
-    // Calendar IDs currently checked in the list below.
-    property var selectedCalendars: []
-
-    function syncFields() {
-        if (clientIdField.text === "") {
-            clientIdField.text = SendaSettings.values.SENDA_GOOGLE_CLIENT_ID ?? "";
-        }
-    }
-
-    function syncCalendarSelection() {
-        const configured = (SendaSettings.values.SENDA_GOOGLE_CALENDARS ?? "")
-            .split(",")
-            .map(id => id.trim())
-            .filter(id => id !== "");
-        root.selectedCalendars = configured.length > 0
-            ? configured
-            : SendaSettings.calendars.filter(calendar => calendar.selected).map(calendar => calendar.id);
-    }
-
-    function toggleCalendar(id) {
-        if (root.selectedCalendars.includes(id)) {
-            root.selectedCalendars = root.selectedCalendars.filter(item => item !== id);
-        } else {
-            root.selectedCalendars = [...root.selectedCalendars, id];
-        }
-    }
+    // Sidebar entries. Each one needs a page in the StackLayout below, in the
+    // same position.
+    readonly property var sections: [
+        { label: "Calendario" },
+        { label: "Tiempo" }
+    ]
+    property int currentSection: 0
 
     onVisibleChanged: {
         if (visible) {
@@ -51,44 +32,80 @@ SendaPanel {
         }
     }
 
-    Connections {
-        target: SendaSettings
-
-        function onValuesChanged() {
-            root.syncFields();
-        }
-
-        function onCalendarsChanged() {
-            root.syncCalendarSelection();
-        }
-    }
-
-    Flickable {
+    RowLayout {
         anchors.fill: parent
-        contentHeight: column.implicitHeight
-        clip: true
+        spacing: 16
 
         ColumnLayout {
-            id: column
-            width: parent.width
-            spacing: 12
+            Layout.preferredWidth: 170
+            Layout.fillHeight: true
+            spacing: 4
 
-            RowLayout {
-                Layout.fillWidth: true
+            Text {
+                Layout.bottomMargin: 10
+                text: "Ajustes"
+                color: Theme.colors.text
+                font.family: Theme.font.title.family
+                font.pixelSize: 18
+                font.weight: Font.Bold
+            }
 
-                Text {
+            Repeater {
+                model: root.sections
+
+                delegate: Rectangle {
+                    required property var modelData
+                    required property int index
+
+                    readonly property bool selected: root.currentSection === index
+
                     Layout.fillWidth: true
-                    text: "Configuración"
-                    color: Theme.colors.text
-                    font.family: Theme.font.title.family
-                    font.pixelSize: 18
-                    font.weight: Font.Bold
-                }
-                SettingsButton {
-                    label: "Cerrar"
-                    onClicked: OverlayService.closeCurrentPanel()
+                    implicitHeight: 34
+                    radius: Theme.rounding.small
+                    color: selected ? Theme.colors.surfaceVariant : sectionMouse.containsMouse ? Theme.colors.surface : "transparent"
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        text: modelData.label
+                        color: parent.selected ? Theme.colors.primary : Theme.colors.text
+                        font.family: Theme.font.base.family
+                        font.pixelSize: 13
+                        font.weight: parent.selected ? Font.Bold : Font.Normal
+                    }
+
+                    MouseArea {
+                        id: sectionMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.currentSection = index
+                    }
                 }
             }
+
+            Item {
+                Layout.fillHeight: true
+            }
+
+            SettingsButton {
+                Layout.fillWidth: true
+                label: "Cerrar"
+                onClicked: OverlayService.closeCurrentPanel()
+            }
+        }
+
+        Rectangle {
+            Layout.preferredWidth: 1
+            Layout.fillHeight: true
+            color: Theme.colors.surfaceVariant
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 10
 
             Text {
                 Layout.fillWidth: true
@@ -100,207 +117,21 @@ SendaPanel {
                 wrapMode: Text.WordWrap
             }
 
-            Rectangle {
+            StackLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: Theme.colors.surfaceVariant
-            }
+                Layout.fillHeight: true
+                currentIndex: root.currentSection
 
-            Text {
-                text: "GOOGLE CALENDAR"
-                color: Theme.colors.overlay
-                font.family: Theme.font.overlay.family
-                font.pixelSize: 11
-                font.weight: Font.Bold
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                Text {
+                CalendarSettingsPage {
                     Layout.fillWidth: true
-                    text: SendaSettings.connected ? "Cuenta conectada" : "Cuenta no conectada"
-                    color: SendaSettings.connected ? Theme.colors.success : Theme.colors.overlay
-                    font.family: Theme.font.base.family
-                    font.pixelSize: 13
+                    Layout.fillHeight: true
                 }
-                SettingsButton {
-                    label: SendaSettings.connected ? "Desconectar" : "Conectar con Google"
-                    primary: !SendaSettings.connected
-                    enabled: !SendaSettings.busy
-                    onClicked: SendaSettings.connected ? SendaSettings.disconnectGoogle() : SendaSettings.connectGoogle()
-                }
-            }
 
-            Text {
-                Layout.fillWidth: true
-                text: SendaSettings.embeddedClient && SendaSettings.values.SENDA_GOOGLE_CLIENT_ID === ""
-                    ? "Esta versión incluye el cliente de Google de Senda; solo tienes que conectar tu cuenta. Opcional: introduce tu propio ID y secreto para usar tu cliente."
-                    : "Usa el ID y el secreto de tu cliente OAuth de escritorio. El secreto no se vuelve a mostrar."
-                color: Theme.colors.overlay
-                font.family: Theme.font.overlay.family
-                font.pixelSize: 11
-                wrapMode: Text.WordWrap
-            }
-
-            SettingsField {
-                id: clientIdField
-                Layout.fillWidth: true
-                placeholder: "ID de cliente"
-                onAccepted: clientSecretField.forceActiveFocus()
-            }
-
-            SettingsField {
-                id: clientSecretField
-                Layout.fillWidth: true
-                secret: true
-                placeholder: SendaSettings.secretConfigured ? "Secreto guardado; escribe uno nuevo para cambiarlo" : "Secreto del cliente"
-            }
-
-            SettingsButton {
-                label: "Guardar credenciales"
-                primary: true
-                enabled: !SendaSettings.busy && clientIdField.text.trim() !== ""
-                onClicked: {
-                    SendaSettings.saveGoogleClient(clientIdField.text, clientSecretField.text);
-                    clientSecretField.text = "";
-                }
-            }
-
-            Text {
-                Layout.fillWidth: true
-                visible: SendaSettings.connected && SendaSettings.calendars.length > 0
-                text: "Calendarios a mostrar"
-                color: Theme.colors.text
-                font.family: Theme.font.base.family
-                font.pixelSize: 13
-            }
-
-            Repeater {
-                model: SendaSettings.connected ? SendaSettings.calendars : []
-
-                delegate: Rectangle {
-                    required property var modelData
-
+                WeatherSettingsPage {
                     Layout.fillWidth: true
-                    implicitHeight: 28
-                    radius: Theme.rounding.small
-                    color: "transparent"
-
-                    RowLayout {
-                        anchors.fill: parent
-                        spacing: 10
-
-                        Text {
-                            text: root.selectedCalendars.includes(modelData.id) ? "󰄲" : "󰄱"
-                            color: root.selectedCalendars.includes(modelData.id) ? Theme.colors.primary : Theme.colors.overlay
-                            font.family: Theme.font.title.family
-                            font.pixelSize: 16
-                        }
-                        Text {
-                            Layout.fillWidth: true
-                            text: modelData.summary || modelData.id
-                            color: Theme.colors.text
-                            font.family: Theme.font.base.family
-                            font.pixelSize: 12
-                            elide: Text.ElideRight
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.toggleCalendar(modelData.id)
-                    }
-                }
-            }
-
-            SettingsButton {
-                visible: SendaSettings.connected && SendaSettings.calendars.length > 0
-                label: "Guardar calendarios"
-                primary: true
-                enabled: !SendaSettings.busy && root.selectedCalendars.length > 0
-                onClicked: SendaSettings.saveCalendars(root.selectedCalendars)
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                Layout.topMargin: 6
-                color: Theme.colors.surfaceVariant
-            }
-
-            Text {
-                text: "CLIMA"
-                color: Theme.colors.overlay
-                font.family: Theme.font.overlay.family
-                font.pixelSize: 11
-                font.weight: Font.Bold
-            }
-
-            Text {
-                Layout.fillWidth: true
-                text: `Localidad: ${SendaSettings.values.SENDA_WEATHER_LOCATION || "sin elegir"}`
-                color: Theme.colors.text
-                font.family: Theme.font.base.family
-                font.pixelSize: 13
-                elide: Text.ElideRight
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                SettingsField {
-                    id: searchField
-                    Layout.fillWidth: true
-                    placeholder: "Busca tu localidad"
-                    onAccepted: SendaSettings.searchPlaces(searchField.text)
-                }
-                SettingsButton {
-                    label: "Buscar"
-                    enabled: !SendaSettings.busy && searchField.text.trim().length >= 2
-                    onClicked: SendaSettings.searchPlaces(searchField.text)
-                }
-            }
-
-            Repeater {
-                model: SendaSettings.places
-
-                delegate: Rectangle {
-                    required property var modelData
-
-                    Layout.fillWidth: true
-                    implicitHeight: 34
-                    radius: Theme.rounding.small
-                    color: placeMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-
-                    Text {
-                        anchors.fill: parent
-                        anchors.leftMargin: 10
-                        verticalAlignment: Text.AlignVCenter
-                        text: [modelData.name, modelData.admin, modelData.country].filter(part => part).join(", ")
-                        color: Theme.colors.text
-                        font.family: Theme.font.base.family
-                        font.pixelSize: 12
-                        elide: Text.ElideRight
-                    }
-
-                    MouseArea {
-                        id: placeMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        enabled: !SendaSettings.busy
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: SendaSettings.saveLocation(modelData)
-                    }
+                    Layout.fillHeight: true
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
-        root.syncFields();
-        root.syncCalendarSelection();
     }
 }
