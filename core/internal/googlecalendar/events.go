@@ -35,6 +35,8 @@ type Event struct {
 	Start    string `json:"start"`
 	End      string `json:"end"`
 	AllDay   bool   `json:"allDay"`
+	// Link opens the event in Google Calendar, as Google returns it.
+	Link string `json:"link"`
 }
 
 type calendarListResponse struct {
@@ -52,11 +54,12 @@ type googleEventTime struct {
 }
 
 type googleEvent struct {
-	ID      string          `json:"id"`
-	Status  string          `json:"status"`
-	Summary string          `json:"summary"`
-	Start   googleEventTime `json:"start"`
-	End     googleEventTime `json:"end"`
+	ID       string          `json:"id"`
+	Status   string          `json:"status"`
+	Summary  string          `json:"summary"`
+	HTMLLink string          `json:"htmlLink"`
+	Start    googleEventTime `json:"start"`
+	End      googleEventTime `json:"end"`
 }
 
 type eventsResponse struct {
@@ -164,6 +167,7 @@ func toEvent(item googleEvent, calendarID string) Event {
 		ID:       item.ID,
 		Calendar: calendarID,
 		Title:    item.Summary,
+		Link:     item.HTMLLink,
 	}
 	if event.Title == "" {
 		event.Title = untitledEvent

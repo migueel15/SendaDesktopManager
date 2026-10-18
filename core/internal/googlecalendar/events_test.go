@@ -111,7 +111,7 @@ func TestEventsPagesSkipsCancelledAndSortsByStart(t *testing.T) {
 		}
 		fmt.Fprint(w, `{"items":[
 			{"id":"holiday","status":"confirmed","start":{"date":"2026-10-18"},"end":{"date":"2026-10-19"}},
-			{"id":"early","summary":"Temprano","status":"confirmed","start":{"dateTime":"2026-10-18T08:30:00+02:00"},"end":{"dateTime":"2026-10-18T09:00:00+02:00"}}
+			{"id":"early","summary":"Temprano","status":"confirmed","htmlLink":"https://www.google.com/calendar/event?eid=abc","start":{"dateTime":"2026-10-18T08:30:00+02:00"},"end":{"dateTime":"2026-10-18T09:00:00+02:00"}}
 		]}`)
 	}
 	client := newCalendarClientWithToken(t, fake)
@@ -137,6 +137,9 @@ func TestEventsPagesSkipsCancelledAndSortsByStart(t *testing.T) {
 	}
 	if events[1].AllDay || events[1].Calendar != "main@example.test" {
 		t.Fatalf("timed event = %+v", events[1])
+	}
+	if events[1].Link != "https://www.google.com/calendar/event?eid=abc" {
+		t.Fatalf("link = %q, want the htmlLink from Google", events[1].Link)
 	}
 }
 
