@@ -34,6 +34,10 @@ Item {
         return Qt.formatTime(new Date(time), "HH:mm");
     }
 
+    // Event under the pointer and its horizontal center, for the tooltip.
+    property var hoveredEvent: null
+    property real hoveredX: 0
+
     Timer {
         interval: 60000
         running: true
@@ -111,8 +115,18 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 anchors.margins: -4
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: SendaCalendar.openEvent(modelData)
+                onEntered: {
+                    root.hoveredEvent = modelData;
+                    root.hoveredX = parent.x + parent.width / 2;
+                }
+                onExited: {
+                    if (root.hoveredEvent === modelData) {
+                        root.hoveredEvent = null;
+                    }
+                }
             }
         }
     }
@@ -162,5 +176,43 @@ Item {
         color: Theme.colors.warning
         font.family: Theme.font.overlay.family
         font.pixelSize: 10
+    }
+
+    // Tooltip for the event under the pointer: its start time and title.
+    Rectangle {
+        id: tooltip
+        visible: root.hoveredEvent !== null
+        z: 10
+        width: tipRow.implicitWidth + 16
+        height: tipRow.implicitHeight + 10
+        x: Math.max(0, Math.min(root.width - width, root.hoveredX - width / 2))
+        y: track.y - height - 8
+        radius: Theme.rounding.small
+        color: Theme.colors.background
+        border.width: 1
+        border.color: Theme.colors.surfaceVariant
+
+        Row {
+            id: tipRow
+            anchors.centerIn: parent
+            spacing: 8
+
+            Text {
+                text: root.hoveredEvent ? root.clock(new Date(root.hoveredEvent.start).getTime()) : ""
+                color: Theme.colors.primary
+                font.family: Theme.font.title.family
+                font.pixelSize: 11
+                font.weight: Font.Bold
+            }
+
+            Text {
+                width: Math.min(implicitWidth, 220)
+                text: root.hoveredEvent ? root.hoveredEvent.title : ""
+                color: Theme.colors.text
+                font.family: Theme.font.base.family
+                font.pixelSize: 11
+                elide: Text.ElideRight
+            }
+        }
     }
 }
