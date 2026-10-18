@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/discordbridge"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/release"
 	"github.com/migueel15/SendaDesktopManager/core/internal/version"
@@ -113,6 +115,11 @@ func runUpdate(cmd *cobra.Command) error {
 
 	if !closeShell() {
 		return errors.New("no se pudo detener Quickshell; ciérralo y ejecuta 'senda shell run'")
+	}
+	// The Discord bridge keeps running the script it was started from, so stop
+	// it too; Quickshell starts the updated one when it reconnects.
+	if err := discordbridge.Stop(discordbridge.SocketPath(), 3*time.Second); err != nil {
+		fmt.Fprintln(cmd.ErrOrStderr(), "aviso:", err)
 	}
 	// Quickshell is always restarted after an update, because its files were
 	// overwritten. Start it detached so this process can exit.

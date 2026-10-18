@@ -441,6 +441,8 @@ class Bridge:
             elif action == "shutdown":
                 writer.write(b'{"ok":true}\n'); await writer.drain()
                 os.kill(os.getpid(), signal.SIGTERM)
+            elif action != "status":
+                raise RuntimeError(f"Acción desconocida: {action}")
             writer.write((json.dumps({"ok": True, "state": self.state}) + "\n").encode())
             await writer.drain()
         except Exception as e:
