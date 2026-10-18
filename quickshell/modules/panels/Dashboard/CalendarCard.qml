@@ -63,7 +63,8 @@ Rectangle {
         spacing: 16
 
         ColumnLayout {
-            Layout.preferredWidth: 260
+            Layout.fillWidth: true
+            Layout.preferredWidth: 1
             Layout.fillHeight: true
             spacing: 6
 
@@ -200,6 +201,7 @@ Rectangle {
 
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.preferredWidth: 1
             Layout.fillHeight: true
             spacing: 8
 
@@ -264,7 +266,7 @@ Rectangle {
                         color: Theme.colors.text
                         font.family: Theme.font.base.family
                         font.pixelSize: 12
-                        elide: Text.ElideRight
+                        wrapMode: Text.WordWrap
                     }
                 }
             }
