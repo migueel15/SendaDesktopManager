@@ -23,9 +23,10 @@ Item {
     height: targetHeight + padding * 2 ?? container.height
     width: targetWidth ?? container.width
 
+    // Name of the monitor this panel is drawn on. Set by the overlay that hosts it.
+    property string screenName: ""
     // True on the monitor the panel was opened from.
-    readonly property bool onOpenScreen: Window.window !== null && Window.window.screen !== null
-        && Window.window.screen.name === OverlayService.currentScreen
+    readonly property bool onOpenScreen: root.screenName !== "" && root.screenName === OverlayService.currentScreen
 
     visible: OverlayService.currentPanel === name && root.onOpenScreen || Debug.enabled && Debug.panel === name
 

@@ -17,6 +17,7 @@ PanelWindow {
     // Panels themselves only show on the monitor they were opened from.
     required property var modelData
     screen: modelData
+    readonly property string screenName: modelData.name
 
     WlrLayershell.namespace: "Senda:OverlayLayer"
 
@@ -51,17 +52,25 @@ PanelWindow {
         Keys.onEscapePressed: OverlayService.closeCurrentPanel()
 
         ControlCenterPopup {
+            screenName: overlayLayer.screenName
             targetX: parent.width - 500 - 5
             targetY: 45
         }
 
         DashboardPanel {
             id: dashboard
+            screenName: overlayLayer.screenName
         }
 
-        TasksPanel {}
-        SettingsPanel {}
-        NotificationsPanel {}
+        TasksPanel {
+            screenName: overlayLayer.screenName
+        }
+        SettingsPanel {
+            screenName: overlayLayer.screenName
+        }
+        NotificationsPanel {
+            screenName: overlayLayer.screenName
+        }
     }
 
 }

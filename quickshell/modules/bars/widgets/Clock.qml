@@ -7,6 +7,8 @@ import qs.services
 Rectangle {
     id: clockBackground
 
+    property string screenName: ""
+
     color: Theme.colors.background
     height: parent.height
     width: clockText.width + 20
@@ -24,7 +26,7 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => {
             if (event.button === Qt.LeftButton) {
-                OverlayService.setCurrentPanel("dashboard", Window.window.screen.name);
+                OverlayService.setCurrentPanel("dashboard", clockBackground.screenName);
             } else if (event.button === Qt.RightButton) {
                 clockText.isPrimary = !clockText.isPrimary;
             }

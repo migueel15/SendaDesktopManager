@@ -20,6 +20,7 @@ Variants {
 
 		required property var modelData
 		screen: modelData
+		readonly property string screenName: modelData.name
 
 		property var panelController: root.panelController
 
@@ -71,11 +72,15 @@ Variants {
 			}
 			Workspaces {}
 
-			TasksToggle {}
+			TasksToggle {
+				screenName: topbar.screenName
+			}
 
 		}
 
-		Clock {}
+		Clock {
+			screenName: topbar.screenName
+		}
 
 		RowLayout {
 			spacing: 0
@@ -105,7 +110,7 @@ Variants {
 
 			ControlPanel {
 				onClicked: {
-					OverlayService.setCurrentPanel("controlCenter", Window.window.screen.name);
+					OverlayService.setCurrentPanel("controlCenter", topbar.screenName);
 				}
 				Layout.rightMargin: 8
 				Layout.leftMargin: 8

@@ -7,6 +7,9 @@ import qs.services
 Item {
 	id: root
 
+	// Name of the monitor the bar sits on; panels open there.
+	property string screenName: ""
+
 	readonly property bool open: OverlayService.isOpen("tasks")
 	readonly property bool hasTask: DorlabTasks.hasTrackedTask
 
@@ -69,7 +72,7 @@ Item {
 			anchors.fill: parent
 			hoverEnabled: true
 			cursorShape: Qt.PointingHandCursor
-			onClicked: OverlayService.setCurrentPanel("tasks", Window.window.screen.name)
+			onClicked: OverlayService.setCurrentPanel("tasks", root.screenName)
 		}
 
 		RowLayout {
