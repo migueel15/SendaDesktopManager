@@ -22,13 +22,17 @@ Quickshell es un proceso de interfaz que no debería manejar credenciales. El n�
 
 4. **Almacenamiento del token.** `$XDG_STATE_HOME/senda/google-calendar.json` (por defecto `~/.local/state/senda/google-calendar.json`), con permisos `0600` y directorio con permisos `0700`. Contiene el refresh token y los metadatos necesarios. Se escribe de forma atómica. No se guarda en el archivo de configuración porque es un estado de sesión, no una preferencia del usuario.
 
-5. **Secreto del cliente.** Se guarda en `$XDG_CONFIG_HOME/senda/config` con permisos `0600`, bajo una clave propia. Nunca se escribe en logs, en mensajes de error ni en el repositorio. Una variable de entorno con el mismo nombre tiene prioridad, como en el resto de la configuración.
+5. **Cliente OAuth.** Las releases oficiales incluyen el ID y el secreto de un cliente de Senda. Se inyectan al compilar con `-ldflags -X` desde los secretos de GitHub Actions `SENDA_GOOGLE_CLIENT_ID` y `SENDA_GOOGLE_CLIENT_SECRET`, y `core/scripts/package-release.sh` se niega a publicar sin ellos. El secreto nunca aparece en el repositorio ni en los logs. Un usuario puede usar su propio cliente configurando `SENDA_GOOGLE_CLIENT_ID` y `SENDA_GOOGLE_CLIENT_SECRET` en `$XDG_CONFIG_HOME/senda/config`; en ese caso se usa el par configurado y nunca se mezcla con el incluido. Las compilaciones desde código fuente no incluyen cliente y exigen uno propio.
+
+   Esta decisión sustituye a la versión inicial, que exigía a cada usuario su propio cliente. Se acepta que el secreto de una aplicación de escritorio no es confidencial: la protección del flujo la dan PKCE, la redirección a `127.0.0.1` y el consentimiento del usuario. El coste asumido es que cualquiera puede extraer el secreto del binario, y que rotarlo obliga a publicar una release nueva.
 
 6. **Cierre de sesión.** `senda calendar logout` revoca el token en Google y borra el archivo de estado.
 
 ## Consecuencias
 
-- Sin un cliente OAuth propio, el usuario no puede conectar Google Calendar. La documentación debe explicar cómo crearlo.
+- Las compilaciones desde código fuente no tienen cliente OAuth. Quien compile Senda debe crear uno propio, o no podrá conectar Google Calendar.
+- Google limita a 100 usuarios las aplicaciones no verificadas. Un cliente compartido por todas las releases consume ese límite entre todos los usuarios.
+- Un abuso del cliente incluido afecta a la cuota de todos los usuarios. Rotar el secreto exige publicar una release nueva.
 - Si la aplicación de Google Cloud queda en modo "Testing", el refresh token caduca a los 7 días. La documentación debe advertirlo y recomendar publicar la aplicación.
 - El archivo de estado y el de configuración deben tener permisos restringidos. Si los permisos no son los esperados, Senda debe avisar y negarse a usar el archivo.
 - Quickshell depende del binario `senda` para los datos del calendario. Si el binario no está disponible, la tarjeta muestra un aviso.

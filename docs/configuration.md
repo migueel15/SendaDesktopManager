@@ -35,7 +35,7 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 |---|---|
 | `DORLAB_API_KEY` | Se pasa a Quickshell como variable de entorno al ejecutar `senda shell run`. |
 | `SENDA_DISCORD_BRIDGE` | Ruta absoluta a `discord-bridge.py`. Tiene prioridad sobre la ubicación automática del script (ver [discord-bridge.md](discord-bridge.md)). |
-| `SENDA_GOOGLE_CLIENT_ID` | ID del cliente OAuth de escritorio de Google Cloud. Ver [google-calendar.md](google-calendar.md). |
+| `SENDA_GOOGLE_CLIENT_ID` | ID de tu propio cliente OAuth de escritorio. Si está vacío, se usa el cliente incluido en la release. Ver [google-calendar.md](google-calendar.md). |
 | `SENDA_GOOGLE_CLIENT_SECRET` | Secreto de ese cliente. Nunca se imprime; `senda config get` solo indica si está definido. |
 | `SENDA_GOOGLE_CALENDARS` | IDs de calendarios separados por comas. Vacío significa los calendarios que Google marca como visibles. |
 | `SENDA_WEATHER_LOCATION` | Nombre de la localidad elegida, solo para mostrarlo. |
