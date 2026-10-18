@@ -32,6 +32,7 @@ func main() {
 	rootCmd.AddCommand(versionCmd())
 	rootCmd.AddCommand(updateCmd())
 	rootCmd.AddCommand(setupCmd())
+	rootCmd.AddCommand(uninstallCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

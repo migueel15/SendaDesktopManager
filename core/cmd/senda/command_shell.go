@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/SendaDesktopManager/core/internal/service"
 	"github.com/spf13/cobra"
 )
 
@@ -27,24 +28,36 @@ var shellCmd = &cobra.Command{
 var shellRunCmd = &cobra.Command{
 	Use:   "run",
 	Short: "run Quickshell instance",
-	Run: func(cmd *cobra.Command, args []string) {
-		runShellInteractive()
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// With the service installed, an interactive run asks systemd to
+		// start it, so there is only ever one supervised instance.
+		if service.Installed() && !service.RunningUnderSystemd() {
+			return service.Start()
+		}
+		return runShellInteractive()
 	},
 }
 
 var shellKillCmd = &cobra.Command{
 	Use:   "kill",
 	Short: "kill Quickshell instance",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if service.Installed() {
+			return service.Stop()
+		}
 		closeShell()
+		return nil
 	},
 }
 
 var shellRestartCdm = &cobra.Command{
 	Use:   "restart",
 	Short: "restart quickshell instance",
-	Run: func(cmd *cobra.Command, args []string) {
-		restartShell()
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if service.Installed() {
+			return service.Restart()
+		}
+		return restartShell()
 	},
 }
 
@@ -54,14 +67,17 @@ func init() {
 	shellCmd.AddCommand(shellRestartCdm)
 }
 
-func runShellInteractive() {
+// runShellInteractive runs Quickshell in the foreground until it exits or
+// this process receives SIGINT or SIGTERM. It returns an error when Quickshell
+// fails on its own, so systemd restarts the service.
+func runShellInteractive() error {
 	// check if shell already launched
 	pid := readPidData()
 	if pid > 0 {
 		process, err := os.FindProcess(pid)
 		if err == nil && process.Signal(syscall.Signal(0)) == nil {
 			fmt.Println("Quickshell is already running")
-			return
+			return nil
 		}
 	}
 
@@ -73,7 +89,7 @@ func runShellInteractive() {
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
-		log.Fatalf("Error running shell: %v", err)
+		return fmt.Errorf("error running shell: %w", err)
 	}
 
 	if err := writePidFile(cmd.Process.Pid); err != nil {
@@ -104,11 +120,13 @@ func runShellInteractive() {
 		if err != nil {
 			log.Println("Quickshell exited:", err)
 		}
+		return nil
 
 	case err := <-done:
 		if err != nil {
-			log.Println("Quickshell exited:", err)
+			return fmt.Errorf("quickshell exited: %w", err)
 		}
+		return nil
 	}
 }
 
@@ -157,11 +175,11 @@ func closeShell() bool {
 	return true
 }
 
-func restartShell() {
+func restartShell() error {
 	if !closeShell() {
-		return
+		return nil
 	}
-	runShellInteractive()
+	return runShellInteractive()
 }
 
 func waitForProcessExit(process *os.Process, timeout time.Duration) bool {

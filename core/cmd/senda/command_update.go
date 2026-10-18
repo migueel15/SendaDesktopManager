@@ -14,6 +14,7 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/discordbridge"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/release"
+	"github.com/migueel15/SendaDesktopManager/core/internal/service"
 	"github.com/migueel15/SendaDesktopManager/core/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -138,23 +139,8 @@ func runUpdate(cmd *cobra.Command) error {
 		}
 	}
 
-	if !closeShell() {
-		return errors.New("no se pudo detener Quickshell; ciérralo y ejecuta 'senda shell run'")
-	}
-	// The Discord bridge keeps running the script it was started from, so stop
-	// it too; Quickshell starts the updated one when it reconnects.
-	if err := discordbridge.Stop(discordbridge.SocketPath(), 3*time.Second); err != nil {
-		fmt.Fprintln(cmd.ErrOrStderr(), "aviso:", err)
-	}
-	// Quickshell is always restarted after an update, because its files were
-	// overwritten. Start it detached so this process can exit.
-	shell := exec.Command(exe, "shell", "run")
-	shell.Stdin = nil
-	shell.Stdout = nil
-	shell.Stderr = nil
-	shell.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
-	if err := shell.Start(); err != nil {
-		return fmt.Errorf("reiniciar Quickshell: %w", err)
+	if err := restartAfterUpdate(cmd, exe); err != nil {
+		return err
 	}
 	fmt.Fprintln(out, "Quickshell reiniciado")
 
@@ -162,6 +148,41 @@ func runUpdate(cmd *cobra.Command) error {
 		fmt.Fprintf(out, "senda actualizado de %s a %s\n", version.Version, tag)
 	} else {
 		fmt.Fprintf(out, "Quickshell sincronizado con %s\n", tag)
+	}
+	return nil
+}
+
+// restartAfterUpdate stops the Discord bridge, which keeps running the script
+// it was started from, and restarts Quickshell so it loads the new files and
+// binary. With senda.service installed, systemd restarts it; otherwise the
+// shell is started detached, as before the service existed.
+func restartAfterUpdate(cmd *cobra.Command, exe string) error {
+	stopBridge := func() {
+		if err := discordbridge.Stop(discordbridge.SocketPath(), 3*time.Second); err != nil {
+			fmt.Fprintln(cmd.ErrOrStderr(), "aviso:", err)
+		}
+	}
+
+	if service.Installed() {
+		stopBridge()
+		restart := service.Restart
+		if service.RunningUnderSystemd() {
+			restart = service.RestartNoBlock
+		}
+		if err := restart(); err != nil {
+			return fmt.Errorf("reiniciar senda.service: %w", err)
+		}
+		return nil
+	}
+
+	if !closeShell() {
+		return errors.New("no se pudo detener Quickshell; ciérralo y ejecuta 'senda shell run'")
+	}
+	stopBridge()
+	shell := exec.Command(exe, "shell", "run")
+	shell.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	if err := shell.Start(); err != nil {
+		return fmt.Errorf("reiniciar Quickshell: %w", err)
 	}
 	return nil
 }

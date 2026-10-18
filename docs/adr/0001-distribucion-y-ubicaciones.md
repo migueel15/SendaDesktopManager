@@ -22,7 +22,7 @@ Antes de este ADR había un archivo `.env` como fuente de valores del usuario y 
 
 5. **Alcance de la v1.** Solo Arch Linux con Hyprland.
 
-6. **Privilegios y Hyprland.** El instalador y `senda setup` no requieren root y no editan la configuración de Hyprland.
+6. **Privilegios y Hyprland.** El instalador y `senda setup` no requieren root y no editan la configuración de Hyprland. El arranque automático se resuelve con la unidad de usuario descrita en el ADR 0003.
 
 7. **Sitio de instalación.** La landing se publica con GitHub Pages desde este repositorio, a partir de `site/`. Todavía no se ha decidido un dominio propio.
 
