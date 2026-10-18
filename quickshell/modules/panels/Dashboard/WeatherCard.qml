@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import qs.common
 import qs.services
 
-// "TU ESPACIO": the weather for the location chosen in the settings panel.
+// "EL TIEMPO": the weather for the location chosen in the settings panel.
 Rectangle {
     id: root
 
