@@ -15,12 +15,16 @@ Item {
     Column {
         id: column
         width: parent.width
-        spacing: 6
+        // Selectors attach directly under their card.
+        spacing: 0
 
         Rectangle {
             width: parent.width
             height: 92
             radius: Theme.rounding.normal
+            // Square while its selector is attached below.
+            bottomLeftRadius: devicesDropdown.attached ? 0 : Theme.rounding.normal
+            bottomRightRadius: devicesDropdown.attached ? 0 : Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant
@@ -116,19 +120,10 @@ Item {
             }
         }
 
-        Rectangle {
-            width: parent.width
-            height: root.devicesExpanded ? devicesColumn.implicitHeight + 20 : 0
-            visible: height > 0
-            radius: Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
-            clip: true
-
-            Behavior on height {
-                NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
-            }
+        DropdownCard {
+            id: devicesDropdown
+            expanded: root.devicesExpanded
+            contentHeight: devicesColumn.implicitHeight + 20
 
             Column {
                 id: devicesColumn

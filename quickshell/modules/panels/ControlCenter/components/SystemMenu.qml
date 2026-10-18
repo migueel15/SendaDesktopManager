@@ -3,33 +3,16 @@ import Quickshell
 import Quickshell.Io
 import QtQuick.Layouts
 
-import Quickshell.Widgets
-
 import qs.common
 
-ClippingRectangle {
+// Power menu, attached under the user card like the other selectors.
+DropdownCard {
     id: systemMenu
 
     property bool isOpen: false
 
-    width: parent.width
-    height: isOpen ? contentColumn.implicitHeight + 20 : 0
-    color: Theme.colors.surface
-    radius: Theme.rounding.normal
-
-    border.width: 1
-    border.color: Theme.colors.surfaceVariant
-
-    clip: true
-
-    visible: height > 0
-
-    Behavior on height {
-        NumberAnimation {
-            duration: 200
-            easing.type: Easing.OutCubic
-        }
-    }
+    expanded: isOpen
+    contentHeight: contentColumn.implicitHeight + 20
 
     // Processes for system actions
     Process {

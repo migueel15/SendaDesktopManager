@@ -9,16 +9,14 @@ import qs.common.components
 import qs.modules.panels.Dashboard
 import qs.services
 
-SendaPanel {
+// Dashboard content. The overlay hosts it in a SendaPanel shared with the
+// settings, so switching between both morphs the same panel.
+Item {
     id: root
-    name: "dashboard"
 
-    padding: 16
-    targetWidth: 700
-    targetHeight: 720
-
-    targetX: parent.width / 2 - root.width / 2
-    targetY: 45
+    // Size the content needs; the host panel adds its padding.
+    readonly property real contentWidth: Math.max(700, dashboardLayout.implicitWidth)
+    readonly property real contentHeight: 720
 
     function isSpotifyPlayer(player) {
         if (!player) return false;
@@ -78,6 +76,7 @@ SendaPanel {
     }
 
     ColumnLayout {
+        id: dashboardLayout
         anchors.fill: parent
         spacing: 12
 

@@ -40,6 +40,15 @@ Variants {
 
 		implicitHeight: Theme.barSize
 
+		// Clicks on empty parts of the bar close the open panel. Buttons sit above
+		// this area, so they still receive their clicks.
+		MouseArea {
+			anchors.fill: parent
+			z: -1
+			enabled: OverlayService.currentPanel !== ""
+			onPressed: OverlayService.closeCurrentPanel()
+		}
+
 		Process {
 			id: reloadProc
 			running: false
@@ -118,7 +127,7 @@ Variants {
 
 			ControlPanel {
 				onClicked: {
-					OverlayService.setCurrentPanel("controlCenter", topbar.screenName);
+					OverlayService.togglePanel("controlCenter", topbar.screenName);
 				}
 				Layout.rightMargin: 8
 				Layout.leftMargin: 8

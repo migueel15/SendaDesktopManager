@@ -18,6 +18,10 @@ Rectangle {
     color: Theme.colors.surface
     height: 60
     radius: Theme.rounding.normal
+    // Square while the power menu is attached below.
+    bottomLeftRadius: attachedBelow ? 0 : Theme.rounding.normal
+    bottomRightRadius: attachedBelow ? 0 : Theme.rounding.normal
+    property bool attachedBelow: false
     border.width: 1
     border.color: Theme.colors.surfaceVariant
     z: 10

@@ -2,21 +2,16 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
-import qs.common.components
 import qs.services
 
 // Settings window with a sidebar of sections. Every change goes through the
-// senda CLI. Opened with `senda settings` or from the dashboard.
-SendaPanel {
+// senda CLI. Opened with `senda settings` or from the dashboard. The overlay
+// hosts it in a SendaPanel shared with the dashboard.
+Item {
     id: root
-    name: "settings"
 
-    padding: 16
-    targetWidth: 680
-    targetHeight: 520
-
-    targetX: parent.width / 2 - root.width / 2
-    targetY: 45
+    // Height the content needs; the host panel gives it the dashboard width.
+    readonly property real contentHeight: 520
 
     // Sidebar entries. Each one needs a page in the StackLayout below, in the
     // same position.
@@ -43,118 +38,142 @@ SendaPanel {
         }
     }
 
+    // Same card style as the dashboard and the control center.
+    component SettingsCard: Rectangle {
+        radius: Theme.rounding.normal
+        color: Theme.colors.surface
+        border.width: 1
+        border.color: Theme.colors.surfaceVariant
+    }
+
     RowLayout {
         anchors.fill: parent
-        spacing: 16
+        spacing: 12
 
-        ColumnLayout {
-            // Fixed at 20% of the window, so the sections never take over the content.
-            Layout.preferredWidth: root.width * 0.2
-            Layout.minimumWidth: root.width * 0.2
-            Layout.maximumWidth: root.width * 0.2
+        SettingsCard {
+            // Fixed at 22% of the window, so the sections never take over the content.
+            Layout.preferredWidth: root.width * 0.22
+            Layout.minimumWidth: root.width * 0.22
+            Layout.maximumWidth: root.width * 0.22
             Layout.fillHeight: true
-            spacing: 4
 
-            Text {
-                Layout.bottomMargin: 10
-                text: "Ajustes"
-                color: Theme.colors.text
-                font.family: Theme.font.title.family
-                font.pixelSize: Theme.scaled(18)
-                font.weight: Font.Bold
-            }
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 4
 
-            Repeater {
-                model: root.sections
+                Text {
+                    Layout.bottomMargin: 10
+                    text: "Ajustes"
+                    color: Theme.colors.text
+                    font.family: Theme.font.title.family
+                    font.pixelSize: Theme.scaled(18)
+                    font.weight: Font.Bold
+                }
 
-                delegate: Rectangle {
-                    required property var modelData
-                    required property int index
+                Repeater {
+                    model: root.sections
 
-                    readonly property bool selected: root.currentSection === index
+                    delegate: Rectangle {
+                        required property var modelData
+                        required property int index
 
-                    Layout.fillWidth: true
-                    implicitHeight: 34
-                    radius: Theme.rounding.small
-                    color: selected ? Theme.colors.surfaceVariant : sectionMouse.containsMouse ? Theme.colors.surface : "transparent"
+                        readonly property bool selected: root.currentSection === index
 
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.leftMargin: 12
-                        text: modelData.label
-                        color: parent.selected ? Theme.colors.primary : Theme.colors.text
-                        font.family: Theme.font.base.family
-                        font.pixelSize: Theme.scaled(13)
-                        font.weight: parent.selected ? Font.Bold : Font.Normal
-                    }
+                        Layout.fillWidth: true
+                        implicitHeight: 34
+                        radius: Theme.rounding.small
+                        color: selected ? Theme.colors.surfaceVariant
+                            : sectionMouse.containsMouse ? Qt.rgba(Theme.colors.surfaceVariant.r, Theme.colors.surfaceVariant.g, Theme.colors.surfaceVariant.b, 0.5)
+                            : "transparent"
 
-                    MouseArea {
-                        id: sectionMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.currentSection = index
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: 12
+                            text: modelData.label
+                            color: parent.selected ? Theme.colors.primary : Theme.colors.text
+                            font.family: Theme.font.base.family
+                            font.pixelSize: Theme.scaled(13)
+                            font.weight: parent.selected ? Font.Bold : Font.Normal
+                        }
+
+                        MouseArea {
+                            id: sectionMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.currentSection = index
+                        }
                     }
                 }
-            }
 
-            Item {
-                Layout.fillHeight: true
-            }
+                Item {
+                    Layout.fillHeight: true
+                }
 
-            SettingsButton {
-                Layout.fillWidth: true
-                label: "Cerrar"
-                onClicked: OverlayService.closeCurrentPanel()
+                SettingsButton {
+                    Layout.fillWidth: true
+                    label: "Cerrar"
+                    onClicked: OverlayService.closeOrGoBack()
+                }
             }
         }
 
-        Rectangle {
-            Layout.preferredWidth: 1
-            Layout.fillHeight: true
-            color: Theme.colors.surfaceVariant
-        }
-
-        ColumnLayout {
+        SettingsCard {
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             Layout.fillHeight: true
-            spacing: 10
 
-            Text {
-                Layout.fillWidth: true
-                visible: SendaSettings.notice !== ""
-                text: SendaSettings.notice
-                color: SendaSettings.noticeIsError ? Theme.colors.warning : Theme.colors.success
-                font.family: Theme.font.overlay.family
-                font.pixelSize: Theme.scaled(12)
-                wrapMode: Text.WordWrap
-            }
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 18
+                spacing: 10
 
-            StackLayout {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                currentIndex: root.currentSection
-
-                AppearanceSettingsPage {
+                Text {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    Layout.bottomMargin: 4
+                    text: root.sections[root.currentSection]?.label ?? ""
+                    color: Theme.colors.primary
+                    font.family: Theme.font.title.family
+                    font.pixelSize: Theme.scaled(16)
+                    font.weight: Font.Bold
                 }
 
-                CalendarSettingsPage {
+                Text {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    visible: SendaSettings.notice !== ""
+                    text: SendaSettings.notice
+                    color: SendaSettings.noticeIsError ? Theme.colors.warning : Theme.colors.success
+                    font.family: Theme.font.overlay.family
+                    font.pixelSize: Theme.scaled(12)
+                    wrapMode: Text.WordWrap
                 }
 
-                WeatherSettingsPage {
+                StackLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                }
+                    currentIndex: root.currentSection
 
-                UpdateSettingsPage {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    AppearanceSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    CalendarSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    WeatherSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    UpdateSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
                 }
             }
         }
