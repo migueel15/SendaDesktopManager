@@ -13,7 +13,9 @@ Singleton {
 
     // screenName is the monitor the panel opens on. Without it, the last monitor
     // is kept, or the first monitor when none was used yet.
-    function setCurrentPanel(panel: string, screenName: string) {
+    // screenName is left untyped on purpose: a typed string parameter turns a
+    // missing argument into the text "undefined", which matches no monitor.
+    function setCurrentPanel(panel: string, screenName) {
         root.currentPanel = panel;
         if (screenName) {
             root.currentScreen = screenName;
