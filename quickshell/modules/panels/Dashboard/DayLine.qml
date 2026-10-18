@@ -38,6 +38,10 @@ Item {
     // Event under the pointer and its horizontal center, for the tooltip.
     property var hoveredEvent: null
     property real hoveredX: 0
+    // The tooltip opens within openRadius of a dot and closes only beyond
+    // closeRadius, so small movements around the dot do not close it.
+    readonly property real openRadius: 5
+    readonly property real closeRadius: 18
 
     Timer {
         interval: 60000
@@ -114,14 +118,20 @@ Item {
             color: Theme.colors.secondary
 
             MouseArea {
-                anchors.fill: parent
-                anchors.margins: -4
+                anchors.centerIn: parent
+                width: root.closeRadius * 2
+                height: root.closeRadius * 2
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: SendaCalendar.openEvent(modelData)
-                onEntered: {
-                    root.hoveredEvent = modelData;
-                    root.hoveredX = parent.x + parent.width / 2;
+                onPositionChanged: mouse => {
+                    const distance = Math.hypot(mouse.x - width / 2, mouse.y - height / 2);
+                    if (distance <= root.openRadius) {
+                        root.hoveredEvent = modelData;
+                        root.hoveredX = parent.x + parent.width / 2;
+                    } else if (distance > root.closeRadius && root.hoveredEvent === modelData) {
+                        root.hoveredEvent = null;
+                    }
                 }
                 onExited: {
                     if (root.hoveredEvent === modelData) {
