@@ -145,71 +145,9 @@ SendaPanel {
             Layout.fillHeight: true
             spacing: 12
 
-            Rectangle {
+            AgendaCard {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                radius: Theme.rounding.normal
-                color: Theme.colors.surface
-                border.width: 1
-                border.color: DorlabTasks.hasActiveTask ? Theme.colors.primary : Theme.colors.surfaceVariant
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 8
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Text {
-                            text: "󰃰"
-                            color: Theme.colors.secondary
-                            font.family: Theme.font.title.family
-                            font.pixelSize: 20
-                        }
-                        Text {
-                            Layout.fillWidth: true
-                            text: "EN LO QUE ESTÁS"
-                            color: Theme.colors.overlay
-                            font.family: Theme.font.overlay.family
-                            font.pixelSize: 11
-                            font.weight: Font.Bold
-                        }
-                        Rectangle {
-                            visible: DorlabTasks.hasActiveTask
-                            width: 7
-                            height: 7
-                            radius: 4
-                            color: Theme.colors.success
-                        }
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        verticalAlignment: Text.AlignVCenter
-                        text: DorlabTasks.hasTrackedTask
-                            ? DorlabTasks.trackedTaskTitle
-                            : "Espacio para tu próxima idea"
-                        color: Theme.colors.text
-                        font.family: Theme.font.title.family
-                        font.pixelSize: 19
-                        font.weight: Font.Bold
-                        wrapMode: Text.WordWrap
-                        maximumLineCount: 3
-                        elide: Text.ElideRight
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: DorlabTasks.hasTrackedTask
-                            ? `${DorlabTasks.hasActiveTask ? "EN MARCHA" : "EN PAUSA"}  ·  ${DorlabTasks.hasActiveTask ? DorlabTasks.formatDuration(DorlabTasks.activeElapsedSeconds) : "reanuda cuando quieras"}`
-                            : "Un paso pequeño también cuenta."
-                        color: DorlabTasks.hasActiveTask ? Theme.colors.success : Theme.colors.overlay
-                        font.family: Theme.font.overlay.family
-                        font.pixelSize: 11
-                        elide: Text.ElideRight
-                    }
-                }
             }
 
             ColumnLayout {

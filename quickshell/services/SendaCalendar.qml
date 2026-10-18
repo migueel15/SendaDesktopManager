@@ -15,6 +15,8 @@ Singleton {
     readonly property int cacheTtlMs: 10 * 60 * 1000
     // Months relative to the current one: the previous month, this one, and three ahead.
     readonly property var prefetchOffsets: [-1, 0, 1, 2, 3]
+    readonly property int upcomingDays: 120
+    readonly property var trustedLinkPrefixes: ["https://www.google.com/calendar/", "https://calendar.google.com/"]
 
     // "loading", "ready", "disconnected" or "error".
     property string status: "loading"
@@ -135,6 +137,42 @@ Singleton {
             }
         }
         root.eventsByDay = next;
+    }
+
+    // Next events from today in start order, one entry per event. It only
+    // searches the cached days, so events beyond the cache are not listed.
+    function upcomingEvents(limit) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const seen = {};
+        const found = [];
+        for (let offset = 0; offset < root.upcomingDays; offset++) {
+            const day = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset);
+            for (const event of root.eventsOn(day)) {
+                const id = `${event.id}|${event.start}`;
+                if (seen[id]) {
+                    continue;
+                }
+                const start = event.allDay ? root.parseDay(event.start) : new Date(event.start);
+                const upcoming = event.allDay ? start >= today : start >= now;
+                if (!upcoming) {
+                    continue;
+                }
+                seen[id] = true;
+                found.push(Object.assign({}, event, { when: start.getTime() }));
+            }
+        }
+        found.sort((first, second) => first.when - second.when);
+        return found.slice(0, limit);
+    }
+
+    // Opens the event in the default browser. Only Google Calendar links are
+    // opened, so a malformed link can never launch another program.
+    function openEvent(event) {
+        const link = event.link ?? "";
+        if (root.trustedLinkPrefixes.some(prefix => link.startsWith(prefix))) {
+            Quickshell.execDetached(["xdg-open", link]);
+        }
     }
 
     function fail(text, fallback) {

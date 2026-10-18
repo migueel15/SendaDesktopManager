@@ -271,25 +271,39 @@ Rectangle {
             Repeater {
                 model: root.selectedEvents.slice(0, root.visibleEvents)
 
-                delegate: RowLayout {
+                delegate: Item {
+                    id: eventItem
                     required property var modelData
                     Layout.fillWidth: true
-                    spacing: 10
+                    implicitHeight: eventRow.implicitHeight
 
-                    Text {
-                        Layout.preferredWidth: 58
-                        text: modelData.allDay ? "Todo el día" : Qt.formatTime(new Date(modelData.start), "HH:mm")
-                        color: Theme.colors.secondary
-                        font.family: Theme.font.overlay.family
-                        font.pixelSize: 11
+                    RowLayout {
+                        id: eventRow
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        spacing: 10
+
+                        Text {
+                            Layout.preferredWidth: 58
+                            text: modelData.allDay ? "Todo el día" : Qt.formatTime(new Date(modelData.start), "HH:mm")
+                            color: Theme.colors.secondary
+                            font.family: Theme.font.overlay.family
+                            font.pixelSize: 11
+                        }
+                        Text {
+                            Layout.fillWidth: true
+                            text: modelData.title
+                            color: Theme.colors.text
+                            font.family: Theme.font.base.family
+                            font.pixelSize: 12
+                            wrapMode: Text.WordWrap
+                        }
                     }
-                    Text {
-                        Layout.fillWidth: true
-                        text: modelData.title
-                        color: Theme.colors.text
-                        font.family: Theme.font.base.family
-                        font.pixelSize: 12
-                        wrapMode: Text.WordWrap
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: SendaCalendar.openEvent(eventItem.modelData)
                     }
                 }
             }
