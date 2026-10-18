@@ -159,24 +159,49 @@ Item {
         font.pixelSize: 10
     }
 
-    Text {
-        x: Math.max(0, Math.min(root.width - implicitWidth, root.positionOf(root.sunriseTime) - implicitWidth / 2))
+    // Sunrise and sunset: an icon above each time, placed at the sun's dot.
+    Column {
+        x: Math.max(0, Math.min(root.width - width, root.positionOf(root.sunriseTime) - width / 2))
         y: track.y + 6
         visible: root.sunKnown
-        text: root.clock(root.sunriseTime)
-        color: Theme.colors.warning
-        font.family: Theme.font.overlay.family
-        font.pixelSize: 10
+        spacing: 0
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "󰖜"
+            color: Theme.colors.warning
+            font.family: Theme.font.title.family
+            font.pixelSize: 12
+        }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: root.clock(root.sunriseTime)
+            color: Theme.colors.warning
+            font.family: Theme.font.overlay.family
+            font.pixelSize: 10
+        }
     }
 
-    Text {
-        x: Math.max(0, Math.min(root.width - implicitWidth, root.positionOf(root.sunsetTime) - implicitWidth / 2))
+    Column {
+        x: Math.max(0, Math.min(root.width - width, root.positionOf(root.sunsetTime) - width / 2))
         y: track.y + 6
         visible: root.sunKnown
-        text: root.clock(root.sunsetTime)
-        color: Theme.colors.warning
-        font.family: Theme.font.overlay.family
-        font.pixelSize: 10
+        spacing: 0
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "󰖛"
+            color: Theme.colors.warning
+            font.family: Theme.font.title.family
+            font.pixelSize: 12
+        }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: root.clock(root.sunsetTime)
+            color: Theme.colors.warning
+            font.family: Theme.font.overlay.family
+            font.pixelSize: 10
+        }
     }
 
     // Tooltip for the event under the pointer: its start time and title.
