@@ -38,10 +38,41 @@ Item {
     // Event under the pointer and its horizontal center, for the tooltip.
     property var hoveredEvent: null
     property real hoveredX: 0
-    // The tooltip opens within openRadius of a dot and closes only beyond
-    // closeRadius, so small movements around the dot do not close it.
-    readonly property real openRadius: 5
+    // A dot opens its tooltip within openRadius and the tooltip closes only
+    // beyond closeRadius, so small movements around the dot keep it open.
+    readonly property real openRadius: 6
     readonly property real closeRadius: 18
+
+    // Center of a dot, in this item's coordinates.
+    function dotCenter(event) {
+        return { x: root.positionOf(new Date(event.start).getTime()), y: track.y + 1 };
+    }
+
+    // Opens, keeps or closes the tooltip for a pointer at (x, y).
+    function updateHover(x, y) {
+        if (root.hoveredEvent) {
+            const current = root.dotCenter(root.hoveredEvent);
+            if (Math.hypot(x - current.x, y - current.y) <= root.closeRadius) {
+                return;
+            }
+            root.hoveredEvent = null;
+        }
+
+        let nearest = null;
+        let best = root.openRadius;
+        for (const event of root.timedEvents) {
+            const center = root.dotCenter(event);
+            const distance = Math.hypot(x - center.x, y - center.y);
+            if (distance <= best) {
+                best = distance;
+                nearest = event;
+            }
+        }
+        if (nearest) {
+            root.hoveredEvent = nearest;
+            root.hoveredX = root.dotCenter(nearest).x;
+        }
+    }
 
     Timer {
         interval: 60000
@@ -117,28 +148,6 @@ Item {
             radius: 3
             color: Theme.colors.secondary
 
-            MouseArea {
-                anchors.centerIn: parent
-                width: root.closeRadius * 2
-                height: root.closeRadius * 2
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: SendaCalendar.openEvent(modelData)
-                onPositionChanged: mouse => {
-                    const distance = Math.hypot(mouse.x - width / 2, mouse.y - height / 2);
-                    if (distance <= root.openRadius) {
-                        root.hoveredEvent = modelData;
-                        root.hoveredX = parent.x + parent.width / 2;
-                    } else if (distance > root.closeRadius && root.hoveredEvent === modelData) {
-                        root.hoveredEvent = null;
-                    }
-                }
-                onExited: {
-                    if (root.hoveredEvent === modelData) {
-                        root.hoveredEvent = null;
-                    }
-                }
-            }
         }
     }
 
@@ -211,6 +220,22 @@ Item {
             color: Theme.colors.warning
             font.family: Theme.font.overlay.family
             font.pixelSize: 10
+        }
+    }
+
+    // One area over the whole line tracks the pointer, so the tooltip follows
+    // the distance rules above. Clicking opens the event under the pointer.
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.LeftButton
+        cursorShape: root.hoveredEvent ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onPositionChanged: mouse => root.updateHover(mouse.x, mouse.y)
+        onExited: root.hoveredEvent = null
+        onClicked: {
+            if (root.hoveredEvent) {
+                SendaCalendar.openEvent(root.hoveredEvent);
+            }
         }
     }
 
