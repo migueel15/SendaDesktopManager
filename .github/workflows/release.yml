@@ -25,6 +25,8 @@ jobs:
       - name: Package release assets
         env:
           TAG: ${{ github.ref_name }}
+          SENDA_GOOGLE_CLIENT_ID: ${{ secrets.SENDA_GOOGLE_CLIENT_ID }}
+          SENDA_GOOGLE_CLIENT_SECRET: ${{ secrets.SENDA_GOOGLE_CLIENT_SECRET }}
         run: |
           core/scripts/package-release.sh "$TAG" "$RUNNER_TEMP/release"
 

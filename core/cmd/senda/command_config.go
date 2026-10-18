@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
+	"github.com/migueel15/SendaDesktopManager/core/internal/googlecalendar"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/spf13/cobra"
 )
@@ -63,6 +64,7 @@ func configGetCmd() *cobra.Command {
 					keyWeatherLon:      values[keyWeatherLon],
 				},
 				"googleClientSecretConfigured": values[keyGoogleClientSecret] != "",
+				"embeddedGoogleClient":         googlecalendar.HasEmbeddedCredentials(),
 			}
 			return writeJSON(cmd, result)
 		},

@@ -29,8 +29,9 @@ const (
 	refreshMargin = time.Minute
 )
 
-// ErrMissingCredentials means the OAuth client ID or secret is not configured.
-var ErrMissingCredentials = errors.New("set SENDA_GOOGLE_CLIENT_ID and SENDA_GOOGLE_CLIENT_SECRET in the config file")
+// ErrMissingCredentials means neither the build nor the config file has an
+// OAuth client.
+var ErrMissingCredentials = errors.New("no Google OAuth client is available; set SENDA_GOOGLE_CLIENT_ID and SENDA_GOOGLE_CLIENT_SECRET in the config file")
 
 // ErrSessionExpired means Google rejected the refresh token. The user must log
 // in again.

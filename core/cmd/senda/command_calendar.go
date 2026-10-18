@@ -150,10 +150,10 @@ func writeJSON(cmd *cobra.Command, value any) error {
 }
 
 func newCalendarClient() *googlecalendar.Client {
-	creds := googlecalendar.Credentials{
-		ClientID:     paths.Setting("SENDA_GOOGLE_CLIENT_ID"),
-		ClientSecret: paths.Setting("SENDA_GOOGLE_CLIENT_SECRET"),
-	}
+	creds := googlecalendar.ResolveCredentials(
+		paths.Setting(keyGoogleClientID),
+		paths.Setting(keyGoogleClientSecret),
+	)
 	store := googlecalendar.TokenStore{Path: paths.GoogleCalendarTokenFile()}
 	return googlecalendar.NewClient(creds, store)
 }
