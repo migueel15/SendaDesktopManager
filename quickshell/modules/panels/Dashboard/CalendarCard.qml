@@ -99,6 +99,12 @@ Rectangle {
                     font.family: Theme.font.title.family
                     font.pixelSize: 13
                     font.weight: Font.Bold
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.goToToday()
+                    }
                 }
                 Text {
                     text: "󰅂"
@@ -114,32 +120,6 @@ Rectangle {
                     }
                 }
 
-                Rectangle {
-                    Layout.preferredWidth: todayLabel.implicitWidth + 14
-                    Layout.preferredHeight: 22
-                    radius: Theme.rounding.small
-                    color: todayMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-                    border.width: 1
-                    border.color: Theme.colors.surfaceVariant
-
-                    Text {
-                        id: todayLabel
-                        anchors.centerIn: parent
-                        text: "Hoy"
-                        color: Theme.colors.primary
-                        font.family: Theme.font.overlay.family
-                        font.pixelSize: 11
-                        font.weight: Font.Bold
-                    }
-
-                    MouseArea {
-                        id: todayMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.goToToday()
-                    }
-                }
             }
 
             RowLayout {
