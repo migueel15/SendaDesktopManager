@@ -134,7 +134,9 @@ SendaPanel {
 
             Text {
                 Layout.fillWidth: true
-                text: "Usa el ID y el secreto de tu cliente OAuth de escritorio. El secreto no se vuelve a mostrar."
+                text: SendaSettings.embeddedClient && SendaSettings.values.SENDA_GOOGLE_CLIENT_ID === ""
+                    ? "Esta versión incluye el cliente de Google de Senda; solo tienes que conectar tu cuenta. Opcional: introduce tu propio ID y secreto para usar tu cliente."
+                    : "Usa el ID y el secreto de tu cliente OAuth de escritorio. El secreto no se vuelve a mostrar."
                 color: Theme.colors.overlay
                 font.family: Theme.font.overlay.family
                 font.pixelSize: 11

@@ -16,6 +16,8 @@ Singleton {
 
     property var values: ({})
     property bool secretConfigured: false
+    // True when this build ships Senda's own Google OAuth client.
+    property bool embeddedClient: false
     property bool connected: false
     property var calendars: []
     property var places: []
@@ -121,6 +123,7 @@ Singleton {
                 const data = JSON.parse(configOutput.text);
                 root.values = data.values;
                 root.secretConfigured = data.googleClientSecretConfigured;
+                root.embeddedClient = data.embeddedGoogleClient;
             } catch (error) {
                 root.showError("La configuración no es válida", "");
             }
