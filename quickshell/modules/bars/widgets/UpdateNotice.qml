@@ -25,7 +25,7 @@ RowLayout {
         Text {
             id: noticeLabel
             anchors.centerIn: parent
-            text: `${SendaUpdate.latest}  ${String.fromCodePoint(0xF0AA)}`
+            text: `${SendaUpdate.latest}  ${String.fromCodePoint(0xF019)}`
             color: Theme.colors.primary
             font.family: Theme.font.overlay.family
             font.pixelSize: Theme.scaled(11)
