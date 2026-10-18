@@ -41,6 +41,17 @@ Rectangle {
         return text.charAt(0).toUpperCase() + text.slice(1);
     }
 
+    // Asks for the shown month and its neighbours, which the grid can also show.
+    function requestVisibleMonths() {
+        const year = root.shownMonth.getFullYear();
+        const month = root.shownMonth.getMonth();
+        SendaCalendar.requestMonths([
+            new Date(year, month - 1, 1),
+            root.shownMonth,
+            new Date(year, month + 1, 1)
+        ]);
+    }
+
     function moveMonth(offset) {
         root.shownMonth = new Date(root.shownMonth.getFullYear(), root.shownMonth.getMonth() + offset, 1);
     }
@@ -51,17 +62,16 @@ Rectangle {
         root.selectedDay = root.today;
     }
 
-    // Loads the six visible weeks whenever the grid moves.
-    onGridStartChanged: SendaCalendar.loadRange(root.gridStart, root.dayAt(42))
+    onShownMonthChanged: root.requestVisibleMonths()
 
     onVisibleChanged: {
         if (visible) {
             root.today = root.startOfDay(new Date());
-            SendaCalendar.loadRange(root.gridStart, root.dayAt(42));
+            root.requestVisibleMonths();
         }
     }
 
-    Component.onCompleted: SendaCalendar.loadRange(root.gridStart, root.dayAt(42))
+    Component.onCompleted: root.requestVisibleMonths()
 
     RowLayout {
         anchors.fill: parent
@@ -230,11 +240,11 @@ Rectangle {
 
             Text {
                 Layout.fillWidth: true
-                visible: SendaCalendar.status !== "ready"
+                visible: SendaCalendar.status !== "ready" || !SendaCalendar.isLoaded(root.selectedDay)
                 text: {
-                    if (SendaCalendar.status === "loading") return "Cargando eventos…";
                     if (SendaCalendar.status === "disconnected") return "Conecta tu cuenta de Google para ver tus eventos.";
-                    return SendaCalendar.message;
+                    if (SendaCalendar.status === "error") return SendaCalendar.message;
+                    return "Cargando eventos…";
                 }
                 color: SendaCalendar.status === "error" ? Theme.colors.warning : Theme.colors.overlay
                 font.family: Theme.font.overlay.family
@@ -251,7 +261,7 @@ Rectangle {
 
             Text {
                 Layout.fillWidth: true
-                visible: SendaCalendar.status === "ready" && root.selectedEvents.length === 0
+                visible: SendaCalendar.status === "ready" && SendaCalendar.isLoaded(root.selectedDay) && root.selectedEvents.length === 0
                 text: "Sin eventos este día"
                 color: Theme.colors.overlay
                 font.family: Theme.font.overlay.family

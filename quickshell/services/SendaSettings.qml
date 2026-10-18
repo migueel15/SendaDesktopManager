@@ -196,7 +196,7 @@ Singleton {
                 root.notice = "Cuenta de Google conectada";
                 root.noticeIsError = false;
                 root.refresh();
-                SendaCalendar.refresh();
+                SendaCalendar.invalidate();
             } else {
                 root.showError(loginErrors.text, "No se pudo conectar con Google");
             }
@@ -216,7 +216,7 @@ Singleton {
                 root.showError(logoutErrors.text, "No se pudo desconectar la cuenta");
             }
             root.refresh();
-            SendaCalendar.refresh();
+            SendaCalendar.invalidate();
         }
     }
 

@@ -4,21 +4,28 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Reads the events of a date range through `senda calendar events`. The CLI
-// holds the Google token; this service only sees JSON.
+// Caches calendar events by month and reads them through `senda calendar
+// events`. The month before the current one and the three after it are fetched
+// at startup and kept fresh. Other months are fetched when the calendar shows
+// them. The CLI holds the Google token; this service only sees JSON.
 Singleton {
     id: root
 
     readonly property string binaryPath: Quickshell.env("SENDA_BIN") || "senda"
+    readonly property int cacheTtlMs: 10 * 60 * 1000
+    // Months relative to the current one: the previous month, this one, and three ahead.
+    readonly property var prefetchOffsets: [-1, 0, 1, 2, 3]
 
     // "loading", "ready", "disconnected" or "error".
     property string status: "loading"
     property string message: ""
     // Events keyed by local day, "YYYY-MM-DD". Each value is that day's events.
     property var eventsByDay: ({})
-
-    property var lastRange: null
-    property var pendingRange: null
+    // Month key "YYYY-MM" -> time of its last successful fetch, in milliseconds.
+    property var loadedAt: ({})
+    // Month keys waiting to be fetched, and the one being fetched now.
+    property var queue: []
+    property string currentKey: ""
 
     function pad(value) {
         return String(value).padStart(2, "0");
@@ -26,6 +33,15 @@ Singleton {
 
     function isoDay(date) {
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    }
+
+    function monthKey(date) {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+    }
+
+    function monthStart(key) {
+        const [year, month] = key.split("-").map(Number);
+        return new Date(year, month - 1, 1);
     }
 
     // Parses YYYY-MM-DD as a local date. new Date(text) would read it as UTC.
@@ -38,24 +54,51 @@ Singleton {
         return root.eventsByDay[root.isoDay(date)] ?? [];
     }
 
-    // Loads events starting in [from, to). Calls made while a request is
-    // running wait for it, so only the latest range is fetched next.
-    function loadRange(from, to) {
-        root.lastRange = { from: from, to: to };
-        if (eventsProcess.running) {
-            root.pendingRange = root.lastRange;
-            return;
-        }
-        root.pendingRange = null;
-        eventsProcess.command = [root.binaryPath, "calendar", "events", "--from", root.isoDay(from), "--to", root.isoDay(to)];
-        eventsProcess.running = true;
+    function isLoaded(date) {
+        return root.loadedAt[root.monthKey(date)] !== undefined;
     }
 
-    // Reloads the last requested range, for example after the account changes.
-    function refresh() {
-        if (root.lastRange) {
-            root.loadRange(root.lastRange.from, root.lastRange.to);
+    // Queues the months that are missing or older than the TTL. Months already
+    // fresh or already queued are skipped.
+    function requestMonths(dates) {
+        for (const date of dates) {
+            const key = root.monthKey(date);
+            const lastFetch = root.loadedAt[key];
+            const fresh = lastFetch !== undefined && Date.now() - lastFetch < root.cacheTtlMs;
+            if (fresh || key === root.currentKey || root.queue.includes(key)) {
+                continue;
+            }
+            root.queue = [...root.queue, key];
         }
+        root.pump();
+    }
+
+    function prefetch() {
+        const today = new Date();
+        root.requestMonths(root.prefetchOffsets.map(offset => new Date(today.getFullYear(), today.getMonth() + offset, 1)));
+    }
+
+    // Drops the cache and fetches the prefetch window again. Used after the
+    // Google account changes.
+    function invalidate() {
+        root.queue = [];
+        root.loadedAt = ({});
+        root.eventsByDay = ({});
+        root.prefetch();
+    }
+
+    function pump() {
+        if (eventsProcess.running || root.queue.length === 0) {
+            return;
+        }
+        const key = root.queue[0];
+        root.queue = root.queue.slice(1);
+        root.currentKey = key;
+
+        const from = root.monthStart(key);
+        const to = new Date(from.getFullYear(), from.getMonth() + 1, 1);
+        eventsProcess.command = [root.binaryPath, "calendar", "events", "--from", root.isoDay(from), "--to", root.isoDay(to)];
+        eventsProcess.running = true;
     }
 
     function groupEvents(events) {
@@ -76,6 +119,30 @@ Singleton {
         return grouped;
     }
 
+    // Replaces the days of one month and keeps the rest. A multi-day event
+    // fetched with one month also reaches neighbouring days, which are ignored
+    // here because those days belong to another month's fetch.
+    function replaceMonth(key, grouped) {
+        const next = {};
+        for (const day in root.eventsByDay) {
+            if (!day.startsWith(key)) {
+                next[day] = root.eventsByDay[day];
+            }
+        }
+        for (const day in grouped) {
+            if (day.startsWith(key)) {
+                next[day] = grouped[day];
+            }
+        }
+        root.eventsByDay = next;
+    }
+
+    function fail(text, fallback) {
+        root.queue = [];
+        root.status = "error";
+        root.message = text.trim() || fallback;
+    }
+
     Process {
         id: eventsProcess
         running: false
@@ -89,36 +156,40 @@ Singleton {
         }
 
         onExited: exitCode => {
+            const key = root.currentKey;
+            root.currentKey = "";
+
             if (exitCode === 0) {
                 try {
-                    root.eventsByDay = root.groupEvents(JSON.parse(eventsOutput.text).events);
+                    root.replaceMonth(key, root.groupEvents(JSON.parse(eventsOutput.text).events));
+                    const loaded = Object.assign({}, root.loadedAt);
+                    loaded[key] = Date.now();
+                    root.loadedAt = loaded;
                     root.status = "ready";
                     root.message = "";
                 } catch (error) {
-                    root.status = "error";
-                    root.message = "La respuesta del calendario no es válida";
+                    root.fail("La respuesta del calendario no es válida", "");
                 }
             } else if (eventsErrors.text.includes("not connected")) {
+                root.queue = [];
+                root.loadedAt = ({});
                 root.eventsByDay = ({});
                 root.status = "disconnected";
                 root.message = "";
             } else {
-                root.status = "error";
-                root.message = eventsErrors.text.trim() || "No se pudieron leer los eventos";
+                root.fail(eventsErrors.text, "No se pudieron leer los eventos");
             }
 
-            if (root.pendingRange) {
-                const range = root.pendingRange;
-                root.pendingRange = null;
-                root.loadRange(range.from, range.to);
-            }
+            root.pump();
         }
     }
 
     Timer {
-        interval: 10 * 60 * 1000
+        interval: root.cacheTtlMs
         running: true
         repeat: true
-        onTriggered: root.refresh()
+        onTriggered: root.prefetch()
     }
+
+    Component.onCompleted: root.prefetch()
 }
