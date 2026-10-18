@@ -29,12 +29,14 @@ PanelWindow {
     color: "transparent"
     visible: Debug.enabled && (Debug.panel === "controlCenter" || Debug.panel === "dashboard")
 
-    implicitWidth: Debug.panel === "dashboard" ? 700 : 500
-    implicitHeight: Debug.panel === "dashboard" ? 480 : controlCenter.height
+    implicitWidth: Debug.panel === "dashboard" ? dashboard.contentWidth : controlCenter.width
+    implicitHeight: Debug.panel === "dashboard" ? dashboard.contentHeight : controlCenter.height
 
     DashboardPanel {
-        targetX: 0
-        targetY: 0
+        id: dashboard
+        width: contentWidth
+        height: contentHeight
+        visible: Debug.panel === "dashboard"
     }
 
     ControlCenterPopup {

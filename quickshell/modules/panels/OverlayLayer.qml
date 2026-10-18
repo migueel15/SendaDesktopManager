@@ -30,12 +30,24 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Ignore
 
-    // visible: hasOpenPopup
-    visible: OverlayService.currentPanel !== ""
+    // Stay mapped while a panel folds back into the bar.
+    visible: OverlayService.currentPanel !== "" || popupContent.anyPanelVisible
     color: "transparent"
 
     aboveWindows: true
     focusable: true
+
+    // Leave the top bar out of the input region, so one click on another bar
+    // button switches panels instead of only closing the open one.
+    mask: Region {
+        item: inputArea
+    }
+
+    Item {
+        id: inputArea
+        anchors.fill: parent
+        anchors.topMargin: Theme.barSize
+    }
 
     MouseArea {
         anchors.fill: parent
@@ -49,23 +61,60 @@ PanelWindow {
         anchors.fill: parent
         focus: OverlayService.currentPanel !== ""
 
-        Keys.onEscapePressed: OverlayService.closeCurrentPanel()
+        readonly property bool anyPanelVisible: {
+            for (const child of children) {
+                if (child.shown) return true;
+            }
+            return false;
+        }
+
+        Keys.onEscapePressed: OverlayService.closeOrGoBack()
 
         ControlCenterPopup {
             screenName: overlayLayer.screenName
-            targetX: parent.width - 500 - 5
-            targetY: 45
+            targetX: parent.width - width - 5
         }
 
-        DashboardPanel {
-            id: dashboard
+        // The dashboard and the settings open in the same place, so they share
+        // one panel. Both use the dashboard width, so switching only morphs the height.
+        SendaPanel {
+            id: centerPanel
+            names: ["dashboard", "settings"]
             screenName: overlayLayer.screenName
+
+            readonly property bool showSettings: activeName === "settings"
+            readonly property var activeContent: showSettings ? settings : dashboard
+
+            targetWidth: dashboard.contentWidth + 2 * padding
+            targetHeight: activeContent.contentHeight
+            targetX: parent.width / 2 - width / 2
+
+            DashboardPanel {
+                id: dashboard
+                // Fixed size, so it is not squashed while the panel morphs.
+                width: contentWidth
+                height: contentHeight
+                opacity: centerPanel.showSettings ? 0 : 1
+                visible: opacity > 0
+                Behavior on opacity {
+                    NumberAnimation { duration: centerPanel.animationDuration / 2 }
+                }
+            }
+
+            SettingsPanel {
+                id: settings
+                // Fixed size, so it is not squashed while the panel morphs.
+                width: dashboard.contentWidth
+                height: contentHeight
+                opacity: centerPanel.showSettings ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity {
+                    NumberAnimation { duration: centerPanel.animationDuration / 2 }
+                }
+            }
         }
 
         TasksPanel {
-            screenName: overlayLayer.screenName
-        }
-        SettingsPanel {
             screenName: overlayLayer.screenName
         }
         NotificationsPanel {

@@ -20,6 +20,11 @@ Item {
 	property bool autoHidePaused: false
 	property bool autoHideArmed: false
 	property string conflictGroup: ""
+	// Duration used when expandedHeight changes while open. Content that animates
+	// its own height should use 0, so the background follows it without lagging.
+	property int resizeDuration: 310
+	// True from an open or close until its height animation ends.
+	property bool toggling: false
 
 	signal closeRequested()
 
@@ -46,12 +51,16 @@ Item {
 	Behavior on height {
 		id: heightBehavior
 		NumberAnimation {
-			duration: heightBehavior.targetValue > 0 ? 310 : 310
+			duration: root.toggling ? 310 : root.resizeDuration
 			easing.type: Easing.OutCubic
+			onRunningChanged: {
+				if (!running) root.toggling = false;
+			}
 		}
 	}
 
 	onExpandedChanged: {
+		toggling = true;
 		if (expanded) BarExtensionManager.activate(root);
 		if (!expanded) {
 			autoHideTimer.stop();

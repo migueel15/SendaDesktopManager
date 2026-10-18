@@ -12,9 +12,8 @@ SendaPanel {
     name: "notifications"
     padding: 16
     targetWidth: 460
-    targetHeight: Math.min(680, parent.height - 88)
+    targetHeight: Math.min(680, parent.height - Theme.barSize - 48)
     targetX: parent.width - width - 8
-    targetY: 48
 
     ColumnLayout {
         anchors.fill: parent

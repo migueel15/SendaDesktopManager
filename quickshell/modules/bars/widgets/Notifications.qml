@@ -22,7 +22,7 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => {
             if (event.button === Qt.LeftButton) {
-                OverlayService.setCurrentPanel("notifications", root.screenName);
+                OverlayService.togglePanel("notifications", root.screenName);
             } else if (event.button === Qt.RightButton) {
                 Notifications.toggleDnd();
             }
