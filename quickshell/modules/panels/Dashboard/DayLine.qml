@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 
 import qs.common
 import qs.services
@@ -213,6 +214,28 @@ Item {
                 font.pixelSize: 11
                 elide: Text.ElideRight
             }
+        }
+    }
+
+    // Small pointer under the tooltip, aimed at the event dot.
+    Shape {
+        visible: tooltip.visible
+        z: 10
+        width: 12
+        height: 6
+        x: Math.max(tooltip.x + 6, Math.min(tooltip.x + tooltip.width - 18, root.hoveredX - 6))
+        y: tooltip.y + tooltip.height - 1
+
+        ShapePath {
+            fillColor: Theme.colors.background
+            strokeColor: Theme.colors.surfaceVariant
+            strokeWidth: 1
+
+            startX: 0
+            startY: 0
+            PathLine { x: 12; y: 0 }
+            PathLine { x: 6; y: 6 }
+            PathLine { x: 0; y: 0 }
         }
     }
 }
