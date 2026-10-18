@@ -38,16 +38,18 @@ var ErrSessionExpired = errors.New("google session expired; run `senda calendar 
 
 // Endpoints are Google's OAuth URLs. Tests replace them with a local server.
 type Endpoints struct {
-	Auth   string
-	Token  string
-	Revoke string
+	Auth     string
+	Token    string
+	Revoke   string
+	Calendar string
 }
 
 // DefaultEndpoints are the production URLs.
 var DefaultEndpoints = Endpoints{
-	Auth:   "https://accounts.google.com/o/oauth2/v2/auth",
-	Token:  "https://oauth2.googleapis.com/token",
-	Revoke: "https://oauth2.googleapis.com/revoke",
+	Auth:     "https://accounts.google.com/o/oauth2/v2/auth",
+	Token:    "https://oauth2.googleapis.com/token",
+	Revoke:   "https://oauth2.googleapis.com/revoke",
+	Calendar: "https://www.googleapis.com/calendar/v3",
 }
 
 // Credentials identify Senda's OAuth client, created as a desktop application.

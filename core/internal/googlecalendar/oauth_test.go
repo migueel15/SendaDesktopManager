@@ -16,11 +16,13 @@ import (
 
 // fakeGoogle serves the token and revoke endpoints and records what it got.
 type fakeGoogle struct {
-	t            *testing.T
-	token        *httptest.Server
-	revoke       *httptest.Server
-	tokenForms   []url.Values
-	refreshReply string
+	t               *testing.T
+	token           *httptest.Server
+	revoke          *httptest.Server
+	calendar        *httptest.Server
+	tokenForms      []url.Values
+	refreshReply    string
+	calendarHandler func(http.ResponseWriter, *http.Request)
 }
 
 func newFakeGoogle(t *testing.T) *fakeGoogle {
@@ -55,6 +57,12 @@ func newFakeGoogle(t *testing.T) *fakeGoogle {
 		w.WriteHeader(http.StatusOK)
 	}))
 	t.Cleanup(fake.revoke.Close)
+
+	// Calendar routes are installed by each test through fake.handleCalendar.
+	fake.calendar = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fake.calendarHandler(w, r)
+	}))
+	t.Cleanup(fake.calendar.Close)
 	return fake
 }
 
@@ -63,9 +71,10 @@ func newTestClient(t *testing.T, fake *fakeGoogle, creds Credentials) (*Client, 
 	store := TokenStore{Path: filepath.Join(t.TempDir(), "google-calendar.json")}
 	client := NewClient(creds, store)
 	client.endpoints = Endpoints{
-		Auth:   "https://accounts.example.test/auth",
-		Token:  fake.token.URL,
-		Revoke: fake.revoke.URL,
+		Auth:     "https://accounts.example.test/auth",
+		Token:    fake.token.URL,
+		Revoke:   fake.revoke.URL,
+		Calendar: fake.calendar.URL,
 	}
 	return client, store
 }
