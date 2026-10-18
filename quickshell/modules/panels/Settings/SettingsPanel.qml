@@ -21,9 +21,9 @@ SendaPanel {
     // Sidebar entries. Each one needs a page in the StackLayout below, in the
     // same position.
     readonly property var sections: [
+        { label: "Apariencia" },
         { label: "Calendario" },
-        { label: "Tiempo" },
-        { label: "Apariencia" }
+        { label: "Tiempo" }
     ]
     property int currentSection: 0
 
@@ -127,17 +127,17 @@ SendaPanel {
                 Layout.fillHeight: true
                 currentIndex: root.currentSection
 
+                AppearanceSettingsPage {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
                 CalendarSettingsPage {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
 
                 WeatherSettingsPage {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-
-                AppearanceSettingsPage {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
