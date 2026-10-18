@@ -39,6 +39,9 @@ QtObject {
 		readonly property color background: "#11111B"
 		readonly property color surface: "#1e1e2e"
 		readonly property color surfaceVariant: "#313244"
+		// Selectors that unfold under a card, a step lighter than surface.
+		readonly property color surfaceRaised: "#262637"
+		readonly property color surfaceRaisedBorder: "#45475a"
 		readonly property color overlay: "#7f849c"
 		readonly property color white: "#ffffff"
 		readonly property color primary: "#89b4fa"

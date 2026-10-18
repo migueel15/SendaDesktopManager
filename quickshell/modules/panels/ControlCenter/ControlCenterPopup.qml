@@ -12,6 +12,8 @@ import qs.services
 SendaPanel {
     id: root
     name: "controlCenter"
+    // The cards animate their own height, so the background follows them at once.
+    resizeDuration: 0
 
     targetWidth: 500
     targetHeight: container.implicitHeight
@@ -29,10 +31,12 @@ SendaPanel {
                 left: parent.left
                 right: parent.right
             }
-            spacing: 8
+            // Spacers separate the cards, so the power menu attaches to the user card.
+            spacing: 0
 
             UserCard {
                 id: userCard
+                attachedBelow: systemMenu.attached
                 onPowerMenuToggleRequested: systemMenu.toggle()
                 onPowerMenuCloseRequested: systemMenu.close()
             }
@@ -41,6 +45,8 @@ SendaPanel {
                 id: systemMenu
                 width: parent.width
             }
+
+            Item { width: 1; height: 8 }
 
             RowLayout {
                 width: parent.width
@@ -57,7 +63,11 @@ SendaPanel {
                 }
             }
 
+            Item { width: 1; height: 8 }
+
             AudioControl {}
+
+            Item { width: 1; height: 8 }
 
             DndControl {
                 Layout.fillWidth: true
@@ -82,12 +92,16 @@ SendaPanel {
         Column {
             id: wifiColumn
             width: parent.width
-            spacing: 6
+            // Selectors attach directly under their card.
+            spacing: 0
 
             Rectangle {
                 width: parent.width
                 height: 92
                 radius: Theme.rounding.normal
+                // Square while its selector is attached below.
+                bottomLeftRadius: networksDropdown.attached ? 0 : Theme.rounding.normal
+                bottomRightRadius: networksDropdown.attached ? 0 : Theme.rounding.normal
                 color: Theme.colors.surface
                 border.width: 1
                 border.color: Theme.colors.surfaceVariant
@@ -181,19 +195,10 @@ SendaPanel {
                 }
             }
 
-            Rectangle {
-                width: parent.width
-                height: wifiControl.expanded ? networksColumn.implicitHeight + 20 : 0
-                visible: height > 0
-                radius: Theme.rounding.normal
-                color: Theme.colors.surface
-                border.width: 1
-                border.color: Theme.colors.surfaceVariant
-                clip: true
-
-                Behavior on height {
-                    NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
-                }
+            DropdownCard {
+                id: networksDropdown
+                expanded: wifiControl.expanded
+                contentHeight: networksColumn.implicitHeight + 20
 
                 Column {
                     id: networksColumn

@@ -18,12 +18,16 @@ Item {
     Column {
         id: column
         width: parent.width
-        spacing: 6
+        // Selectors attach under their card; the input card uses a spacer.
+        spacing: 0
 
         Rectangle {
             width: parent.width
             height: outputColumn.implicitHeight + 24
             radius: Theme.rounding.normal
+            // Square while its selector is attached below.
+            bottomLeftRadius: outputDropdown.attached ? 0 : Theme.rounding.normal
+            bottomRightRadius: outputDropdown.attached ? 0 : Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant
@@ -138,19 +142,10 @@ Item {
             }
         }
 
-        Rectangle {
-            width: parent.width
-            height: root.expandedSection === "output" ? sinksColumn.implicitHeight + 20 : 0
-            visible: height > 0
-            radius: Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
-            clip: true
-
-            Behavior on height {
-                NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
-            }
+        DropdownCard {
+            id: outputDropdown
+            expanded: root.expandedSection === "output"
+            contentHeight: sinksColumn.implicitHeight + 20
 
             Column {
                 id: sinksColumn
@@ -209,10 +204,18 @@ Item {
             }
         }
 
+        Item {
+            width: 1
+            height: 6
+        }
+
         Rectangle {
             width: parent.width
             height: 64
             radius: Theme.rounding.normal
+            // Square while its selector is attached below.
+            bottomLeftRadius: inputDropdown.attached ? 0 : Theme.rounding.normal
+            bottomRightRadius: inputDropdown.attached ? 0 : Theme.rounding.normal
             color: Theme.colors.surface
             border.width: 1
             border.color: Theme.colors.surfaceVariant
@@ -267,19 +270,10 @@ Item {
             }
         }
 
-        Rectangle {
-            width: parent.width
-            height: root.expandedSection === "input" ? sourcesColumn.implicitHeight + 20 : 0
-            visible: height > 0
-            radius: Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
-            clip: true
-
-            Behavior on height {
-                NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
-            }
+        DropdownCard {
+            id: inputDropdown
+            expanded: root.expandedSection === "input"
+            contentHeight: sourcesColumn.implicitHeight + 20
 
             Column {
                 id: sourcesColumn
