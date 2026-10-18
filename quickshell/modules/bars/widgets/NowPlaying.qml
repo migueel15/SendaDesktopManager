@@ -364,7 +364,8 @@ Rectangle {
                 Column {
                     width: parent.width
                     spacing: 4
-                    visible: root.hasTimeline
+                    // Stays visible while a track is shown, at 0 until the duration is known.
+                    visible: root.hasTrack
 
                     RowLayout {
                         width: parent.width
