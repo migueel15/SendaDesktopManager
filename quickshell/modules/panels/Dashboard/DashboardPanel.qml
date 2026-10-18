@@ -111,6 +111,10 @@ SendaPanel {
                         font.family: Theme.font.overlay.family
                     }
                     Item { Layout.fillHeight: true }
+                    DayLine {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 40
+                    }
                 }
 
                 Rectangle {
