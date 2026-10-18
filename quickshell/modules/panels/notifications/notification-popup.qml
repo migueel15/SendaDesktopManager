@@ -228,7 +228,7 @@ Variants {
                 text: card.notification ? (card.notification.summary || "") : ""
                 color: Theme.colors.text
                 font.family: Theme.font.title.family
-                font.pixelSize: 15
+                font.pixelSize: Theme.scaled(15)
                 font.weight: Font.DemiBold
                 wrapMode: Text.Wrap
                 maximumLineCount: 2

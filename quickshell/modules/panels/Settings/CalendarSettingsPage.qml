@@ -65,7 +65,7 @@ Flickable {
                 text: SendaSettings.connected ? "Cuenta conectada" : "Cuenta no conectada"
                 color: SendaSettings.connected ? Theme.colors.success : Theme.colors.overlay
                 font.family: Theme.font.base.family
-                font.pixelSize: 13
+                font.pixelSize: Theme.scaled(13)
             }
             SettingsButton {
                 label: SendaSettings.connected ? "Desconectar" : "Conectar con Google"
@@ -92,7 +92,7 @@ Flickable {
                 text: "Usa el ID y el secreto de tu cliente OAuth de escritorio. El secreto no se vuelve a mostrar."
                 color: Theme.colors.overlay
                 font.family: Theme.font.overlay.family
-                font.pixelSize: 11
+                font.pixelSize: Theme.scaled(11)
                 wrapMode: Text.WordWrap
             }
 
@@ -127,7 +127,7 @@ Flickable {
             text: "Calendarios a mostrar"
             color: Theme.colors.text
             font.family: Theme.font.base.family
-            font.pixelSize: 13
+            font.pixelSize: Theme.scaled(13)
         }
 
         Repeater {
@@ -147,14 +147,14 @@ Flickable {
                         text: root.selectedCalendars.includes(modelData.id) ? "󰄲" : "󰄱"
                         color: root.selectedCalendars.includes(modelData.id) ? Theme.colors.primary : Theme.colors.overlay
                         font.family: Theme.font.title.family
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.scaled(16)
                     }
                     Text {
                         Layout.fillWidth: true
                         text: modelData.summary || modelData.id
                         color: Theme.colors.text
                         font.family: Theme.font.base.family
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.scaled(12)
                         elide: Text.ElideRight
                     }
                 }

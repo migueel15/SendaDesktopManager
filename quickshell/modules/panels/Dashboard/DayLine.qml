@@ -166,7 +166,7 @@ Item {
         text: "00:00"
         color: Theme.colors.overlay
         font.family: Theme.font.overlay.family
-        font.pixelSize: 10
+        font.pixelSize: Theme.scaled(10)
     }
 
     Text {
@@ -175,7 +175,7 @@ Item {
         text: "24:00"
         color: Theme.colors.overlay
         font.family: Theme.font.overlay.family
-        font.pixelSize: 10
+        font.pixelSize: Theme.scaled(10)
     }
 
     // Sunrise and sunset: an icon above each time, placed at the sun's dot.
@@ -190,14 +190,14 @@ Item {
             text: "󰖜"
             color: Theme.colors.warning
             font.family: Theme.font.title.family
-            font.pixelSize: 12
+            font.pixelSize: Theme.scaled(12)
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.clock(root.sunriseTime)
             color: Theme.colors.warning
             font.family: Theme.font.overlay.family
-            font.pixelSize: 10
+            font.pixelSize: Theme.scaled(10)
         }
     }
 
@@ -212,14 +212,14 @@ Item {
             text: "󰖛"
             color: Theme.colors.warning
             font.family: Theme.font.title.family
-            font.pixelSize: 12
+            font.pixelSize: Theme.scaled(12)
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.clock(root.sunsetTime)
             color: Theme.colors.warning
             font.family: Theme.font.overlay.family
-            font.pixelSize: 10
+            font.pixelSize: Theme.scaled(10)
         }
     }
 
@@ -262,7 +262,7 @@ Item {
                 text: root.hoveredEvent ? root.clock(new Date(root.hoveredEvent.start).getTime()) : ""
                 color: Theme.colors.primary
                 font.family: Theme.font.title.family
-                font.pixelSize: 11
+                font.pixelSize: Theme.scaled(11)
                 font.weight: Font.Bold
             }
 
@@ -271,7 +271,7 @@ Item {
                 text: root.hoveredEvent ? root.hoveredEvent.title : ""
                 color: Theme.colors.text
                 font.family: Theme.font.base.family
-                font.pixelSize: 11
+                font.pixelSize: Theme.scaled(11)
                 elide: Text.ElideRight
             }
         }

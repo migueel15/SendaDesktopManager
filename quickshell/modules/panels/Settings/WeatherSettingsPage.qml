@@ -25,7 +25,7 @@ Flickable {
             }
             color: Theme.colors.text
             font.family: Theme.font.base.family
-            font.pixelSize: 13
+            font.pixelSize: Theme.scaled(13)
             elide: Text.ElideRight
         }
 
@@ -64,7 +64,7 @@ Flickable {
                     text: [modelData.name, modelData.admin, modelData.country].filter(part => part).join(", ")
                     color: Theme.colors.text
                     font.family: Theme.font.base.family
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.scaled(12)
                     elide: Text.ElideRight
                 }
 

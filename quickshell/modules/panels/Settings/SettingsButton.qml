@@ -25,7 +25,7 @@ Rectangle {
         text: root.label
         color: root.primary ? Theme.colors.background : Theme.colors.text
         font.family: Theme.font.overlay.family
-        font.pixelSize: 12
+        font.pixelSize: Theme.scaled(12)
         font.weight: Font.Bold
     }
 

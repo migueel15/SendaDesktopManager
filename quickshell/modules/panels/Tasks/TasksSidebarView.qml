@@ -855,7 +855,7 @@ Item {
                                                     text: teamSlot.collapsed ? "" : ""
                                                     color: Theme.colors.overlay
                                                     font.family: Theme.font.icon.family
-                                                    font.pixelSize: 10
+                                                    font.pixelSize: Theme.scaled(10)
                                                     horizontalAlignment: Text.AlignHCenter
                                                 }
 

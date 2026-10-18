@@ -44,14 +44,14 @@ Rectangle {
                 text: "EL TIEMPO"
                 color: Theme.colors.overlay
                 font.family: Theme.font.overlay.family
-                font.pixelSize: 11
+                font.pixelSize: Theme.scaled(11)
                 font.weight: Font.Bold
             }
             Text {
                 text: "󰒓"
                 color: Theme.colors.overlay
                 font.family: Theme.font.title.family
-                font.pixelSize: 16
+                font.pixelSize: Theme.scaled(16)
 
                 MouseArea {
                     anchors.fill: parent
@@ -72,7 +72,7 @@ Rectangle {
                 text: root.conditionIcon(root.current?.condition)
                 color: Theme.colors.secondary
                 font.family: Theme.font.title.family
-                font.pixelSize: 40
+                font.pixelSize: Theme.scaled(40)
             }
 
             ColumnLayout {
@@ -83,7 +83,7 @@ Rectangle {
                     text: `${Math.round(root.current?.temperature ?? 0)}°`
                     color: Theme.colors.text
                     font.family: Theme.font.title.family
-                    font.pixelSize: 30
+                    font.pixelSize: Theme.scaled(30)
                     font.weight: Font.Bold
                 }
                 Text {
@@ -91,7 +91,7 @@ Rectangle {
                     text: root.current?.label ?? ""
                     color: Theme.colors.text
                     font.family: Theme.font.base.family
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.scaled(12)
                     elide: Text.ElideRight
                 }
             }
@@ -103,7 +103,7 @@ Rectangle {
             text: `Máx ${Math.round(root.current?.max ?? 0)}°  ·  Mín ${Math.round(root.current?.min ?? 0)}°  ·  ${root.placeName}`
             color: Theme.colors.overlay
             font.family: Theme.font.overlay.family
-            font.pixelSize: 11
+            font.pixelSize: Theme.scaled(11)
             elide: Text.ElideRight
         }
 
@@ -119,7 +119,7 @@ Rectangle {
             }
             color: SendaWeather.status === "error" ? Theme.colors.warning : Theme.colors.overlay
             font.family: Theme.font.overlay.family
-            font.pixelSize: 11
+            font.pixelSize: Theme.scaled(11)
             wrapMode: Text.WordWrap
 
             MouseArea {

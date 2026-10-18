@@ -32,7 +32,7 @@ Rectangle {
     TextMetrics {
         id: fullDateMetrics
         font.family: Theme.font.overlay.family
-        font.pixelSize: 11
+        font.pixelSize: Theme.scaled(11)
         font.weight: Font.Bold
         text: "mié 28 oct"
     }
@@ -40,7 +40,7 @@ Rectangle {
     TextMetrics {
         id: allDayMetrics
         font.family: Theme.font.overlay.family
-        font.pixelSize: 11
+        font.pixelSize: Theme.scaled(11)
         text: "Todo el día"
     }
 
@@ -60,7 +60,7 @@ Rectangle {
             text: "PRÓXIMOS EVENTOS"
             color: Theme.colors.overlay
             font.family: Theme.font.overlay.family
-            font.pixelSize: 11
+            font.pixelSize: Theme.scaled(11)
             font.weight: Font.Bold
         }
 
@@ -74,7 +74,7 @@ Rectangle {
             }
             color: SendaCalendar.status === "error" ? Theme.colors.warning : Theme.colors.overlay
             font.family: Theme.font.overlay.family
-            font.pixelSize: 11
+            font.pixelSize: Theme.scaled(11)
             wrapMode: Text.WordWrap
 
             MouseArea {
@@ -91,7 +91,7 @@ Rectangle {
             text: "No hay eventos próximos"
             color: Theme.colors.overlay
             font.family: Theme.font.overlay.family
-            font.pixelSize: 11
+            font.pixelSize: Theme.scaled(11)
         }
 
         ListView {
@@ -130,7 +130,7 @@ Rectangle {
                             text: root.dayLabel(modelData)
                             color: Theme.colors.primary
                             font.family: Theme.font.overlay.family
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.scaled(11)
                             font.weight: Font.Bold
                         }
                         Text {
@@ -139,7 +139,7 @@ Rectangle {
                             text: root.timeLabel(modelData)
                             color: Theme.colors.overlay
                             font.family: Theme.font.overlay.family
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.scaled(11)
                         }
                     }
 
@@ -150,7 +150,7 @@ Rectangle {
                         text: modelData.title
                         color: Theme.colors.text
                         font.family: Theme.font.base.family
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.scaled(12)
                         wrapMode: Text.WordWrap
                     }
                 }

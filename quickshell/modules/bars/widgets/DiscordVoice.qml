@@ -272,7 +272,7 @@ Rectangle {
                                     text: (participantAvatar.modelData.name || "?").slice(0, 1).toUpperCase()
                                     color: Theme.colors.text
                                     font.family: Theme.font.overlay.family
-                                    font.pixelSize: 11
+                                    font.pixelSize: Theme.scaled(11)
                                     visible: avatarImage.status !== Image.Ready
                                 }
                             }
@@ -526,7 +526,7 @@ Rectangle {
                                     text: (participantRow.modelData.name || "?").slice(0, 1).toUpperCase()
                                     color: Theme.colors.text
                                     font.family: Theme.font.overlay.family
-                                    font.pixelSize: 12
+                                    font.pixelSize: Theme.scaled(12)
                                     visible: participantAvatarImage.status !== Image.Ready
                                 }
 

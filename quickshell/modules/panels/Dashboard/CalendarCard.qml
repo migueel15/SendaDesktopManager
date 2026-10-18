@@ -92,7 +92,7 @@ Rectangle {
                     text: "󰅁"
                     color: Theme.colors.primary
                     font.family: Theme.font.title.family
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.scaled(16)
 
                     MouseArea {
                         anchors.fill: parent
@@ -107,7 +107,7 @@ Rectangle {
                     text: root.capitalize(Qt.formatDate(root.shownMonth, "MMMM yyyy"))
                     color: Theme.colors.text
                     font.family: Theme.font.title.family
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.scaled(13)
                     font.weight: Font.Bold
 
                     MouseArea {
@@ -120,7 +120,7 @@ Rectangle {
                     text: "󰅂"
                     color: Theme.colors.primary
                     font.family: Theme.font.title.family
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.scaled(16)
 
                     MouseArea {
                         anchors.fill: parent
@@ -145,7 +145,7 @@ Rectangle {
                         text: modelData
                         color: Theme.colors.overlay
                         font.family: Theme.font.overlay.family
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.scaled(10)
                         font.weight: Font.Bold
                     }
                 }
@@ -186,7 +186,7 @@ Rectangle {
                             color: cell.isToday ? Theme.colors.primary : cell.inMonth ? Theme.colors.text : Theme.colors.overlay
                             opacity: cell.inMonth ? 1 : 0.45
                             font.family: Theme.font.overlay.family
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.scaled(11)
                             font.weight: cell.isToday ? Font.Bold : Font.Normal
                         }
 
@@ -233,7 +233,7 @@ Rectangle {
                 text: root.capitalize(Qt.formatDate(root.selectedDay, "dddd d 'de' MMMM"))
                 color: Theme.colors.primary
                 font.family: Theme.font.title.family
-                font.pixelSize: 14
+                font.pixelSize: Theme.scaled(14)
                 font.weight: Font.Bold
                 elide: Text.ElideRight
             }
@@ -248,7 +248,7 @@ Rectangle {
                 }
                 color: SendaCalendar.status === "error" ? Theme.colors.warning : Theme.colors.overlay
                 font.family: Theme.font.overlay.family
-                font.pixelSize: 11
+                font.pixelSize: Theme.scaled(11)
                 wrapMode: Text.WordWrap
 
                 MouseArea {
@@ -265,7 +265,7 @@ Rectangle {
                 text: "Sin eventos este día"
                 color: Theme.colors.overlay
                 font.family: Theme.font.overlay.family
-                font.pixelSize: 11
+                font.pixelSize: Theme.scaled(11)
             }
 
             Repeater {
@@ -288,14 +288,14 @@ Rectangle {
                             text: modelData.allDay ? "Todo el día" : Qt.formatTime(new Date(modelData.start), "HH:mm")
                             color: Theme.colors.secondary
                             font.family: Theme.font.overlay.family
-                            font.pixelSize: 11
+                            font.pixelSize: Theme.scaled(11)
                         }
                         Text {
                             Layout.fillWidth: true
                             text: modelData.title
                             color: Theme.colors.text
                             font.family: Theme.font.base.family
-                            font.pixelSize: 12
+                            font.pixelSize: Theme.scaled(12)
                             wrapMode: Text.WordWrap
                         }
                     }
@@ -314,7 +314,7 @@ Rectangle {
                 text: `+${root.selectedEvents.length - root.visibleEvents} más`
                 color: Theme.colors.overlay
                 font.family: Theme.font.overlay.family
-                font.pixelSize: 11
+                font.pixelSize: Theme.scaled(11)
             }
 
             Item {

@@ -102,7 +102,7 @@ SendaPanel {
                         text: root.userName ? `${root.greeting}, ${root.userName}` : root.greeting
                         color: Theme.colors.primary
                         font.family: Theme.font.title.family
-                        font.pixelSize: 18
+                        font.pixelSize: Theme.scaled(18)
                         font.weight: Font.Bold
                     }
                     Text {
@@ -131,7 +131,7 @@ SendaPanel {
                         text: Qt.formatTime(systemClock.date, "HH:mm")
                         color: Theme.colors.text
                         font.family: Theme.font.title.family
-                        font.pixelSize: 58
+                        font.pixelSize: Theme.scaled(58)
                         font.weight: Font.Bold
                     }
                 }
@@ -210,7 +210,7 @@ SendaPanel {
                                     text: "󰝚"
                                     color: Theme.colors.overlay
                                     font.family: Theme.font.title.family
-                                    font.pixelSize: 27
+                                    font.pixelSize: Theme.scaled(27)
                                     visible: albumArt.status !== Image.Ready
                                 }
                                 MouseArea {
@@ -231,7 +231,7 @@ SendaPanel {
                                     text: root.player?.trackTitle || "Silencio también es música"
                                     color: Theme.colors.text
                                     font.family: Theme.font.title.family
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.scaled(14)
                                     font.weight: Font.Bold
                                     elide: Text.ElideRight
                                 }
@@ -241,7 +241,7 @@ SendaPanel {
                                     text: root.player?.trackArtist || "No hay reproducción activa"
                                     color: Theme.colors.overlay
                                     font.family: Theme.font.overlay.family
-                                    font.pixelSize: 11
+                                    font.pixelSize: Theme.scaled(11)
                                     elide: Text.ElideRight
                                 }
 
@@ -259,13 +259,13 @@ SendaPanel {
                                             text: root.formatTrackTime(seekArea.pressed ? seekArea.previewPosition : (root.player?.position ?? 0))
                                             color: Theme.colors.overlay
                                             font.family: Theme.font.overlay.family
-                                            font.pixelSize: 11
+                                            font.pixelSize: Theme.scaled(11)
                                         }
                                         Text {
                                             text: root.formatTrackTime(root.player?.length ?? 0)
                                             color: Theme.colors.overlay
                                             font.family: Theme.font.overlay.family
-                                            font.pixelSize: 11
+                                            font.pixelSize: Theme.scaled(11)
                                         }
                                     }
 
@@ -340,7 +340,7 @@ SendaPanel {
                                                 text: modelData.icon
                                                 color: Theme.colors.text
                                                 font.family: Theme.font.title.family
-                                                font.pixelSize: 17
+                                                font.pixelSize: Theme.scaled(17)
                                             }
                                             MouseArea {
                                                 id: controlMouse

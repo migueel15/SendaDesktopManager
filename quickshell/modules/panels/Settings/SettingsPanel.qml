@@ -22,7 +22,8 @@ SendaPanel {
     // same position.
     readonly property var sections: [
         { label: "Calendario" },
-        { label: "Tiempo" }
+        { label: "Tiempo" },
+        { label: "Apariencia" }
     ]
     property int currentSection: 0
 
@@ -49,7 +50,7 @@ SendaPanel {
                 text: "Ajustes"
                 color: Theme.colors.text
                 font.family: Theme.font.title.family
-                font.pixelSize: 18
+                font.pixelSize: Theme.scaled(18)
                 font.weight: Font.Bold
             }
 
@@ -74,7 +75,7 @@ SendaPanel {
                         text: modelData.label
                         color: parent.selected ? Theme.colors.primary : Theme.colors.text
                         font.family: Theme.font.base.family
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.scaled(13)
                         font.weight: parent.selected ? Font.Bold : Font.Normal
                     }
 
@@ -117,7 +118,7 @@ SendaPanel {
                 text: SendaSettings.notice
                 color: SendaSettings.noticeIsError ? Theme.colors.warning : Theme.colors.success
                 font.family: Theme.font.overlay.family
-                font.pixelSize: 12
+                font.pixelSize: Theme.scaled(12)
                 wrapMode: Text.WordWrap
             }
 
@@ -132,6 +133,11 @@ SendaPanel {
                 }
 
                 WeatherSettingsPage {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                AppearanceSettingsPage {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }

@@ -28,7 +28,7 @@ Rectangle {
         selectByMouse: true
         color: Theme.colors.text
         font.family: Theme.font.base.family
-        font.pixelSize: 12
+        font.pixelSize: Theme.scaled(12)
         echoMode: root.secret ? TextInput.Password : TextInput.Normal
         onAccepted: root.accepted()
     }
@@ -41,6 +41,6 @@ Rectangle {
         text: root.placeholder
         color: Theme.colors.overlay
         font.family: Theme.font.base.family
-        font.pixelSize: 12
+        font.pixelSize: Theme.scaled(12)
     }
 }

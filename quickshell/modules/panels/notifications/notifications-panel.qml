@@ -28,7 +28,7 @@ SendaPanel {
                 text: "󰂚"
                 color: Theme.colors.primary
                 font.family: Theme.font.icon.family
-                font.pixelSize: 24
+                font.pixelSize: Theme.scaled(24)
             }
 
             ColumnLayout {
@@ -39,7 +39,7 @@ SendaPanel {
                     text: "Notificaciones"
                     color: Theme.colors.text
                     font.family: Theme.font.title.family
-                    font.pixelSize: 20
+                    font.pixelSize: Theme.scaled(20)
                     font.weight: Font.DemiBold
                 }
 
@@ -89,7 +89,7 @@ SendaPanel {
                     text: "󰂜"
                     color: Theme.colors.overlay
                     font.family: Theme.font.icon.family
-                    font.pixelSize: 36
+                    font.pixelSize: Theme.scaled(36)
                 }
 
                 Text {
@@ -325,7 +325,7 @@ SendaPanel {
                     text: row.notification.summary || ""
                     color: Theme.colors.text
                     font.family: Theme.font.title.family
-                    font.pixelSize: 15
+                    font.pixelSize: Theme.scaled(15)
                     font.weight: Font.DemiBold
                     wrapMode: Text.Wrap
                     maximumLineCount: 3

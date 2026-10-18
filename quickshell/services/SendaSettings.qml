@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
+import qs.common
 import qs.services
 
 // Backs the settings panel. Every read and write goes through the `senda`
@@ -127,6 +128,7 @@ Singleton {
                 root.secretConfigured = data.googleClientSecretConfigured;
                 root.embeddedClient = data.embeddedGoogleClient;
                 root.defaultWeatherLocation = data.defaultWeatherLocation ?? "";
+                Theme.setFontScale(data.values.SENDA_UI_FONT_SCALE);
             } catch (error) {
                 root.showError("La configuración no es válida", "");
             }
@@ -245,6 +247,10 @@ Singleton {
             }
         }
     }
+
+    // Reads the settings once at startup, so the interface scale applies before
+    // the panel is opened.
+    Component.onCompleted: root.refresh()
 
     // `senda settings` calls this through the running shell.
     IpcHandler {
