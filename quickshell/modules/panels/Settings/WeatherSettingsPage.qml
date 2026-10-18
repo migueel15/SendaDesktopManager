@@ -18,7 +18,11 @@ Flickable {
 
         Text {
             Layout.fillWidth: true
-            text: `Localidad: ${SendaSettings.values.SENDA_WEATHER_LOCATION || "sin elegir"}`
+            text: {
+                if (SendaSettings.values.SENDA_WEATHER_LOCATION) return `Localidad: ${SendaSettings.values.SENDA_WEATHER_LOCATION}`;
+                if (SendaSettings.defaultWeatherLocation) return `Localidad: ${SendaSettings.defaultWeatherLocation} (por defecto, según tu zona horaria)`;
+                return "Localidad: sin elegir";
+            }
             color: Theme.colors.text
             font.family: Theme.font.base.family
             font.pixelSize: 13

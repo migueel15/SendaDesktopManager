@@ -18,6 +18,8 @@ Singleton {
     property bool secretConfigured: false
     // True when this build ships Senda's own Google OAuth client.
     property bool embeddedClient: false
+    // Capital used for the weather when no place is chosen, from the system time zone.
+    property string defaultWeatherLocation: ""
     property bool connected: false
     property var calendars: []
     property var places: []
@@ -124,6 +126,7 @@ Singleton {
                 root.values = data.values;
                 root.secretConfigured = data.googleClientSecretConfigured;
                 root.embeddedClient = data.embeddedGoogleClient;
+                root.defaultWeatherLocation = data.defaultWeatherLocation ?? "";
             } catch (error) {
                 root.showError("La configuración no es válida", "");
             }

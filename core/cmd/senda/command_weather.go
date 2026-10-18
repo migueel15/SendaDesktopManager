@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/location"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/weather"
 	"github.com/spf13/cobra"
@@ -44,36 +45,47 @@ func weatherCurrentCmd() *cobra.Command {
 		Short: "Print the weather for the configured location as JSON",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			latitude, longitude, err := configuredLocation()
+			place, err := configuredLocation()
 			if err != nil {
 				return err
 			}
-			current, err := weather.NewClient().Current(cmd.Context(), latitude, longitude)
+			current, err := weather.NewClient().Current(cmd.Context(), place.Latitude, place.Longitude)
 			if err != nil {
 				return err
 			}
 			return writeJSON(cmd, map[string]any{
-				"location": paths.Setting(keyWeatherLocation),
+				"location": place.Name,
 				"current":  current,
 			})
 		},
 	}
 }
 
-// configuredLocation reads the coordinates chosen in the settings panel.
-func configuredLocation() (float64, float64, error) {
+// configuredLocation returns the place chosen in the settings panel. Without a
+// choice, it falls back to the capital of the system time zone.
+func configuredLocation() (location.Place, error) {
 	latText := paths.Setting(keyWeatherLat)
 	lonText := paths.Setting(keyWeatherLon)
+	if latText == "" && lonText == "" {
+		if place, ok := location.Default(); ok {
+			return place, nil
+		}
+		return location.Place{}, errLocationNotSet
+	}
 	if latText == "" || lonText == "" {
-		return 0, 0, errLocationNotSet
+		return location.Place{}, errLocationNotSet
 	}
 	latitude, err := strconv.ParseFloat(latText, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("%s is not a number: %w", keyWeatherLat, err)
+		return location.Place{}, fmt.Errorf("%s is not a number: %w", keyWeatherLat, err)
 	}
 	longitude, err := strconv.ParseFloat(lonText, 64)
 	if err != nil {
-		return 0, 0, fmt.Errorf("%s is not a number: %w", keyWeatherLon, err)
+		return location.Place{}, fmt.Errorf("%s is not a number: %w", keyWeatherLon, err)
 	}
-	return latitude, longitude, nil
+	return location.Place{
+		Name:      paths.Setting(keyWeatherLocation),
+		Latitude:  latitude,
+		Longitude: longitude,
+	}, nil
 }

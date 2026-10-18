@@ -9,6 +9,7 @@ import (
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 	"github.com/migueel15/SendaDesktopManager/core/internal/googlecalendar"
+	"github.com/migueel15/SendaDesktopManager/core/internal/location"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/spf13/cobra"
 )
@@ -65,6 +66,7 @@ func configGetCmd() *cobra.Command {
 				},
 				"googleClientSecretConfigured": values[keyGoogleClientSecret] != "",
 				"embeddedGoogleClient":         googlecalendar.HasEmbeddedCredentials(),
+				"defaultWeatherLocation":       defaultLocationName(),
 			}
 			return writeJSON(cmd, result)
 		},
@@ -130,4 +132,13 @@ func validateCoordinate(key, value string, limit float64) error {
 		return fmt.Errorf("%s must be a number between -%g and %g", key, limit, limit)
 	}
 	return nil
+}
+
+// defaultLocationName names the capital used when no weather location is
+// chosen, or "" when the system time zone has no known capital.
+func defaultLocationName() string {
+	if place, ok := location.Default(); ok {
+		return place.Name
+	}
+	return ""
 }
