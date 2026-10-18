@@ -23,7 +23,8 @@ SendaPanel {
     readonly property var sections: [
         { label: "Apariencia" },
         { label: "Calendario" },
-        { label: "Tiempo" }
+        { label: "Tiempo" },
+        { label: "Actualización" }
     ]
     property int currentSection: 0
 
@@ -138,6 +139,11 @@ SendaPanel {
                 }
 
                 WeatherSettingsPage {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                UpdateSettingsPage {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
