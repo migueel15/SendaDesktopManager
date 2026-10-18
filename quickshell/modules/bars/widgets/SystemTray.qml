@@ -11,7 +11,6 @@ Rectangle {
 
     readonly property Repeater items: itemsRepeater
     property bool expanded: false
-    readonly property real extensionLift: trayExtensionContent.collapseLift
     readonly property bool trayMenuOpen: {
         for (let i = 0; i < itemsRepeater.count; i++) {
             const item = itemsRepeater.itemAt(i);
@@ -74,18 +73,27 @@ Rectangle {
             return point.x + expandButton.width - implicitWidth + 20;
         }
         anchor.rect.y: root.QsWindow.window
-                ? root.QsWindow.window.contentItem.height - root.extensionLift
+                ? root.QsWindow.window.contentItem.height
                 : 0
         anchor.rect.width: 1
         anchor.rect.height: 1
 
         implicitWidth: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
-        implicitHeight: Math.max(1, trayExtensionContent.height)
+        // Size the window for the open extension, so the unfold animates inside it
+        // instead of resizing the Wayland surface on every frame. Growing the
+        // window while shrinking keeps a resize animation from being cut off.
+        implicitHeight: Math.max(1, trayExtensionContent.expandedHeight, trayExtensionContent.height)
+        // Let clicks below the visible shape reach the windows underneath.
+        mask: Region {
+            item: trayExtensionContent
+        }
         visible: root.expanded || trayExtensionContent.height > 0.01
         color: "transparent"
 
         BarComponents.BarExtension {
             id: trayExtensionContent
+            // Hide the last pixels under the bar, without moving the window.
+            y: -collapseLift
             width: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
             expanded: root.expanded
             conflictGroup: "tray-popups"

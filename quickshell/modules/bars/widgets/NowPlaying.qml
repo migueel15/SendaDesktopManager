@@ -243,19 +243,28 @@ Rectangle {
                 + root.width / 2 - trackExtension.width / 2;
         }
         anchor.rect.y: root.QsWindow.window
-                ? root.QsWindow.window.contentItem.height - trackExtensionContent.collapseLift
+                ? root.QsWindow.window.contentItem.height
                 : 0
         anchor.rect.width: 1
         anchor.rect.height: 1
 
         width: 280
         implicitWidth: 280
-        implicitHeight: Math.max(1, trackExtensionContent.height)
+        // Size the window for the open extension, so the unfold animates inside it
+        // instead of resizing the Wayland surface on every frame. Growing the
+        // window while shrinking keeps a resize animation from being cut off.
+        implicitHeight: Math.max(1, trackExtensionContent.expandedHeight, trackExtensionContent.height)
+        // Let clicks below the visible shape reach the windows underneath.
+        mask: Region {
+            item: trackExtensionContent
+        }
         visible: root.expanded || trackExtensionContent.height > 0.01
         color: "transparent"
 
         BarComponents.BarExtension {
             id: trackExtensionContent
+            // Hide the last pixels under the bar, without moving the window.
+            y: -collapseLift
             width: trackExtension.width
             expanded: root.expanded
             expandedHeight: 92

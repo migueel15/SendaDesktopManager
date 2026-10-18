@@ -155,7 +155,9 @@ Item {
             requestPaint();
         }
 
-        onAvailableChanged: if (available) loadSource()
+        // The canvas becomes available again each time the tray popup maps. Keep the
+        // measured icon then; reloading it decodes and scans every pixel on the GUI thread.
+        onAvailableChanged: if (available && !hasContent) loadSource()
         onImageLoaded: requestPaint()
         onPaint: {
             const ctx = getContext("2d");
