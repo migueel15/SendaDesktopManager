@@ -45,6 +45,11 @@ SendaPanel {
         if (hour < 20) return "Buenas tardes";
         return "Buenas noches";
     }
+    // Login name of the session, with its first letter capitalized.
+    readonly property string userName: {
+        const user = Quickshell.env("USER") ?? "";
+        return user.charAt(0).toUpperCase() + user.slice(1);
+    }
 
     function focusSpotify() {
         Quickshell.execDetached([SendaManager.binaryPath, "window", "focus", "spotify"]);
@@ -94,7 +99,7 @@ SendaPanel {
                     spacing: 4
 
                     Text {
-                        text: root.greeting
+                        text: root.userName ? `${root.greeting}, ${root.userName}` : root.greeting
                         color: Theme.colors.primary
                         font.family: Theme.font.title.family
                         font.pixelSize: 18
@@ -106,12 +111,6 @@ SendaPanel {
                         font.family: Theme.font.overlay.family
                     }
                     Item { Layout.fillHeight: true }
-                    Text {
-                        text: "Un buen día empieza a tu ritmo."
-                        color: Theme.colors.text
-                        font.family: Theme.font.base.family
-                        font.pixelSize: 14
-                    }
                 }
 
                 Rectangle {
