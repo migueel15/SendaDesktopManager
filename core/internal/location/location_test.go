@@ -6,7 +6,7 @@ func TestZoneFromPathReadsIANAName(t *testing.T) {
 	cases := map[string]string{
 		"/usr/share/zoneinfo/Europe/Madrid":                  "Europe/Madrid",
 		"/usr/share/zoneinfo/America/Argentina/Buenos_Aires": "America/Argentina/Buenos_Aires",
-		"/etc/UTC":                                           "",
+		"/etc/UTC": "",
 	}
 	for path, want := range cases {
 		if got := zoneFromPath(path); got != want {
