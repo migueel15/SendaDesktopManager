@@ -33,7 +33,7 @@ Item {
 
     // Says what the light is doing, so the line never shows up without context.
     readonly property string lightStatus: {
-        if (!root.sunKnown) return "";
+        if (!root.sunKnown) return "Sin datos de amanecer y atardecer";
         const current = root.now.getTime();
         if (current < root.lineStart) return `Noche · amanece a las ${root.clock(root.lineStart)}`;
         if (current > root.lineEnd) return "Noche · el sol ya se ha puesto";
@@ -56,7 +56,6 @@ Item {
         color: Theme.colors.text
         font.family: Theme.font.overlay.family
         font.pixelSize: 11
-        visible: root.sunKnown
     }
 
     Rectangle {
