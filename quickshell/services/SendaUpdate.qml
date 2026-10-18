@@ -18,12 +18,21 @@ Singleton {
     // Release whose notice the user closed. A new release shows the notice again.
     property string dismissedTag: ""
 
+    readonly property bool busy: checkProcess.running
     readonly property bool noticeVisible: root.available && root.latest !== "" && root.latest !== root.dismissedTag
+
+    // Asks the settings panel to show the update section.
+    signal openRequested()
 
     function check() {
         if (!checkProcess.running) {
             checkProcess.running = true;
         }
+    }
+
+    function openSettings(screenName: string) {
+        root.openRequested();
+        OverlayService.setCurrentPanel("settings", screenName);
     }
 
     function dismiss() {

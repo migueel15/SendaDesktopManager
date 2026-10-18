@@ -4,7 +4,8 @@ import QtQuick.Layouts
 import qs.common
 import qs.services
 
-// Update settings: the installed version, the latest release, and the update.
+// Update settings: the installed version, the newer one when there is one, and
+// the buttons to check again or update.
 Flickable {
     id: root
 
@@ -18,18 +19,10 @@ Flickable {
 
         Text {
             Layout.fillWidth: true
-            text: `Versión instalada: ${SendaUpdate.current || "sin comprobar"}`
-            color: Theme.colors.text
-            font.family: Theme.font.base.family
-            font.pixelSize: Theme.scaled(13)
-        }
-
-        Text {
-            Layout.fillWidth: true
-            text: SendaUpdate.latest !== ""
-                ? (SendaUpdate.available ? `Hay una versión nueva: ${SendaUpdate.latest}` : "Tienes la última versión")
-                : "Aún no se ha consultado la última versión"
-            color: SendaUpdate.available ? Theme.colors.success : Theme.colors.overlay
+            text: SendaUpdate.available
+                ? `${SendaUpdate.current} → ${SendaUpdate.latest}`
+                : `Versión ${SendaUpdate.current || "sin comprobar"}`
+            color: SendaUpdate.available ? Theme.colors.success : Theme.colors.text
             font.family: Theme.font.base.family
             font.pixelSize: Theme.scaled(13)
         }
@@ -44,41 +37,22 @@ Flickable {
             wrapMode: Text.WordWrap
         }
 
-        Text {
-            Layout.fillWidth: true
-            visible: SendaUpdate.current === "dev"
-            text: "Esta es una compilación de desarrollo y no se puede actualizar desde aquí."
-            color: Theme.colors.overlay
-            font.family: Theme.font.overlay.family
-            font.pixelSize: Theme.scaled(11)
-            wrapMode: Text.WordWrap
-        }
-
         RowLayout {
             Layout.fillWidth: true
             spacing: 10
 
             SettingsButton {
-                label: "Comprobar ahora"
+                label: "Comprobar"
+                enabled: !SendaUpdate.busy
                 onClicked: SendaUpdate.check()
             }
 
             SettingsButton {
-                label: "Actualizar ahora"
+                label: "Actualizar"
                 primary: true
                 enabled: SendaUpdate.available
                 onClicked: SendaUpdate.install()
             }
-        }
-
-        Text {
-            Layout.fillWidth: true
-            visible: SendaUpdate.available
-            text: "Al actualizar, Senda descarga la versión nueva, la verifica y reinicia el shell."
-            color: Theme.colors.overlay
-            font.family: Theme.font.overlay.family
-            font.pixelSize: Theme.scaled(11)
-            wrapMode: Text.WordWrap
         }
     }
 }

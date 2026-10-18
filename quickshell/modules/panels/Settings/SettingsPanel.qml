@@ -34,6 +34,15 @@ SendaPanel {
         }
     }
 
+    // The update notice in the bar opens this panel on the update section.
+    Connections {
+        target: SendaUpdate
+
+        function onOpenRequested() {
+            root.currentSection = root.sections.findIndex(section => section.label === "Actualización");
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 16

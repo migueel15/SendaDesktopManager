@@ -84,6 +84,7 @@ Variants {
 		}
 
 		UpdateNotice {
+			screenName: topbar.screenName
 			anchors.verticalCenter: parent.verticalCenter
 			anchors.right: barClock.left
 			anchors.rightMargin: 12
