@@ -10,7 +10,7 @@ Item {
     property string screenName: ""
 
     height: parent.height
-    implicitWidth: iconText.implicitWidth + 16
+    implicitWidth: Theme.barButtonSize
 
     readonly property string currentIcon: Notifications.dndEnabled
         ? (Notifications.hasNotifications ? Theme.notifications.icon.notification : Theme.notifications.icon.dnd_none)
@@ -21,7 +21,7 @@ Item {
     Rectangle {
         anchors.centerIn: parent
         width: parent.width
-        height: parent.height * 0.8
+        height: Theme.barButtonSize
         radius: Theme.rounding.normal
         color: mouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 

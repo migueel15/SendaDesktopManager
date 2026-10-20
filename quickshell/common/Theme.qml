@@ -160,6 +160,8 @@ QtObject {
 	}
 
 	property int barSize: 40
+	// Square size of icon-only buttons on the bar.
+	readonly property int barButtonSize: Math.round(barSize * 0.8)
 	// Width of the frame on the left, right, and bottom edges of each screen.
 	property int frameSize: 6
 	property int barBorderRadius: Theme.rounding.normal

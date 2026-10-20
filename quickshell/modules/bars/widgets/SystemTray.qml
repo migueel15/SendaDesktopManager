@@ -29,8 +29,8 @@ Rectangle {
     // Expand/collapse button
     Rectangle {
         id: expandButton
-        height: parent.height * 0.8
-        width: 32
+        height: Theme.barButtonSize
+        width: Theme.barButtonSize
         radius: Theme.rounding.normal
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left

@@ -72,8 +72,8 @@ Variants {
 
 			// Logo with the same hover pill as the other bar buttons. Click reloads Hyprland.
 			Rectangle {
-				Layout.preferredWidth: 36
-				Layout.preferredHeight: parent.height * 0.8
+				Layout.preferredWidth: Theme.barButtonSize
+				Layout.preferredHeight: Theme.barButtonSize
 				Layout.alignment: Qt.AlignVCenter
 				radius: Theme.rounding.normal
 				color: logoMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"

@@ -10,7 +10,7 @@ Rectangle {
 		property bool keyboardEnabled : true
 
 		height: parent.height
-		width: textIcon.implicitWidth + 16
+		width: Theme.barButtonSize
 		implicitWidth: width
 		color: "transparent"
 
@@ -19,7 +19,7 @@ Rectangle {
     Rectangle {
         anchors.centerIn: parent
         width: parent.width
-        height: parent.height * 0.8
+        height: Theme.barButtonSize
         radius: Theme.rounding.normal
         color: keyboardMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
