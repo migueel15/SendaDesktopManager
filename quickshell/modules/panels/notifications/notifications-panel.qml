@@ -24,13 +24,6 @@ SendaPanel {
             Layout.fillWidth: true
             spacing: 12
 
-            Text {
-                text: "󰂚"
-                color: Theme.colors.primary
-                font.family: Theme.font.icon.family
-                font.pixelSize: Theme.scaled(24)
-            }
-
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 2
@@ -38,9 +31,7 @@ SendaPanel {
                 Text {
                     text: "Notificaciones"
                     color: Theme.colors.text
-                    font.family: Theme.font.title.family
-                    font.pixelSize: Theme.scaled(20)
-                    font.weight: Font.DemiBold
+                    font: Theme.font.title
                 }
 
                 Text {
@@ -48,11 +39,12 @@ SendaPanel {
                         ? "1 pendiente"
                         : `${Notifications.unreadNotifications.length} pendientes`
                     color: Theme.colors.overlay
-                    font: Theme.font.overlay
+                    font: Theme.font.caption
                 }
             }
 
             PanelAction {
+                active: Notifications.dndEnabled
                 text: Notifications.dndEnabled ? "󰂛" : "󰂚"
                 accessibleLabel: Notifications.dndEnabled
                     ? "Desactivar no molestar"
@@ -72,7 +64,7 @@ SendaPanel {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 1
-            color: Theme.colors.surfaceVariant
+            color: Theme.colors.border
         }
 
         Item {
@@ -192,20 +184,28 @@ SendaPanel {
 
         required property string text
         required property string accessibleLabel
+        // Lit like a selected item, e.g. Do Not Disturb turned on.
+        property bool active: false
         signal clicked
 
-        implicitWidth: 36
-        implicitHeight: 36
+        // Ghost icon button, the same size as the bar buttons.
+        implicitWidth: Theme.barButtonSize
+        implicitHeight: Theme.barButtonSize
         radius: Theme.rounding.normal
-        color: actionMouse.containsMouse ? Theme.colors.surfaceVariant : Theme.colors.surface
-        border.width: 1
-        border.color: Theme.colors.surfaceVariant
+        color: action.active ? Theme.colors.selection
+            : (actionMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent")
         opacity: enabled ? 1 : 0.45
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
 
         Text {
             anchors.centerIn: parent
             text: action.text
-            color: Theme.colors.text
+            color: action.active ? Theme.colors.primary : Theme.colors.text
             font: Theme.font.icon
         }
 
@@ -231,11 +231,21 @@ SendaPanel {
         implicitHeight: rowLayout.implicitHeight + 24
         x: 0
         radius: Theme.rounding.normal
-        color: Theme.colors.surface
+        color: rowHover.hovered ? Theme.colors.surfaceRaised : Theme.colors.surface
         border.width: 1
-        border.color: Theme.colors.surfaceVariant
+        border.color: Theme.colors.border
         transform: Translate {
             x: row.swipeOffset
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
+
+        HoverHandler {
+            id: rowHover
         }
 
         // One activation target for the whole card. Declaring it before the
@@ -288,15 +298,22 @@ SendaPanel {
             id: rowLayout
             anchors.fill: parent
             anchors.margins: 12
-            spacing: 10
+            spacing: 12
 
-            Item {
-                Layout.preferredWidth: 36
-                Layout.preferredHeight: 36
+            // App icon on a tile, like the popups.
+            Rectangle {
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
+                Layout.alignment: Qt.AlignTop
+                radius: Theme.rounding.small
+                color: Theme.colors.background
+                border.width: 1
+                border.color: Theme.colors.border
 
                 IconImage {
                     id: rowAppIcon
                     anchors.fill: parent
+                    anchors.margins: 5
                     source: Notifications.applicationIconSource(row.notification)
                     visible: status === Image.Ready
                 }
@@ -314,7 +331,7 @@ SendaPanel {
 
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: 2
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -324,7 +341,7 @@ SendaPanel {
                         Layout.fillWidth: true
                         text: row.notification.appName || "Notificación"
                         color: Theme.colors.overlay
-                        font: Theme.font.overlay
+                        font: Theme.font.caption
                         elide: Text.ElideRight
 
                         HoverHandler {
@@ -337,19 +354,19 @@ SendaPanel {
                     Text {
                         text: row.timestampLabel(row.notification.receivedAt)
                         color: Theme.colors.overlay
-                        font.family: applicationName.font.family
-                        font.pixelSize: applicationName.font.pixelSize
-                        font.weight: applicationName.font.weight
+                        font: Theme.font.caption
                     }
+                }
+
+                Item {
+                    Layout.preferredHeight: 4
                 }
 
                 Text {
                     Layout.fillWidth: true
                     text: row.notification.summary || ""
                     color: Theme.colors.text
-                    font.family: Theme.font.title.family
-                    font.pixelSize: Theme.scaled(15)
-                    font.weight: Font.DemiBold
+                    font: Theme.font.heading
                     wrapMode: Text.Wrap
                     maximumLineCount: 3
                     elide: Text.ElideRight
@@ -365,8 +382,9 @@ SendaPanel {
                     Layout.fillWidth: true
                     visible: text.length > 0
                     text: row.notification.body || ""
-                    color: Theme.colors.overlay
-                    font: Theme.font.overlay
+                    color: Theme.colors.textMuted
+                    font: Theme.font.body
+                    lineHeight: 1.15
                     wrapMode: Text.Wrap
                     maximumLineCount: 5
                     elide: Text.ElideRight
@@ -377,7 +395,10 @@ SendaPanel {
 
             }
 
+            // Shown on hover only, to keep the list calm.
             PanelAction {
+                Layout.alignment: Qt.AlignTop
+                opacity: rowHover.hovered ? 1 : 0
                 text: "󰅖"
                 accessibleLabel: "Descartar notificación"
                 onClicked: {
