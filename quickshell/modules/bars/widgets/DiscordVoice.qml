@@ -107,11 +107,9 @@ Rectangle {
         id: watchRetryTimer
         interval: 1000
         repeat: true
-        running: watchConnectedOnce && !watchSocket.connected
+        running: !watchSocket.connected
         onTriggered: watchSocket.connected = true
     }
-
-    property bool watchConnectedOnce: false
 
     Socket {
         id: watchSocket
@@ -120,7 +118,6 @@ Rectangle {
 
         onConnectedChanged: {
             if (!connected) return;
-            root.watchConnectedOnce = true;
             write('{"action":"watch"}\n');
             flush();
         }

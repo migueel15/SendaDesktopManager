@@ -6,11 +6,16 @@ import qs.common
 
 Rectangle {
 	id: workspaceRectangle
-	color: Theme.colors.background
+	color: "transparent"
 
 	// Guards para evitar null access
 	property var screenMonitor: Hyprland.monitorFor(topbar.screen)
-	readonly property real workspaceCellWidth: Theme.workspaces.font.pixelSize + Theme.workspaces.spacing * 2
+	// Dots: empty ones in Humo, ones with windows in Hielo, and the active one
+	// stretched into a Nieve pill. Width and color animate on change.
+	// Sized from the bar font so they follow the text scale.
+	readonly property int dotSize: Math.round(Theme.font.base.pixelSize * 0.65)
+	readonly property int activeWidth: Math.round(Theme.font.base.pixelSize * 1.6)
+	readonly property int dotGap: Math.round(Theme.font.base.pixelSize * 0.55)
 	// property var workspacesNumber: Hyprland.workspaces.values?.length ?? 0
 	// property var monitorNumber: Hyprland.monitors.values?.length ?? 1
 	// property var workspacesPerScreen: monitorNumber > 0 ? workspacesNumber / monitorNumber : 0
@@ -33,39 +38,66 @@ Rectangle {
 
 	// Solo mostrar cuando los datos estén listos
 	visible: screenMonitor !== null && filteredWorkspaces.length > 0
-	implicitWidth: filteredWorkspaces.length * workspaceCellWidth
+	implicitWidth: dotsRow.implicitWidth + dotGap * 2
 	Layout.fillHeight: true
 
-	RowLayout {
-		anchors.fill: parent
-		spacing: 0
+	Row {
+		id: dotsRow
+		anchors.centerIn: parent
+		spacing: workspaceRectangle.dotGap
 
 		Repeater {
 			model: workspaceRectangle.filteredWorkspaces
 
-			delegate: Rectangle {
-				Layout.preferredWidth: workspaceRectangle.workspaceCellWidth
-				Layout.fillHeight: true
+			delegate: Item {
+				id: cell
 
-				color: "transparent"
+				required property var modelData
+				readonly property bool isActive: modelData?.active ?? false
+				readonly property bool hasClients: (modelData?.toplevels?.values?.length ?? 0) > 0
 
-				property var workspace: modelData
-				property bool isActive: workspace?.active ?? false
-				property bool hasClients: workspace?.toplevels?.values?.length > 0 ?? false
+				width: dot.width
+				height: workspaceRectangle.height
 
-				Text {
-					anchors.centerIn: parent
-					color: isActive ? Theme.workspaces.activeWorkspaceColor : (hasClients ? Theme.workspaces.notFocusedWorkspaceColor : Theme.workspaces.emptyWorkspaceColor)
-					text: Theme.workspaces.icon
-					font: Theme.workspaces.font
+				Rectangle {
+					id: dot
+					anchors.verticalCenter: parent.verticalCenter
+					width: cell.isActive ? workspaceRectangle.activeWidth : workspaceRectangle.dotSize
+					height: workspaceRectangle.dotSize
+					radius: Theme.rounding.full
+					color: cell.isActive ? Theme.workspaces.activeWorkspaceColor
+						: (cell.hasClients ? Theme.workspaces.notFocusedWorkspaceColor : Theme.workspaces.emptyWorkspaceColor)
+					scale: hoverArea.containsMouse && !cell.isActive ? 1.25 : 1
+
+					Behavior on width {
+						NumberAnimation {
+							duration: 260
+							easing.type: Easing.OutCubic
+						}
+					}
+					Behavior on color {
+						ColorAnimation {
+							duration: 200
+						}
+					}
+					Behavior on scale {
+						NumberAnimation {
+							duration: 120
+						}
+					}
 				}
 
+				// Wider than the dot so small targets are easy to hit.
 				MouseArea {
+					id: hoverArea
 					anchors.fill: parent
+					anchors.leftMargin: -workspaceRectangle.dotGap / 2
+					anchors.rightMargin: -workspaceRectangle.dotGap / 2
+					hoverEnabled: true
+					cursorShape: Qt.PointingHandCursor
 					onClicked: {
-						if (workspace && workspace.activate) {
-							workspace.activate();
-						}
+						if (cell.modelData && cell.modelData.activate)
+							cell.modelData.activate();
 					}
 				}
 			}

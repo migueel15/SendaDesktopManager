@@ -25,6 +25,9 @@ ShellRoot {
 		panelController: panelCtrl
 	}
 
+	// The frame goes before the corners so they are placed inside it.
+	ScreenFrame {}
+
 	TopRightCorner {}
 	TopLeftCorner {}
 	BottomLeftCorner {}

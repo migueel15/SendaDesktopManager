@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Window
+import qs.common
 
 // Normalize the painted bounds, not the transparent canvas supplied by the app.
 // Canvas also accepts Quickshell's image providers (theme icons and SNI pixmaps).
@@ -65,22 +66,22 @@ Item {
         height: root.iconSize
         visible: root.usingFallback
         radius: 3
-        color: "#313244"
-        border.color: "#cdd6f4"
+        color: Theme.colors.surfaceVariant
+        border.color: Theme.colors.text
         border.width: 1
         Rectangle {
             x: 3
             y: 4
             width: parent.width - 6
             height: 2
-            color: "#cdd6f4"
+            color: Theme.colors.text
         }
         Rectangle {
             x: 3
             y: 9
             width: 4
             height: 4
-            color: "#89b4fa"
+            color: Theme.colors.primary
         }
     }
 
@@ -88,7 +89,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         radius: 3
-        color: "#cdd6f4"
+        color: Theme.colors.text
         visible: !root.usingFallback && canvas.darkContent
     }
 

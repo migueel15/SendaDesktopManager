@@ -35,7 +35,20 @@ senda setup
 Según `core/internal/setup/setup.go`, `senda setup`:
 
 1. Se niega a ejecutarse como root y comprueba que el sistema es Arch Linux con Hyprland.
-2. Lista las dependencias que faltan y, si respondes `s`, las instala con `sudo pacman -S --needed`.
+2. Lista las dependencias que faltan y, si respondes `s`, las instala con `sudo pacman -S --needed`. Las que no están en los repositorios oficiales (como `blueberry`, de AUR) se indican para instalarlas a mano. La lista está en `core/internal/setup/packages.go`:
+
+   | Uso | Paquetes |
+   |---|---|
+   | Shell y compositor | `quickshell`, `hyprland`, `hyprlock` |
+   | Fondo de pantalla | `awww` |
+   | Red, audio y batería | `networkmanager`, `wireplumber`, `upower` |
+   | Bluetooth | `bluez`, `bluez-utils`, `blueberry` |
+   | Brillo de monitores externos | `ddcutil` |
+   | Sonidos del sistema | `ffmpeg`, `sound-theme-freedesktop` |
+   | Enlaces y scripts | `xdg-utils`, `jq`, `python` |
+   | Fuentes | `inter-font`, `ttf-nerd-fonts-symbols` |
+
+   Las dependencias con comando se buscan en `PATH`; las fuentes, el tema de sonidos y `bluez` se comprueban con `pacman -Q`.
 3. Crea `~/.config/senda/config` si no existe.
 4. Descarga, verifica e instala los archivos de Quickshell de la última release.
 5. Detiene cualquier instancia de Quickshell lanzada a mano y crea la unidad de usuario `~/.config/systemd/user/senda.service`, la habilita y la arranca.

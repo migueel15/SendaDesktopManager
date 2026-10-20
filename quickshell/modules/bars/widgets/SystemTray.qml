@@ -29,13 +29,20 @@ Rectangle {
     // Expand/collapse button
     Rectangle {
         id: expandButton
-        height: parent.height * 0.8
-        width: 24
+        height: Theme.barButtonSize
+        width: Theme.barButtonSize
         radius: Theme.rounding.normal
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
 
-        color: Theme.colors.surface
+        // Same hover pill as the other bar buttons; stays lit while expanded.
+        color: expandButtonHover.hovered || root.expanded ? Theme.colors.surfaceVariant : "transparent"
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
 
         // Hovering the button keeps the tray open; it closes after leaving,
         // the same way the Spotify and Discord widgets do.
@@ -64,6 +71,7 @@ Rectangle {
         MouseArea {
             id: expandButtonMouseArea
             anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
             onClicked: root.expanded = !root.expanded
         }
     }

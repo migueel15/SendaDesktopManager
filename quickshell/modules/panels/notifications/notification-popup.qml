@@ -97,7 +97,7 @@ Variants {
         property real swipeOffset: 0
         property int swipeExitDuration: 280
 
-        implicitHeight: popupColumn.implicitHeight + 24
+        implicitHeight: popupColumn.implicitHeight + 26
         transform: Translate {
             x: card.swipeOffset
         }
@@ -117,7 +117,48 @@ Variants {
             anchors.fill: parent
             radius: Theme.rounding.normal
             color: Theme.colors.background
+            border.width: 1
+            border.color: Theme.colors.border
         }
+
+        // Remaining lifetime of the popup. Full while hovered, since hovering
+        // pauses the timeout.
+        Rectangle {
+            id: lifetimeBar
+            anchors {
+                left: parent.left
+                bottom: parent.bottom
+                leftMargin: Theme.rounding.normal
+                bottomMargin: 1
+            }
+            readonly property real fullWidth: card.width - 2 * Theme.rounding.normal
+            property real progress: 1
+            width: fullWidth * progress
+            height: 2
+            radius: 1
+            color: Theme.colors.primary
+            opacity: 0.7
+
+            NumberAnimation on progress {
+                id: lifetimeAnimation
+                running: false
+                to: 0
+            }
+
+            function restart() {
+                lifetimeAnimation.stop();
+                const remaining = card.expiresAt - Date.now();
+                progress = Math.max(0, Math.min(1, remaining / Notifications.popupLifetimeMs));
+                if (cardHover.hovered || remaining <= 0)
+                    return;
+                lifetimeAnimation.duration = remaining;
+                lifetimeAnimation.start();
+            }
+
+            Component.onCompleted: restart()
+        }
+
+        onExpiresAtChanged: lifetimeBar.restart()
 
         // Keep card activation below the content so hyperlinks retain their
         // own target and the swipe handler can still take over a drag.
@@ -135,7 +176,11 @@ Variants {
         }
 
         HoverHandler {
-            onHoveredChanged: Notifications.setPopupHovered(card.notificationId, hovered)
+            id: cardHover
+            onHoveredChanged: {
+                Notifications.setPopupHovered(card.notificationId, hovered);
+                lifetimeBar.restart();
+            }
         }
 
         DragHandler {
@@ -170,20 +215,27 @@ Variants {
             anchors {
                 fill: parent
                 margins: 12
+                bottomMargin: 14
             }
-            spacing: 3
+            spacing: 2
 
             RowLayout {
                 width: parent.width
                 spacing: 8
 
-                Item {
-                    Layout.preferredWidth: 26
-                    Layout.preferredHeight: 26
+                // App icon on a small tile, so every app gets the same frame.
+                Rectangle {
+                    Layout.preferredWidth: 22
+                    Layout.preferredHeight: 22
+                    radius: Theme.rounding.small
+                    color: Theme.colors.surface
+                    border.width: 1
+                    border.color: Theme.colors.border
 
                     IconImage {
                         id: popupAppIcon
                         anchors.fill: parent
+                        anchors.margins: 3
                         source: Notifications.applicationIconSource(card.notification)
                         visible: status === Image.Ready
                     }
@@ -203,8 +255,8 @@ Variants {
                     id: applicationName
                     Layout.fillWidth: true
                     text: card.notification ? (card.notification.appName || "Notificación") : ""
-                    color: Theme.colors.primary
-                    font: Theme.font.overlay
+                    color: Theme.colors.overlay
+                    font: Theme.font.caption
                     elide: Text.ElideRight
 
                     HoverHandler {
@@ -217,19 +269,20 @@ Variants {
                 Text {
                     text: card.notification ? card.timestampLabel(card.notification.receivedAt) : ""
                     color: Theme.colors.overlay
-                    font.family: applicationName.font.family
-                    font.pixelSize: applicationName.font.pixelSize
-                    font.weight: applicationName.font.weight
+                    font: Theme.font.caption
                 }
+            }
+
+            Item {
+                width: 1
+                height: 6
             }
 
             Text {
                 width: parent.width
                 text: card.notification ? (card.notification.summary || "") : ""
                 color: Theme.colors.text
-                font.family: Theme.font.title.family
-                font.pixelSize: Theme.scaled(15)
-                font.weight: Font.DemiBold
+                font: Theme.font.heading
                 wrapMode: Text.Wrap
                 maximumLineCount: 2
                 elide: Text.ElideRight
@@ -245,8 +298,9 @@ Variants {
                 width: parent.width
                 visible: text.length > 0
                 text: card.notification ? (card.notification.body || "") : ""
-                color: Theme.colors.overlay
-                font: Theme.font.overlay
+                color: Theme.colors.textMuted
+                font: Theme.font.body
+                lineHeight: 1.15
                 wrapMode: Text.Wrap
                 maximumLineCount: 4
                 elide: Text.ElideRight

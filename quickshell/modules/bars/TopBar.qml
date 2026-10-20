@@ -62,26 +62,60 @@ Variants {
 			}
 		}
 
+		// Left section: logo, workspaces, and the active task. Same 4 px gap and
+		// 8 px edge margin as the right section.
 		RowLayout {
 			height: parent.height
-			spacing: 15
-			Text {
-				color: Theme.colors.primary
-				leftPadding: 15
-				text: "󰣇"
-				font: Theme.font.base
+			anchors.left: parent.left
+			anchors.leftMargin: 8
+			spacing: 4
 
-				MouseArea {
-					anchors.fill: parent
+			// Logo with the same hover pill as the other bar buttons. Click reloads Hyprland.
+			Rectangle {
+				Layout.preferredWidth: Theme.barButtonSize
+				Layout.preferredHeight: Theme.barButtonSize
+				Layout.alignment: Qt.AlignVCenter
+				radius: Theme.rounding.normal
+				color: logoMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
 
-					onClicked: {
-						reloadProc.running = true;
+				Behavior on color {
+					ColorAnimation {
+						duration: 150
 					}
 				}
+
+				Image {
+					anchors.centerIn: parent
+					width: 22
+					height: 22
+					source: Qt.resolvedUrl("../../assets/senda-logo.svg")
+					sourceSize: Qt.size(22, 22)
+					fillMode: Image.PreserveAspectFit
+					smooth: true
+				}
+
+				MouseArea {
+					id: logoMouse
+					anchors.fill: parent
+					hoverEnabled: true
+					cursorShape: Qt.PointingHandCursor
+					onClicked: reloadProc.running = true
+				}
 			}
+
+			// Separates the logo from the workspaces.
+			Rectangle {
+				Layout.preferredWidth: 1
+				Layout.preferredHeight: parent.height * 0.4
+				Layout.leftMargin: 4
+				Layout.rightMargin: 4
+				color: Theme.colors.surfaceVariant
+			}
+
 			Workspaces {}
 
 			TasksToggle {
+				Layout.leftMargin: 4
 				screenName: topbar.screenName
 			}
 
@@ -99,39 +133,46 @@ Variants {
 			anchors.leftMargin: 12
 		}
 
+		// Right section, left to right: what is playing now (media, voice),
+		// background apps (tray), quick toggles, and the panels.
 		RowLayout {
-			spacing: 0
+			spacing: 4
 			height: parent.height
 			anchors.right: parent.right
-
-			DiscordVoice {
-				Layout.rightMargin: 6
-				Layout.leftMargin: 8
-			}
+			anchors.rightMargin: 8
 
 			NowPlaying {
-				Layout.rightMargin: 6
+				id: nowPlaying
+			}
+
+			DiscordVoice {
+				id: discordVoice
+			}
+
+			// Separates the contextual widgets from the fixed ones.
+			Rectangle {
+				visible: nowPlaying.visible || discordVoice.visible
+				Layout.preferredWidth: 1
+				Layout.preferredHeight: parent.height * 0.4
 				Layout.leftMargin: 6
+				Layout.rightMargin: 6
+				color: Theme.colors.surfaceVariant
 			}
 
 			SystemTray {
-				Layout.rightMargin: 8
-				Layout.leftMargin: 6
+				Layout.rightMargin: 6
 			}
+
+			KeyboardToggler {}
 
 			Notifications {
 				screenName: topbar.screenName
-			}
-			KeyboardToggler {
-				Layout.leftMargin: 8
 			}
 
 			ControlPanel {
 				onClicked: {
 					OverlayService.togglePanel("controlCenter", topbar.screenName);
 				}
-				Layout.rightMargin: 8
-				Layout.leftMargin: 8
 			}
 		}
 	}

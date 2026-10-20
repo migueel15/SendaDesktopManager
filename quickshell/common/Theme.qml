@@ -6,7 +6,7 @@ import QtQuick
 QtObject {
 	id: root
 
-	property string currentTheme: "mocha"
+	property string currentTheme: "senda"
 
 	// Spanish names for days and months, whatever the system locale is.
 	readonly property var locale: Qt.locale("es_ES")
@@ -30,69 +30,140 @@ QtObject {
 
 	readonly property Colors colors: Colors {}
 	readonly property Rounding rounding: Rounding {}
-	readonly property FontSize fontSize: FontSize {}
+	readonly property Spacing spacing: Spacing {}
+	readonly property Motion motion: Motion {}
 	readonly property Fonts font: Fonts {}
 	readonly property Workspaces workspaces: Workspaces {}
 	readonly property Notifications notifications: Notifications {}
 
+	// Senda palette. Neutrals: Noche, Grafito, Pizarra, Humo, Bruma.
+	// Accent: Abismo, Cobalto, Hielo, Escarcha.
 	component Colors: QtObject {
-		readonly property color background: "#11111B"
-		readonly property color surface: "#1e1e2e"
-		readonly property color surfaceVariant: "#313244"
+		// Desktop background, darker than bars and panels.
+		readonly property color base: "#0A0E16"
+		// Bars and panels (Grafito).
+		readonly property color background: "#141A26"
+		// Cards inside panels.
+		readonly property color surface: "#11161F"
+		readonly property color border: "#222B3A"
+		// Hover fills and inactive borders (Pizarra).
+		readonly property color surfaceVariant: "#263042"
 		// Selectors that unfold under a card, a step lighter than surface.
-		readonly property color surfaceRaised: "#262637"
-		readonly property color surfaceRaisedBorder: "#45475a"
-		readonly property color overlay: "#7f849c"
-		readonly property color white: "#ffffff"
-		readonly property color primary: "#89b4fa"
-		readonly property color secondary: "#cba6f7"
-		readonly property color accent: "#fab387"
-		readonly property color success: "#a6e3a1"
-		readonly property color warning: "#f9e2af"
-		readonly property color error: "#f38ba8"
-		readonly property color info: "#89b4fa"
-		readonly property color text: "#cdd6f4"
+		readonly property color surfaceRaised: "#1A2130"
+		readonly property color surfaceRaisedBorder: "#3E4A60"
+		// Secondary text (Humo).
+		readonly property color overlay: "#8695AD"
+		readonly property color textMuted: "#C6CFDD"
+		readonly property color white: "#F2F7FF"
+		// Hielo.
+		readonly property color primary: "#7AA7FF"
+		// Escarcha.
+		readonly property color secondary: "#CFE3FF"
+		// Cobalto.
+		readonly property color accent: "#3D6FD1"
+		readonly property color accentDeep: "#0F1E38"
+		// Selected or active items: deep fill with a Hielo border and text.
+		readonly property color selection: "#1F3A66"
+		readonly property color focus: "#7AA7FF"
+		readonly property color success: "#6FD3A0"
+		readonly property color warning: "#F2C46D"
+		readonly property color error: "#F27A8A"
+		readonly property color info: "#A79CFF"
+		// Bruma.
+		readonly property color text: "#E8EEF7"
 	}
 
 	component Rounding: QtObject {
 		readonly property int small: 6
 		readonly property int normal: 10
-		readonly property int large: 20
+		readonly property int large: 16
 		readonly property int full: 1000
 	}
 
-	component FontSize: QtObject {
-		readonly property int small: 12
-		readonly property int normal: 14
-		readonly property int large: 16
-		readonly property int xLarge: 18
-		readonly property int giant: 19
+	// Spacing scale for gaps, margins, and padding. Avoid values off the scale.
+	component Spacing: QtObject {
+		readonly property int xxs: 2
+		readonly property int xs: 4
+		readonly property int sm: 8
+		readonly property int md: 12
+		readonly property int lg: 16
+		readonly property int xl: 24
 	}
+
+	// Durations in milliseconds. fast: hover and colors; normal: small moves and
+	// fades; slow: panels unfolding. Easing is OutCubic everywhere.
+	component Motion: QtObject {
+		readonly property int fast: 120
+		readonly property int normal: 180
+		readonly property int slow: 310
+		readonly property int easing: Easing.OutCubic
+	}
+
+	// Inter for text. Icons are Nerd Font glyphs: plain icons use Symbols
+	// Nerd Font, and mixed strings fall back to it through fontconfig.
+	readonly property string textFamily: "Inter"
+	readonly property string iconFamily: "Symbols Nerd Font"
 
 	component Fonts: QtObject {
 		property font base: Qt.font({
-				family: "CaskaydiaMono Nerd Font",
-				pixelSize: root.scaled(19),
+				family: root.textFamily,
+				pixelSize: root.scaled(17),
 				weight: Font.Normal
 		})
 		property font title: Qt.font({
-				family: "CaskaydiaMono Nerd Font",
-				pixelSize: root.scaled(17),
-				weight: Font.Bold
+				family: root.textFamily,
+				pixelSize: root.scaled(16),
+				weight: Font.DemiBold
+		})
+		// Big numbers such as the dashboard clock.
+		property font display: Qt.font({
+				family: root.textFamily,
+				pixelSize: root.scaled(36),
+				weight: Font.Light
+		})
+		// Card and section headings.
+		property font heading: Qt.font({
+				family: root.textFamily,
+				pixelSize: root.scaled(14),
+				weight: Font.DemiBold
+		})
+		// Default text inside panels.
+		property font body: Qt.font({
+				family: root.textFamily,
+				pixelSize: root.scaled(13),
+				weight: Font.Normal
+		})
+		// Secondary details: times, counters, hints.
+		property font caption: Qt.font({
+				family: root.textFamily,
+				pixelSize: root.scaled(11),
+				weight: Font.Normal
+		})
+		// Small uppercase labels over groups.
+		property font label: Qt.font({
+				family: root.textFamily,
+				pixelSize: root.scaled(10),
+				weight: Font.DemiBold,
+				capitalization: Font.AllUppercase,
+				letterSpacing: 0.6
 		})
 		property font overlay: Qt.font({
-				family: "CaskaydiaMono Nerd Font",
+				family: root.textFamily,
 				pixelSize: root.scaled(13),
 				weight: Font.Normal
 		})
 		property font icon: Qt.font({
-				family: "CaskaydiaMono Nerd Font",
+				family: root.iconFamily,
 				pixelSize: root.scaled(13),
 				weight: Font.Normal
 		})
 	}
 
 	property int barSize: 40
+	// Square size of icon-only buttons on the bar.
+	readonly property int barButtonSize: Math.round(barSize * 0.8)
+	// Width of the frame on the left, right, and bottom edges of each screen.
+	property int frameSize: 6
 	property int barBorderRadius: Theme.rounding.normal
 
 	component Workspaces: QtObject {

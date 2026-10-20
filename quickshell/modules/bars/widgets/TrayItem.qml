@@ -35,9 +35,7 @@ MouseArea {
         if (!modelData.hasMenu || !window)
             return;
         const pos = root.mapToItem(window.contentItem, 0, root.height);
-        menu.anchor.rect.x = pos.x;
-        menu.anchor.rect.y = pos.y + 5;
-        menu.open();
+        menu.toggle(window, pos.x, pos.y + 5);
     }
 
     function findDesktopIconSource() {
@@ -71,10 +69,9 @@ MouseArea {
         event.accepted = true;
     }
 
-    QsMenuAnchor {
+    TrayMenu {
         id: menu
-        menu: root.modelData.menu
-        anchor.window: root.QsWindow.window
+        rootMenu: root.modelData.menu
     }
 
     Connections {

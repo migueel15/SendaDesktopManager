@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -14,7 +15,12 @@ import (
 // fakePacman records the calls made by the dependency step.
 type fakePacman struct {
 	known     map[string]bool
+	present   map[string]bool
 	installed [][]string
+}
+
+func (f *fakePacman) Installed(pkg string) bool {
+	return f.present[pkg]
 }
 
 func (f *fakePacman) Known(pkg string) (bool, error) {
@@ -24,6 +30,28 @@ func (f *fakePacman) Known(pkg string) (bool, error) {
 func (f *fakePacman) Install(pkgs []string) error {
 	f.installed = append(f.installed, pkgs)
 	return nil
+}
+
+// commandsExcept returns the commands in Requirements other than the named ones.
+func commandsExcept(skip ...string) []string {
+	var found []string
+	for _, req := range Requirements {
+		if req.Command != "" && !slices.Contains(skip, req.Command) {
+			found = append(found, req.Command)
+		}
+	}
+	return found
+}
+
+// packageOnly returns the packages in Requirements that have no command.
+func packageOnly() map[string]bool {
+	set := map[string]bool{}
+	for _, req := range Requirements {
+		if req.Command == "" {
+			set[req.Package] = true
+		}
+	}
+	return set
 }
 
 // lookPathFound returns a LookPath fake where only the named commands exist.
@@ -100,29 +128,32 @@ func TestCheckNotRoot(t *testing.T) {
 	}
 }
 
-func TestRequirementsMapping(t *testing.T) {
-	want := []Requirement{
-		{Command: "qs", Package: "quickshell"},
-		{Command: "awww", Package: "awww"},
-		{Command: "jq", Package: "jq"},
-		{Command: "nmcli", Package: "networkmanager"},
-		{Command: "wpctl", Package: "wireplumber"},
-		{Command: "hyprlock", Package: "hyprlock"},
-		{Command: "python3", Package: "python"},
-	}
-	if !reflect.DeepEqual(Requirements, want) {
-		t.Fatalf("Requirements = %v, want %v", Requirements, want)
-	}
+func TestMissingRequirementsChecksCommandsAndPackages(t *testing.T) {
+	present := packageOnly()
+	delete(present, "inter-font")
 
-	missing := MissingRequirements(lookPathFound("qs", "jq", "python3"))
-	wantMissing := []Requirement{
+	missing := MissingRequirements(lookPathFound(commandsExcept("awww", "ddcutil")...),
+		func(pkg string) bool { return present[pkg] })
+	want := []Requirement{
 		{Command: "awww", Package: "awww"},
-		{Command: "nmcli", Package: "networkmanager"},
-		{Command: "wpctl", Package: "wireplumber"},
-		{Command: "hyprlock", Package: "hyprlock"},
+		{Command: "ddcutil", Package: "ddcutil"},
+		{Package: "inter-font"},
 	}
-	if !reflect.DeepEqual(missing, wantMissing) {
-		t.Fatalf("MissingRequirements() = %v, want %v", missing, wantMissing)
+	if !reflect.DeepEqual(missing, want) {
+		t.Fatalf("MissingRequirements() = %v, want %v", missing, want)
+	}
+}
+
+func TestRequirementsHavePackages(t *testing.T) {
+	seen := map[Requirement]bool{}
+	for _, req := range Requirements {
+		if req.Package == "" {
+			t.Errorf("requirement %q has no package", req.Command)
+		}
+		if seen[req] {
+			t.Errorf("requirement %v is listed twice", req)
+		}
+		seen[req] = true
 	}
 }
 
@@ -186,7 +217,7 @@ func TestCheckDependenciesDeclinedInstallsNothing(t *testing.T) {
 	out := &strings.Builder{}
 	opts := Options{
 		Out:      out,
-		LookPath: lookPathFound("jq"),
+		LookPath: lookPathFound(commandsExcept("qs")...),
 		Pacman:   pacman,
 	}
 
@@ -202,18 +233,22 @@ func TestCheckDependenciesDeclinedInstallsNothing(t *testing.T) {
 }
 
 func TestCheckDependenciesInstallsKnownAndReportsAUR(t *testing.T) {
-	pacman := &fakePacman{known: map[string]bool{"quickshell": true, "networkmanager": true}}
+	pacman := &fakePacman{
+		known:   map[string]bool{"quickshell": true, "networkmanager": true, "inter-font": true},
+		present: packageOnly(),
+	}
+	delete(pacman.present, "inter-font")
 	out := &strings.Builder{}
 	opts := Options{
 		Out:      out,
-		LookPath: lookPathFound("jq", "awww", "wpctl", "hyprlock", "python3"),
+		LookPath: lookPathFound(commandsExcept("qs", "nmcli", "awww")...),
 		Pacman:   pacman,
 	}
 
 	if err := checkDependencies(opts, bufio.NewReader(strings.NewReader("S\n"))); err != nil {
 		t.Fatalf("checkDependencies() error = %v", err)
 	}
-	want := [][]string{{"quickshell", "networkmanager"}}
+	want := [][]string{{"quickshell", "networkmanager", "inter-font"}}
 	if !reflect.DeepEqual(pacman.installed, want) {
 		t.Fatalf("installed = %v, want %v", pacman.installed, want)
 	}

@@ -54,12 +54,12 @@ Item {
 		id: container
 
 		anchors.centerIn: parent
-		implicitWidth: content.implicitWidth + 14
-		height: parent.height * 0.8
+		// Without a task it is an icon-only button, sized like the others.
+		implicitWidth: root.hasTask ? content.implicitWidth + 16 : Theme.barButtonSize
+		height: Theme.barButtonSize
 		radius: Theme.rounding.normal
-		color: containerMouseArea.containsMouse || root.open ? Theme.colors.surfaceVariant : Theme.colors.surface
-		border.width: 1
-		border.color: root.open ? Theme.colors.primary : Theme.colors.surfaceVariant
+		// Same hover pill as the tray button; stays lit while the panel is open.
+		color: containerMouseArea.containsMouse || root.open ? Theme.colors.surfaceVariant : "transparent"
 
 		Behavior on color {
 			ColorAnimation {
@@ -84,13 +84,13 @@ Item {
 			spacing: 8
 
 			Item {
-				Layout.preferredWidth: 24
+				Layout.preferredWidth: root.hasTask ? 24 : Theme.barButtonSize - 16
 				Layout.fillHeight: true
 
 				Text {
 					anchors.centerIn: parent
 					text: "󰄭"
-					color: root.open ? Theme.colors.primary : Theme.colors.text
+					color: Theme.colors.text
 					font: Theme.font.base
 				}
 			}
