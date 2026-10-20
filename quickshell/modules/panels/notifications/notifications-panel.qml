@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell.Widgets
 
@@ -111,7 +112,30 @@ SendaPanel {
                 anchors.fill: parent
                 spacing: 8
                 clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                rightMargin: notificationScrollBar.visible ? notificationScrollBar.width + 6 : 0
                 model: Notifications.recentNotifications
+
+                ScrollBar.vertical: ScrollBar {
+                    id: notificationScrollBar
+                    policy: notificationList.contentHeight > notificationList.height
+                        ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                    visible: policy === ScrollBar.AlwaysOn
+                    width: 6
+                    padding: 0
+
+                    background: Rectangle {
+                        radius: width / 2
+                        color: Theme.colors.surface
+                    }
+
+                    contentItem: Rectangle {
+                        implicitWidth: 6
+                        radius: width / 2
+                        color: notificationScrollBar.pressed || notificationScrollBar.hovered
+                            ? Theme.colors.overlay : Theme.colors.surfaceVariant
+                    }
+                }
                 add: Transition {
                     ParallelAnimation {
                         NumberAnimation {
@@ -154,7 +178,7 @@ SendaPanel {
 
                 delegate: NotificationRow {
                     required property var modelData
-                    width: notificationList.width
+                    width: notificationList.width - notificationList.rightMargin
                     height: implicitHeight
                     notification: modelData
                     onDismissRequested: id => Notifications.dismiss(id)

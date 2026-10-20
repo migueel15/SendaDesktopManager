@@ -120,6 +120,7 @@ Variants {
 			}
 
 			Notifications {
+				screenName: topbar.screenName
 			}
 			KeyboardToggler {
 				Layout.leftMargin: 8
