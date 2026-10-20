@@ -18,6 +18,8 @@ import (
 type Pacman interface {
 	// Known reports whether pacman has pkg in its sync databases.
 	Known(pkg string) (bool, error)
+	// Installed reports whether pkg is installed on the system.
+	Installed(pkg string) bool
 	// Install installs pkgs with sudo pacman -S --needed on the terminal.
 	Install(pkgs []string) error
 }
@@ -94,7 +96,7 @@ func checkOSRelease(path string) error {
 // checkDependencies reports missing commands and, after an explicit "s",
 // installs the ones pacman knows. Unknown packages are left for the user.
 func checkDependencies(opts Options, in *bufio.Reader) error {
-	missing := MissingRequirements(opts.LookPath)
+	missing := MissingRequirements(opts.LookPath, opts.Pacman.Installed)
 	if len(missing) == 0 {
 		fmt.Fprintln(opts.Out, "Dependencias presentes")
 		return nil
@@ -103,7 +105,11 @@ func checkDependencies(opts Options, in *bufio.Reader) error {
 	fmt.Fprintln(opts.Out, "Faltan dependencias:")
 	pkgs := make([]string, 0, len(missing))
 	for _, req := range missing {
-		fmt.Fprintf(opts.Out, "  %s (paquete %s)\n", req.Command, req.Package)
+		if req.Command == "" {
+			fmt.Fprintf(opts.Out, "  paquete %s\n", req.Package)
+		} else {
+			fmt.Fprintf(opts.Out, "  %s (paquete %s)\n", req.Command, req.Package)
+		}
 		pkgs = append(pkgs, req.Package)
 	}
 

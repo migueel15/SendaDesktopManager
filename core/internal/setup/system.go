@@ -28,6 +28,11 @@ func (SystemPacman) Known(pkg string) (bool, error) {
 	return false, fmt.Errorf("consultar %s con pacman: %w", pkg, err)
 }
 
+// Installed reports whether pkg is installed, according to pacman -Q.
+func (SystemPacman) Installed(pkg string) bool {
+	return exec.Command("pacman", "-Q", pkg).Run() == nil
+}
+
 // Install runs sudo pacman -S --needed with the terminal attached, so the
 // user can read the prompts and type the password.
 func (SystemPacman) Install(pkgs []string) error {
