@@ -420,7 +420,7 @@ SendaPanel {
         Rectangle {
             anchors.fill: parent
             radius: Theme.rounding.normal
-            color: dndControl.dndEnabled ? "#29283a" : Theme.colors.surface
+            color: dndControl.dndEnabled ? Theme.colors.accentDeep : Theme.colors.surface
             border.width: 1
             border.color: dndControl.dndEnabled ? Theme.colors.primary : Theme.colors.surfaceVariant
 

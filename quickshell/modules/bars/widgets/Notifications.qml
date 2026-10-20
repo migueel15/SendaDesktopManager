@@ -10,14 +10,32 @@ Item {
     property string screenName: ""
 
     height: parent.height
-    implicitWidth: iconText.implicitWidth
+    implicitWidth: iconText.implicitWidth + 16
 
     readonly property string currentIcon: Notifications.dndEnabled
         ? (Notifications.hasNotifications ? Theme.notifications.icon.notification : Theme.notifications.icon.dnd_none)
         : (Notifications.hasNotifications ? Theme.notifications.icon.notification : Theme.notifications.icon.none)
 
+
+    // Same hover pill as the control panel button.
+    Rectangle {
+        anchors.centerIn: parent
+        width: parent.width
+        height: parent.height * 0.8
+        radius: Theme.rounding.normal
+        color: mouseArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
+    }
+
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: event => {

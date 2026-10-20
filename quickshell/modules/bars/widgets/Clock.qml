@@ -9,18 +9,26 @@ Rectangle {
 
     property string screenName: ""
 
-    color: Theme.colors.background
-    height: parent.height
-    width: clockText.width + 20
+    readonly property bool open: OverlayService.isOpen("dashboard")
+
+    // Same hover pill as the other bar buttons; stays lit while the dashboard is open.
+    color: clockMouse.containsMouse || open ? Theme.colors.surfaceVariant : "transparent"
+    radius: Theme.rounding.normal
+    height: parent.height * 0.8
+    width: clockRow.implicitWidth + 24
 
     anchors.centerIn: parent
-    // layer.enabled: true
-    // layer.effect: Shadow {
-    //     color: ThemeManager.selectedTheme.colors.topbarColor
-    // }
+
+    Behavior on color {
+        ColorAnimation {
+            duration: 150
+        }
+    }
 
     MouseArea {
+        id: clockMouse
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
 
         acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -38,26 +46,37 @@ Rectangle {
         precision: SystemClock.Minutes
     }
 
-    Text {
-        id: clockText
-
-        property bool isPrimary: true
-        property string primaryFormat: {
-            const weekDay = clock.date.toLocaleString(Qt.locale(), "dddd");
-            const capitalizedWeekDay = weekDay.charAt(0).toUpperCase() + weekDay.slice(1);
-            return capitalizedWeekDay + " " + clock.date.toLocaleString(Qt.locale(), "hh:mm");
-        }
-        property string secondaryFormat: {
-            const month = clock.date.toLocaleString(Qt.locale(), "MMMM");
-            const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1);
-            return `${clock.date.toLocaleString(Qt.locale(), "dd")} ${capitalizedMonth} ${clock.date.toLocaleString(Qt.locale(), "yyyy")}`;
-        }
-        // text: clock.date.toLocaleString(Qt.locale(), "hh:mm AP - dddd, dd MMMM yyyy")
-        text: {
-            isPrimary ? primaryFormat : secondaryFormat;
-        }
-        color: Theme.colors.text
-        font: Theme.font.base
+    // Primary: weekday in Humo and the time in Bruma. Secondary: the full date.
+    Row {
+        id: clockRow
         anchors.centerIn: parent
+        spacing: 8
+
+        Text {
+            visible: clockText.isPrimary
+            text: {
+                const weekDay = clock.date.toLocaleString(Theme.locale, "dddd");
+                return weekDay.charAt(0).toUpperCase() + weekDay.slice(1);
+            }
+            color: Theme.colors.overlay
+            font: Theme.font.base
+        }
+
+        Text {
+            id: clockText
+
+            property bool isPrimary: true
+
+            text: {
+                if (isPrimary)
+                    return clock.date.toLocaleString(Theme.locale, "hh:mm");
+                const month = clock.date.toLocaleString(Theme.locale, "MMMM");
+                return `${clock.date.toLocaleString(Theme.locale, "dd")} ${month.charAt(0).toUpperCase() + month.slice(1)} ${clock.date.toLocaleString(Theme.locale, "yyyy")}`;
+            }
+            color: Theme.colors.text
+            font.family: Theme.font.base.family
+            font.pixelSize: Theme.font.base.pixelSize
+            font.weight: isPrimary ? Font.DemiBold : Font.Normal
+        }
     }
 }

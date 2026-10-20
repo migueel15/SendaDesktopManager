@@ -10,8 +10,25 @@ Rectangle {
 		property bool keyboardEnabled : true
 
 		height: parent.height
-		width: textIcon.implicitWidth
+		width: textIcon.implicitWidth + 16
+		implicitWidth: width
 		color: "transparent"
+
+
+    // Same hover pill as the control panel button.
+    Rectangle {
+        anchors.centerIn: parent
+        width: parent.width
+        height: parent.height * 0.8
+        radius: Theme.rounding.normal
+        color: keyboardMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
+    }
 
 	Text{
 		id: textIcon
@@ -27,7 +44,9 @@ Rectangle {
 	}
 
 	MouseArea {
+		id: keyboardMouse
 		anchors.fill : parent
+		hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
 
 		onClicked: {
