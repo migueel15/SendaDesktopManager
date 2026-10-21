@@ -182,6 +182,55 @@ Flickable {
             font.weight: Font.DemiBold
         }
 
+        Rectangle {
+            id: preloadRow
+            Layout.fillWidth: true
+            implicitHeight: preloadLabel.implicitHeight + Theme.spacing.md * 2
+            radius: Theme.rounding.small
+            color: preloadMouse.containsMouse && enabled ? Theme.colors.surfaceVariant : "transparent"
+            enabled: !SendaSettings.busy && !SendaSttSettings.busy
+            opacity: enabled ? 1 : 0.4
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: Theme.spacing.md
+                spacing: Theme.spacing.sm
+
+                Text {
+                    text: SendaSttSettings.preloadEnabled ? "󰄲" : "󰄱"
+                    color: SendaSttSettings.preloadEnabled ? Theme.colors.primary : Theme.colors.overlay
+                    font: Theme.font.icon
+                }
+                Text {
+                    id: preloadLabel
+                    Layout.fillWidth: true
+                    text: "Precargar modelo"
+                    color: Theme.colors.text
+                    font: Theme.font.body
+                }
+            }
+
+            MouseArea {
+                id: preloadMouse
+                anchors.fill: parent
+                enabled: preloadRow.enabled
+                hoverEnabled: true
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                // Keep the indicator bound to the saved value, even if saving fails.
+                onClicked: SendaSttSettings.setPreload(!SendaSttSettings.preloadEnabled)
+            }
+        }
+        Text {
+            Layout.fillWidth: true
+            text: SendaSttSettings.preloadState === "preparing" ? "Preparando el modelo…"
+                : SendaSttSettings.preloadState === "ready" ? "Listo"
+                : SendaSttSettings.preloadState === "error" ? `Error: ${SendaSttSettings.preloadError}` : "Inactivo"
+            color: SendaSttSettings.preloadState === "error" ? Theme.colors.warning : Theme.colors.text
+            font.family: Theme.font.base.family
+            font.pixelSize: Theme.scaled(12)
+            wrapMode: Text.WordWrap
+        }
+
         RowLayout {
             Layout.fillWidth: true
             Text {
