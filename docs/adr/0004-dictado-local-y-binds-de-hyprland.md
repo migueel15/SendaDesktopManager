@@ -21,3 +21,7 @@ El dictado necesita un motor de reconocimiento, modelos descargables y un atajo 
 - El runtime de Python y los modelos residen en los datos de Senda y se eliminan con `senda uninstall`.
 - El usuario decide dónde cargar el módulo en su configuración de Hyprland y debe quitar el `require` al desinstalar Senda.
 - Regenerar el módulo sustituye su contenido, por lo que no debe usarse para guardar personalizaciones dentro de `senda_binds.lua`.
+
+## Revisión (2026-10-22)
+
+En f-002 se elimina el submapa `senda_stt` y se deshabilita la cancelación con `Esc`. El atajo de Hyprland inicia o termina el dictado; para cancelarlo se usa `senda stt cancel`.

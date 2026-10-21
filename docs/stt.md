@@ -18,13 +18,15 @@ El motor se instala en un entorno virtual Python bajo `$XDG_DATA_HOME/senda/stt/
 
 ## Control
 
-El atajo predeterminado es `Alt + ñ`. Púlsalo para empezar a escuchar y otra vez para terminar y entregar el texto. Durante la sesión, `Esc` cancela el dictado y descarta el resultado. `senda stt toggle` hace el mismo toggle desde la terminal; `senda stt cancel` cancela y `senda stt status` muestra el estado. El toggle comprueba que haya modelo, motor y micrófono antes de iniciar.
+El atajo predeterminado es `Alt + ñ`. Púlsalo para empezar a escuchar y otra vez para terminar y entregar el texto. `senda stt toggle` hace el mismo toggle desde la terminal; `senda stt cancel` cancela y descarta el resultado, y `senda stt status` muestra el estado. El toggle comprueba que haya modelo, motor y micrófono antes de iniciar.
 
-Si `Esc` no está disponible, se muestra un aviso y la sesión puede continuar. Para salir de un submap atascado, ejecuta:
+La cancelación con `Esc` está desactivada por ahora. La sesión puede mostrar el aviso «Esc no está disponible en esta sesión.»; para cancelar, usa `senda stt cancel`. La segunda pulsación del atajo termina el dictado y entrega el texto.
 
-```sh
-hyprctl dispatch 'hl.dsp.submap("reset")'
-```
+## Precarga del modelo
+
+En Ajustes → Dictado, el interruptor «Precargar modelo» está desactivado por defecto. Al activarlo, la shell mantiene el modelo cargado en reposo sin abrir el micrófono. El modelo predeterminado ocupa aproximadamente 475 MB en RAM o VRAM mientras está cargado, y el dictado puede empezar sin esperar a que se cargue.
+
+Si pulsas el atajo mientras se carga el modelo, el dictado empieza al terminar la carga. Una segunda pulsación durante la carga anula esa petición. Tras tres fallos seguidos de carga, la shell deja de reintentar y Ajustes muestra el error. Los cambios de modelo durante un dictado se aplican al terminar la sesión. La shell utiliza internamente `senda stt session --standby` para mantener el modelo preparado.
 
 ## Ajustes
 
@@ -66,5 +68,4 @@ Al ejecutar `senda uninstall`, Senda intenta cancelar el dictado y, si existe `s
 - **No se detecta micrófono:** conecta o selecciona una entrada de audio predeterminada y comprueba que no sea un monitor de salida.
 - **El atajo no hace nada:** comprueba que `senda stt shortcut show` indique el módulo cargado y añade el `require` a `hyprland.lua` si falta.
 - **El atajo ya está asignado:** consulta los conflictos y elige otra combinación.
-- **Esc no cancela:** verifica que el módulo esté cargado. Si el submap permanece activo, ejecuta `hyprctl dispatch 'hl.dsp.submap("reset")'`.
 - **El texto no se pega:** comprueba que `wl-copy` y `wtype` estén instalados. En terminal, confirma que su clase esté incluida en `SENDA_STT_TERMINALS`.

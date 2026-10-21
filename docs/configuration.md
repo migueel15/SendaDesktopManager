@@ -41,6 +41,7 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 | `SENDA_WEATHER_LOCATION` | Nombre de la localidad elegida, solo para mostrarlo. |
 | `SENDA_WEATHER_LAT` y `SENDA_WEATHER_LON` | Coordenadas de la localidad, entre -90 y 90 y entre -180 y 180. |
 | `SENDA_STT_MODEL` | ID del modelo de dictado activo. Predeterminado: `nemotron-3.5-streaming-0.6b-int8`. |
+| `SENDA_STT_PRELOAD` | Precarga del modelo en la shell: `true` la activa; cualquier otro valor la deja desactivada. Predeterminado: desactivada. |
 | `SENDA_STT_LANGUAGE` | Idioma del reconocimiento. Predeterminado `es`; también admite `auto` y códigos de idioma. |
 | `SENDA_STT_PASTE_MODE` | Entrega del resultado: `paste` (predeterminado) o `clipboard`. |
 | `SENDA_STT_SHORTCUT` | Atajo de Hyprland para iniciar y detener el dictado. Predeterminado: `ALT + ntilde` (Alt + ñ). |
