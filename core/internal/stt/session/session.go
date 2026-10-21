@@ -85,6 +85,8 @@ type Deps struct {
 	Settings       stt.Settings
 	ModelDir       string
 	CleanupTimeout time.Duration
+	// Standby true is equivalent to --standby: preload, emit loaded, then wait for start or cancel.
+	Standby bool
 }
 
 const deliveryTimeout = 5 * time.Second
