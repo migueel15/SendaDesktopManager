@@ -11,6 +11,10 @@ Flickable {
     contentHeight: column.implicitHeight
     clip: true
 
+    readonly property bool shortcutReady: typeof SendaSttSettings.shortcut !== "undefined"
+        && SendaSttSettings.shortcut !== null
+        && typeof SendaSttSettings.shortcut.shortcut === "string"
+
     function displayShortcut(value) {
         return value.replace(/ntilde/gi, "ñ").replace(/ALT/gi, "Alt")
             .replace(/SUPER/gi, "Super").replace(/CTRL|CONTROL/gi, "Ctrl")
@@ -270,15 +274,16 @@ Flickable {
         }
         Text {
             Layout.fillWidth: true
-            text: `Actual: ${root.displayShortcut(SendaSttSettings.shortcut.shortcut || "ALT + ntilde")}`
+            text: `Actual: ${root.displayShortcut(root.shortcutReady ? (SendaSttSettings.shortcut.shortcut || "ALT + ntilde") : "ALT + ntilde")}`
             color: Theme.colors.text
             font.family: Theme.font.base.family
             font.pixelSize: Theme.scaled(12)
         }
         Text {
             Layout.fillWidth: true
-            text: SendaSttSettings.shortcut.loaded ? "Módulo cargado en Hyprland" : "Módulo no cargado en Hyprland"
-            color: SendaSttSettings.shortcut.loaded ? Theme.colors.success : Theme.colors.warning
+            visible: root.shortcutReady
+            text: root.shortcutReady && SendaSttSettings.shortcut.loaded ? "Módulo cargado en Hyprland" : "Módulo no cargado en Hyprland"
+            color: root.shortcutReady && SendaSttSettings.shortcut.loaded ? Theme.colors.success : Theme.colors.warning
             font.family: Theme.font.overlay.family
             font.pixelSize: Theme.scaled(11)
         }
@@ -287,10 +292,12 @@ Flickable {
             SettingsField {
                 id: shortcutField
                 Layout.fillWidth: true
+                visible: root.shortcutReady
                 placeholder: "Alt + ñ"
-                text: root.displayShortcut(SendaSttSettings.shortcut.shortcut || "ALT + ntilde")
+                text: root.displayShortcut(root.shortcutReady ? (SendaSttSettings.shortcut.shortcut || "ALT + ntilde") : "ALT + ntilde")
             }
             SettingsButton {
+                visible: root.shortcutReady
                 label: "Guardar atajo"
                 primary: true
                 enabled: !SendaSttSettings.busy && shortcutField.text.trim().length > 0
@@ -299,7 +306,8 @@ Flickable {
         }
         Text {
             Layout.fillWidth: true
-            text: SendaSttSettings.shortcut.path ? `Archivo: ${SendaSttSettings.shortcut.path}` : ""
+            visible: root.shortcutReady && !!SendaSttSettings.shortcut.path
+            text: root.shortcutReady ? `Archivo: ${SendaSttSettings.shortcut.path || ""}` : ""
             color: Theme.colors.overlay
             font.family: Theme.font.overlay.family
             font.pixelSize: Theme.scaled(11)
@@ -307,8 +315,8 @@ Flickable {
         }
         Text {
             Layout.fillWidth: true
-            visible: SendaSttSettings.shortcut.exists && !SendaSttSettings.shortcut.loaded
-            text: `El archivo existe, pero el módulo no está cargado. Añade esta línea a tu configuración de Hyprland:\n${SendaSttSettings.shortcut.requireLine || 'require("modules.senda_binds")'}`
+            visible: root.shortcutReady && !!SendaSttSettings.shortcut.exists && !SendaSttSettings.shortcut.loaded
+            text: root.shortcutReady ? `El archivo existe, pero el módulo no está cargado. Añade esta línea a tu configuración de Hyprland:\n${SendaSttSettings.shortcut.requireLine || 'require("modules.senda_binds")'}` : ""
             color: Theme.colors.warning
             font.family: Theme.font.overlay.family
             font.pixelSize: Theme.scaled(11)
@@ -316,13 +324,13 @@ Flickable {
         }
         SettingsButton {
             Layout.alignment: Qt.AlignLeft
-            visible: !SendaSttSettings.shortcut.exists
+            visible: root.shortcutReady && !SendaSttSettings.shortcut.exists
             label: "Crear módulo"
             enabled: !SendaSttSettings.busy
             onClicked: SendaSttSettings.applyShortcut()
         }
         Repeater {
-            model: SendaSttSettings.shortcut.conflicts || []
+            model: root.shortcutReady ? (SendaSttSettings.shortcut.conflicts || []) : []
             delegate: Text {
                 required property string modelData
                 Layout.fillWidth: true
