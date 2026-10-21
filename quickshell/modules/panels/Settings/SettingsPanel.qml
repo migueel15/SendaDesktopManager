@@ -19,6 +19,7 @@ Item {
         { label: "Apariencia" },
         { label: "Calendario" },
         { label: "Tiempo" },
+        { label: "Dictado" },
         { label: "Actualización" }
     ]
     property int currentSection: 0
@@ -26,6 +27,7 @@ Item {
     onVisibleChanged: {
         if (visible) {
             SendaSettings.refresh();
+            SendaSttSettings.refresh();
         }
     }
 
@@ -166,6 +168,11 @@ Item {
                     }
 
                     WeatherSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    SttSettingsPage {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }
