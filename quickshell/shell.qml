@@ -13,6 +13,7 @@ import qs.modules.panels
 import Quickshell.Wayland
 
 import qs.modules.wallpaper
+import qs.modules.stt
 
 ShellRoot {
 	id: root
@@ -34,6 +35,8 @@ ShellRoot {
 	BottomRightCorner {}
 
 	VolumeOSD {}
+
+	SttDock {}
 
 	Variants {
 		id: panelCtrl
