@@ -67,6 +67,10 @@ type fakeEngine struct {
 	release chan struct{} // when set, Start blocks until closed
 }
 
+func (*fakeEngine) Prepare(context.Context, stt.EngineOptions) (stt.Standby, error) {
+	return nil, stt.ErrNotImplemented
+}
+
 func (e *fakeEngine) Start(ctx context.Context, _ stt.EngineOptions) (stt.Stream, error) {
 	if e.release != nil {
 		select {

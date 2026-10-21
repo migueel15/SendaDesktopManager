@@ -20,6 +20,10 @@ import (
 
 type signalEngine struct{}
 
+func (signalEngine) Prepare(context.Context, stt.EngineOptions) (stt.Standby, error) {
+	return nil, stt.ErrNotImplemented
+}
+
 func (signalEngine) Start(context.Context, stt.EngineOptions) (stt.Stream, error) {
 	return &signalStream{results: make(chan stt.Result)}, nil
 }

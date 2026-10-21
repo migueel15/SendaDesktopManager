@@ -10,6 +10,9 @@ Singleton {
 
     readonly property string binaryPath: Quickshell.env("SENDA_BIN") || "senda"
 
+    // Standby contract: preparing loads without recording; loaded enters standby.
+    // start moves standby to starting, then ready enters listening. Cancel during
+    // preparing/standby (or stop before start) ends normally; load failures emit error.
     property string phase: "idle"
     property string transcript: ""
     property string errorMessage: ""

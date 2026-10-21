@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	KeyPreload      = "SENDA_STT_PRELOAD"
 	KeyModel        = "SENDA_STT_MODEL"
 	KeyLanguage     = "SENDA_STT_LANGUAGE"
 	KeyPasteMode    = "SENDA_STT_PASTE_MODE"
@@ -33,6 +34,7 @@ type Settings struct {
 	PasteMode         PasteMode
 	Shortcut          string
 	Terminals         []string
+	Preload           bool
 }
 
 var modelPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
@@ -57,6 +59,7 @@ func LoadSettings(values map[string]string) Settings {
 	if v := strings.TrimSpace(values[KeyShortcut]); shortcutPattern.MatchString(v) {
 		s.Shortcut = v
 	}
+	s.Preload = strings.TrimSpace(values[KeyPreload]) == "true"
 	var terminals []string
 	for _, v := range strings.Split(values[KeyTerminals], ",") {
 		v = strings.TrimSpace(v)

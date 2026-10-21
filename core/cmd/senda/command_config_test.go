@@ -42,7 +42,7 @@ func TestConfigSTTDefaultsAndPersistence(t *testing.T) {
 		return result.Values
 	}
 	defaults := map[string]string{stt.KeyModel: stt.DefaultModelID, stt.KeyLanguage: "es",
-		stt.KeyPasteMode: "paste", stt.KeyShortcut: stt.DefaultShortcut, stt.KeyTerminals: strings.Join(stt.DefaultTerminals, ",")}
+		stt.KeyPreload: "false", stt.KeyPasteMode: "paste", stt.KeyShortcut: stt.DefaultShortcut, stt.KeyTerminals: strings.Join(stt.DefaultTerminals, ",")}
 	for key, want := range defaults {
 		if got := get()[key]; got != want {
 			t.Errorf("default %s = %q, want %q", key, got, want)
@@ -149,6 +149,70 @@ func TestReadChangesValidatesFontScale(t *testing.T) {
 	for _, input := range []string{`{"SENDA_UI_FONT_SCALE":"79"}`, `{"SENDA_UI_FONT_SCALE":"151"}`, `{"SENDA_UI_FONT_SCALE":"1.1"}`, `{"SENDA_UI_FONT_SCALE":"grande"}`} {
 		if _, err := readChanges(strings.NewReader(input)); err == nil {
 			t.Fatalf("readChanges(%s) accepted an invalid scale", input)
+		}
+	}
+}
+
+func TestConfigSTTPreload(t *testing.T) {
+	if stt.LoadSettings(nil).Preload {
+		t.Fatal("preload should default to false")
+	}
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	for _, value := range []string{"", "true", "false", "true", ""} {
+		cmd := configSetCmd()
+		cmd.SetIn(strings.NewReader(`{"SENDA_STT_PRELOAD":"` + value + `"}`))
+		cmd.SetOut(io.Discard)
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("set preload %q: %v", value, err)
+		}
+		values, err := config.Load(paths.ConfigFile())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := values[stt.KeyPreload]; got != value {
+			t.Fatalf("persisted preload = %q, want %q", got, value)
+		}
+		if got := stt.LoadSettings(values).Preload; got != (value == "true") {
+			t.Fatalf("loaded preload = %v for %q", got, value)
+		}
+		cmd = configGetCmd()
+		var out bytes.Buffer
+		cmd.SetOut(&out)
+		if err := cmd.Execute(); err != nil {
+			t.Fatal(err)
+		}
+		var result struct {
+			Values map[string]string `json:"values"`
+		}
+		if err := json.Unmarshal(out.Bytes(), &result); err != nil {
+			t.Fatal(err)
+		}
+		want := value
+		if want == "" {
+			want = "false"
+		}
+		if got := result.Values[stt.KeyPreload]; got != want {
+			t.Fatalf("get preload = %q, want %q", got, want)
+		}
+	}
+}
+
+func TestConfigRejectsInvalidSTTPreload(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	if err := config.Set(paths.ConfigFile(), map[string]string{stt.KeyPreload: "true"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, value := range []string{"yes", "1", "TRUE", "False", " true "} {
+		cmd := configSetCmd()
+		cmd.SetIn(strings.NewReader(`{"SENDA_STT_PRELOAD":"` + value + `"}`))
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		if err := cmd.Execute(); err == nil {
+			t.Fatalf("accepted preload %q", value)
+		}
+		values, err := config.Load(paths.ConfigFile())
+		if err != nil || values[stt.KeyPreload] != "true" {
+			t.Fatalf("rejected write changed config: %v, %v", values, err)
 		}
 	}
 }

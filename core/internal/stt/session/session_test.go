@@ -79,6 +79,10 @@ func TestEOFAndContextDuringStarting(t *testing.T) {
 
 type engineFunc func(context.Context, stt.EngineOptions) (stt.Stream, error)
 
+func (engineFunc) Prepare(context.Context, stt.EngineOptions) (stt.Standby, error) {
+	return nil, stt.ErrNotImplemented
+}
+
 func (f engineFunc) Start(ctx context.Context, o stt.EngineOptions) (stt.Stream, error) {
 	return f(ctx, o)
 }

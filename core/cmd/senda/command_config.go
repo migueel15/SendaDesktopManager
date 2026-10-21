@@ -43,6 +43,7 @@ var editableSettings = map[string]bool{
 	keyWeatherLon:         true,
 	keyUIFontScale:        true,
 	stt.KeyLanguage:       true,
+	stt.KeyPreload:        true,
 	stt.KeyPasteMode:      true,
 	stt.KeyTerminals:      true,
 }
@@ -77,6 +78,7 @@ func configGetCmd() *cobra.Command {
 					keyWeatherLat:      values[keyWeatherLat],
 					keyWeatherLon:      values[keyWeatherLon],
 					keyUIFontScale:     values[keyUIFontScale],
+					stt.KeyPreload:     strconv.FormatBool(sttSettings.Preload),
 					stt.KeyModel:       sttSettings.ModelID,
 					stt.KeyLanguage:    sttSettings.Language,
 					stt.KeyPasteMode:   string(sttSettings.PasteMode),
@@ -140,6 +142,10 @@ func validateSetting(key, value string) error {
 		return validateCoordinate(key, strings.TrimSpace(value), 180)
 	case keyUIFontScale:
 		return validateFontScale(strings.TrimSpace(value))
+	case stt.KeyPreload:
+		if value != "" && value != "true" && value != "false" {
+			return fmt.Errorf("%s must be true or false", stt.KeyPreload)
+		}
 	case stt.KeyPasteMode:
 		if value != "" && value != string(stt.PasteDirect) && value != string(stt.PasteClipboard) {
 			return fmt.Errorf("%s must be paste or clipboard", stt.KeyPasteMode)
