@@ -2,7 +2,6 @@
 package models
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
@@ -34,7 +33,20 @@ func Catalog() []Entry {
 		LicenseURL: "https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b",
 		Languages:  []string{"es"}, LanguageOption: true,
 		Files: ModelFiles{Encoder: "encoder.int8.onnx", Decoder: "decoder.int8.onnx", Joiner: "joiner.int8.onnx", Tokens: "tokens.txt"},
-	}}
+	},
+		{ID: "nemotron-speech-streaming-en-0.6b-int8", Name: "Nemotron Speech Streaming EN 0.6B INT8", Archive: "sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25",
+			URL: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemotron-speech-streaming-en-0.6b-560ms-int8-2026-04-25.tar.bz2", SHA256: "78e2b79fcf7271553a74402a76b771b09ea40117a39566a79f52235b23db6358", SizeBytes: 463945051,
+			License: "NVIDIA Open Model License", LicenseURL: "https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b", Languages: []string{"en"},
+			Files: ModelFiles{Encoder: "encoder.int8.onnx", Decoder: "decoder.int8.onnx", Joiner: "joiner.int8.onnx", Tokens: "tokens.txt"}},
+		{ID: "zipformer-en-20m-int8", Name: "Streaming Zipformer EN 20M INT8", Archive: "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+			URL: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2", SHA256: "9c559283e8498d3fe95913c79ca1cb454bb26281ac2b102b41306c7d752765d9", SizeBytes: 127887156,
+			License: "Apache 2.0", LicenseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17", Languages: []string{"en"},
+			Files: ModelFiles{Encoder: "encoder-epoch-99-avg-1.int8.onnx", Decoder: "decoder-epoch-99-avg-1.int8.onnx", Joiner: "joiner-epoch-99-avg-1.int8.onnx", Tokens: "tokens.txt"}},
+		{ID: "zipformer-zh-en-int8", Name: "Streaming Zipformer ZH/EN INT8", Archive: "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20",
+			URL: "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2", SHA256: "27ffbd9ee24ad186d99acc2f6354d7992b27bcab490812510665fa8f9389c5f8", SizeBytes: 511274346,
+			License: "Apache 2.0", LicenseURL: "https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20", Languages: []string{"zh", "en"},
+			Files: ModelFiles{Encoder: "encoder-epoch-99-avg-1.int8.onnx", Decoder: "decoder-epoch-99-avg-1.int8.onnx", Joiner: "joiner-epoch-99-avg-1.int8.onnx", Tokens: "tokens.txt"}},
+	}
 }
 
 type Store struct {
@@ -46,15 +58,6 @@ type Store struct {
 func NewStore(dir string) *Store {
 	return &Store{Dir: dir, Catalog: Catalog(), Client: http.DefaultClient}
 }
-func (*Store) List(string) ([]Status, error) { return nil, stt.ErrNotImplemented }
-func (*Store) Install(context.Context, string, func(int64, int64)) error {
-	return stt.ErrNotImplemented
-}
-func (*Store) Remove(string) error { return stt.ErrNotImplemented }
-
-// Installed and ModelDir return zero values until model storage is implemented.
-func (*Store) Installed(string) bool  { return false }
-func (*Store) ModelDir(string) string { return "" }
 
 var ErrUnknownModel = errors.New("modelo desconocido")
 var ErrChecksum = errors.New("la suma de comprobación del modelo no coincide")
