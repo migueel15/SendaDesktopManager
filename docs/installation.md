@@ -45,15 +45,16 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Bluetooth | `bluez`, `bluez-utils`, `blueberry` |
    | Brillo de monitores externos | `ddcutil` |
    | Sonidos del sistema | `ffmpeg`, `sound-theme-freedesktop` |
-   | Enlaces y scripts | `xdg-utils`, `jq`, `python` |
+   | Enlaces, dictado y scripts | `xdg-utils`, `jq`, `python`, `wl-clipboard`, `wtype`, `pipewire` |
    | Fuentes | `inter-font`, `ttf-nerd-fonts-symbols` |
 
    Las dependencias con comando se buscan en `PATH`; las fuentes, el tema de sonidos y `bluez` se comprueban con `pacman -Q`.
 3. Crea `~/.config/senda/config` si no existe.
 4. Descarga, verifica e instala los archivos de Quickshell de la última release.
 5. Detiene cualquier instancia de Quickshell lanzada a mano y crea la unidad de usuario `~/.config/systemd/user/senda.service`, la habilita y la arranca.
+6. Crea `~/.config/hypr/modules/senda_binds.lua` si no existe. Si Hyprland aún no carga el módulo, indica que añadas `require("modules.senda_binds")` a `hyprland.lua`; no modifica la configuración de Hyprland. El motor y los modelos de dictado se instalan por separado desde Ajustes → Dictado o con `senda stt runtime install` y `senda stt models install <id>`.
 
-Desde ese momento Senda arranca sola en cada inicio de sesión. No hace falta añadir nada a la configuración de Hyprland; si la tuya lanza `senda shell run`, quita esa línea.
+Desde ese momento Senda arranca sola en cada inicio de sesión; no hace falta modificar `hyprland.lua` para que arranque el servicio. Para activar el atajo, sí debes añadir manualmente `require("modules.senda_binds")` a `hyprland.lua` si todavía no carga ese módulo. Si tu configuración lanza `senda shell run`, quita esa línea.
 
 ### El servicio `senda.service`
 
@@ -98,6 +99,7 @@ Pide confirmación (`-y` la omite) y después:
 
 1. Detiene, deshabilita y elimina `senda.service`.
 2. Detiene Quickshell y el puente de Discord si siguen en marcha.
-3. Elimina `~/.local/share/senda`, `~/.config/senda`, `~/.local/state/senda` (incluido el token de Google Calendar) y el propio binario.
+3. Intenta cancelar el dictado. Si existe el módulo `~/.config/hypr/modules/senda_binds.lua`, lo sustituye por una versión desactivada y trata de recargar Hyprland; si falla, muestra un aviso. Indica que puedes quitar el `require` de `hyprland.lua`.
+4. Elimina `~/.local/share/senda` (incluidos los modelos y el entorno del motor), `~/.config/senda`, `~/.local/state/senda` (incluido el token de Google Calendar) y el propio binario.
 
 No elimina los paquetes instalados con pacman. Se niega a ejecutarse cuando `SENDA_HOME` está definido, para no borrar un checkout de desarrollo.
