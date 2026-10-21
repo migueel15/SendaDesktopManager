@@ -10,8 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/release"
+	"github.com/migueel15/SendaDesktopManager/core/internal/stt/engine"
 )
 
 // Pacman is the package manager boundary used by the dependency step.
@@ -27,17 +29,22 @@ type Pacman interface {
 // Options holds the environment and external commands that Run uses. Tests
 // replace them with fakes; the command wires the real implementations.
 type Options struct {
-	In              io.Reader
-	Out             io.Writer
-	Getenv          func(string) string
-	Euid            int
-	OSReleasePath   string
-	LookPath        func(file string) (string, error)
-	Pacman          Pacman
-	Executable      func() (string, error)
-	StartShell      func(exe string) error
-	ReleaseAPI      string
-	ReleaseDownload string
+	In               io.Reader
+	Out              io.Writer
+	Getenv           func(string) string
+	Euid             int
+	OSReleasePath    string
+	LookPath         func(file string) (string, error)
+	Pacman           Pacman
+	Executable       func() (string, error)
+	StartShell       func(exe string) error
+	RuntimeInstalled func() bool
+	InstallRuntime   func(context.Context, io.Writer) error
+	BindsPath        func() string
+	EnsureBinds      func(path, executable string) (bool, error)
+	BindsLoaded      func(context.Context) (bool, error)
+	ReleaseAPI       string
+	ReleaseDownload  string
 }
 
 // checksumsAsset is the checksums file published with every release.
@@ -71,9 +78,15 @@ func Run(ctx context.Context, opts Options) error {
 	if err := installQuickshell(ctx, opts); err != nil {
 		return err
 	}
+	if err := ensureRuntime(ctx, opts, reader); err != nil {
+		return err
+	}
 
 	exe, err := resolveExecutable(opts.Executable)
 	if err != nil {
+		return err
+	}
+	if err := ensureBinds(ctx, opts, exe); err != nil {
 		return err
 	}
 	if err := opts.StartShell(exe); err != nil {
@@ -81,6 +94,62 @@ func Run(ctx context.Context, opts Options) error {
 	}
 	fmt.Fprintln(opts.Out, "Servicio senda.service instalado y activo; Senda arrancará en cada inicio de sesión")
 	fmt.Fprintln(opts.Out, "Si tu configuración de Hyprland lanza 'senda shell run', quita esa línea")
+	return nil
+}
+
+func ensureRuntime(ctx context.Context, opts Options, in *bufio.Reader) error {
+	installed := opts.RuntimeInstalled
+	if installed == nil {
+		installed = engine.RuntimeInstalled
+	}
+	if installed() {
+		fmt.Fprintln(opts.Out, "Motor de dictado ya instalado")
+		return nil
+	}
+	fmt.Fprint(opts.Out, "¿Instalar el motor de dictado? [s/N] ")
+	line, _ := in.ReadString('\n')
+	if !strings.EqualFold(strings.TrimSpace(line), "s") {
+		fmt.Fprintln(opts.Out, "El dictado no funcionará hasta instalar el motor con `senda stt runtime install`")
+		return nil
+	}
+	install := opts.InstallRuntime
+	if install == nil {
+		install = engine.InstallRuntime
+	}
+	if err := install(ctx, opts.Out); err != nil {
+		return fmt.Errorf("instalar motor de dictado: %w", err)
+	}
+	fmt.Fprintln(opts.Out, "Motor de dictado instalado")
+	return nil
+}
+
+func ensureBinds(ctx context.Context, opts Options, exe string) error {
+	path := opts.BindsPath
+	if path == nil {
+		path = binds.Path
+	}
+	ensure := opts.EnsureBinds
+	if ensure == nil {
+		ensure = binds.EnsureDefault
+	}
+	created, err := ensure(path(), exe)
+	if err != nil {
+		return fmt.Errorf("crear módulo de atajos de dictado: %w", err)
+	}
+	if created {
+		fmt.Fprintln(opts.Out, "Módulo de atajos de dictado creado:", path())
+	}
+	loaded := opts.BindsLoaded
+	if loaded == nil {
+		loaded = func(ctx context.Context) (bool, error) { return binds.Loaded(ctx, nil) }
+	}
+	ok, err := loaded(ctx)
+	if err != nil {
+		fmt.Fprintln(opts.Out, "No se pudo comprobar si Hyprland carga el módulo de atajos:", err)
+	}
+	if err != nil || !ok {
+		fmt.Fprintln(opts.Out, "Añade esta línea a tu configuración de Hyprland para activar el dictado:", binds.RequireLine())
+	}
 	return nil
 }
 
