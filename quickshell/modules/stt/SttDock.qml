@@ -9,7 +9,7 @@ Scope {
     id: root
 
     LazyLoader {
-        active: SendaStt.dockVisible
+        active: SendaStt.dockVisible && SendaStt.phase !== "standby"
 
         PanelWindow {
             property bool entered: false
@@ -24,7 +24,7 @@ Scope {
             implicitWidth: Math.min(screen.width - Theme.spacing.xl * 2, 560)
             implicitHeight: dockLayout.implicitHeight + Theme.spacing.md * 2
             color: "transparent"
-            mask: Region {}
+            mask: Region { item: content }
 
             Rectangle {
                 id: content
@@ -43,6 +43,12 @@ Scope {
                 Component.onCompleted: Qt.callLater(() => rootWindow.entered = true)
                 Behavior on y {
                     NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easing }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.AllButtons
+                    onWheel: wheel => wheel.accepted = true
                 }
 
                 ColumnLayout {
@@ -65,7 +71,9 @@ Scope {
 
                         Text {
                             Layout.fillWidth: true
-                            text: SendaStt.phase === "starting" ? "Cargando el modelo…"
+                            text: SendaStt.phase === "preparing" ? "Preparando el modelo…"
+                                : SendaStt.phase === "standby" ? "Modelo preparado"
+                                : SendaStt.phase === "starting" ? "Cargando el modelo…"
                                 : SendaStt.phase === "listening" ? "Escuchando"
                                 : SendaStt.phase === "stopping" || SendaStt.phase === "delivering" ? "Procesando…"
                                 : SendaStt.phase === "error" ? SendaStt.errorMessage : "Dictado"
@@ -75,15 +83,40 @@ Scope {
                         }
                     }
 
-                    Text {
+                    Flickable {
+                        id: transcriptView
                         Layout.fillWidth: true
                         visible: SendaStt.transcript !== ""
-                        text: SendaStt.transcript
-                        color: Theme.colors.textMuted
-                        font: Theme.font.body
-                        wrapMode: Text.Wrap
-                        maximumLineCount: 3
-                        elide: Text.ElideLeft
+                        implicitHeight: Math.min(transcriptText.implicitHeight, transcriptMetrics.height * 3)
+                        contentWidth: width
+                        contentHeight: transcriptText.implicitHeight
+                        clip: true
+                        flickableDirection: Flickable.VerticalFlick
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        function followTranscript() {
+                            cancelFlick();
+                            contentY = Math.max(0, contentHeight - height);
+                        }
+
+                        onContentHeightChanged: Qt.callLater(followTranscript)
+                        onHeightChanged: Qt.callLater(followTranscript)
+
+                        FontMetrics {
+                            id: transcriptMetrics
+                            font: Theme.font.body
+                        }
+
+                        Text {
+                            id: transcriptText
+                            width: transcriptView.width
+                            text: SendaStt.transcript
+                            color: Theme.colors.textMuted
+                            font: Theme.font.body
+                            textFormat: Text.PlainText
+                            wrapMode: Text.Wrap
+                            onTextChanged: Qt.callLater(transcriptView.followTranscript)
+                        }
                     }
                 }
             }
