@@ -9,6 +9,7 @@ import (
 	"io"
 	"slices"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -108,18 +109,21 @@ type fakeSubmap struct {
 	enters     int
 	resets     int
 	resetCtxOK []bool
+	calls      []string
 }
 
 func (m *fakeSubmap) Enter(context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.enters++
+	m.calls = append(m.calls, "enter")
 	return m.enterErr
 }
 func (m *fakeSubmap) Reset(ctx context.Context) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.resets++
+	m.calls = append(m.calls, "reset")
 	m.resetCtxOK = append(m.resetCtxOK, ctx.Err() == nil)
 	return nil
 }
@@ -536,5 +540,143 @@ func TestAC2SubmapUnavailableDoesNotBlockSession(t *testing.T) {
 	run.wait(t)
 	if got := r.deliv.delivered(); !slices.Equal(got, []string{"texto"}) {
 		t.Errorf("delivered = %v", got)
+	}
+}
+
+func TestAC4F002SessionResetsBeforeEnterAndOnExit(t *testing.T) {
+	for _, exit := range []string{"stop", "cancel", "eof", "context", "engine-error", "enter-error"} {
+		t.Run(exit, func(t *testing.T) {
+			engine := &fakeEngine{}
+			r := newRig(engine, newStream("texto"))
+			if exit == "engine-error" {
+				engine.err = errors.New("engine failed")
+			}
+			if exit == "enter-error" {
+				r.submap.enterErr = errors.New("bind failed")
+			}
+			run := start(t, context.Background(), r.deps)
+			if exit != "engine-error" && exit != "enter-error" {
+				run.waitEvent(t, stt.EventReady)
+				switch exit {
+				case "eof":
+					run.stdin.Close()
+				case "context":
+					run.cancel()
+				default:
+					run.send(exit)
+				}
+			}
+			run.wait(t)
+			r.submap.mu.Lock()
+			calls := slices.Clone(r.submap.calls)
+			r.submap.mu.Unlock()
+			if !slices.Equal(calls, []string{"reset", "enter", "reset"}) {
+				t.Errorf("submap calls = %v", calls)
+			}
+			assertResetWithLiveContext(t, r)
+		})
+	}
+}
+
+type f002Standby struct {
+	loaded          chan struct{}
+	loadErr         error
+	stream          *fakeStream
+	begins, cancels atomic.Int32
+}
+
+func (s *f002Standby) Loaded() <-chan struct{} { return s.loaded }
+func (s *f002Standby) Err() error              { return s.loadErr }
+func (s *f002Standby) Begin(context.Context) (stt.Stream, error) {
+	s.begins.Add(1)
+	return s.stream, nil
+}
+func (s *f002Standby) Cancel(context.Context) error { s.cancels.Add(1); return nil }
+
+type f002Engine struct {
+	standby *f002Standby
+	starts  atomic.Int32
+	invoked chan struct{}
+}
+
+func (e *f002Engine) Prepare(context.Context, stt.EngineOptions) (stt.Standby, error) {
+	e.invoked <- struct{}{}
+	return e.standby, nil
+}
+func (e *f002Engine) Start(context.Context, stt.EngineOptions) (stt.Stream, error) {
+	e.starts.Add(1)
+	e.invoked <- struct{}{}
+	return e.standby.stream, nil
+}
+
+func TestAC7F002StandbyWaitsForStartAndDelivers(t *testing.T) {
+	s := &f002Standby{loaded: make(chan struct{}), stream: newStream("hola mundo")}
+	e := &f002Engine{standby: s, invoked: make(chan struct{}, 1)}
+	r := newRig(&fakeEngine{}, s.stream)
+	r.deps.Engine, r.deps.Standby = e, true
+	run := start(t, context.Background(), r.deps)
+	close(s.loaded)
+	run.waitEvent(t, stt.EventLoaded)
+	if s.begins.Load() != 0 || e.starts.Load() != 0 || has(run.out.events(t), stt.EventReady) {
+		t.Fatal("microphone opened before start")
+	}
+	run.send(stt.CommandStart)
+	run.waitEvent(t, stt.EventReady)
+	run.send(stt.CommandStop)
+	run.wait(t)
+	if s.begins.Load() != 1 || e.starts.Load() != 0 {
+		t.Errorf("Begin=%d Start=%d", s.begins.Load(), e.starts.Load())
+	}
+	if got := types(run.out.events(t)); !slices.Equal(got, []stt.EventType{stt.EventLoaded, stt.EventReady, stt.EventFinal, stt.EventDelivered}) {
+		t.Errorf("events = %v", got)
+	}
+	if !slices.Equal(r.deliv.delivered(), []string{"hola mundo"}) {
+		t.Errorf("delivered = %v", r.deliv.delivered())
+	}
+}
+
+func TestAC8F002StandbyCancelAndLoadFailure(t *testing.T) {
+	for _, phase := range []string{"preparing", "standby", "load-error"} {
+		t.Run(phase, func(t *testing.T) {
+			s := &f002Standby{loaded: make(chan struct{}), stream: newStream("ignored")}
+			if phase == "load-error" {
+				s.loadErr = errors.New("model load failed")
+			}
+			e := &f002Engine{standby: s, invoked: make(chan struct{}, 1)}
+			r := newRig(&fakeEngine{}, s.stream)
+			r.deps.Engine, r.deps.Standby = e, true
+			run := start(t, context.Background(), r.deps)
+			select {
+			case <-e.invoked:
+			case <-time.After(time.Second):
+				t.Fatal("engine was not invoked")
+			}
+			if phase != "preparing" {
+				close(s.loaded)
+			}
+			if phase == "standby" {
+				run.waitEvent(t, stt.EventLoaded)
+			}
+			if phase != "load-error" {
+				run.send(stt.CommandCancel)
+			}
+			select {
+			case err := <-run.done:
+				events := run.out.events(t)
+				if phase == "load-error" {
+					if !errors.Is(err, s.loadErr) || !has(events, stt.EventError) || has(events, stt.EventLoaded) {
+						t.Errorf("load failure = %v, events %v", err, events)
+					}
+				} else if err != nil || has(events, stt.EventError) || !has(events, stt.EventCancelled) || s.cancels.Load() != 1 {
+					t.Errorf("cancel = %v, events %v, Cancel=%d", err, events, s.cancels.Load())
+				}
+			case <-time.After(time.Second):
+				t.Fatal("standby session did not terminate")
+			}
+			if s.begins.Load() != 0 || e.starts.Load() != 0 {
+				t.Error("microphone opened without start")
+			}
+			assertNoDelivery(t, r)
+		})
 	}
 }

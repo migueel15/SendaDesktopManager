@@ -2,9 +2,16 @@ package deliver
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"slices"
+	"strconv"
+	"strings"
+	"syscall"
 	"testing"
+	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 )
@@ -110,5 +117,58 @@ func TestAC5EmptyTextDoesNothing(t *testing.T) {
 		if len(r.calls) != 0 {
 			t.Fatalf("Deliver(%q) ran %+v", text, r.calls)
 		}
+	}
+}
+
+// The fake wl-copy exits while its child keeps the inherited stdout open.
+func TestAC1F002ClipboardChildDoesNotBlock(t *testing.T) {
+	for _, deliver := range []bool{false, true} {
+		t.Run(fmt.Sprintf("deliver=%t", deliver), func(t *testing.T) {
+			dir := t.TempDir()
+			pid, copied := filepath.Join(dir, "child.pid"), filepath.Join(dir, "copied.txt")
+			script := "#!/bin/sh\ncat > '" + copied + "'\nsleep 10 &\necho $! > '" + pid + "'\n"
+			if err := os.WriteFile(filepath.Join(dir, "wl-copy"), []byte(script), 0700); err != nil {
+				t.Fatal(err)
+			}
+			t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+			t.Cleanup(func() {
+				data, _ := os.ReadFile(pid)
+				n, _ := strconv.Atoi(strings.TrimSpace(string(data)))
+				if n > 0 {
+					_ = syscall.Kill(n, syscall.SIGKILL)
+				}
+			})
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			done := make(chan error, 1)
+			go func() {
+				if deliver {
+					done <- New(stt.ExecRunner).Deliver(ctx, "hola", settings(stt.PasteClipboard))
+					return
+				}
+				_, err := stt.DetachedRunner(ctx, strings.NewReader("hola"), "wl-copy")
+				done <- err
+			}()
+			select {
+			case err := <-done:
+				if err != nil {
+					t.Fatal(err)
+				}
+			case <-time.After(time.Second):
+				t.Fatal("clipboard command did not return in less than 1 s")
+			}
+			data, err := os.ReadFile(copied)
+			if err != nil || string(data) != "hola" {
+				t.Fatalf("copied = %q, %v", data, err)
+			}
+			data, err = os.ReadFile(pid)
+			n, parseErr := strconv.Atoi(strings.TrimSpace(string(data)))
+			if err != nil || parseErr != nil || n <= 0 {
+				t.Fatalf("child pid = %q, %v, %v", data, err, parseErr)
+			}
+			if err := syscall.Kill(n, 0); err != nil {
+				t.Fatalf("child should still be alive: %v", err)
+			}
+		})
 	}
 }
