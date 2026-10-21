@@ -11,6 +11,7 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/googlecalendar"
 	"github.com/migueel15/SendaDesktopManager/core/internal/location"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 	"github.com/spf13/cobra"
 )
 
@@ -41,6 +42,9 @@ var editableSettings = map[string]bool{
 	keyWeatherLat:         true,
 	keyWeatherLon:         true,
 	keyUIFontScale:        true,
+	stt.KeyLanguage:       true,
+	stt.KeyPasteMode:      true,
+	stt.KeyTerminals:      true,
 }
 
 func configCmd() *cobra.Command {
@@ -64,6 +68,7 @@ func configGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			sttSettings := stt.LoadSettings(values)
 			result := map[string]any{
 				"values": map[string]string{
 					keyGoogleClientID:  values[keyGoogleClientID],
@@ -72,6 +77,11 @@ func configGetCmd() *cobra.Command {
 					keyWeatherLat:      values[keyWeatherLat],
 					keyWeatherLon:      values[keyWeatherLon],
 					keyUIFontScale:     values[keyUIFontScale],
+					stt.KeyModel:       sttSettings.ModelID,
+					stt.KeyLanguage:    sttSettings.Language,
+					stt.KeyPasteMode:   string(sttSettings.PasteMode),
+					stt.KeyShortcut:    sttSettings.Shortcut,
+					stt.KeyTerminals:   strings.Join(sttSettings.Terminals, ","),
 				},
 				"googleClientSecretConfigured": values[keyGoogleClientSecret] != "",
 				"embeddedGoogleClient":         googlecalendar.HasEmbeddedCredentials(),
@@ -130,6 +140,10 @@ func validateSetting(key, value string) error {
 		return validateCoordinate(key, strings.TrimSpace(value), 180)
 	case keyUIFontScale:
 		return validateFontScale(strings.TrimSpace(value))
+	case stt.KeyPasteMode:
+		if value != "" && value != string(stt.PasteDirect) && value != string(stt.PasteClipboard) {
+			return fmt.Errorf("%s must be paste or clipboard", stt.KeyPasteMode)
+		}
 	}
 	return nil
 }

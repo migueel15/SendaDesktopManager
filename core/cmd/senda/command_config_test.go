@@ -1,10 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/config"
+	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 )
 
 func TestReadChangesAcceptsEditableSettings(t *testing.T) {
@@ -14,6 +20,79 @@ func TestReadChangesAcceptsEditableSettings(t *testing.T) {
 	}
 	if changes["SENDA_WEATHER_LAT"] != "39.4" {
 		t.Fatalf("changes = %v", changes)
+	}
+}
+
+func TestConfigSTTDefaultsAndPersistence(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	get := func() map[string]string {
+		t.Helper()
+		cmd := configGetCmd()
+		var out bytes.Buffer
+		cmd.SetOut(&out)
+		if err := cmd.Execute(); err != nil {
+			t.Fatal(err)
+		}
+		var result struct {
+			Values map[string]string `json:"values"`
+		}
+		if err := json.Unmarshal(out.Bytes(), &result); err != nil {
+			t.Fatal(err)
+		}
+		return result.Values
+	}
+	defaults := map[string]string{stt.KeyModel: stt.DefaultModelID, stt.KeyLanguage: "es",
+		stt.KeyPasteMode: "paste", stt.KeyShortcut: stt.DefaultShortcut, stt.KeyTerminals: strings.Join(stt.DefaultTerminals, ",")}
+	for key, want := range defaults {
+		if got := get()[key]; got != want {
+			t.Errorf("default %s = %q, want %q", key, got, want)
+		}
+	}
+	if err := config.Set(paths.ConfigFile(), map[string]string{stt.KeyModel: "other-model", stt.KeyShortcut: "SUPER + n"}); err != nil {
+		t.Fatal(err)
+	}
+	cmd := configSetCmd()
+	cmd.SetIn(strings.NewReader(`{"SENDA_STT_LANGUAGE":"auto","SENDA_STT_PASTE_MODE":"clipboard","SENDA_STT_TERMINALS":"foot,kitty"}`))
+	cmd.SetOut(io.Discard)
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	for key, want := range map[string]string{stt.KeyModel: "other-model", stt.KeyShortcut: "SUPER + n",
+		stt.KeyLanguage: "auto", stt.KeyPasteMode: "clipboard", stt.KeyTerminals: "foot,kitty"} {
+		if got := get()[key]; got != want {
+			t.Errorf("persisted %s = %q, want %q", key, got, want)
+		}
+	}
+	cmd = configSetCmd()
+	cmd.SetIn(strings.NewReader(`{"SENDA_STT_LANGUAGE":"","SENDA_STT_PASTE_MODE":"","SENDA_STT_TERMINALS":""}`))
+	cmd.SetOut(io.Discard)
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{stt.KeyLanguage, stt.KeyPasteMode, stt.KeyTerminals} {
+		if got := get()[key]; got != defaults[key] {
+			t.Errorf("reset %s = %q", key, got)
+		}
+	}
+}
+
+func TestConfigRefusesSTTProtectedKeysAndInvalidPasteMode(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	for _, input := range []string{
+		`{"SENDA_STT_MODEL":"model"}`, `{"SENDA_STT_SHORTCUT":"ALT + a"}`,
+		`{"SENDA_STT_PASTE_MODE":"invalid"}`, `{"SENDA_STT_PASTE_MODE":"PASTE"}`,
+	} {
+		cmd := configSetCmd()
+		cmd.SetIn(strings.NewReader(input))
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		if err := cmd.Execute(); err == nil {
+			t.Fatalf("accepted %s", input)
+		}
+	}
+	values, err := config.Load(paths.ConfigFile())
+	if err != nil || len(values) != 0 {
+		t.Fatalf("rejected writes changed config: %v, %v", values, err)
 	}
 }
 
