@@ -579,19 +579,52 @@ func TestAC4F002SessionResetsBeforeEnterAndOnExit(t *testing.T) {
 }
 
 type f002Standby struct {
+	mu              sync.Mutex
 	loaded          chan struct{}
 	loadErr         error
 	stream          *fakeStream
 	begins, cancels atomic.Int32
 }
 
-func (s *f002Standby) Loaded() <-chan struct{} { return s.loaded }
-func (s *f002Standby) Err() error              { return s.loadErr }
+func (s *f002Standby) Loaded() <-chan struct{} {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.loaded
+}
+func (s *f002Standby) Err() error { return s.loadErr }
 func (s *f002Standby) Begin(context.Context) (stt.Stream, error) {
 	s.begins.Add(1)
-	return s.stream, nil
+	s.mu.Lock()
+	s.loaded = make(chan struct{})
+	s.mu.Unlock()
+	return &f002StandbyStream{fakeStream: s.stream, standby: s}, nil
 }
 func (s *f002Standby) Cancel(context.Context) error { s.cancels.Add(1); return nil }
+
+// Each dictation rearms Loaded and publishes a fresh load on completion.
+type f002StandbyStream struct {
+	*fakeStream
+	standby *f002Standby
+	once    sync.Once
+}
+
+func (s *f002StandbyStream) reload() {
+	s.once.Do(func() {
+		s.standby.mu.Lock()
+		defer s.standby.mu.Unlock()
+		close(s.standby.loaded)
+	})
+}
+func (s *f002StandbyStream) Stop(ctx context.Context) (string, error) {
+	text, err := s.fakeStream.Stop(ctx)
+	s.reload()
+	return text, err
+}
+func (s *f002StandbyStream) Cancel(ctx context.Context) error {
+	err := s.fakeStream.Cancel(ctx)
+	s.reload()
+	return err
+}
 
 type f002Engine struct {
 	standby *f002Standby
@@ -623,11 +656,21 @@ func TestAC7F002StandbyWaitsForStartAndDelivers(t *testing.T) {
 	run.send(stt.CommandStart)
 	run.waitEvent(t, stt.EventReady)
 	run.send(stt.CommandStop)
-	run.wait(t)
-	if s.begins.Load() != 1 || e.starts.Load() != 0 {
-		t.Errorf("Begin=%d Start=%d", s.begins.Load(), e.starts.Load())
+	run.waitEvent(t, stt.EventDelivered)
+	waitResidentEvent(t, run, stt.EventLoaded, 2)
+	run.send(stt.CommandCancel)
+	select {
+	case err := <-run.done:
+		if err != nil {
+			t.Fatalf("Run: %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("resident session did not terminate after cancel")
 	}
-	if got := types(run.out.events(t)); !slices.Equal(got, []stt.EventType{stt.EventLoaded, stt.EventReady, stt.EventFinal, stt.EventDelivered}) {
+	if s.begins.Load() != 1 || e.starts.Load() != 0 || s.cancels.Load() != 1 {
+		t.Errorf("Begin=%d Start=%d Standby.Cancel=%d", s.begins.Load(), e.starts.Load(), s.cancels.Load())
+	}
+	if got := types(run.out.events(t)); !slices.Equal(got, []stt.EventType{stt.EventLoaded, stt.EventReady, stt.EventFinal, stt.EventDelivered, stt.EventLoaded, stt.EventCancelled}) {
 		t.Errorf("events = %v", got)
 	}
 	if !slices.Equal(r.deliv.delivered(), []string{"hola mundo"}) {

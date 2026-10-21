@@ -40,9 +40,11 @@ const (
 // Result contains the complete accumulated transcription so far.
 type Result struct{ Text string }
 
-// Stream closes Results when the engine ends for any reason. Afterwards Err
-// returns nil for a normal Stop/Cancel, or the asynchronous process/audio/decode
-// error. Stop and Cancel are idempotent and kill the process on ctx expiry.
+// Stream represents one dictation and closes Results when that dictation ends.
+// Afterwards Err returns nil for a normal Stop/Cancel, or the asynchronous
+// process/audio/decode error. Stop and Cancel are idempotent for this Stream and
+// kill the process on ctx expiry. Stop returns the final text; Cancel discards it.
+// A standby Stream closes the microphone but keeps the model resident on success.
 type Stream interface {
 	Results() <-chan Result
 	Err() error
@@ -52,12 +54,22 @@ type Stream interface {
 
 // Standby holds a prepared engine without opening the microphone. Loaded closes
 // when loading finishes, including on failure; after it closes, Err reports the
-// load error (nil on success). Begin opens the microphone and returns the current
-// Stream. Cancel releases the engine without delivering a transcription.
+// load error (nil on success). Begin waits internally for loaded, opens the
+// microphone and waits for that dictation's ready before returning a new Stream.
+// After Stream.Stop returns the final text or Stream.Cancel finishes, Loaded and
+// Begin are valid again for the next dictation. Loaded is rearmed for the next loaded event,
+// after the microphone closes and a fresh recognition stream is created.
+// Standby.Cancel terminates the process and releases the model. The session
+// guarantees that Begin and Standby.Cancel are never concurrent.
 //
-// Session standby states: preparing → standby → starting (start) → listening → …
-// A successful load emits loaded; a failed load emits error. Cancel in preparing
-// or standby terminates without error. Stop before start is equivalent to cancel.
+// Session standby states: preparing → standby → starting → listening → stopping
+// → delivering → standby, repeated for each dictation. Cancel while listening
+// discards the text and returns to standby. Each return to standby emits loaded,
+// after delivered on Stop (after final alone when the text is empty), or after
+// cancelled on Cancel. A delivery or microphone failure emits error and ends
+// both session and process; the shell is responsible for relaunching them.
+// Cancel or Stop in standby terminates without error; signals and stdin EOF
+// terminate cleanly as well.
 type Standby interface {
 	Loaded() <-chan struct{}
 	Err() error
@@ -67,8 +79,13 @@ type Standby interface {
 
 type Engine interface {
 	// Prepare loads the model without recording. The engine protocol uses
-	// --standby, emits {"event":"loaded"}, then waits for start or cancel on
-	// stdin before launching pw-record (only start opens the microphone).
+	// --standby, emits loaded and waits for start, stop or cancel on stdin.
+	// Only start opens the microphone. Stop emits final, closes the microphone,
+	// creates a fresh stream and emits loaded again without unloading the model;
+	// cancel while listening does the same without final. Stop/cancel while idle
+	// exit with code 0; stdin EOF and SIGTERM terminate the process cleanly.
+	// A dictation error emits error and terminates. Without standby, Start retains
+	// its single-dictation lifetime.
 	Prepare(ctx context.Context, opts EngineOptions) (Standby, error)
 	Start(ctx context.Context, opts EngineOptions) (Stream, error)
 }
@@ -81,7 +98,8 @@ type Deliverer interface {
 
 // Submap.Enter registers a dynamic Esc bind and returns ErrSubmapUnavailable
 // when the binds module is absent. The session continues without Esc and warns
-// on stderr. Reset removes that bind and is idempotent.
+// on stderr. Reset removes that bind and is idempotent. In resident mode the
+// session repeats Reset before Enter for every dictation.
 type Submap interface {
 	Enter(ctx context.Context) error
 	Reset(ctx context.Context) error
