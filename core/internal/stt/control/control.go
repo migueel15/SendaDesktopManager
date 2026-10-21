@@ -69,13 +69,13 @@ type Shell interface {
 	Call(ctx context.Context, function string) (string, error)
 }
 
-// Toggle checks status and runs preflight only when idle, before toggling.
+// Toggle runs preflight before starting dictation, including from preload states.
 func Toggle(ctx context.Context, shell Shell, preflight func() error) (string, error) {
 	status, err := Status(ctx, shell)
 	if err != nil {
 		return "", err
 	}
-	if status == "idle" {
+	if status == "idle" || status == "preparing" || status == "standby" {
 		if err := preflight(); err != nil {
 			return "", err
 		}
@@ -105,7 +105,7 @@ func Cancel(ctx context.Context, shell Shell) error {
 	return err
 }
 
-// CancelAndReset always resets the Escape submap, including when IPC fails.
+// CancelAndReset always calls Reset, including when IPC fails.
 func CancelAndReset(ctx context.Context, shell Shell, submap stt.Submap) error {
 	ipcErr := Cancel(ctx, shell)
 	resetCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)

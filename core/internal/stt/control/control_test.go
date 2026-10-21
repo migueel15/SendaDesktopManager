@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
+	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 )
 
 type failingShell struct{ calls []string }
@@ -20,21 +20,20 @@ func (s *failingShell) Call(_ context.Context, function string) (string, error) 
 
 func TestCancelResetsSubmapWhenShellFails(t *testing.T) {
 	shell := &failingShell{}
-	var got []string
-	runner := func(_ context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
-		got = append([]string{name}, args...)
-		return []byte("ok\n"), nil
-	}
-	err := CancelAndReset(context.Background(), shell, binds.NewSubmap(runner))
+	resets := 0
+	submap := &resetStub{reset: func(context.Context) error {
+		resets++
+		return nil
+	}}
+	err := CancelAndReset(context.Background(), shell, submap)
 	if err == nil || !strings.Contains(err.Error(), "shell desconectada") {
 		t.Fatalf("CancelAndReset error = %v", err)
 	}
 	if !reflect.DeepEqual(shell.calls, []string{"cancel"}) {
 		t.Fatalf("shell calls = %v", shell.calls)
 	}
-	want := []string{"hyprctl", "dispatch", `hl.dsp.submap("reset")`}
-	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("reset command = %v, want %v", got, want)
+	if resets != 1 {
+		t.Fatalf("Reset calls = %d, want 1", resets)
 	}
 }
 
@@ -59,5 +58,51 @@ func TestCheckMicrophoneAcceptsDefaultSource(t *testing.T) {
 	}
 	if err := CheckMicrophone(context.Background(), runner); err != nil {
 		t.Fatalf("CheckMicrophone = %v", err)
+	}
+}
+
+type resetStub struct{ reset func(context.Context) error }
+
+func (*resetStub) Enter(context.Context) error       { return stt.ErrSubmapUnavailable }
+func (s *resetStub) Reset(ctx context.Context) error { return s.reset(ctx) }
+
+func TestCancelResetSurvivesCancelledContextAndJoinsErrors(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	resetFailure := errors.New("reset failed")
+	resets := 0
+	submap := &resetStub{reset: func(ctx context.Context) error {
+		resets++
+		if ctx.Err() != nil {
+			t.Fatalf("reset context = %v", ctx.Err())
+		}
+		if _, ok := ctx.Deadline(); !ok {
+			t.Fatal("reset context has no timeout")
+		}
+		return resetFailure
+	}}
+	err := CancelAndReset(ctx, &failingShell{}, submap)
+	if resets != 1 || !errors.Is(err, resetFailure) || !strings.Contains(err.Error(), "shell desconectada") {
+		t.Fatalf("CancelAndReset = %v, Reset calls = %d", err, resets)
+	}
+}
+
+func TestTogglePreloadChecksModelAndRuntime(t *testing.T) {
+	for _, state := range []string{"idle", "preparing", "standby"} {
+		for _, failure := range []error{ErrNoModel, ErrNoRuntime} {
+			t.Run(state+"/"+failure.Error(), func(t *testing.T) {
+				shell := &fakeShell{status: state}
+				checks := okChecks()
+				if failure == ErrNoModel {
+					checks.ModelInstalled = func(string) bool { return false }
+				} else {
+					checks.RuntimeInstalled = func() bool { return false }
+				}
+				_, err := Toggle(context.Background(), shell, func() error { return Preflight(context.Background(), stt.LoadSettings(nil), checks) })
+				if !errors.Is(err, failure) || shell.called("toggle") {
+					t.Fatalf("Toggle = %v, calls = %v", err, shell.calls)
+				}
+			})
+		}
 	}
 }

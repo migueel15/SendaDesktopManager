@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -34,7 +33,7 @@ func TestAC7NormalizeShortcutRejectsInvalid(t *testing.T) {
 	}
 }
 
-func TestAC4F002RenderBindsAndSubmap(t *testing.T) {
+func TestAC4F002RenderToggleWithoutEscape(t *testing.T) {
 	out, err := Render("ALT + ntilde", "senda")
 	if err != nil {
 		t.Fatalf("Render = %v", err)
@@ -134,35 +133,24 @@ func TestAC7SubmapUnavailableWhenModuleNotLoaded(t *testing.T) {
 	}
 }
 
-func TestAC4F002DynamicEscapeCommands(t *testing.T) {
-	var calls [][]string
-	run := func(_ context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
-		calls = append(calls, append([]string{name}, args...))
-		if len(args) > 0 && args[0] == "repl" {
-			return []byte("true"), nil
-		}
-		return []byte("ok"), nil
+func TestAC4F002EscapeDisabledWithoutHyprlandCalls(t *testing.T) {
+	run := func(context.Context, io.Reader, string, ...string) ([]byte, error) {
+		t.Fatal("disabled Escape control must not call Hyprland")
+		return nil, errors.New("unexpected call")
 	}
-	submap := NewSubmap(run)
-	if err := submap.Enter(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	if err := submap.Reset(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	if err := submap.Reset(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	if len(calls) != 4 {
-		t.Fatalf("calls = %v", calls)
-	}
-	bind := calls[1]
-	if len(bind) != 3 || bind[0] != "hyprctl" || bind[1] != "eval" || !strings.Contains(bind[2], `hl.bind("escape", hl.dsp.exec_cmd(`) || !strings.Contains(bind[2], " stt cancel") {
-		t.Errorf("dynamic Escape registration = %v", bind)
-	}
-	for _, call := range calls[2:] {
-		if !reflect.DeepEqual(call, []string{"hyprctl", "eval", `hl.unbind("escape")`}) {
-			t.Errorf("Reset = %v", call)
+	for _, runner := range []stt.Runner{run, nil} {
+		submap := NewSubmap(runner)
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		for _, ctx := range []context.Context{context.Background(), ctx} {
+			for range 2 {
+				if err := submap.Enter(ctx); !errors.Is(err, stt.ErrSubmapUnavailable) {
+					t.Fatalf("Enter = %v, want ErrSubmapUnavailable", err)
+				}
+				if err := submap.Reset(ctx); err != nil {
+					t.Fatalf("Reset = %v, want nil", err)
+				}
+			}
 		}
 	}
 }
