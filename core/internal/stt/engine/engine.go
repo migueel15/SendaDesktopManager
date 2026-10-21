@@ -21,11 +21,6 @@ type engine struct{ python string }
 
 func New() stt.Engine { return &engine{} }
 
-// Prepare reserves the standby protocol; loading is implemented separately.
-func (e *engine) Prepare(ctx context.Context, opts stt.EngineOptions) (stt.Standby, error) {
-	return nil, stt.ErrNotImplemented
-}
-
 func (e *engine) Start(ctx context.Context, opts stt.EngineOptions) (stt.Stream, error) {
 	m, err := stt.ReadManifest(opts.ModelDir)
 	if err != nil {

@@ -23,6 +23,7 @@ def main():
     p.add_argument("--manifest", required=True)
     p.add_argument("--provider", choices=["cpu", "cuda"], required=True)
     p.add_argument("--language", default="auto")
+    p.add_argument("--standby", action="store_true")
     p.add_argument("--wav")  # Manual validation uses the same decode/flush path.
     a = p.parse_args()
     import numpy as np
@@ -51,6 +52,13 @@ def main():
             commands.put(line.strip())
         commands.put("cancel")
     threading.Thread(target=receive, daemon=True).start()
+    if a.standby:
+        emit("loaded")
+        command = commands.get()
+        if command in ("cancel", "stop"):
+            return
+        if command != "start":
+            raise RuntimeError("Orden del motor no válida")
     proc, wav = None, None
     diagnostics = deque(maxlen=8)
     segments, previous = [], ""

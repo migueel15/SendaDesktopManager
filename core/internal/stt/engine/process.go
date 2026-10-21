@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -16,6 +17,10 @@ import (
 )
 
 type process struct {
+	loaded      chan struct{}
+	loadedOnce  sync.Once
+	standby     bool
+	begun       bool
 	cmd         *exec.Cmd
 	stdin       io.WriteCloser
 	results     chan stt.Result
@@ -41,10 +46,22 @@ func (b *diagnostics) Write(data []byte) (int, error) {
 func (b *diagnostics) String() string { return string(*b) }
 
 func startProcess(ctx context.Context, cmd *exec.Cmd) (*process, error) {
+	p, err := launchProcess(ctx, cmd, false)
+	if err != nil {
+		return nil, err
+	}
+	return p.waitReady(ctx)
+}
+
+func prepareProcess(ctx context.Context, cmd *exec.Cmd) (*process, error) {
+	return launchProcess(ctx, cmd, true)
+}
+
+func launchProcess(ctx context.Context, cmd *exec.Cmd, standby bool) (*process, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	p := &process{cmd: cmd, results: make(chan stt.Result, 1), ready: make(chan struct{}), done: make(chan struct{})}
+	p := &process{loaded: make(chan struct{}), standby: standby, cmd: cmd, results: make(chan stt.Result, 1), ready: make(chan struct{}), done: make(chan struct{})}
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	var stderr diagnostics
 	cmd.Stderr = io.MultiWriter(os.Stderr, &stderr)
@@ -71,6 +88,10 @@ func startProcess(ctx context.Context, cmd *exec.Cmd) (*process, error) {
 		case <-p.done:
 		}
 	}()
+	return p, nil
+}
+
+func (p *process) waitReady(ctx context.Context) (*process, error) {
 	select {
 	case <-p.ready:
 		return p, nil
@@ -78,7 +99,12 @@ func startProcess(ctx context.Context, cmd *exec.Cmd) (*process, error) {
 		if err := p.Err(); err != nil {
 			return nil, err
 		}
-		return p, nil
+		select {
+		case <-p.ready:
+			return p, nil
+		default:
+			return nil, fmt.Errorf("El motor de voz terminó antes de iniciar la grabación")
+		}
 	case <-ctx.Done():
 		p.fail(ctx.Err())
 		p.terminate()
@@ -101,7 +127,7 @@ func (p *process) fail(err error) {
 }
 
 func (p *process) read(stdout io.ReadCloser, stderr *diagnostics) {
-	ready, final := false, false
+	loaded, ready, final := false, false, false
 	scanner := bufio.NewScanner(stdout)
 	scanner.Buffer(make([]byte, 4096), 4*1024*1024)
 	for scanner.Scan() {
@@ -115,7 +141,10 @@ func (p *process) read(stdout io.ReadCloser, stderr *diagnostics) {
 			break
 		}
 		switch {
-		case e.Type == stt.EventReady && !ready:
+		case e.Type == stt.EventLoaded && p.standby && !loaded && !ready:
+			loaded = true
+			p.loadedOnce.Do(func() { close(p.loaded) })
+		case e.Type == stt.EventReady && !ready && (!p.standby || (loaded && p.hasBegun())):
 			ready = true
 			close(p.ready)
 		case ready && (e.Type == stt.EventPartial || e.Type == stt.EventFinal):
@@ -148,9 +177,10 @@ func (p *process) read(stdout io.ReadCloser, stderr *diagnostics) {
 	syscall.Kill(-p.cmd.Process.Pid, syscall.SIGKILL)
 	p.stdin.Close()
 	p.mu.Lock()
-	if p.err == nil && (err != nil || !ready || (!final && p.command != stt.CommandCancel)) {
+	if p.err == nil && (err != nil || (p.command != stt.CommandCancel && (!ready || !final))) {
 		p.err = fmt.Errorf("El motor de voz terminó inesperadamente: %v %s", err, stderr.String())
 	}
+	p.loadedOnce.Do(func() { close(p.loaded) })
 	close(p.results)
 	close(p.done)
 	p.mu.Unlock()
@@ -207,4 +237,88 @@ func (p *process) Stop(ctx context.Context) (string, error) { return p.finish(ct
 func (p *process) Cancel(ctx context.Context) error {
 	_, err := p.finish(ctx, stt.CommandCancel)
 	return err
+}
+
+// Prepare starts loading the recognizer without opening the microphone.
+func (e *engine) Prepare(ctx context.Context, opts stt.EngineOptions) (stt.Standby, error) {
+	m, err := stt.ReadManifest(opts.ModelDir)
+	if err != nil {
+		return nil, fmt.Errorf("No se pudo leer el modelo: %w", err)
+	}
+	if m.Kind != "transducer" || m.Encoder == "" || m.Decoder == "" || m.Joiner == "" || m.Tokens == "" {
+		return nil, fmt.Errorf("El manifiesto del modelo no contiene un transductor completo")
+	}
+	python := e.python
+	if python == "" {
+		python = Python()
+	}
+	if python == "" {
+		return nil, fmt.Errorf("El entorno de reconocimiento de voz no está instalado")
+	}
+	provider := opts.Provider
+	if provider == "" || provider == "auto" {
+		provider = RuntimeProvider()
+		if provider == "" {
+			provider = "cpu"
+		}
+	}
+	if provider != "cpu" && provider != "cuda" {
+		return nil, fmt.Errorf("Proveedor de reconocimiento no válido: %s", provider)
+	}
+	path, err := writeScript(filepath.Dir(filepath.Dir(python)))
+	if err != nil {
+		return nil, fmt.Errorf("No se pudo preparar el motor de voz: %w", err)
+	}
+	manifest, _ := json.Marshal(m)
+	return prepareProcess(ctx, exec.Command(python, "-u", path, "--model-dir", opts.ModelDir,
+		"--manifest", string(manifest), "--provider", provider, "--language", opts.Language, "--standby"))
+}
+
+func (p *process) Loaded() <-chan struct{} { return p.loaded }
+
+func (p *process) hasBegun() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.begun
+}
+
+func (p *process) Begin(ctx context.Context) (stt.Stream, error) {
+	select {
+	case <-p.loaded:
+	case <-ctx.Done():
+		p.fail(ctx.Err())
+		p.terminate()
+		<-p.done
+		return nil, ctx.Err()
+	}
+	p.mu.Lock()
+	if p.err != nil {
+		err := p.err
+		p.mu.Unlock()
+		return nil, err
+	}
+	if p.command != "" {
+		p.mu.Unlock()
+		return nil, fmt.Errorf("El motor de voz ya está detenido")
+	}
+	if err := ctx.Err(); err != nil {
+		p.mu.Unlock()
+		p.fail(err)
+		p.terminate()
+		<-p.done
+		return nil, err
+	}
+	if !p.begun {
+		p.begun = true
+		if _, err := io.WriteString(p.stdin, stt.CommandStart+"\n"); err != nil {
+			p.err = fmt.Errorf("No se pudo iniciar la grabación: %w", err)
+			p.terminate()
+		}
+	}
+	p.mu.Unlock()
+	stream, err := p.waitReady(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return stream, nil
 }
