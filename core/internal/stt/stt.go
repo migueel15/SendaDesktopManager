@@ -101,7 +101,11 @@ func ExecRunner(ctx context.Context, stdin io.Reader, name string, args ...strin
 
 // DetachedRunner executes a command without waiting for background children to
 // close inherited stdout. It has the same call signature as Runner.
-// Implementation is deferred to the delivery adapter task.
 func DetachedRunner(ctx context.Context, stdin io.Reader, name string, args ...string) ([]byte, error) {
-	return nil, ErrNotImplemented
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Stdin = stdin
+	// Nil stdout and stderr use the null device, rather than Output's pipes.
+	// Wait still reaps the command and reports its exit status, but does not
+	// wait for a clipboard owner that inherited its output descriptors.
+	return nil, cmd.Run()
 }
