@@ -531,3 +531,180 @@ func TestUnresponsiveDeliveryHasDeadline(t *testing.T) {
 	}
 	assertResetWithLiveContext(t, r)
 }
+
+type standbyEngineFunc func(context.Context) (stt.Standby, error)
+
+func (f standbyEngineFunc) Prepare(ctx context.Context, _ stt.EngineOptions) (stt.Standby, error) {
+	return f(ctx)
+}
+func (standbyEngineFunc) Start(context.Context, stt.EngineOptions) (stt.Stream, error) {
+	panic("standby must use Begin")
+}
+
+type lifecycleStandby struct {
+	*f002Standby
+	begin  func(context.Context) (stt.Stream, error)
+	cancel func(context.Context) error
+}
+
+func (s lifecycleStandby) Begin(ctx context.Context) (stt.Stream, error) { return s.begin(ctx) }
+func (s lifecycleStandby) Cancel(ctx context.Context) error              { return s.cancel(ctx) }
+
+func await[T any](t *testing.T, ch <-chan T) T {
+	t.Helper()
+	select {
+	case v := <-ch:
+		return v
+	case <-time.After(time.Second):
+		t.Fatal("operation timed out")
+		var zero T
+		return zero
+	}
+}
+
+func assertCleanCancellation(t *testing.T, run *running, r *rig) {
+	t.Helper()
+	if err := await(t, run.done); err != nil {
+		t.Fatalf("Run = %v", err)
+	}
+	events := run.out.events(t)
+	if !has(events, stt.EventCancelled) || has(events, stt.EventError) || r.notif.count() != 0 {
+		t.Fatalf("events = %v, notifications = %d", events, r.notif.count())
+	}
+	assertNoDelivery(t, r)
+}
+
+func TestStandbyParentCancellation(t *testing.T) {
+	for _, phase := range []string{"prepare-call", "loading", "standby"} {
+		t.Run(phase, func(t *testing.T) {
+			r := newRig(&fakeEngine{}, newStream("ignored"))
+			r.deps.Standby = true
+			entered := make(chan struct{})
+			s := &f002Standby{loaded: make(chan struct{}), stream: r.stream}
+			if phase == "standby" {
+				close(s.loaded)
+			}
+			r.deps.Engine = standbyEngineFunc(func(ctx context.Context) (stt.Standby, error) {
+				close(entered)
+				if phase == "prepare-call" {
+					<-ctx.Done()
+					return nil, context.Canceled
+				}
+				return lifecycleStandby{f002Standby: s, cancel: func(context.Context) error { return context.Canceled }}, nil
+			})
+			run := start(t, context.Background(), r.deps)
+			await(t, entered)
+			if phase == "standby" {
+				run.waitEvent(t, stt.EventLoaded)
+			}
+			run.cancel()
+			assertCleanCancellation(t, run, r)
+		})
+	}
+}
+
+func TestStandbyCancelDuringPrepareKeepsContextAlive(t *testing.T) {
+	for _, command := range []string{stt.CommandCancel, stt.CommandStop} {
+		t.Run(command, func(t *testing.T) {
+			r := newRig(&fakeEngine{}, newStream("ignored"))
+			r.deps.Standby = true
+			entered := make(chan context.Context, 1)
+			release := make(chan struct{})
+			cancelled := make(chan error, 1)
+			s := &f002Standby{loaded: make(chan struct{}), stream: r.stream}
+			r.deps.Engine = standbyEngineFunc(func(ctx context.Context) (stt.Standby, error) {
+				entered <- ctx
+				<-release
+				return lifecycleStandby{f002Standby: s, cancel: func(cleanupCtx context.Context) error {
+					cancelled <- errors.Join(ctx.Err(), cleanupCtx.Err())
+					return nil
+				}}, nil
+			})
+			run := start(t, context.Background(), r.deps)
+			prepareCtx := await(t, entered)
+			run.send(command)
+			select {
+			case <-prepareCtx.Done():
+				t.Fatal("Prepare cancelled before Standby.Cancel")
+			case <-time.After(20 * time.Millisecond):
+			}
+			close(release)
+			assertCleanCancellation(t, run, r)
+			if err := await(t, cancelled); err != nil {
+				t.Fatalf("Cancel received expired contexts: %v", err)
+			}
+			if prepareCtx.Err() == nil {
+				t.Fatal("session context was not released")
+			}
+		})
+	}
+}
+
+func TestStandbyCancelDuringBeginWaitsForStream(t *testing.T) {
+	for _, fail := range []bool{false, true} {
+		t.Run(fmt.Sprintf("begin-fails=%t", fail), func(t *testing.T) {
+			r := newRig(&fakeEngine{}, newStream("ignored"))
+			r.deps.Standby = true
+			entered := make(chan context.Context, 1)
+			release := make(chan struct{})
+			s := &f002Standby{loaded: make(chan struct{}), stream: r.stream}
+			close(s.loaded)
+			beginErr := errors.New("Begin failed")
+			r.deps.Engine = standbyEngineFunc(func(context.Context) (stt.Standby, error) {
+				return lifecycleStandby{f002Standby: s, cancel: s.Cancel, begin: func(ctx context.Context) (stt.Stream, error) {
+					entered <- ctx
+					<-release
+					if fail {
+						return nil, beginErr
+					}
+					return r.stream, nil
+				}}, nil
+			})
+			run := start(t, context.Background(), r.deps)
+			run.waitEvent(t, stt.EventLoaded)
+			run.send(stt.CommandStart)
+			beginCtx := await(t, entered)
+			run.send(stt.CommandCancel)
+			select {
+			case <-beginCtx.Done():
+				t.Fatal("Begin context cancelled by stdin before return")
+			case <-time.After(20 * time.Millisecond):
+			}
+			if s.cancels.Load() != 0 {
+				t.Fatal("Standby.Cancel raced with Begin")
+			}
+			close(release)
+			if fail {
+				if err := await(t, run.done); !errors.Is(err, beginErr) {
+					t.Fatalf("Run = %v", err)
+				}
+				if !has(run.out.events(t), stt.EventError) || r.notif.count() != 1 {
+					t.Fatal("missing Begin failure")
+				}
+			} else {
+				assertCleanCancellation(t, run, r)
+				if _, n := r.stream.counts(); n != 1 {
+					t.Fatalf("Stream.Cancel calls = %d", n)
+				}
+			}
+			if s.cancels.Load() != 0 {
+				t.Fatal("Standby.Cancel called after Begin")
+			}
+		})
+	}
+}
+
+func TestMachineStandbyTransitions(t *testing.T) {
+	for _, exit := range []Input{InputStart, InputStop, InputCancel, InputFail} {
+		m := NewMachine()
+		for _, in := range []Input{InputPrepare, InputLoaded, exit} {
+			if _, err := m.Apply(in); err != nil {
+				t.Fatal(err)
+			}
+		}
+		want := map[Input]State{InputStart: Starting, InputStop: Cancelled, InputCancel: Cancelled, InputFail: Failed}[exit]
+		if m.State() != want {
+			t.Fatalf("state = %s, want %s", m.State(), want)
+		}
+	}
+}

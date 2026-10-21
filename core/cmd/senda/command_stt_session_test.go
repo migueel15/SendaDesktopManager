@@ -131,3 +131,34 @@ func TestSTTSessionSIGTERM(t *testing.T) {
 		}
 	}
 }
+
+type cliStandbyEngine struct{ signalEngine }
+
+func (cliStandbyEngine) Prepare(context.Context, stt.EngineOptions) (stt.Standby, error) {
+	loaded := make(chan struct{})
+	close(loaded)
+	return cliStandby{loaded}, nil
+}
+
+type cliStandby struct{ loaded chan struct{} }
+
+func (s cliStandby) Loaded() <-chan struct{}                 { return s.loaded }
+func (cliStandby) Err() error                                { return nil }
+func (cliStandby) Begin(context.Context) (stt.Stream, error) { panic("unexpected Begin") }
+func (cliStandby) Cancel(ctx context.Context) error          { return ctx.Err() }
+
+func TestSTTSessionStandbyFlag(t *testing.T) {
+	cmd := newSTTSessionCmd(func() (session.Deps, error) {
+		return session.Deps{Engine: cliStandbyEngine{}, Deliverer: signalDeliverer{}, Submap: signalSubmap{}}, nil
+	})
+	cmd.SetArgs([]string{"--standby"})
+	cmd.SetIn(strings.NewReader("cancel\n"))
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), `"event":"cancelled"`) || strings.Contains(out.String(), `"event":"ready"`) {
+		t.Fatalf("events = %s", out.String())
+	}
+}
