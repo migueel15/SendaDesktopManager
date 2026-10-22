@@ -2,7 +2,7 @@
 
 ## Estado
 
-Aceptada
+Aceptada. La decisión 4 sobre almacenamiento se sustituye por [ADR 0005](0005-tokens-en-secret-service.md).
 
 ## Contexto
 

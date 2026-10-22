@@ -36,8 +36,8 @@ func StateDir() string {
 	return filepath.Join(xdgDir("XDG_STATE_HOME", ".local/state"), appName)
 }
 
-// GoogleCalendarTokenFile stores the Google Calendar refresh token. It is
-// created with owner-only permissions.
+// GoogleCalendarTokenFile identifies the legacy token file for migration and
+// namespaces the Secret Service entry. New tokens are stored in the keyring.
 func GoogleCalendarTokenFile() string {
 	return filepath.Join(StateDir(), "google-calendar.json")
 }

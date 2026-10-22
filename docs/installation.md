@@ -46,6 +46,7 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Brillo de monitores externos | `ddcutil` |
    | Sonidos del sistema | `ffmpeg`, `sound-theme-freedesktop` |
    | Enlaces, dictado y scripts | `xdg-utils`, `jq`, `python`, `wl-clipboard`, `wtype`, `pipewire` |
+   | Acceso al keyring de Google Calendar | `libsecret`; requiere además un proveedor Secret Service configurado y desbloqueado, véase [Google Calendar](google-calendar.md) |
    | Fuentes | `inter-font`, `ttf-nerd-fonts-symbols` |
 
    Las dependencias con comando se buscan en `PATH`; las fuentes, el tema de sonidos y `bluez` se comprueban con `pacman -Q`.

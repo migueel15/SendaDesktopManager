@@ -68,7 +68,7 @@ func newFakeGoogle(t *testing.T) *fakeGoogle {
 
 func newTestClient(t *testing.T, fake *fakeGoogle, creds Credentials) (*Client, TokenStore) {
 	t.Helper()
-	store := TokenStore{Path: filepath.Join(t.TempDir(), "google-calendar.json")}
+	store := testTokenStore(filepath.Join(t.TempDir(), "google-calendar.json"))
 	client := NewClient(creds, store)
 	client.endpoints = Endpoints{
 		Auth:     "https://accounts.example.test/auth",

@@ -1,8 +1,20 @@
 # Google Calendar
 
-El dashboard muestra los eventos de tu cuenta de Google. Senda solo pide permisos de lectura y guarda un refresh token en tu equipo.
+El dashboard muestra los eventos de tu cuenta de Google. Senda solo pide permisos de lectura y guarda el refresh token en el keyring de tu sesión mediante Secret Service.
 
 ## Requisitos
+
+Para guardar tokens necesitas `secret-tool` (paquete `libsecret`) y un proveedor de Secret Service, como GNOME Keyring o KWallet con esa interfaz habilitada. Funciona en Wayland y X11; el compositor por sí solo no proporciona un keyring.
+
+En Arch Linux con Hyprland puedes instalar:
+
+```sh
+sudo pacman -S --needed libsecret gnome-keyring seahorse
+```
+
+Abre **Contraseñas y claves** (`seahorse`), crea o configura un almacén predeterminado con contraseña y desbloquéalo antes de conectar Google. GNOME Keyring puede activarse por D-Bus; el desbloqueo automático depende de la integración PAM de tu inicio de sesión. No necesitas instalar GNOME como escritorio ni iniciar otro proveedor si ya usas KWallet compatible. No dejes vacía la contraseña del almacén: el cifrado depende de su configuración.
+
+Si falta el servicio, está bloqueado y no se puede desbloquear, o falla la operación, Senda muestra un error y no guarda un token nuevo en texto plano. La instalación de paquetes no configura por sí sola el desbloqueo de la sesión. Véase el [manual de secret-tool](https://man.archlinux.org/man/secret-tool.1.en).
 
 Las releases oficiales de Senda incluyen su propio cliente OAuth. Si usas una release, no necesitas crear nada: abre el panel y pulsa **Conectar con Google**.
 
@@ -36,11 +48,13 @@ También puedes hacerlo desde la terminal con `senda calendar login`, `senda cal
 |---|---|---|
 | ID y secreto de tu cliente (opcional) | `$XDG_CONFIG_HOME/senda/config` | `0600` |
 | Cliente incluido en la release | Dentro del binario, no editable | — |
-| Refresh token | `$XDG_STATE_HOME/senda/google-calendar.json` | `0600` |
+| Refresh token | Keyring de Secret Service, entrada «Senda Google Calendar» | Cifrado y acceso gestionados por el proveedor |
 | Access token | Solo en memoria, renovado automáticamente | — |
 
-Si el archivo del token tiene permisos más abiertos que `0600`, Senda se niega a usarlo.
+El token se envía a `secret-tool` por la entrada estándar, nunca como argumento de proceso. La entrada se identifica por la aplicación, el tipo de token y un identificador derivado de la ruta de estado; no incluye el correo del usuario.
+
+Las instalaciones anteriores se migran al primer acceso a la conexión: Senda lee el archivo `$XDG_STATE_HOME/senda/google-calendar.json` (por defecto `~/.local/state/senda/google-calendar.json`), lo guarda en el keyring y solo después elimina el JSON. Rechaza archivos antiguos con permisos abiertos a otros usuarios. Si falla la migración, conserva el archivo y comunica el error. Borrar el archivo no elimina posibles copias de seguridad previas.
 
 ## Desconectar
 
-`senda calendar logout` revoca el token en Google y borra el archivo local. Si la revocación falla, el archivo local se borra igualmente y el comando lo indica.
+`senda calendar logout` necesita acceso al keyring: elimina su entrada y cualquier archivo heredado antes de solicitar la revocación en Google. Si la revocación falla, el token local ya está eliminado y el comando lo indica. Puedes completar la revocación desde las conexiones de tu cuenta de Google. Desinstalar Senda no elimina automáticamente la entrada del keyring: desconecta antes.

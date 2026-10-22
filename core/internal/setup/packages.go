@@ -24,6 +24,7 @@ var Requirements = []Requirement{
 	{Command: "ddcutil", Package: "ddcutil"},
 	{Command: "ffplay", Package: "ffmpeg"},
 	{Command: "xdg-open", Package: "xdg-utils"},
+	{Command: "secret-tool", Package: "libsecret"},
 	{Command: "python3", Package: "python"},
 	{Command: "wl-copy", Package: "wl-clipboard"},
 	{Command: "wtype", Package: "wtype"},

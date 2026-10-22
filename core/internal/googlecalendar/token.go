@@ -1,66 +1,75 @@
 // Package googlecalendar connects Senda to Google Calendar. It owns the OAuth
-// flow and the token file; callers receive only short-lived access tokens.
+// flow and secret storage; callers receive only short-lived access tokens.
 package googlecalendar
 
 import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
+	"time"
 )
 
-// ErrNotConnected means no refresh token is stored yet.
 var ErrNotConnected = errors.New("google calendar is not connected; run `senda calendar login`")
 
-// storedToken is what Senda keeps on disk between runs. Access tokens are
-// short-lived and stay in memory, so only the refresh token is written.
 type storedToken struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// TokenStore keeps the refresh token in one file that only the owner can read.
+type tokenSecrets interface {
+	Save(string) error
+	Load() (string, error)
+	Delete() error
+}
+
+// TokenStore stores tokens in Secret Service. Path identifies the legacy file
+// for migration and namespaces the keyring entry for this installation.
 type TokenStore struct {
-	Path string
+	Path    string
+	secrets tokenSecrets
 }
 
-// Save writes the refresh token atomically, so an interrupted write never
-// leaves a truncated file behind.
-func (s TokenStore) Save(refreshToken string) error {
-	dir := filepath.Dir(s.Path)
-	if err := os.MkdirAll(dir, 0o700); err != nil {
-		return err
+func (s TokenStore) backend() tokenSecrets {
+	if s.secrets != nil {
+		return s.secrets
 	}
-
-	data, err := json.Marshal(storedToken{RefreshToken: refreshToken})
-	if err != nil {
-		return err
-	}
-
-	temp, err := os.CreateTemp(dir, ".google-calendar-*.tmp")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(temp.Name())
-
-	if err := temp.Chmod(0o600); err != nil {
-		temp.Close()
-		return err
-	}
-	if _, err := temp.Write(data); err != nil {
-		temp.Close()
-		return err
-	}
-	if err := temp.Close(); err != nil {
-		return err
-	}
-	return os.Rename(temp.Name(), s.Path)
+	path, _ := filepath.Abs(s.Path)
+	sum := sha256.Sum256([]byte(path))
+	return secretService{account: hex.EncodeToString(sum[:])}
 }
 
-// Load returns the stored refresh token. It refuses a file readable by other
-// users, because that file grants access to the account.
+// Save never falls back to a plaintext file. Remove legacy data only after the
+// keyring has confirmed the write.
+func (s TokenStore) Save(token string) error {
+	if token == "" {
+		return errors.New("cannot store an empty Google token")
+	}
+	if err := s.backend().Save(token); err != nil {
+		return err
+	}
+	return s.deleteLegacy()
+}
+
 func (s TokenStore) Load() (string, error) {
+	token, err := s.backend().Load()
+	if err == nil {
+		if err := s.deleteLegacy(); err != nil {
+			return "", err
+		}
+		return token, nil
+	}
+	if !errors.Is(err, ErrNotConnected) {
+		return "", err
+	}
+	// Migrate existing installations without requiring another Google login.
 	info, err := os.Stat(s.Path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return "", ErrNotConnected
@@ -71,25 +80,82 @@ func (s TokenStore) Load() (string, error) {
 	if info.Mode().Perm()&0o077 != 0 {
 		return "", fmt.Errorf("%s has permissions %04o; expected 0600", s.Path, info.Mode().Perm())
 	}
-
 	data, err := os.ReadFile(s.Path)
 	if err != nil {
 		return "", err
 	}
-	var stored storedToken
-	if err := json.Unmarshal(data, &stored); err != nil {
-		return "", fmt.Errorf("%s is not valid: %w", s.Path, err)
+	var old storedToken
+	if err := json.Unmarshal(data, &old); err != nil {
+		return "", fmt.Errorf("invalid legacy Google token file: %w", err)
 	}
-	if stored.RefreshToken == "" {
+	if old.RefreshToken == "" {
 		return "", ErrNotConnected
 	}
-	return stored.RefreshToken, nil
+	if err := s.Save(old.RefreshToken); err != nil {
+		return "", err
+	}
+	return old.RefreshToken, nil
 }
 
-// Delete removes the token file. A missing file is not an error.
-func (s TokenStore) Delete() error {
+func (s TokenStore) deleteLegacy() error {
 	err := os.Remove(s.Path)
 	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	return err
+}
+
+func (s TokenStore) Delete() error {
+	if err := s.backend().Delete(); err != nil {
+		return err
+	}
+	return s.deleteLegacy()
+}
+
+type secretService struct{ account string }
+
+// Secrets are sent through stdin, never command arguments or error messages.
+func (s secretService) run(action, token string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+	args := []string{action}
+	if action == "store" {
+		args = append(args, "--label=Senda Google Calendar")
+	}
+	args = append(args, "application", "senda", "account", s.account, "type", "google-calendar-refresh-token")
+	cmd := exec.CommandContext(ctx, "secret-tool", args...)
+	if action == "store" {
+		cmd.Stdin = strings.NewReader(token)
+	}
+	var output, diagnostic bytes.Buffer
+	cmd.Stdout = &output
+	cmd.Stderr = &diagnostic
+	err := cmd.Run()
+	if err != nil {
+		// libsecret reports a missing match with exit 1 and no diagnostic.
+		var exit *exec.ExitError
+		if ctx.Err() == nil && errors.As(err, &exit) && exit.ExitCode() == 1 && diagnostic.Len() == 0 && action != "store" {
+			return "", ErrNotConnected
+		}
+		return "", errors.New("Google Calendar keyring unavailable: install libsecret (secret-tool) and unlock a password-protected Secret Service keyring, such as GNOME Keyring or compatible KWallet")
+	}
+	return output.String(), nil
+}
+
+func (s secretService) Save(token string) error { _, err := s.run("store", token); return err }
+func (s secretService) Load() (string, error) {
+	token, err := s.run("lookup", "")
+	if err != nil {
+		return "", err
+	}
+	if token == "" {
+		return "", ErrNotConnected
+	}
+	return token, nil
+}
+func (s secretService) Delete() error {
+	_, err := s.run("clear", "")
+	if errors.Is(err, ErrNotConnected) {
 		return nil
 	}
 	return err

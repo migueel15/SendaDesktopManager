@@ -201,9 +201,8 @@ func (c *Client) AccessToken(ctx context.Context) (string, error) {
 	return c.accessToken, nil
 }
 
-// Logout revokes the refresh token at Google and deletes the local copy. The
-// local file is removed first, so a failed revocation never leaves a usable
-// token on disk.
+// Logout removes the token from the keyring before requesting revocation at
+// Google, so failed revocation does not leave a token in application storage.
 func (c *Client) Logout(ctx context.Context) error {
 	refreshToken, err := c.store.Load()
 	if errors.Is(err, ErrNotConnected) {
