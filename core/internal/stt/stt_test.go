@@ -15,7 +15,7 @@ import (
 )
 
 func TestLoadSettings(t *testing.T) {
-	defaults := Settings{ModelID: DefaultModelID, Language: DefaultLanguage,
+	defaults := Settings{AudioDucking: true, AudioVolume: 10, ModelID: DefaultModelID, Language: DefaultLanguage,
 		PasteMode: PasteDirect, Shortcut: DefaultShortcut, Terminals: DefaultTerminals}
 	for _, values := range []map[string]string{nil, {}, {
 		KeyModel: "../escape", KeyLanguage: "invalid-language!", KeyPasteMode: "other",
@@ -29,7 +29,7 @@ func TestLoadSettings(t *testing.T) {
 	}
 	values := map[string]string{KeyModel: "other-model", KeyLanguage: "en-US", KeyPasteMode: "clipboard",
 		KeyShortcut: "SUPER + n", KeyTerminals: " kitty, ,org.example.Terminal,foot "}
-	want := Settings{ModelID: "other-model", Language: "en-US", PasteMode: PasteClipboard,
+	want := Settings{AudioDucking: true, AudioVolume: 10, ModelID: "other-model", Language: "en-US", PasteMode: PasteClipboard,
 		Shortcut: "SUPER + n", Terminals: []string{"kitty", "org.example.Terminal", "foot"}}
 	if got := LoadSettings(values); !reflect.DeepEqual(got, want) {
 		t.Errorf("LoadSettings() = %+v, want %+v", got, want)

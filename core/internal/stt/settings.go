@@ -3,12 +3,15 @@ package stt
 import (
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 )
 
 const (
+	KeyAudioDucking = "SENDA_STT_AUDIO_DUCKING"
+	KeyAudioVolume  = "SENDA_STT_AUDIO_VOLUME"
 	KeyPreload      = "SENDA_STT_PRELOAD"
 	KeyModel        = "SENDA_STT_MODEL"
 	KeyLanguage     = "SENDA_STT_LANGUAGE"
@@ -35,6 +38,8 @@ type Settings struct {
 	Shortcut          string
 	Terminals         []string
 	Preload           bool
+	AudioDucking      bool
+	AudioVolume       int
 }
 
 var modelPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
@@ -45,7 +50,7 @@ var terminalPattern = regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`)
 // LoadSettings substitutes defaults for empty or invalid values. Terminal
 // classes are comma-separated; returned slices never alias DefaultTerminals.
 func LoadSettings(values map[string]string) Settings {
-	s := Settings{ModelID: DefaultModelID, Language: DefaultLanguage, PasteMode: PasteDirect,
+	s := Settings{AudioDucking: true, AudioVolume: 10, ModelID: DefaultModelID, Language: DefaultLanguage, PasteMode: PasteDirect,
 		Shortcut: DefaultShortcut, Terminals: append([]string(nil), DefaultTerminals...)}
 	if v := strings.TrimSpace(values[KeyModel]); modelPattern.MatchString(v) {
 		s.ModelID = v
@@ -58,6 +63,10 @@ func LoadSettings(values map[string]string) Settings {
 	}
 	if v := strings.TrimSpace(values[KeyShortcut]); shortcutPattern.MatchString(v) {
 		s.Shortcut = v
+	}
+	s.AudioDucking = strings.TrimSpace(values[KeyAudioDucking]) != "false"
+	if v, err := strconv.Atoi(strings.TrimSpace(values[KeyAudioVolume])); err == nil && v >= 0 && v <= 100 {
+		s.AudioVolume = v
 	}
 	s.Preload = strings.TrimSpace(values[KeyPreload]) == "true"
 	var terminals []string

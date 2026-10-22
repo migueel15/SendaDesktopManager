@@ -44,6 +44,8 @@ var editableSettings = map[string]bool{
 	keyUIFontScale:        true,
 	stt.KeyLanguage:       true,
 	stt.KeyPreload:        true,
+	stt.KeyAudioDucking:   true,
+	stt.KeyAudioVolume:    true,
 	stt.KeyPasteMode:      true,
 	stt.KeyTerminals:      true,
 }
@@ -72,18 +74,20 @@ func configGetCmd() *cobra.Command {
 			sttSettings := stt.LoadSettings(values)
 			result := map[string]any{
 				"values": map[string]string{
-					keyGoogleClientID:  values[keyGoogleClientID],
-					keyGoogleCalendars: values[keyGoogleCalendars],
-					keyWeatherLocation: values[keyWeatherLocation],
-					keyWeatherLat:      values[keyWeatherLat],
-					keyWeatherLon:      values[keyWeatherLon],
-					keyUIFontScale:     values[keyUIFontScale],
-					stt.KeyPreload:     strconv.FormatBool(sttSettings.Preload),
-					stt.KeyModel:       sttSettings.ModelID,
-					stt.KeyLanguage:    sttSettings.Language,
-					stt.KeyPasteMode:   string(sttSettings.PasteMode),
-					stt.KeyShortcut:    sttSettings.Shortcut,
-					stt.KeyTerminals:   strings.Join(sttSettings.Terminals, ","),
+					keyGoogleClientID:   values[keyGoogleClientID],
+					keyGoogleCalendars:  values[keyGoogleCalendars],
+					keyWeatherLocation:  values[keyWeatherLocation],
+					keyWeatherLat:       values[keyWeatherLat],
+					keyWeatherLon:       values[keyWeatherLon],
+					keyUIFontScale:      values[keyUIFontScale],
+					stt.KeyPreload:      strconv.FormatBool(sttSettings.Preload),
+					stt.KeyAudioDucking: strconv.FormatBool(sttSettings.AudioDucking),
+					stt.KeyAudioVolume:  strconv.Itoa(sttSettings.AudioVolume),
+					stt.KeyModel:        sttSettings.ModelID,
+					stt.KeyLanguage:     sttSettings.Language,
+					stt.KeyPasteMode:    string(sttSettings.PasteMode),
+					stt.KeyShortcut:     sttSettings.Shortcut,
+					stt.KeyTerminals:    strings.Join(sttSettings.Terminals, ","),
 				},
 				"googleClientSecretConfigured": values[keyGoogleClientSecret] != "",
 				"embeddedGoogleClient":         googlecalendar.HasEmbeddedCredentials(),
@@ -142,9 +146,16 @@ func validateSetting(key, value string) error {
 		return validateCoordinate(key, strings.TrimSpace(value), 180)
 	case keyUIFontScale:
 		return validateFontScale(strings.TrimSpace(value))
-	case stt.KeyPreload:
+	case stt.KeyPreload, stt.KeyAudioDucking:
 		if value != "" && value != "true" && value != "false" {
-			return fmt.Errorf("%s must be true or false", stt.KeyPreload)
+			return fmt.Errorf("%s must be true or false", key)
+		}
+	case stt.KeyAudioVolume:
+		if value != "" {
+			percent, err := strconv.Atoi(value)
+			if err != nil || percent < 0 || percent > 100 {
+				return fmt.Errorf("%s must be a whole number between 0 and 100", key)
+			}
 		}
 	case stt.KeyPasteMode:
 		if value != "" && value != string(stt.PasteDirect) && value != string(stt.PasteClipboard) {

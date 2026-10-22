@@ -183,6 +183,80 @@ Flickable {
         }
 
         Rectangle {
+            id: duckingRow
+            Layout.fillWidth: true
+            implicitHeight: duckingLabel.implicitHeight + Theme.spacing.md * 2
+            radius: Theme.rounding.small
+            color: duckingMouse.containsMouse && enabled ? Theme.colors.surfaceVariant : "transparent"
+            enabled: !SendaSettings.busy && !SendaSttSettings.busy
+            opacity: enabled ? 1 : 0.4
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: Theme.spacing.md
+                spacing: Theme.spacing.sm
+
+                Text {
+                    text: SendaSttSettings.audioDuckingEnabled ? "󰄲" : "󰄱"
+                    color: SendaSttSettings.audioDuckingEnabled ? Theme.colors.primary : Theme.colors.overlay
+                    font: Theme.font.icon
+                }
+                Text {
+                    id: duckingLabel
+                    Layout.fillWidth: true
+                    text: "Atenuar volumen durante el dictado"
+                    color: Theme.colors.text
+                    font: Theme.font.body
+                }
+            }
+
+            MouseArea {
+                id: duckingMouse
+                anchors.fill: parent
+                enabled: duckingRow.enabled
+                hoverEnabled: true
+                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                // Keep the indicator bound to the saved value, even if saving fails.
+                onClicked: SendaSttSettings.setAudioDucking(!SendaSttSettings.audioDuckingEnabled)
+            }
+        }
+        RowLayout {
+            Layout.fillWidth: true
+            visible: SendaSttSettings.audioDuckingEnabled
+            enabled: !SendaSettings.busy && !SendaSttSettings.busy
+            opacity: enabled ? 1 : 0.4
+
+            Text {
+                Layout.fillWidth: true
+                text: "Volumen durante el dictado (%)"
+                color: Theme.colors.text
+                font: Theme.font.body
+            }
+            SettingsField {
+                id: dictationVolumeField
+                Layout.preferredWidth: 65
+                text: String(SendaSttSettings.audioVolume)
+                placeholder: "0–100"
+                onAccepted: if (volumeSave.enabled) volumeSave.clicked()
+            }
+            SettingsButton {
+                id: volumeSave
+                label: "Guardar"
+                enabled: /^\d{1,3}$/.test(dictationVolumeField.text.trim())
+                    && Number(dictationVolumeField.text.trim()) <= 100
+                onClicked: SendaSttSettings.setAudioVolume(Number(dictationVolumeField.text.trim()))
+            }
+        }
+        Text {
+            Layout.fillWidth: true
+            text: "Al terminar o cancelar, se recupera el volumen anterior. Los cambios se aplican al siguiente dictado."
+            color: Theme.colors.overlay
+            font.family: Theme.font.base.family
+            font.pixelSize: Theme.scaled(12)
+            wrapMode: Text.WordWrap
+        }
+
+        Rectangle {
             id: preloadRow
             Layout.fillWidth: true
             implicitHeight: preloadLabel.implicitHeight + Theme.spacing.md * 2

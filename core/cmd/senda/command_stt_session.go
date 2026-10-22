@@ -27,7 +27,8 @@ func sttSessionCmd() *cobra.Command {
 		settings := stt.LoadSettings(values)
 		return session.Deps{
 			Engine: engine.New(), Deliverer: deliver.New(stt.ExecRunner),
-			Submap: binds.NewSubmap(stt.ExecRunner), Notifier: control.NewNotifier(),
+			DuckAudio: control.DuckAudio(stt.ExecRunner, settings),
+			Submap:    binds.NewSubmap(stt.ExecRunner), Notifier: control.NewNotifier(),
 			Settings: settings, ModelDir: models.NewStore(stt.ModelsDir()).ModelDir(settings.ModelID),
 		}, nil
 	})

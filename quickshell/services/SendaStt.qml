@@ -35,7 +35,9 @@ Singleton {
     readonly property bool preloadEnabled: String(SendaSettings.values.SENDA_STT_PRELOAD || "").trim() === "true"
     readonly property string preloadConfiguration: JSON.stringify([
         root.preloadEnabled, SendaSettings.values.SENDA_STT_MODEL || "",
-        SendaSettings.values.SENDA_STT_LANGUAGE || ""
+        SendaSettings.values.SENDA_STT_LANGUAGE || "",
+        SendaSettings.values.SENDA_STT_AUDIO_DUCKING || "true",
+        SendaSettings.values.SENDA_STT_AUDIO_VOLUME || "10"
     ])
     readonly property string preloadState: root.engineCancelled || root.retiring ? "inactive"
         : root.phase === "preparing" ? "preparing"

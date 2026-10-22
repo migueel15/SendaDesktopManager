@@ -33,6 +33,17 @@ Singleton {
     readonly property string preloadState: SendaStt.preloadState
     readonly property string preloadError: SendaStt.preloadError
 
+    readonly property bool audioDuckingEnabled: String(SendaSettings.values.SENDA_STT_AUDIO_DUCKING || "true") !== "false"
+    readonly property int audioVolume: Number(SendaSettings.values.SENDA_STT_AUDIO_VOLUME || "10")
+
+    function setAudioDucking(enabled) {
+        SendaSettings.save({ SENDA_STT_AUDIO_DUCKING: enabled ? "true" : "false" }, "Atenuación de volumen guardada");
+    }
+
+    function setAudioVolume(percent) {
+        SendaSettings.save({ SENDA_STT_AUDIO_VOLUME: String(percent) }, "Volumen del dictado guardado");
+    }
+
     function setPreload(enabled) {
         SendaSettings.save({ SENDA_STT_PRELOAD: enabled ? "true" : "false" }, "Preferencia de precarga guardada");
     }

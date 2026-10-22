@@ -216,3 +216,44 @@ func TestConfigRejectsInvalidSTTPreload(t *testing.T) {
 		}
 	}
 }
+
+func TestConfigDictationVolume(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	for _, percent := range []string{"0", "35", "100"} {
+		cmd := configSetCmd()
+		cmd.SetIn(strings.NewReader(`{"SENDA_STT_AUDIO_DUCKING":"false","SENDA_STT_AUDIO_VOLUME":"` + percent + `"}`))
+		cmd.SetOut(io.Discard)
+		if err := cmd.Execute(); err != nil {
+			t.Fatal(err)
+		}
+		cmd = configGetCmd()
+		var out bytes.Buffer
+		cmd.SetOut(&out)
+		if err := cmd.Execute(); err != nil {
+			t.Fatal(err)
+		}
+		var result struct {
+			Values map[string]string `json:"values"`
+		}
+		if err := json.Unmarshal(out.Bytes(), &result); err != nil {
+			t.Fatal(err)
+		}
+		if result.Values[stt.KeyAudioVolume] != percent || result.Values[stt.KeyAudioDucking] != "false" {
+			t.Fatalf("settings did not round trip: %v", result.Values)
+		}
+	}
+	for _, changes := range []string{
+		`{"SENDA_STT_AUDIO_DUCKING":"yes"}`,
+		`{"SENDA_STT_AUDIO_VOLUME":"-1"}`,
+		`{"SENDA_STT_AUDIO_VOLUME":"101"}`,
+		`{"SENDA_STT_AUDIO_VOLUME":"2.5"}`,
+	} {
+		cmd := configSetCmd()
+		cmd.SetIn(strings.NewReader(changes))
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		if err := cmd.Execute(); err == nil {
+			t.Fatalf("accepted invalid configuration: %s", changes)
+		}
+	}
+}

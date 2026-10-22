@@ -93,6 +93,8 @@ func (m *Machine) Apply(in Input) (State, error) {
 }
 
 type Deps struct {
+	// DuckAudio returns cleanup for one active dictation, never standby.
+	DuckAudio      func(context.Context) (func(context.Context) error, error)
 	Engine         stt.Engine
 	Deliverer      stt.Deliverer
 	Submap         stt.Submap
@@ -282,7 +284,27 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 				}
 			}
 		}
-		dictate := func() error {
+		dictate := func() (dictationErr error) {
+			if deps.DuckAudio != nil {
+				audioCtx, done := context.WithTimeout(ctx, deps.CleanupTimeout)
+				restore, err := deps.DuckAudio(audioCtx)
+				done()
+				if restore != nil {
+					defer func() {
+						restoreErr := cleanup(restore)
+						// A cleanup failure must end the resident session too.
+						if restoreErr != nil {
+							if errors.Is(dictationErr, resume) {
+								dictationErr = nil
+							}
+							dictationErr = errors.Join(dictationErr, restoreErr)
+						}
+					}()
+				}
+				if err != nil {
+					return err
+				}
+			}
 			if err := cleanup(deps.Submap.Reset); err != nil {
 				return fmt.Errorf("no se pudo limpiar el atajo de Esc: %w", err)
 			}

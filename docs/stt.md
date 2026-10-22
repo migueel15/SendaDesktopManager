@@ -22,6 +22,8 @@ El atajo predeterminado es `Alt + ñ`. Púlsalo para empezar a escuchar y otra v
 
 La cancelación con `Esc` está desactivada por ahora. La sesión puede mostrar el aviso «Esc no está disponible en esta sesión.»; para cancelar, usa `senda stt cancel`. La segunda pulsación del atajo termina el dictado y entrega el texto.
 
+En Ajustes → Dictado puedes activar o desactivar «Atenuar volumen durante el dictado» y guardar el volumen deseado entre 0 y 100 %. Por defecto está activado al 10 %. Los cambios se aplican al siguiente dictado, también con el modelo precargado. Durante cada dictado con la opción activada, Senda ajusta la salida al porcentaje elegido y restaura el volumen anterior al terminar, cancelar o producirse un error. No cambia el silencio ni el volumen del micrófono. La precarga en reposo no modifica el volumen.
+
 ## Precarga del modelo
 
 En Ajustes → Dictado, el interruptor «Precargar modelo» está desactivado por defecto. Al activarlo, la shell mantiene el modelo cargado en reposo sin abrir el micrófono. El modelo predeterminado ocupa aproximadamente 475 MB en RAM o VRAM mientras está cargado, y permanece cargado entre dictados: al terminar o cancelar uno, se cierra el micrófono y se puede empezar otro sin volver a cargar el modelo. Sin precarga, cada dictado carga el modelo y lo libera al terminar o cancelarse; el micrófono solo vuelve a abrirse con una nueva pulsación.
