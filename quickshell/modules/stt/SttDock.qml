@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.common
+import qs.common.components
 import qs.services
 
 Scope {
@@ -54,12 +55,14 @@ Scope {
             WlrLayershell.namespace: "senda-stt-dock"
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
+            // The dock grows out of the bottom screen frame, like a drop.
+            readonly property int cornerSize: Theme.barBorderRadius
+
             anchors.bottom: true
-            margins.bottom: Theme.spacing.lg
             exclusiveZone: 0
 
             // Keep the layer surface stable while only the pill changes size.
-            implicitWidth: maximumWidth
+            implicitWidth: maximumWidth + cornerSize * 2
             implicitHeight: maximumHeight
             color: "transparent"
             mask: Region { item: content }
@@ -84,10 +87,18 @@ Scope {
                 y: rootWindow.height - height + Math.round(slideOffset)
                 radius: rootWindow.expanded ? Theme.rounding.large : Theme.rounding.full
                 clip: true
+                // Same color as the screen frame, without a border, so both read as one shape.
                 color: Theme.colors.background
-                border.width: 1
-                border.color: SendaStt.phase === "error" ? Theme.colors.error : Theme.colors.border
                 opacity: rootWindow.entered && !SendaStt.dockClosing ? 1 : 0
+
+                // Squares the bottom corners where the dock meets the frame.
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: Math.min(parent.radius, Math.floor(parent.height / 2))
+                    color: parent.color
+                }
 
                 Behavior on animatedWidth {
                     NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easing }
@@ -244,6 +255,25 @@ Scope {
                         onTextChanged: Qt.callLater(transcriptView.followTranscript)
                     }
                 }
+            }
+
+            // Concave corners that join the dock sides to the frame below.
+            BarCorner {
+                position: "bottom-right"
+                cornerRadius: rootWindow.cornerSize
+                shapeColor: Theme.colors.background
+                x: content.x - width
+                y: rootWindow.height - height + Math.round(content.slideOffset)
+                opacity: content.opacity
+            }
+
+            BarCorner {
+                position: "bottom-left"
+                cornerRadius: rootWindow.cornerSize
+                shapeColor: Theme.colors.background
+                x: content.x + content.width
+                y: rootWindow.height - height + Math.round(content.slideOffset)
+                opacity: content.opacity
             }
 
             id: rootWindow
