@@ -24,9 +24,13 @@ La cancelación con `Esc` está desactivada por ahora. La sesión puede mostrar 
 
 ## Precarga del modelo
 
-En Ajustes → Dictado, el interruptor «Precargar modelo» está desactivado por defecto. Al activarlo, la shell mantiene el modelo cargado en reposo sin abrir el micrófono. El modelo predeterminado ocupa aproximadamente 475 MB en RAM o VRAM mientras está cargado, y el dictado puede empezar sin esperar a que se cargue.
+En Ajustes → Dictado, el interruptor «Precargar modelo» está desactivado por defecto. Al activarlo, la shell mantiene el modelo cargado en reposo sin abrir el micrófono. El modelo predeterminado ocupa aproximadamente 475 MB en RAM o VRAM mientras está cargado, y permanece cargado entre dictados: al terminar o cancelar uno, se cierra el micrófono y se puede empezar otro sin volver a cargar el modelo. Sin precarga, cada dictado carga el modelo y lo libera al terminar o cancelarse; el micrófono solo vuelve a abrirse con una nueva pulsación.
 
-Si pulsas el atajo mientras se carga el modelo, el dictado empieza al terminar la carga. Una segunda pulsación durante la carga anula esa petición. Tras tres fallos seguidos de carga, la shell deja de reintentar y Ajustes muestra el error. Los cambios de modelo durante un dictado se aplican al terminar la sesión. La shell utiliza internamente `senda stt session --standby` para mantener el modelo preparado.
+Si pulsas el atajo mientras se carga el modelo, el dictado empieza al terminar la carga. Una segunda pulsación durante la carga anula esa petición. Tras tres fallos seguidos de carga, la shell deja de reintentar y Ajustes muestra el error. La siguiente pulsación permite volver a cargarlo incluso después de esos tres fallos. Los cambios de modelo, idioma o precarga durante un dictado se aplican al terminar ese dictado. La shell utiliza internamente `senda stt session --standby` para mantener el modelo preparado.
+
+Con precarga, una pulsación mientras termina o entrega el dictado pide el siguiente; otra pulsación anula esa petición. Lo mismo ocurre mientras el motor vuelve a estar listo o se reinicia por un cambio de ajustes. Si el proceso cae con esa petición pendiente, la shell la conserva al reiniciarlo, con el mismo límite de tres fallos. Sin precarga, las pulsaciones durante el cierre final se ignoran. Ajustes muestra «Listo» mientras el modelo residente está cargado, también durante el dictado, pero deja de mostrarlo mientras se cierra el motor. El dock permanece visible desde la pulsación hasta su cierre normal.
+
+`senda stt cancel` durante un dictado descarta solo ese dictado y mantiene el modelo residente. En reposo, o durante la carga sin un dictado pendiente, cierra el motor y detiene la precarga automática hasta la siguiente pulsación del atajo; los cambios de ajustes tampoco reactivan la precarga durante esa pausa. La siguiente pulsación aplica los ajustes actuales, carga el modelo, empieza el dictado y vuelve a dejarlo residente al terminar si la precarga sigue activada.
 
 ## Ajustes
 

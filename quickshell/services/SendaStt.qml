@@ -12,8 +12,8 @@ Singleton {
     readonly property string binaryPath: Quickshell.env("SENDA_BIN") || "senda"
 
     // Standby contract: preparing loads without recording; loaded enters standby.
-    // start moves standby to starting, then ready enters listening. Cancel during
-    // preparing/standby (or stop before start) ends normally; load failures emit error.
+    // start opens a dictation only after loaded. Completion returns to standby
+    // without releasing the engine; cancel in preparing/standby ends the process.
     property string phase: "idle"
     property string transcript: ""
     property string errorMessage: ""
@@ -37,9 +37,10 @@ Singleton {
         root.preloadEnabled, SendaSettings.values.SENDA_STT_MODEL || "",
         SendaSettings.values.SENDA_STT_LANGUAGE || ""
     ])
-    readonly property string preloadState: root.phase === "preparing" ? "preparing"
+    readonly property string preloadState: root.engineCancelled || root.retiring ? "inactive"
+        : root.phase === "preparing" ? "preparing"
         : root.preloadError !== "" ? "error"
-        : root.phase === "standby" ? "ready" : "inactive"
+        : root.sessionActive && root.standbySession && root.modelLoaded ? "ready" : "inactive"
     property string preloadError: ""
     property int loadFailures: 0
     // This guard is released only by onExited, after the engine is freed.
@@ -47,20 +48,26 @@ Singleton {
     property bool standbySession: false
     property bool modelLoaded: false
     property bool dictationRequested: false
+    property bool queuedDictation: false
+    property bool configurationPending: false
+    property bool preloadSuppressed: false
+    property bool engineCancelled: false
     property bool retiring: false
     property bool shuttingDown: false
 
     function refreshPreload() {
         root.loadFailures = 0;
         root.preloadError = "";
-        if (root.sessionActive && root.standbySession && !root.dictationRequested) {
+        root.configurationPending = root.sessionActive;
+        if (root.sessionActive && root.standbySession && !root.dictationRequested
+                && (root.phase === "preparing" || root.phase === "standby")) {
             root.retiring = true;
             if (root.sessionStarted) session.signal(15);
         } else if (!root.sessionActive) {
             preloadTimer.restart();
         }
-        // An active dictation keeps its settings until it exits. The next
-        // session reads the current config directly through the CLI.
+        // An active dictation keeps its settings until the next loaded/exit.
+        // Its replacement reads the current config directly through the CLI.
     }
 
     onPreloadConfigurationChanged: root.refreshPreload()
@@ -78,6 +85,10 @@ Singleton {
         root.standbySession = standby;
         root.modelLoaded = false;
         root.retiring = false;
+        root.engineCancelled = false;
+        root.configurationPending = false;
+        root.preloadSuppressed = false;
+        root.queuedDictation = standby && root.dictationRequested;
         root.pendingCommand = "";
         root.errorMessage = "";
         root.phase = standby ? "preparing" : "starting";
@@ -86,28 +97,52 @@ Singleton {
     }
 
     function beginDictation() {
+        // The model is already resident; only the microphone is opening.
+        root.queuedDictation = false;
         root.phase = "starting";
         root.sendCommand("start");
     }
 
+    function finishDictation() {
+        // Keep the explicit queue until start, so exit recovery never uses
+        // the request belonging to the dictation that just ended.
+        root.dictationRequested = root.queuedDictation;
+        root.phase = "finishing";
+        if (!root.dictationRequested) root.scheduleDockClose();
+    }
+
     function toggle() {
+        if (!root.standbySession && root.sessionActive && root.phase === "finishing") return "stopping";
+        if (root.standbySession && !root.retiring && !root.engineCancelled
+                && (root.phase === "stopping" || root.phase === "delivering")) {
+            // Stop/cancel during delivery can terminate the resident process.
+            root.queuedDictation = !root.queuedDictation;
+            if (root.queuedDictation) {
+                closeTimer.stop();
+                root.dockClosing = false;
+            }
+            return root.queuedDictation ? "started" : "stopping";
+        }
         if (!root.dictationRequested) {
             closeTimer.stop();
             errorTimer.stop();
             preloadTimer.stop();
             root.dictationRequested = true;
+            root.queuedDictation = root.standbySession;
             root.transcript = "";
             root.errorMessage = "";
             root.dockClosing = false;
             root.dockVisible = true;
-            if (!root.sessionActive) root.launch(false);
-            else if (!root.retiring && root.phase === "standby") root.beginDictation();
+            if (!root.sessionActive) root.launch(root.preloadEnabled);
+            else if (!root.retiring && !root.engineCancelled && root.phase === "standby") root.beginDictation();
             // During preparing, loaded will send start. During retirement,
             // onExited will launch the requested dictation.
             return "started";
         }
-        if (root.phase === "preparing") {
+        if (root.retiring || root.engineCancelled || root.phase === "preparing"
+                || root.phase === "standby" || root.phase === "finishing") {
             root.dictationRequested = false;
+            root.queuedDictation = false;
             root.scheduleDockClose();
         } else if (root.phase === "starting" || root.phase === "listening") {
             root.phase = "stopping";
@@ -118,8 +153,32 @@ Singleton {
 
     function cancel() {
         if (!root.sessionActive) return false;
+        root.queuedDictation = false;
+        if (root.engineCancelled || root.retiring) {
+            root.dictationRequested = false;
+            root.scheduleDockClose();
+            return true;
+        }
+        if (root.standbySession && root.phase === "preparing" && root.dictationRequested) {
+            root.dictationRequested = false;
+            root.scheduleDockClose();
+            return true;
+        }
+        if (root.standbySession
+                && (root.phase === "stopping" || root.phase === "delivering" || root.phase === "finishing")) {
+            if (root.phase === "finishing") root.dictationRequested = false;
+            root.scheduleDockClose();
+            return true;
+        }
+        if (root.standbySession && !root.dictationRequested
+                && (root.phase === "preparing" || root.phase === "standby")) {
+            root.preloadSuppressed = true;
+            root.engineCancelled = true;
+            preloadTimer.stop();
+        }
         root.dictationRequested = false;
-        root.phase = "stopping";
+        root.phase = root.engineCancelled ? "finishing" : "stopping";
+        if (root.engineCancelled) root.scheduleDockClose();
         return root.sendCommand("cancel");
     }
 
@@ -157,7 +216,7 @@ Singleton {
         id: preloadTimer
         interval: 1000
         onTriggered: {
-            if (!root.sessionActive && root.preloadEnabled && root.loadFailures < 3)
+            if (!root.sessionActive && root.preloadEnabled && !root.preloadSuppressed && root.loadFailures < 3)
                 root.launch(true);
         }
     }
@@ -183,15 +242,28 @@ Singleton {
             onRead: line => {
                 try {
                     const event = JSON.parse(line);
-                    if (root.retiring || root.shuttingDown) return;
+                    if (root.retiring || root.engineCancelled || root.shuttingDown) return;
                     switch (event.event) {
                     case "loaded":
+                        // Empty dictations emit final then loaded, without delivered.
+                        if (root.phase === "delivering") root.finishDictation();
+                        if (root.configurationPending) {
+                            root.retiring = true;
+                            session.signal(15);
+                            break;
+                        }
                         root.modelLoaded = true;
                         root.preloadError = "";
                         root.phase = "standby";
-                        if (root.dictationRequested) root.beginDictation();
+                        if (root.dictationRequested) {
+                            closeTimer.stop();
+                            root.dockClosing = false;
+                            root.transcript = "";
+                            root.beginDictation();
+                        }
                         break;
                     case "ready":
+                        if (root.dictationRequested) root.dockVisible = true;
                         root.loadFailures = 0;
                         root.preloadError = "";
                         if (root.phase === "starting") root.phase = "listening";
@@ -206,9 +278,14 @@ Singleton {
                         break;
                     case "delivered":
                     case "cancelled":
-                        root.phase = "finishing";
+                        if (root.standbySession) root.finishDictation();
+                        else {
+                            root.dictationRequested = false;
+                            root.phase = "finishing";
+                        }
                         break;
                     case "error":
+                        if (root.dictationRequested) root.dockVisible = true;
                         root.errorMessage = event.message || "Error en la sesión de dictado";
                         root.phase = "error";
                         root.dockClosing = false;
@@ -216,6 +293,7 @@ Singleton {
                         break;
                     }
                 } catch (error) {
+                    if (root.dictationRequested) root.dockVisible = true;
                     root.errorMessage = "No se pudo leer la respuesta del dictado";
                     root.phase = "error";
                     root.dockClosing = false;
@@ -228,10 +306,12 @@ Singleton {
         onExited: exitCode => {
             const wasRetiring = root.retiring;
             const requested = root.dictationRequested;
+            const wasEngineCancelled = root.engineCancelled;
+            const pendingDictation = root.standbySession && root.queuedDictation;
             // Loading again is not recovery: idle crashes after loaded count
             // toward the same limit until a dictation reaches ready.
-            const loadFailed = root.standbySession && !wasRetiring
-                && ((!root.modelLoaded && (exitCode !== 0 || root.phase === "error"))
+            const loadFailed = root.standbySession && !wasRetiring && !wasEngineCancelled
+                && (pendingDictation || (!root.modelLoaded && (exitCode !== 0 || root.phase === "error"))
                     || (!requested && exitCode !== 0));
             root.sessionActive = false;
             root.sessionStarted = false;
@@ -240,8 +320,12 @@ Singleton {
             if (root.shuttingDown) return;
             if (wasRetiring) {
                 root.phase = "idle";
-                if (requested) root.launch(false);
+                if (requested) root.launch(root.preloadEnabled);
                 else preloadTimer.restart();
+                return;
+            }
+            if (wasEngineCancelled && requested) {
+                root.launch(root.preloadEnabled);
                 return;
             }
             if (loadFailed) {
@@ -249,6 +333,11 @@ Singleton {
                 root.preloadError = root.errorMessage || sessionErrors.text.trim() || "No se pudo precargar el modelo";
                 root.errorMessage = root.preloadError;
                 root.phase = "error";
+            }
+            if (pendingDictation && !wasEngineCancelled && root.loadFailures < 3) {
+                root.dictationRequested = true;
+                root.launch(root.preloadEnabled);
+                return;
             }
             root.dictationRequested = false;
             if (root.phase === "error") {
@@ -259,7 +348,7 @@ Singleton {
                 root.scheduleDockClose();
             }
             // cancelled is emitted before engine cleanup; only restart here.
-            if (root.preloadEnabled && root.loadFailures < 3) preloadTimer.restart();
+            if (root.preloadEnabled && !root.preloadSuppressed && root.loadFailures < 3) preloadTimer.restart();
         }
     }
 
