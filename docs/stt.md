@@ -32,6 +32,10 @@ Con precarga, una pulsación mientras termina o entrega el dictado pide el sigui
 
 `senda stt cancel` durante un dictado descarta solo ese dictado y mantiene el modelo residente. En reposo, o durante la carga sin un dictado pendiente, cierra el motor y detiene la precarga automática hasta la siguiente pulsación del atajo; los cambios de ajustes tampoco reactivan la precarga durante esa pausa. La siguiente pulsación aplica los ajustes actuales, carga el modelo, empieza el dictado y vuelve a dejarlo residente al terminar si la precarga sigue activada.
 
+## Dock de dictado
+
+Mientras dictas, un dock sale del marco inferior de la pantalla, con su mismo color y unido a él por esquinas curvas. Al empezar a escuchar es una burbuja compacta con barras animadas centradas; cuando llega texto en vivo se expande y muestra las últimas líneas de la transcripción bajo las barras, con desplazamiento con la rueda. A partir del primer minuto muestra el tiempo de dictado, centrado bajo las barras. Al parar, siguen las barras hasta que el texto se entrega y el dock vuelve a meterse en el marco. Solo muestra texto mientras se prepara o carga el modelo y cuando hay un error. El dock no captura el ratón fuera de la burbuja ni el teclado.
+
 ## Ajustes
 
 En Ajustes → Dictado se puede elegir idioma (español, detección automática o un código de idioma), modo de entrega y terminales reconocidas. También se puede configurar el atajo, ver si el módulo está cargado y qué binds entran en conflicto. La CLI permite consultar o cambiar el atajo:
@@ -51,7 +55,7 @@ Los modos de entrega son:
 | `paste` (predeterminado) | Copia el texto y simula `Ctrl+V`; en una terminal reconocida simula `Ctrl+Shift+V`. |
 | `clipboard` | Copia el texto sin simular pegado. |
 
-Las clases de ventana de terminal se configuran en `SENDA_STT_TERMINALS`. Los valores predeterminados son `kitty`, `foot`, `Alacritty`, `org.wezfurlong.wezterm` y `com.mitchellh.ghostty`. La detección usa la clase de la ventana activa de Hyprland. La entrega usa `wl-copy` y `wtype`.
+Las clases de ventana de terminal se configuran en `SENDA_STT_TERMINALS`. Los valores predeterminados son `kitty`, `foot`, `Alacritty`, `org.wezfurlong.wezterm` y `com.mitchellh.ghostty`. La detección usa la clase de la ventana activa de Hyprland. La entrega usa `wl-copy` y `wtype`; en modo `paste`, antes de pegar comprueba con `wl-paste` que el portapapeles ya contiene el texto (espera como máximo un segundo).
 
 ## Activar el atajo de Hyprland
 
