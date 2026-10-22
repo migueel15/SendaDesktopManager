@@ -14,6 +14,9 @@ Scope {
         PanelWindow {
             property bool entered: false
             readonly property bool listening: SendaStt.phase === "listening"
+            // Bars stay while the dictation finishes; only loading and errors show text.
+            readonly property bool showBars: SendaStt.phase !== "preparing"
+                && SendaStt.phase !== "starting" && SendaStt.phase !== "error"
             readonly property bool expanded: listening && SendaStt.transcript !== ""
             // The elapsed time appears under the bars once the dictation passes this mark.
             readonly property int timerDelay: 60
@@ -71,10 +74,10 @@ Scope {
                 id: content
                 property real animatedWidth: rootWindow.expanded ? rootWindow.maximumWidth
                     : Math.min(rootWindow.maximumWidth,
-                        (rootWindow.listening
+                        (rootWindow.showBars
                             ? Math.max(listeningBars.width, rootWindow.showTimer ? Math.ceil(elapsedText.implicitWidth) : 0)
                             : statusText.implicitWidth) + Theme.spacing.xl * 2)
-                property real animatedHeight: Theme.spacing.md * 2 + (rootWindow.listening
+                property real animatedHeight: Theme.spacing.md * 2 + (rootWindow.showBars
                     ? Theme.spacing.xl + rootWindow.timerBlock
                         + (rootWindow.expanded ? Theme.spacing.xs + transcriptView.height : 0)
                     : Math.ceil(statusText.implicitHeight))
@@ -133,7 +136,7 @@ Scope {
                     y: Theme.spacing.md
                     width: Theme.spacing.xs * 9
                     height: Theme.spacing.xl
-                    visible: rootWindow.listening
+                    visible: rootWindow.showBars
 
                     Repeater {
                         model: 5
@@ -153,7 +156,7 @@ Scope {
                                 yScale: Theme.spacing.sm / Theme.spacing.xl
 
                                 SequentialAnimation on yScale {
-                                    running: rootWindow.listening && rootWindow.visible && !SendaStt.dockClosing
+                                    running: rootWindow.showBars && rootWindow.visible && !SendaStt.dockClosing
                                     loops: Animation.Infinite
                                     PauseAnimation { duration: animatedBar.index * Theme.motion.fast }
                                     NumberAnimation {
@@ -197,7 +200,7 @@ Scope {
                     x: Theme.spacing.md
                     y: Theme.spacing.md
                     width: Math.max(0, content.width - Theme.spacing.md * 2)
-                    visible: !rootWindow.listening
+                    visible: !rootWindow.showBars
                     text: SendaStt.phase === "preparing" ? "Preparando el modelo…"
                         : SendaStt.phase === "starting" ? "Cargando el modelo…"
                         : SendaStt.phase === "stopping" || SendaStt.phase === "delivering" ? "Procesando…"
