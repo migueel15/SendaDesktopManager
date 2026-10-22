@@ -42,8 +42,10 @@ Scope {
             // when the window is created. Most compositors pick the current active monitor.
             WlrLayershell.namespace: "senda-volume-osd"
 
-            anchors.bottom: true
-            margins.bottom: screen.height / 50
+            // Center horizontally, just below the top bar.
+            anchors.top: true
+            exclusionMode: ExclusionMode.Ignore
+            margins.top: Theme.barSize + Theme.spacing.md
             exclusiveZone: 0
 
             implicitWidth: 250
