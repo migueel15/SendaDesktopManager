@@ -76,7 +76,7 @@ func TestPythonProtocolWithoutSherpa(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, mode := range []string{"normal", "decode-error", "microphone-error", "cancel"} {
+	for _, mode := range []string{"normal", "decode-error", "microphone-error", "cancel", "resident-stop", "resident-cancel"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			defer cancel()
@@ -109,6 +109,9 @@ func TestEnginePrepareUsesStandby(t *testing.T) {
  test "$cmd" = start || exit 6
  printf '%s\n' '{"event":"ready"}'
  read cmd
+ test "$cmd" = cancel || exit 7
+ printf '%s\n' '{"event":"loaded"}'
+ read cmd
  test "$cmd" = cancel
  `
 	if err := os.WriteFile(python, []byte(body), 0700); err != nil {
@@ -138,6 +141,9 @@ func TestEnginePrepareUsesStandby(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := stream.Cancel(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := standby.Cancel(ctx); err != nil {
 		t.Fatal(err)
 	}
 }
