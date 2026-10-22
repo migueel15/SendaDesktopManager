@@ -657,7 +657,10 @@ func TestStandbyCancelDuringBeginWaitsForStream(t *testing.T) {
 					if fail {
 						return nil, beginErr
 					}
-					return r.stream, nil
+					s.mu.Lock()
+					s.loaded = make(chan struct{})
+					s.mu.Unlock()
+					return &f002StandbyStream{fakeStream: r.stream, standby: s}, nil
 				}}, nil
 			})
 			run := start(t, context.Background(), r.deps)
@@ -682,13 +685,18 @@ func TestStandbyCancelDuringBeginWaitsForStream(t *testing.T) {
 					t.Fatal("missing Begin failure")
 				}
 			} else {
+				waitResidentEvent(t, run, stt.EventLoaded, 2)
+				if s.cancels.Load() != 0 || beginCtx.Err() != nil {
+					t.Fatal("resident cancel released the prepared engine")
+				}
+				run.send(stt.CommandCancel)
 				assertCleanCancellation(t, run, r)
 				if _, n := r.stream.counts(); n != 1 {
 					t.Fatalf("Stream.Cancel calls = %d", n)
 				}
 			}
-			if s.cancels.Load() != 0 {
-				t.Fatal("Standby.Cancel called after Begin")
+			if s.cancels.Load() != 1 {
+				t.Fatalf("Standby.Cancel calls on shutdown = %d", s.cancels.Load())
 			}
 		})
 	}
@@ -706,5 +714,151 @@ func TestMachineStandbyTransitions(t *testing.T) {
 		if m.State() != want {
 			t.Fatalf("state = %s, want %s", m.State(), want)
 		}
+	}
+}
+
+func TestResidentEmptyFinalReturnsToLoaded(t *testing.T) {
+	s := &residentStandby{loaded: make(chan struct{})}
+	close(s.loaded)
+	s.streams = []*residentStream{{fakeStream: newStream(""), standby: s}}
+	e := &residentEngine{standby: s}
+	r := newRig(&fakeEngine{}, s.streams[0].fakeStream)
+	r.deps.Engine, r.deps.Standby = e, true
+	run := start(t, context.Background(), r.deps)
+	waitResidentEvent(t, run, stt.EventLoaded, 1)
+	run.send(stt.CommandStart)
+	run.waitEvent(t, stt.EventReady)
+	run.send(stt.CommandStop)
+	waitResidentEvent(t, run, stt.EventLoaded, 2)
+	finishResident(t, run, e, stt.CommandStop, 1)
+	want := []stt.EventType{stt.EventLoaded, stt.EventReady, stt.EventFinal, stt.EventLoaded, stt.EventCancelled}
+	if got := types(run.out.events(t)); !slices.Equal(got, want) {
+		t.Fatalf("events = %v; want %v", got, want)
+	}
+	assertNoDelivery(t, r)
+}
+
+func TestResidentDeliveryFailureTerminates(t *testing.T) {
+	s := &residentStandby{loaded: make(chan struct{})}
+	close(s.loaded)
+	s.streams = []*residentStream{{fakeStream: newStream("texto"), standby: s}}
+	e := &residentEngine{standby: s}
+	r := newRig(&fakeEngine{}, s.streams[0].fakeStream)
+	r.deps.Engine, r.deps.Standby = e, true
+	deliveryErr := errors.New("fallo de entrega")
+	r.deps.Deliverer = deliverFunc(func(context.Context, string, stt.Settings) error { return deliveryErr })
+	run := start(t, context.Background(), r.deps)
+	run.waitEvent(t, stt.EventLoaded)
+	run.send(stt.CommandStart)
+	run.waitEvent(t, stt.EventReady)
+	run.send(stt.CommandStop)
+	if err := await(t, run.done); !errors.Is(err, deliveryErr) {
+		t.Fatalf("Run = %v", err)
+	}
+	want := []stt.EventType{stt.EventLoaded, stt.EventReady, stt.EventFinal, stt.EventError}
+	if got := types(run.out.events(t)); !slices.Equal(got, want) {
+		t.Fatalf("events = %v; want %v", got, want)
+	}
+	if begins, cancels := s.counts(); begins != 1 || cancels != 1 || r.notif.count() != 1 {
+		t.Fatalf("Begin=%d Cancel=%d notifications=%d", begins, cancels, r.notif.count())
+	}
+}
+
+func TestResidentResetsBeforeEachEnter(t *testing.T) {
+	run, r, e := startResident(t)
+	for cycle := 1; cycle <= 2; cycle++ {
+		waitResidentEvent(t, run, stt.EventLoaded, cycle)
+		run.send(stt.CommandStart)
+		waitResidentEvent(t, run, stt.EventReady, cycle)
+		r.submap.mu.Lock()
+		calls := slices.Clone(r.submap.calls)
+		r.submap.mu.Unlock()
+		enters := 0
+		for i, call := range calls {
+			if call == "enter" {
+				enters++
+				if i == 0 || calls[i-1] != "reset" {
+					t.Fatalf("Enter without preceding Reset: %v", calls)
+				}
+			}
+		}
+		if enters != cycle {
+			t.Fatalf("Enter calls = %d; want %d", enters, cycle)
+		}
+		run.send(stt.CommandStop)
+		waitResidentEvent(t, run, stt.EventLoaded, cycle+1)
+	}
+	finishResident(t, run, e, stt.CommandCancel, 2)
+	assertResetWithLiveContext(t, r)
+}
+
+func TestMachineResidentCyclesClearPendingStop(t *testing.T) {
+	m := NewMachine()
+	steps := []struct {
+		in   Input
+		want State
+	}{
+		{InputPrepare, Preparing}, {InputLoaded, Standby},
+		{InputStart, Starting}, {InputStop, Starting}, {InputReady, Stopping},
+		{InputFinalized, Delivering}, {InputDelivered, Done}, {InputLoaded, Standby},
+		{InputStart, Starting}, {InputReady, Listening}, {InputCancel, Cancelled},
+		{InputLoaded, Standby}, {InputStart, Starting}, {InputReady, Listening},
+	}
+	for _, step := range steps {
+		if got, err := m.Apply(step.in); err != nil || got != step.want {
+			t.Fatalf("Apply(%s) = %s, %v; want %s", step.in, got, err, step.want)
+		}
+	}
+}
+
+func TestResidentShutdownDuringBegin(t *testing.T) {
+	for _, cause := range []string{"signal", "eof"} {
+		t.Run(cause, func(t *testing.T) {
+			r := newRig(&fakeEngine{}, newStream("ignored"))
+			r.deps.Standby = true
+			entered := make(chan context.Context, 1)
+			release := make(chan struct{})
+			var once sync.Once
+			unblock := func() { once.Do(func() { close(release) }) }
+			defer unblock()
+			cancelled := make(chan error, 1)
+			s := &f002Standby{loaded: make(chan struct{}), stream: r.stream}
+			close(s.loaded)
+			r.deps.Engine = standbyEngineFunc(func(context.Context) (stt.Standby, error) {
+				return lifecycleStandby{f002Standby: s,
+					begin: func(ctx context.Context) (stt.Stream, error) {
+						entered <- ctx
+						<-release
+						return r.stream, nil
+					},
+					cancel: func(ctx context.Context) error {
+						select {
+						case <-release:
+						default:
+							t.Error("Standby.Cancel ran concurrently with Begin")
+						}
+						cancelled <- ctx.Err()
+						return nil
+					}}, nil
+			})
+			run := start(t, context.Background(), r.deps)
+			run.waitEvent(t, stt.EventLoaded)
+			run.send(stt.CommandStart)
+			beginCtx := await(t, entered)
+			if cause == "signal" {
+				run.cancel()
+				await(t, beginCtx.Done())
+			} else {
+				run.stdin.Close()
+			}
+			unblock()
+			assertCleanCancellation(t, run, r)
+			if err := await(t, cancelled); err != nil {
+				t.Fatalf("Standby.Cancel context = %v", err)
+			}
+			if _, n := r.stream.counts(); n != 1 {
+				t.Fatalf("Stream.Cancel calls = %d", n)
+			}
+		})
 	}
 }

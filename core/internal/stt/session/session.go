@@ -45,6 +45,8 @@ const (
 
 // Machine supports idle → preparing → standby → starting for preloaded sessions.
 // Stop before start cancels; stop during starting waits for the stream.
+// Resident cycles return from done or cancelled to standby on loaded. Each
+// start clears the previous pending stop before opening a new dictation.
 type Machine struct {
 	state       State
 	pendingStop bool
@@ -57,12 +59,13 @@ func (m *Machine) Apply(in Input) (State, error) {
 	switch {
 	case in == InputPrepare && m.state == Idle:
 		next = Preparing
-	case in == InputLoaded && m.state == Preparing:
+	case in == InputLoaded && (m.state == Preparing || m.state == Done || m.state == Cancelled):
 		next = Standby
 	case in == InputStop && (m.state == Preparing || m.state == Standby):
 		next = Cancelled
 	case in == InputStart && (m.state == Idle || m.state == Standby):
 		next = Starting
+		m.pendingStop = false
 	case in == InputStop && m.state == Starting:
 		m.pendingStop = true
 	case in == InputReady && m.state == Starting:
@@ -97,7 +100,7 @@ type Deps struct {
 	Settings       stt.Settings
 	ModelDir       string
 	CleanupTimeout time.Duration
-	// Standby true is equivalent to --standby: preload, emit loaded, then wait for start or cancel.
+	// Standby keeps the prepared engine resident across successive dictations.
 	Standby bool
 }
 
@@ -239,269 +242,304 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 		if standby == nil {
 			return errors.New("el motor no devolvió un reposo")
 		}
-		loaded := standby.Loaded()
-		for m.State() != Starting {
-			if ctx.Err() != nil {
-				return cancelEvent()
-			}
-			select {
-			case <-ctx.Done():
-				return cancelEvent()
-			case c, ok := <-commands:
-				if c.err != nil {
-					return c.err
-				}
-				if !ok || c.text == stt.CommandCancel || c.text == stt.CommandStop {
-					return cancelEvent()
-				}
-				if c.text == stt.CommandStart && m.State() == Standby {
-					m.Apply(InputStart)
-				}
-			case <-loaded:
-				loaded = nil
-				if err := standby.Err(); err != nil {
-					if ctx.Err() != nil && errors.Is(err, context.Canceled) {
-						return cancelEvent()
-					}
-					return fmt.Errorf("no se pudo cargar el motor: %w", err)
-				}
+	}
+	resume := errors.New("dictado residente completado")
+	for {
+		if deps.Standby {
+			loaded := standby.Loaded()
+			for m.State() != Starting {
 				if ctx.Err() != nil {
 					return cancelEvent()
 				}
-				m.Apply(InputLoaded)
-				if err := emit(stt.Event{Type: stt.EventLoaded}); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	if err := cleanup(deps.Submap.Reset); err != nil {
-		return fmt.Errorf("no se pudo limpiar el atajo de Esc: %w", err)
-	}
-	enterCtx, enterDone := context.WithTimeout(ctx, deps.CleanupTimeout)
-	_, enterErr := bounded(enterCtx, func() (struct{}, error) {
-		return struct{}{}, deps.Submap.Enter(enterCtx)
-	})
-	enterDone()
-	if err := enterErr; err != nil {
-		if errors.Is(err, stt.ErrSubmapUnavailable) {
-			fmt.Fprintln(os.Stderr, "Aviso: Esc no está disponible en esta sesión.")
-		} else if ctx.Err() == nil {
-			return fmt.Errorf("no se pudo activar el submapa: %w", err)
-		}
-	}
-	if ctx.Err() != nil {
-		return emit(stt.Event{Type: stt.EventCancelled})
-	}
-	type startedResult struct {
-		stream stt.Stream
-		err    error
-	}
-	startResults := make(chan startedResult)
-	var started <-chan startedResult = startResults
-	doneStarting := make(chan struct{})
-	startDone = doneStarting
-	beginStandby := standby
-	standby = nil // Begin now owns the engine; never call Standby.Cancel concurrently.
-	go func() {
-		defer close(doneStarting)
-		s, err := guarded(func() (stt.Stream, error) {
-			if beginStandby != nil {
-				return beginStandby.Begin(ctx)
-			}
-			return deps.Engine.Start(ctx, opts)
-		})
-		select {
-		case startResults <- startedResult{s, err}:
-		case <-ctx.Done():
-			if s != nil {
-				_ = cleanup(s.Cancel)
-			}
-		}
-	}()
-	type stoppedResult struct {
-		text string
-		err  error
-	}
-	var stopped <-chan stoppedResult
-	var stopCancel context.CancelFunc
-	defer func() {
-		if stopCancel != nil {
-			stopCancel()
-		}
-	}()
-	beginStop := func() {
-		stopCtx, done := fresh()
-		stopCancel = done
-		ch := make(chan stoppedResult, 1)
-		stopped = ch
-		go func() {
-			text, err := bounded(stopCtx, func() (string, error) { return stream.Stop(stopCtx) })
-			ch <- stoppedResult{text, err}
-		}()
-	}
-	cancelled := func() error {
-		if deps.Standby && started != nil && ctx.Err() == nil {
-			// A stdin cancel during Begin waits for its stream without expiring
-			// the Prepare context or racing Standby.Cancel against Begin.
-			var r startedResult
-			select {
-			case r = <-started:
-			case <-ctx.Done():
-				return cancelEvent()
-			}
-			started = nil
-			stream = r.stream
-			if r.err != nil && !(ctx.Err() != nil && errors.Is(r.err, context.Canceled)) {
-				return fmt.Errorf("no se pudo iniciar el motor: %w", r.err)
-			}
-		}
-		m.Apply(InputCancel)
-		cancel()
-		if stream != nil && !completed {
-			completed = true
-			if err := cleanup(stream.Cancel); err != nil {
-				return fmt.Errorf("no se pudo cancelar el motor: %w", err)
-			}
-		}
-		return emit(stt.Event{Type: stt.EventCancelled})
-	}
-	handle := func(c command, ok bool) (bool, error) {
-		if !ok || c.text == stt.CommandCancel {
-			return true, cancelled()
-		}
-		if c.err != nil {
-			return true, fmt.Errorf("no se pudieron leer las órdenes: %w", c.err)
-		}
-		if c.text == stt.CommandStop {
-			previous := m.State()
-			m.Apply(InputStop)
-			if previous == Listening {
-				beginStop()
-			}
-		}
-		return false, nil
-	}
-	pending := func() (bool, error) {
-		for {
-			select {
-			case c, ok := <-commands:
-				if end, err := handle(c, ok); end {
-					return true, err
-				}
-			default:
-				return false, nil
-			}
-		}
-	}
-	var results <-chan stt.Result
-	last := ""
-	partial := func(r stt.Result) error {
-		if r.Text == last {
-			return nil
-		}
-		last = r.Text
-		return emit(stt.Event{Type: stt.EventPartial, Text: r.Text})
-	}
-	for {
-		if ctx.Err() != nil {
-			return cancelled()
-		}
-		// Consume already queued orders before ready/final, so cancel wins.
-		if end, err := pending(); end {
-			return err
-		}
-		select {
-		case <-ctx.Done():
-			return cancelled()
-		case c, ok := <-commands:
-			if end, err := handle(c, ok); end {
-				return err
-			}
-		case r := <-started:
-			started = nil
-			stream = r.stream
-			if ctx.Err() != nil {
-				return cancelled()
-			}
-			if r.err != nil {
-				return fmt.Errorf("no se pudo iniciar el motor: %w", r.err)
-			}
-			if stream == nil {
-				return errors.New("el motor no devolvió una sesión")
-			}
-			m.Apply(InputReady)
-			if err := emit(stt.Event{Type: stt.EventReady}); err != nil {
-				return err
-			}
-			results = stream.Results()
-			if m.State() == Stopping {
-				beginStop()
-			}
-		case r, ok := <-results:
-			if !ok {
-				results = nil
-				if err := stream.Err(); err != nil {
-					return fmt.Errorf("el motor de dictado falló: %w", err)
-				}
-				if m.State() != Stopping {
-					return errors.New("El motor se detuvo inesperadamente")
-				}
-			} else if err := partial(r); err != nil {
-				return err
-			}
-		case r := <-stopped:
-			if ctx.Err() != nil {
-				return cancelled()
-			}
-			if end, err := pending(); end {
-				return err
-			}
-			if r.err != nil {
-				return fmt.Errorf("no se pudo detener el motor: %w", r.err)
-			}
-			if err := stream.Err(); err != nil {
-				return fmt.Errorf("el motor de dictado falló: %w", err)
-			}
-			// Stop closes Results. Flush its buffered tail before final.
-			for results != nil {
 				select {
-				case p, ok := <-results:
-					if !ok {
-						results = nil
-					} else if err := partial(p); err != nil {
+				case <-ctx.Done():
+					return cancelEvent()
+				case c, ok := <-commands:
+					if c.err != nil {
+						return c.err
+					}
+					if !ok || c.text == stt.CommandCancel || c.text == stt.CommandStop {
+						return cancelEvent()
+					}
+					if c.text == stt.CommandStart && m.State() == Standby {
+						m.Apply(InputStart)
+					}
+				case <-loaded:
+					loaded = nil
+					if err := standby.Err(); err != nil {
+						if ctx.Err() != nil && errors.Is(err, context.Canceled) {
+							return cancelEvent()
+						}
+						return fmt.Errorf("no se pudo cargar el motor: %w", err)
+					}
+					if ctx.Err() != nil {
+						return cancelEvent()
+					}
+					m.Apply(InputLoaded)
+					if err := emit(stt.Event{Type: stt.EventLoaded}); err != nil {
 						return err
 					}
-				default:
-					results = nil
+				}
+			}
+		}
+		dictate := func() error {
+			if err := cleanup(deps.Submap.Reset); err != nil {
+				return fmt.Errorf("no se pudo limpiar el atajo de Esc: %w", err)
+			}
+			enterCtx, enterDone := context.WithTimeout(ctx, deps.CleanupTimeout)
+			_, enterErr := bounded(enterCtx, func() (struct{}, error) {
+				return struct{}{}, deps.Submap.Enter(enterCtx)
+			})
+			enterDone()
+			if err := enterErr; err != nil {
+				if errors.Is(err, stt.ErrSubmapUnavailable) {
+					fmt.Fprintln(os.Stderr, "Aviso: Esc no está disponible en esta sesión.")
+				} else if ctx.Err() == nil {
+					return fmt.Errorf("no se pudo activar el submapa: %w", err)
 				}
 			}
 			if ctx.Err() != nil {
-				return cancelled()
+				return emit(stt.Event{Type: stt.EventCancelled})
 			}
-			if end, err := pending(); end {
-				return err
+			type startedResult struct {
+				stream stt.Stream
+				err    error
 			}
-			completed = true
-			m.Apply(InputFinalized)
-			if err := emit(stt.Event{Type: stt.EventFinal, Text: r.text}); err != nil {
-				return err
-			}
-			if r.text != "" {
-				deliveryCtx, done := context.WithTimeout(context.Background(), deliveryTimeout)
-				_, err := bounded(deliveryCtx, func() (struct{}, error) {
-					return struct{}{}, deps.Deliverer.Deliver(deliveryCtx, r.text, deps.Settings)
+			startResults := make(chan startedResult)
+			var started <-chan startedResult = startResults
+			doneStarting := make(chan struct{})
+			startDone = doneStarting
+			beginStandby := standby
+			standby = nil // Begin now owns the engine; never call Standby.Cancel concurrently.
+			go func() {
+				defer close(doneStarting)
+				s, err := guarded(func() (stt.Stream, error) {
+					if beginStandby != nil {
+						return beginStandby.Begin(ctx)
+					}
+					return deps.Engine.Start(ctx, opts)
 				})
-				done()
-				if err != nil {
-					return fmt.Errorf("no se pudo entregar el texto: %w", err)
+				select {
+				case startResults <- startedResult{s, err}:
+				case <-ctx.Done():
+					if s != nil {
+						_ = cleanup(s.Cancel)
+					}
+					if beginStandby != nil {
+						_ = cleanup(beginStandby.Cancel)
+					}
 				}
-				if err := emit(stt.Event{Type: stt.EventDelivered}); err != nil {
+			}()
+			type stoppedResult struct {
+				text string
+				err  error
+			}
+			var stopped <-chan stoppedResult
+			var stopCancel context.CancelFunc
+			defer func() {
+				if stopCancel != nil {
+					stopCancel()
+				}
+			}()
+			beginStop := func() {
+				stopCtx, done := fresh()
+				stopCancel = done
+				ch := make(chan stoppedResult, 1)
+				stopped = ch
+				activeStream := stream
+				go func() {
+					text, err := bounded(stopCtx, func() (string, error) { return activeStream.Stop(stopCtx) })
+					ch <- stoppedResult{text, err}
+				}()
+			}
+			cancelled := func(resident bool) error {
+				if deps.Standby && started != nil && ctx.Err() == nil {
+					// A stdin cancel during Begin waits for its stream without expiring
+					// the Prepare context or racing Standby.Cancel against Begin.
+					var r startedResult
+					select {
+					case r = <-started:
+					case <-ctx.Done():
+						return cancelEvent()
+					}
+					started = nil
+					stream = r.stream
+					standby = beginStandby
+					if r.err != nil && !(ctx.Err() != nil && errors.Is(r.err, context.Canceled)) {
+						return fmt.Errorf("no se pudo iniciar el motor: %w", r.err)
+					}
+				}
+				m.Apply(InputCancel)
+				// Resident shutdown releases Standby before cancelling its context.
+				if !deps.Standby {
+					cancel()
+				}
+				if stream != nil && !completed {
+					completed = true
+					if err := cleanup(stream.Cancel); err != nil {
+						return fmt.Errorf("no se pudo cancelar el motor: %w", err)
+					}
+				}
+				if err := emit(stt.Event{Type: stt.EventCancelled}); err != nil {
 					return err
 				}
+				if resident && ctx.Err() == nil {
+					return resume
+				}
+				return nil
 			}
-			m.Apply(InputDelivered)
-			return nil
+			handle := func(c command, ok bool) (bool, error) {
+				if !ok || c.text == stt.CommandCancel {
+					return true, cancelled(deps.Standby && ok && c.text == stt.CommandCancel)
+				}
+				if c.err != nil {
+					return true, fmt.Errorf("no se pudieron leer las órdenes: %w", c.err)
+				}
+				if c.text == stt.CommandStop {
+					previous := m.State()
+					m.Apply(InputStop)
+					if previous == Listening {
+						beginStop()
+					}
+				}
+				return false, nil
+			}
+			pending := func() (bool, error) {
+				for {
+					select {
+					case c, ok := <-commands:
+						if end, err := handle(c, ok); end {
+							return true, err
+						}
+					default:
+						return false, nil
+					}
+				}
+			}
+			var results <-chan stt.Result
+			last := ""
+			partial := func(r stt.Result) error {
+				if r.Text == last {
+					return nil
+				}
+				last = r.Text
+				return emit(stt.Event{Type: stt.EventPartial, Text: r.Text})
+			}
+			for {
+				if ctx.Err() != nil {
+					return cancelled(false)
+				}
+				// Consume already queued orders before ready/final, so cancel wins.
+				if end, err := pending(); end {
+					return err
+				}
+				select {
+				case <-ctx.Done():
+					return cancelled(false)
+				case c, ok := <-commands:
+					if end, err := handle(c, ok); end {
+						return err
+					}
+				case r := <-started:
+					started = nil
+					stream = r.stream
+					standby = beginStandby
+					if ctx.Err() != nil {
+						return cancelled(false)
+					}
+					if r.err != nil {
+						return fmt.Errorf("no se pudo iniciar el motor: %w", r.err)
+					}
+					if stream == nil {
+						return errors.New("el motor no devolvió una sesión")
+					}
+					m.Apply(InputReady)
+					if err := emit(stt.Event{Type: stt.EventReady}); err != nil {
+						return err
+					}
+					results = stream.Results()
+					if m.State() == Stopping {
+						beginStop()
+					}
+				case r, ok := <-results:
+					if !ok {
+						results = nil
+						if err := stream.Err(); err != nil {
+							return fmt.Errorf("el motor de dictado falló: %w", err)
+						}
+						if m.State() != Stopping {
+							return errors.New("El motor se detuvo inesperadamente")
+						}
+					} else if err := partial(r); err != nil {
+						return err
+					}
+				case r := <-stopped:
+					if ctx.Err() != nil {
+						return cancelled(false)
+					}
+					if end, err := pending(); end {
+						return err
+					}
+					if r.err != nil {
+						return fmt.Errorf("no se pudo detener el motor: %w", r.err)
+					}
+					if err := stream.Err(); err != nil {
+						return fmt.Errorf("el motor de dictado falló: %w", err)
+					}
+					// Stop closes Results. Flush its buffered tail before final.
+					for results != nil {
+						select {
+						case p, ok := <-results:
+							if !ok {
+								results = nil
+							} else if err := partial(p); err != nil {
+								return err
+							}
+						default:
+							results = nil
+						}
+					}
+					if ctx.Err() != nil {
+						return cancelled(false)
+					}
+					if end, err := pending(); end {
+						return err
+					}
+					completed = true
+					m.Apply(InputFinalized)
+					if err := emit(stt.Event{Type: stt.EventFinal, Text: r.text}); err != nil {
+						return err
+					}
+					if r.text != "" {
+						deliveryCtx, done := context.WithTimeout(context.Background(), deliveryTimeout)
+						_, err := bounded(deliveryCtx, func() (struct{}, error) {
+							return struct{}{}, deps.Deliverer.Deliver(deliveryCtx, r.text, deps.Settings)
+						})
+						done()
+						if err != nil {
+							return fmt.Errorf("no se pudo entregar el texto: %w", err)
+						}
+						if err := emit(stt.Event{Type: stt.EventDelivered}); err != nil {
+							return err
+						}
+					}
+					m.Apply(InputDelivered)
+					if deps.Standby {
+						return resume
+					}
+					return nil
+				}
+			}
 		}
+		if err := dictate(); !errors.Is(err, resume) {
+			return err
+		}
+		// The microphone is closed; remove Esc while the model stays resident.
+		if err := cleanup(deps.Submap.Reset); err != nil {
+			return fmt.Errorf("no se pudo limpiar el atajo de Esc: %w", err)
+		}
+		stream = nil
+		completed = false
+		startDone = nil
 	}
 }
