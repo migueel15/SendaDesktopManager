@@ -18,13 +18,23 @@ El motor se instala en un entorno virtual Python bajo `$XDG_DATA_HOME/senda/stt/
 
 ## Control
 
-El atajo predeterminado es `Alt + ñ`. Púlsalo para empezar a escuchar y otra vez para terminar y entregar el texto. Durante la sesión, `Esc` cancela el dictado y descarta el resultado. `senda stt toggle` hace el mismo toggle desde la terminal; `senda stt cancel` cancela y `senda stt status` muestra el estado. El toggle comprueba que haya modelo, motor y micrófono antes de iniciar.
+El atajo predeterminado es `Alt + ñ`. Púlsalo para empezar a escuchar y otra vez para terminar y entregar el texto. `senda stt toggle` hace el mismo toggle desde la terminal; `senda stt cancel` cancela y descarta el resultado, y `senda stt status` muestra el estado. El toggle comprueba que haya modelo, motor y micrófono antes de iniciar.
 
-Si `Esc` no está disponible, se muestra un aviso y la sesión puede continuar. Para salir de un submap atascado, ejecuta:
+La cancelación con `Esc` está desactivada por ahora. La sesión puede mostrar el aviso «Esc no está disponible en esta sesión.»; para cancelar, usa `senda stt cancel`. La segunda pulsación del atajo termina el dictado y entrega el texto.
 
-```sh
-hyprctl dispatch 'hl.dsp.submap("reset")'
-```
+## Precarga del modelo
+
+En Ajustes → Dictado, el interruptor «Precargar modelo» está desactivado por defecto. Al activarlo, la shell mantiene el modelo cargado en reposo sin abrir el micrófono. El modelo predeterminado ocupa aproximadamente 475 MB en RAM o VRAM mientras está cargado, y permanece cargado entre dictados: al terminar o cancelar uno, se cierra el micrófono y se puede empezar otro sin volver a cargar el modelo. Sin precarga, cada dictado carga el modelo y lo libera al terminar o cancelarse; el micrófono solo vuelve a abrirse con una nueva pulsación.
+
+Si pulsas el atajo mientras se carga el modelo, el dictado empieza al terminar la carga. Una segunda pulsación durante la carga anula esa petición. Tras tres fallos seguidos de carga, la shell deja de reintentar y Ajustes muestra el error. La siguiente pulsación permite volver a cargarlo incluso después de esos tres fallos. Los cambios de modelo, idioma o precarga durante un dictado se aplican al terminar ese dictado. La shell utiliza internamente `senda stt session --standby` para mantener el modelo preparado.
+
+Con precarga, una pulsación mientras termina o entrega el dictado pide el siguiente; otra pulsación anula esa petición. Lo mismo ocurre mientras el motor vuelve a estar listo o se reinicia por un cambio de ajustes. Si el proceso cae con esa petición pendiente, la shell la conserva al reiniciarlo, con el mismo límite de tres fallos. Sin precarga, las pulsaciones durante el cierre final se ignoran. Ajustes muestra «Listo» mientras el modelo residente está cargado, también durante el dictado, pero deja de mostrarlo mientras se cierra el motor. El dock permanece visible desde la pulsación hasta su cierre normal.
+
+`senda stt cancel` durante un dictado descarta solo ese dictado y mantiene el modelo residente. En reposo, o durante la carga sin un dictado pendiente, cierra el motor y detiene la precarga automática hasta la siguiente pulsación del atajo; los cambios de ajustes tampoco reactivan la precarga durante esa pausa. La siguiente pulsación aplica los ajustes actuales, carga el modelo, empieza el dictado y vuelve a dejarlo residente al terminar si la precarga sigue activada.
+
+## Dock de dictado
+
+Mientras dictas, un dock sale del marco inferior de la pantalla, con su mismo color y unido a él por esquinas curvas. Al empezar a escuchar es una burbuja compacta con barras animadas centradas; cuando llega texto en vivo se expande y muestra las últimas líneas de la transcripción bajo las barras, con desplazamiento con la rueda. A partir del primer minuto muestra el tiempo de dictado, centrado bajo las barras. Al parar, siguen las barras hasta que el texto se entrega y el dock vuelve a meterse en el marco. Solo muestra texto mientras se prepara o carga el modelo y cuando hay un error. El dock no captura el ratón fuera de la burbuja ni el teclado.
 
 ## Ajustes
 
@@ -45,7 +55,7 @@ Los modos de entrega son:
 | `paste` (predeterminado) | Copia el texto y simula `Ctrl+V`; en una terminal reconocida simula `Ctrl+Shift+V`. |
 | `clipboard` | Copia el texto sin simular pegado. |
 
-Las clases de ventana de terminal se configuran en `SENDA_STT_TERMINALS`. Los valores predeterminados son `kitty`, `foot`, `Alacritty`, `org.wezfurlong.wezterm` y `com.mitchellh.ghostty`. La detección usa la clase de la ventana activa de Hyprland. La entrega usa `wl-copy` y `wtype`.
+Las clases de ventana de terminal se configuran en `SENDA_STT_TERMINALS`. Los valores predeterminados son `kitty`, `foot`, `Alacritty`, `org.wezfurlong.wezterm` y `com.mitchellh.ghostty`. La detección usa la clase de la ventana activa de Hyprland. La entrega usa `wl-copy` y `wtype`; en modo `paste`, antes de pegar comprueba con `wl-paste` que el portapapeles ya contiene el texto (espera como máximo un segundo).
 
 ## Activar el atajo de Hyprland
 
@@ -66,5 +76,4 @@ Al ejecutar `senda uninstall`, Senda intenta cancelar el dictado y, si existe `s
 - **No se detecta micrófono:** conecta o selecciona una entrada de audio predeterminada y comprueba que no sea un monitor de salida.
 - **El atajo no hace nada:** comprueba que `senda stt shortcut show` indique el módulo cargado y añade el `require` a `hyprland.lua` si falta.
 - **El atajo ya está asignado:** consulta los conflictos y elige otra combinación.
-- **Esc no cancela:** verifica que el módulo esté cargado. Si el submap permanece activo, ejecuta `hyprctl dispatch 'hl.dsp.submap("reset")'`.
 - **El texto no se pega:** comprueba que `wl-copy` y `wtype` estén instalados. En terminal, confirma que su clase esté incluida en `SENDA_STT_TERMINALS`.

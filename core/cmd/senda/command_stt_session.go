@@ -34,7 +34,8 @@ func sttSessionCmd() *cobra.Command {
 }
 
 func newSTTSessionCmd(load func() (session.Deps, error)) *cobra.Command {
-	return &cobra.Command{
+	var standby bool
+	cmd := &cobra.Command{
 		Use: "session", Short: "Ejecutar una sesión con órdenes por stdin y eventos JSON por stdout", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cmd.SilenceUsage = true
@@ -44,7 +45,10 @@ func newSTTSessionCmd(load func() (session.Deps, error)) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			deps.Standby = standby
 			return session.Run(ctx, deps, cmd.InOrStdin(), cmd.OutOrStdout())
 		},
 	}
+	cmd.Flags().BoolVar(&standby, "standby", false, "Precargar el motor sin abrir el micrófono")
+	return cmd
 }

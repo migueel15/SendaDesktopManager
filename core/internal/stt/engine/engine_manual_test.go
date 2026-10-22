@@ -3,9 +3,11 @@
 package engine
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -69,4 +71,85 @@ func TestManualSpanishWAV(t *testing.T) {
 		t.Fatalf("invalid Spanish transcription: %q (%s)", text, first)
 	}
 	t.Logf("load=%s first_partial_after_ready=%s total=%s text=%q", ready.Sub(start), first, time.Since(start), text)
+}
+
+func TestAC7F002ManualStandbyDoesNotRecordBeforeStart(t *testing.T) {
+	dir, python := os.Getenv("SENDA_STT_TEST_MODEL"), os.Getenv("SENDA_STT_TEST_PYTHON")
+	if dir == "" || python == "" {
+		t.Skip("set SENDA_STT_TEST_MODEL and SENDA_STT_TEST_PYTHON")
+	}
+	m, err := stt.ReadManifest(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	temp := t.TempDir()
+	log := filepath.Join(temp, "record.log")
+	// Keep stdout open without producing audio; cancellation must terminate this process.
+	fake := "#!/bin/sh\necho record >> '" + log + "'\nexec sleep 60\n"
+	if err := os.WriteFile(filepath.Join(temp, "pw-record"), []byte(fake), 0700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", temp+string(os.PathListSeparator)+os.Getenv("PATH"))
+	path, err := writeScript(temp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	manifest, err := json.Marshal(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, python, "-u", path, "--model-dir", dir, "--manifest", string(manifest), "--provider", "cpu", "--language", "es", "--standby")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { stdin.Close(); cancel(); _ = cmd.Wait() })
+	dec := json.NewDecoder(stdout)
+	expect := func(want stt.EventType) {
+		t.Helper()
+		var event stt.Event
+		if err := dec.Decode(&event); err != nil {
+			t.Fatalf("waiting for %s: %v", want, err)
+		}
+		if event.Type != want {
+			t.Fatalf("event = %+v, want %s", event, want)
+		}
+	}
+	expect(stt.EventLoaded)
+	time.Sleep(200 * time.Millisecond)
+	if data, err := os.ReadFile(log); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("pw-record ran before start: %q, %v", data, err)
+	}
+	if _, err := io.WriteString(stdin, "start\n"); err != nil {
+		t.Fatal(err)
+	}
+	expect(stt.EventReady)
+	deadline := time.Now().Add(time.Second)
+	for {
+		data, err := os.ReadFile(log)
+		if err == nil && string(data) == "record\n" {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("pw-record did not run after start: %q, %v", data, err)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if _, err := io.WriteString(stdin, "cancel\n"); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Wait(); err != nil {
+		t.Fatalf("cancel: %v: %s", err, stderr.String())
+	}
 }

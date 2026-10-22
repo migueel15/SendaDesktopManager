@@ -137,3 +137,25 @@ func TestSTTCancelCommandCallsCancelIPC(t *testing.T) {
 		t.Fatalf("submap resets = %d, want 1", submap.resets)
 	}
 }
+
+func TestSTTTogglePreloadFailureNotifiesWithoutToggling(t *testing.T) {
+	for _, state := range []string{"preparing", "standby"} {
+		t.Run(state, func(t *testing.T) {
+			shell := &commandSTTFakeShell{status: state}
+			notifier := &commandSTTFakeNotifier{}
+			cmd := newSTTToggleCmd(func(*cobra.Command) control.Shell { return shell }, func(*cobra.Command) error { return control.ErrNoMicrophone }, notifier)
+			cmd.SetOut(&bytes.Buffer{})
+			cmd.SetErr(&bytes.Buffer{})
+			cmd.SetArgs(nil)
+			if err := cmd.Execute(); !errors.Is(err, control.ErrNoMicrophone) {
+				t.Fatalf("toggle error = %v", err)
+			}
+			if !reflect.DeepEqual(shell.calls, []string{"status"}) {
+				t.Fatalf("IPC calls = %v", shell.calls)
+			}
+			if notifier.calls != 1 || notifier.body != control.ErrNoMicrophone.Error() {
+				t.Fatalf("notification = %+v", notifier)
+			}
+		})
+	}
+}

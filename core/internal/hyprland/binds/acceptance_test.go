@@ -33,7 +33,7 @@ func TestAC7NormalizeShortcutRejectsInvalid(t *testing.T) {
 	}
 }
 
-func TestAC7RenderBindsAndSubmap(t *testing.T) {
+func TestAC4F002RenderToggleWithoutEscape(t *testing.T) {
 	out, err := Render("ALT + ntilde", "senda")
 	if err != nil {
 		t.Fatalf("Render = %v", err)
@@ -45,21 +45,10 @@ func TestAC7RenderBindsAndSubmap(t *testing.T) {
 	if !strings.Contains(text, "submap_universal = true") {
 		t.Errorf("missing submap_universal:\n%s", text)
 	}
-	if !strings.Contains(text, SubmapName) || SubmapName != "senda_stt" {
-		t.Errorf("missing submap %q:\n%s", SubmapName, text)
-	}
-	cancel := strings.Index(text, "senda stt cancel")
-	if cancel < 0 {
-		t.Fatalf("missing cancel command:\n%s", text)
-	}
-	submapAt := strings.Index(text, SubmapName)
-	if submapAt < 0 || submapAt > cancel {
-		t.Errorf("cancel is not inside the %s submap:\n%s", SubmapName, text)
-	}
-	lineStart := strings.LastIndex(text[:cancel], "\n") + 1
-	lineEnd := cancel + strings.Index(text[cancel:]+"\n", "\n")
-	if line := text[lineStart:lineEnd]; !strings.Contains(line, "escape") {
-		t.Errorf("escape is not bound to cancel: %q", line)
+	for _, forbidden := range []string{"hl.define_submap", "senda_stt", "senda stt cancel", `hl.bind("escape"`} {
+		if strings.Contains(text, forbidden) {
+			t.Errorf("static module contains %q:\n%s", forbidden, text)
+		}
 	}
 }
 
@@ -141,5 +130,27 @@ func TestAC7SubmapUnavailableWhenModuleNotLoaded(t *testing.T) {
 	err := NewSubmap(fixedRunner("false\n", nil)).Enter(context.Background())
 	if !errors.Is(err, stt.ErrSubmapUnavailable) {
 		t.Fatalf("Enter = %v, want ErrSubmapUnavailable", err)
+	}
+}
+
+func TestAC4F002EscapeDisabledWithoutHyprlandCalls(t *testing.T) {
+	run := func(context.Context, io.Reader, string, ...string) ([]byte, error) {
+		t.Fatal("disabled Escape control must not call Hyprland")
+		return nil, errors.New("unexpected call")
+	}
+	for _, runner := range []stt.Runner{run, nil} {
+		submap := NewSubmap(runner)
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		for _, ctx := range []context.Context{context.Background(), ctx} {
+			for range 2 {
+				if err := submap.Enter(ctx); !errors.Is(err, stt.ErrSubmapUnavailable) {
+					t.Fatalf("Enter = %v, want ErrSubmapUnavailable", err)
+				}
+				if err := submap.Reset(ctx); err != nil {
+					t.Fatalf("Reset = %v, want nil", err)
+				}
+			}
+		}
 	}
 }

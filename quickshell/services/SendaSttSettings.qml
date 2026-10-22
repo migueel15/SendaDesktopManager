@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.services
 
 // The CLI owns the STT configuration, model files and Hyprland binding.
 Singleton {
@@ -27,6 +28,14 @@ Singleton {
 
     readonly property bool busy: root.operation !== "" || runtimeProcess.running
         || modelsProcess.running || shortcutProcess.running
+
+    readonly property bool preloadEnabled: SendaStt.preloadEnabled
+    readonly property string preloadState: SendaStt.preloadState
+    readonly property string preloadError: SendaStt.preloadError
+
+    function setPreload(enabled) {
+        SendaSettings.save({ SENDA_STT_PRELOAD: enabled ? "true" : "false" }, "Preferencia de precarga guardada");
+    }
 
     function showError(message, fallback) {
         root.notice = message.trim() || fallback;
@@ -205,6 +214,11 @@ Singleton {
                 root.noticeIsError = false;
             } else {
                 root.showError(writeErrors.text, "No se pudo completar la operación de dictado");
+            }
+            if (exitCode === 0 && (root.operation === "useModel" || root.operation === "removeModel"
+                || root.operation === "runtime")) {
+                SendaStt.refreshPreload();
+                SendaSettings.refresh();
             }
             root.operation = "";
             root.installingId = "";

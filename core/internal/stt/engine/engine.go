@@ -20,6 +20,7 @@ var script []byte
 type engine struct{ python string }
 
 func New() stt.Engine { return &engine{} }
+
 func (e *engine) Start(ctx context.Context, opts stt.EngineOptions) (stt.Stream, error) {
 	m, err := stt.ReadManifest(opts.ModelDir)
 	if err != nil {

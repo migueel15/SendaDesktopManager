@@ -13,6 +13,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 )
 
 func shellProcess(t *testing.T, body string) *process {
@@ -132,11 +134,7 @@ func TestDeadlinesKillProcessGroup(t *testing.T) {
 				t.Fatal(err)
 			}
 			pid, _ := strconv.Atoi(strings.TrimSpace(string(data)))
-			// A killed descendant may briefly remain a zombie until init reaps it.
-			stat, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
-			if err == nil && !strings.Contains(string(stat), ") Z ") {
-				t.Fatalf("recorder still running: %s", stat)
-			}
+			waitRecorderReaped(t, pid)
 		})
 	}
 }
@@ -172,6 +170,12 @@ func TestUnexpectedDeathKillsRecorder(t *testing.T) {
 		t.Fatal(err)
 	}
 	pid, _ := strconv.Atoi(strings.TrimSpace(string(data)))
+	waitRecorderReaped(t, pid)
+}
+
+// SIGKILL can briefly leave a descendant in Linux's transient X (dead) state.
+func waitRecorderReaped(t *testing.T, pid int) {
+	t.Helper()
 	deadline := time.Now().Add(time.Second)
 	for {
 		stat, err := os.ReadFile(fmt.Sprintf("/proc/%d/stat", pid))
@@ -182,5 +186,218 @@ func TestUnexpectedDeathKillsRecorder(t *testing.T) {
 			t.Fatalf("orphan recorder: %s", stat)
 		}
 		time.Sleep(time.Millisecond)
+	}
+}
+
+const loadedLine = `printf '%s\n' '{"event":"loaded"}'; `
+
+func standbyProcess(t *testing.T, ctx context.Context, body string) *process {
+	t.Helper()
+	p, err := prepareProcess(ctx, exec.Command("sh", "-c", body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = p.Cancel(ctx)
+	})
+	return p
+}
+
+func TestStandbyBeginAndStop(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	p := standbyProcess(t, ctx, loadedLine+`read cmd; test "$cmd" = start || exit 2; `+readyLine+`read cmd; test "$cmd" = stop || exit 3; printf '%s\n' '{"event":"final","text":"hola"}'; `+loadedLine+`read cmd; test "$cmd" = cancel`)
+	select {
+	case <-p.Loaded():
+	case <-ctx.Done():
+		t.Fatal(ctx.Err())
+	}
+	if p.Err() != nil {
+		t.Fatal(p.Err())
+	}
+	p.mu.Lock()
+	begun := p.current != nil
+	p.mu.Unlock()
+	if begun {
+		t.Fatal("recording before Begin")
+	}
+	streams := make(chan stt.Stream, 8)
+	var wg sync.WaitGroup
+	for range 8 {
+		wg.Go(func() {
+			s, err := p.Begin(ctx)
+			if err != nil || s == nil {
+				t.Errorf("Begin = %v, %v", s, err)
+			}
+			streams <- s
+		})
+	}
+	wg.Wait()
+	stream := <-streams
+	for range 7 {
+		if other := <-streams; other != stream {
+			t.Fatal("concurrent Begin returned distinct streams")
+		}
+	}
+	if text, err := stream.Stop(ctx); text != "hola" || err != nil {
+		t.Fatalf("Stop = %q, %v", text, err)
+	}
+}
+
+func TestStandbyCancel(t *testing.T) {
+	for _, loaded := range []bool{false, true} {
+		t.Run(strconv.FormatBool(loaded), func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			body := `read cmd; test "$cmd" = cancel`
+			if loaded {
+				body = loadedLine + body
+			}
+			p := standbyProcess(t, ctx, body)
+			if loaded {
+				select {
+				case <-p.Loaded():
+				case <-ctx.Done():
+					t.Fatal(ctx.Err())
+				}
+			}
+			for range 2 {
+				if err := p.Cancel(ctx); err != nil {
+					t.Fatal(err)
+				}
+			}
+			select {
+			case <-p.Loaded():
+			default:
+				t.Fatal("Loaded remains open after cancellation")
+			}
+			if _, err := p.Begin(ctx); err == nil {
+				t.Fatal("Begin accepted after Cancel")
+			}
+		})
+	}
+}
+
+func TestStandbyLoadFailure(t *testing.T) {
+	for _, body := range []string{`printf '%s\n' '{"event":"error","message":"modelo roto"}'`, `exit 23`, readyLine} {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		p := standbyProcess(t, ctx, body)
+		select {
+		case <-p.Loaded():
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		}
+		if p.Err() == nil {
+			t.Fatal("load failure not published")
+		}
+		if _, err := p.Begin(ctx); err == nil {
+			t.Fatal("Begin accepted failed load")
+		}
+		cancel()
+	}
+}
+
+func TestStandbyCancellation(t *testing.T) {
+	for _, phase := range []string{"preparing", "standby", "starting", "cancel-deadline"} {
+		t.Run(phase, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			body := `trap '' TERM; `
+			if phase != "preparing" {
+				body += loadedLine
+			}
+			p := standbyProcess(t, ctx, body+`sleep 30`)
+			if phase != "preparing" {
+				select {
+				case <-p.Loaded():
+				case <-time.After(time.Second):
+					t.Fatal("load timeout")
+				}
+			}
+			if phase == "starting" || phase == "cancel-deadline" {
+				limit, stop := context.WithTimeout(ctx, 30*time.Millisecond)
+				defer stop()
+				var err error
+				if phase == "starting" {
+					_, err = p.Begin(limit)
+				} else {
+					err = p.Cancel(limit)
+				}
+				if !errors.Is(err, context.DeadlineExceeded) {
+					t.Fatal(err)
+				}
+			} else {
+				cancel()
+			}
+			select {
+			case <-p.done:
+			case <-time.After(time.Second):
+				t.Fatal("process did not terminate")
+			}
+			if err := syscall.Kill(p.cmd.Process.Pid, 0); !errors.Is(err, syscall.ESRCH) {
+				t.Fatalf("parent alive: %v", err)
+			}
+		})
+	}
+}
+
+// Completed handles must remain tied to their dictation, even when the next one fails.
+func TestResidentStreamIsolation(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	p := standbyProcess(t, ctx, loadedLine+`read cmd; test "$cmd" = start || exit 2; `+readyLine+
+		`read cmd; test "$cmd" = stop || exit 3; printf '%s\n' '{"event":"final","text":"primero"}'; `+loadedLine+
+		`read cmd; test "$cmd" = start || exit 4; `+readyLine+
+		`read cmd; test "$cmd" = stop || exit 5; printf '%s\n' '{"event":"error","message":"micrófono roto"}'; exit 1`)
+	first, err := p.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if text, err := first.Stop(ctx); text != "primero" || err != nil {
+		t.Fatalf("first Stop = %q, %v", text, err)
+	}
+	second, err := p.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first == second || first.Results() == second.Results() {
+		t.Fatal("dictations share a stream")
+	}
+	if text, err := first.Stop(ctx); text != "primero" || err != nil {
+		t.Fatalf("repeated Stop = %q, %v", text, err)
+	}
+	if err := first.Cancel(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := second.Stop(ctx); err == nil || !strings.Contains(err.Error(), "micrófono roto") {
+		t.Fatalf("second Stop = %v", err)
+	}
+	if first.Err() != nil || second.Err() == nil {
+		t.Fatalf("dictation errors = %v, %v", first.Err(), second.Err())
+	}
+}
+
+func TestResidentStreamStopDeadline(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	p := standbyProcess(t, ctx, `trap '' TERM; `+loadedLine+`read cmd; `+readyLine+`sleep 30`)
+	stream, err := p.Begin(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	limit, stop := context.WithTimeout(ctx, 30*time.Millisecond)
+	defer stop()
+	if _, err := stream.Stop(limit); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatal(err)
+	}
+	select {
+	case <-p.done:
+	default:
+		t.Fatal("process not reaped")
+	}
+	if !errors.Is(stream.Err(), context.DeadlineExceeded) {
+		t.Fatal(stream.Err())
 	}
 }

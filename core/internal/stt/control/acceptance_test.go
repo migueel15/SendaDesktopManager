@@ -3,6 +3,7 @@ package control
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
@@ -118,5 +119,35 @@ func TestAC8ToggleActiveStatesSkipPreflight(t *testing.T) {
 				t.Fatalf("toggle not called: %v", shell.calls)
 			}
 		})
+	}
+}
+
+func TestAC8F002ToggleStandbyChecksMicrophone(t *testing.T) {
+	for _, state := range []string{"preparing", "standby"} {
+		for _, available := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/microphone=%t", state, available), func(t *testing.T) {
+				shell := &fakeShell{status: state}
+				checks := okChecks()
+				calls := 0
+				checks.Microphone = func(context.Context) error {
+					calls++
+					if !available {
+						return errors.New("sin entrada")
+					}
+					return nil
+				}
+				_, err := Toggle(context.Background(), shell, func() error { return Preflight(context.Background(), stt.LoadSettings(nil), checks) })
+				if calls != 1 {
+					t.Errorf("microphone checks = %d", calls)
+				}
+				if available {
+					if err != nil || !shell.called("toggle") {
+						t.Errorf("Toggle = %v, calls %v", err, shell.calls)
+					}
+				} else if !errors.Is(err, ErrNoMicrophone) || shell.called("toggle") {
+					t.Errorf("Toggle = %v, calls %v", err, shell.calls)
+				}
+			})
+		}
 	}
 }
