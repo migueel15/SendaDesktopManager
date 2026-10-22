@@ -9,7 +9,9 @@ Scope {
     id: root
 
     LazyLoader {
-        active: SendaStt.dockVisible && SendaStt.phase !== "standby"
+        // Keep the dock loaded until its close animation ends, even when the
+        // resident session is already back in standby.
+        active: SendaStt.dockVisible
 
         PanelWindow {
             property bool entered: false
@@ -81,7 +83,7 @@ Scope {
                     ? Theme.spacing.xl + rootWindow.timerBlock
                         + (rootWindow.expanded ? Theme.spacing.xs + transcriptView.height : 0)
                     : Math.ceil(statusText.implicitHeight))
-                // Closing slides the pill back into the frame instead of fading it.
+                // Closing mirrors opening: the pill slides back into the frame.
                 property real slideOffset: rootWindow.entered && !SendaStt.dockClosing
                     ? 0 : Math.ceil(animatedHeight)
 
@@ -93,7 +95,7 @@ Scope {
                 clip: true
                 // Same color as the screen frame, without a border, so both read as one shape.
                 color: Theme.colors.background
-                opacity: rootWindow.entered ? 1 : 0
+                opacity: rootWindow.entered && !SendaStt.dockClosing ? 1 : 0
 
                 // Squares the bottom corners where the dock meets the frame.
                 Rectangle {

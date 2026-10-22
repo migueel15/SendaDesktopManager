@@ -202,7 +202,8 @@ Singleton {
 
     Timer {
         id: closeTimer
-        interval: Theme.motion.slow
+        // Slightly longer than the dock's close animation, so it is not cut off.
+        interval: Theme.motion.slow + 50
         onTriggered: root.closeDock()
     }
 
