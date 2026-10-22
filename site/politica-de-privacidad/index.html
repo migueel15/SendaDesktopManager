@@ -18,25 +18,42 @@
 <body>
   <main>
     <h1>Política de privacidad de Senda</h1>
-    <p class="muted">Última actualización: 18 de octubre de 2026</p>
+    <p class="muted">Última actualización: 22 de octubre de 2026</p>
 
-    <h2>Qué hace Senda con tu cuenta de Google</h2>
-    <p>Senda es un entorno de escritorio que se ejecuta en tu equipo. Si conectas tu cuenta de Google, Senda muestra tus eventos de Google Calendar en el dashboard.</p>
+    <h2 id="datos-de-google">Datos de Google a los que accede Senda</h2>
+    <p>Senda es un entorno de escritorio que se ejecuta en tu equipo. Conectar Google es opcional y permite mostrar tus eventos de Google Calendar en el dashboard. Senda solicita estos permisos de solo lectura:</p>
     <ul>
-      <li>Solo pide permiso de <strong>lectura</strong>: ver tus eventos y la lista de tus calendarios. No crea, modifica ni borra nada en tu calendario.</li>
-      <li>Los eventos se mantienen en la memoria de Senda mientras se usa el dashboard. No se escriben en disco.</li>
-      <li>El token de acceso se guarda en tu equipo con permisos que solo permiten leerlo a tu usuario. Los calendarios que eliges se guardan en la configuración local de Senda.</li>
+      <li><code>https://www.googleapis.com/auth/calendar.calendarlist.readonly</code>: consultar la lista de tus calendarios para que puedas elegir cuáles mostrar. Senda utiliza sus identificadores, nombres y estado de selección.</li>
+      <li><code>https://www.googleapis.com/auth/calendar.events.readonly</code>: consultar los eventos de los calendarios seleccionados. Senda utiliza el identificador y título del evento, su calendario, las fechas y horas de inicio y fin, si dura todo el día, su estado de cancelación y el enlace para abrirlo en Google Calendar.</li>
     </ul>
+    <p>Estos permisos permiten leer la lista de calendarios y los detalles de los eventos que devuelve Google Calendar. Senda utiliza los campos indicados para mostrar la agenda; no crea, modifica ni elimina calendarios ni eventos. No solicita acceso a Gmail, contactos ni archivos de Google Drive.</p>
+    <p>Google también proporciona un token de acceso y un token de renovación para mantener la conexión autorizada. Senda no recibe ni guarda tu contraseña de Google.</p>
 
-    <h2>Quién accede a tus datos</h2>
-    <p>Solo tú, desde tu equipo. Senda no envía tus datos de Google Calendar a ningún servidor del desarrollador ni a terceros, y no hay ningún servicio externo que los reciba.</p>
-
-    <h2>Para qué se usan</h2>
-    <p>Únicamente para mostrarte tus eventos en Senda. No se usan para publicidad, no se venden, no se comparten y no se usan para entrenar modelos de inteligencia artificial.</p>
+    <h2 id="uso-y-transferencias">Uso y transferencia de los datos</h2>
+    <p>Los datos se usan únicamente para seleccionar calendarios, mostrar tus eventos y abrirlos en Google Calendar cuando lo solicitas. Senda se comunica directamente con Google para autorizar la conexión, consultar los calendarios y renovar o revocar los tokens.</p>
+    <p>Senda no transmite estos datos ni los tokens a servidores del desarrollador ni a otros terceros. El desarrollador no tiene acceso remoto a ellos. No se venden, no se usan para publicidad ni para entrenar modelos de inteligencia artificial.</p>
     <p>El uso de la información recibida de las APIs de Google cumple la <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de datos de usuario de los servicios de API de Google</a>, incluidos sus requisitos de uso limitado.</p>
 
-    <h2>Cómo dejar de dar acceso</h2>
-    <p>Desde el panel de Senda puedes desconectar tu cuenta de Google. Al hacerlo, Senda revoca el acceso en Google y borra el token guardado en tu equipo. También puedes revocar el acceso en la <a href="https://myaccount.google.com/permissions">página de permisos de tu cuenta de Google</a>.</p>
+    <h2 id="proteccion">Protección de los datos</h2>
+    <ul>
+      <li>Las comunicaciones con los servicios de Google usan HTTPS, que cifra los datos en tránsito.</li>
+      <li>La autorización usa OAuth 2.0 con PKCE y un parámetro de estado para proteger el intercambio de autorización. La respuesta del navegador se recibe en una dirección local de tu equipo (<code>127.0.0.1</code>).</li>
+      <li>El token de renovación se guarda localmente en <code>$XDG_STATE_HOME/senda/google-calendar.json</code> (por defecto, <code>~/.local/state/senda/google-calendar.json</code>), con permisos <code>0600</code>: lectura y escritura para tu usuario. Senda rechaza archivos de token con permisos abiertos a otros usuarios.</li>
+      <li>Los identificadores de calendarios seleccionados y las credenciales OAuth personalizadas, si las configuras, se guardan en <code>$XDG_CONFIG_HOME/senda/config</code> (por defecto, <code>~/.config/senda/config</code>), con permisos <code>0600</code>.</li>
+      <li>Los tokens de acceso y la caché de eventos se mantienen en memoria; Senda no los escribe en disco.</li>
+    </ul>
+    <p>Senda no cifra por sí misma el archivo local del token ni la configuración. Su protección en disco se basa en los permisos del sistema operativo y en las medidas de seguridad de tu equipo.</p>
+
+    <h2 id="conservacion-y-eliminacion">Conservación y eliminación de los datos de Google</h2>
+    <ul>
+      <li><strong>Eventos y lista de calendarios:</strong> se conservan en memoria durante la ejecución de Senda y se descartan al cerrar su proceso. La caché de eventos se actualiza durante el uso; no hay un archivo de eventos persistente.</li>
+      <li><strong>Token de acceso:</strong> permanece solo en la memoria del proceso que realiza la consulta, se renueva cuando es necesario y se descarta al terminar el proceso.</li>
+      <li><strong>Token de renovación:</strong> se conserva entre sesiones para evitar que tengas que autorizar cada consulta. No tiene un plazo de borrado automático en Senda; se elimina al desconectar la cuenta o al borrar su archivo local. Revocar el acceso en Google invalida la autorización, pero no borra por sí solo el archivo de tu equipo.</li>
+      <li><strong>Selección de calendarios:</strong> los identificadores permanecen en la configuración local hasta que los cambias o eliminas la entrada <code>SENDA_GOOGLE_CALENDARS</code>. Desconectar la cuenta no elimina esta preferencia.</li>
+    </ul>
+    <p>Para desconectar, usa el panel de configuración de Senda o ejecuta <code>senda calendar logout</code>. Senda elimina el token local y solicita su revocación a Google. Si Google no confirma la revocación, Senda lo indica; puedes completarla desde las <a href="https://myaccount.google.com/connections">conexiones de tu cuenta de Google</a>. Para descartar también cualquier dato que permanezca en memoria, cierra el proceso de Senda.</p>
+    <p>Para eliminar todos los datos locales de esta integración, desconecta la cuenta, cierra Senda y elimina de la configuración la entrada <code>SENDA_GOOGLE_CALENDARS</code> y las credenciales OAuth personalizadas si las habías añadido. Desinstalar la aplicación no garantiza la eliminación de estos archivos. Las copias de seguridad que hayas creado se gestionan por separado.</p>
+    <p>El desarrollador no conserva copias de tus datos de Google y no puede borrar archivos de tu equipo a distancia. Desconectar o eliminar los datos locales de Senda no borra tus eventos ni calendarios originales en Google.</p>
 
     <h2>Contacto</h2>
     <p>Para cualquier pregunta sobre esta política, escribe a <a href="mailto:miguelangeldorado10@gmail.com">miguelangeldorado10@gmail.com</a>.</p>
