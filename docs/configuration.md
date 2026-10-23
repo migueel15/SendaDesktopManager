@@ -57,6 +57,16 @@ El refresh token de Google no está en este archivo. Se guarda en `$XDG_STATE_HO
 
 El archivo `.env` ya no se lee.
 
+## Bloqueo de teclado desde la barra
+
+El widget de teclado comparte su estado entre todas las barras. Al pulsarlo,
+ejecuta `hyprctl eval Senda.keyboard.toggle()` y actualiza los iconos de todos los
+monitores solo si el comando termina con código 0. Mientras está en ejecución,
+las nuevas pulsaciones se ignoran en todas las barras.
+
+El estado del icono empieza como activado al iniciar o recargar Quickshell; no
+consulta el estado real de Hyprland ni detecta cambios hechos fuera de la barra.
+
 ## Variables de entorno solo para desarrollo
 
 `SENDA_HOME` cambia el directorio de datos a una ruta concreta, normalmente un checkout del repositorio. Solo se lee del entorno para elegir ese directorio: si aparece en el archivo de configuración, no cambia la ruta de datos.

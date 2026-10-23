@@ -7,6 +7,26 @@ Singleton {
     id: root
 
     readonly property string binaryPath: Quickshell.env("SENDA_BIN") || "senda"
+    readonly property bool keyboardEnabled: keyboardState.enabled
+
+    function toggleKeyboard() {
+        if (!keyboardToggleProcess.running)
+            keyboardToggleProcess.running = true;
+    }
+
+    QtObject {
+        id: keyboardState
+        property bool enabled: true
+    }
+
+    Process {
+        id: keyboardToggleProcess
+        command: ["hyprctl", "eval", "Senda.keyboard.toggle()"]
+        onExited: function(exitCode, exitStatus) {
+            if (exitCode === 0)
+                keyboardState.enabled = !keyboardState.enabled;
+        }
+    }
 
     function setWallpaper(screen, path, x, y) {
         const position = `${x},${y}`;
