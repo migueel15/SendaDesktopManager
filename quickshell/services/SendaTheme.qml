@@ -255,7 +255,7 @@ Singleton {
             // Also covers failure to start, for which there may be no exit signal.
             onRunningChanged: {
                 if (!running)
-                    Qt.callLater(() => root.watchExited(watchProcess));
+                    Qt.callLater(root.watchExited, watchProcess);
             }
         }
     }
