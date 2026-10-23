@@ -32,8 +32,8 @@ func TestDictationRestoresDiscordMuteOnExit(t *testing.T) {
 			run := start(t, context.Background(), r.deps)
 			if action != "engine-error" {
 				run.waitEvent(t, stt.EventReady)
-				if muted.Load() != 1 || restored.Load() != 0 {
-					t.Fatal("Discord not muted while listening")
+				if restored.Load() != 0 {
+					t.Fatal("Discord restored while listening")
 				}
 				if action == "signal" {
 					run.cancel()
@@ -56,6 +56,35 @@ func TestDictationRestoresDiscordMuteOnExit(t *testing.T) {
 				t.Fatalf("muted=%d restored=%d", muted.Load(), restored.Load())
 			}
 		})
+	}
+}
+
+func TestSlowDiscordMuteDoesNotDelayDictation(t *testing.T) {
+	r := newRig(&fakeEngine{}, newStream("hola"))
+	release := make(chan struct{})
+	var restored atomic.Int32
+	r.deps.MuteDiscord = func(context.Context) func(context.Context) error {
+		<-release
+		return func(context.Context) error {
+			restored.Add(1)
+			return nil
+		}
+	}
+	run := start(t, context.Background(), r.deps)
+	// Ready arrives while Discord is still being muted.
+	run.waitEvent(t, stt.EventReady)
+	run.send("stop")
+	close(release)
+	select {
+	case err := <-run.done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("session did not exit")
+	}
+	if restored.Load() != 1 {
+		t.Fatalf("restored=%d, want 1 after the slow mute finished", restored.Load())
 	}
 }
 

@@ -308,14 +308,18 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 				}
 			}
 			if deps.MuteDiscord != nil {
-				if restore := deps.MuteDiscord(ctx); restore != nil {
+				// Discord's microphone is independent of ours: mute it in parallel so
+				// the dictation starts at once, and restore only after muting finished.
+				muted := make(chan func(context.Context) error, 1)
+				go func() { muted <- deps.MuteDiscord(ctx) }()
+				defer func() {
 					// Discord problems are reported but never end the dictation.
-					defer func() {
+					if restore := <-muted; restore != nil {
 						if err := cleanup(restore); err != nil {
 							fmt.Fprintf(os.Stderr, "Aviso: %v\n", err)
 						}
-					}()
-				}
+					}
+				}()
 			}
 			if err := cleanup(deps.Submap.Reset); err != nil {
 				return fmt.Errorf("no se pudo limpiar el atajo de Esc: %w", err)
