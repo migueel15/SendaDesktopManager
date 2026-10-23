@@ -4,6 +4,7 @@ import QtQuick
 import qs.common
 import qs.services
 import qs.modules.bars.widgets
+import qs.modules.themes
 import Quickshell.Io
 import Quickshell.Wayland
 
@@ -39,6 +40,31 @@ Variants {
 		}
 
 		implicitHeight: Theme.barSize
+
+		PanelWindow {
+			id: themeWindow
+			screen: topbar.modelData
+			anchors.top: true
+			margins.top: topbar.implicitHeight
+			implicitWidth: Math.min(Theme.scaled(760), screen.width)
+			implicitHeight: Math.max(1, screen.height - topbar.implicitHeight)
+			exclusionMode: ExclusionMode.Ignore
+			WlrLayershell.namespace: "Senda:ThemePicker"
+			WlrLayershell.layer: WlrLayer.Overlay
+			WlrLayershell.keyboardFocus: themePicker.expanded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+			color: "transparent"
+			visible: themePicker.onPickerScreen && (SendaTheme.pickerOpen || themePicker.height > 0.01)
+			mask: Region { item: themePicker }
+
+			ThemePicker {
+				id: themePicker
+				width: themeWindow.width
+				y: -collapseLift
+				maximumHeight: themeWindow.implicitHeight
+				onPickerScreen: SendaTheme.pickerScreen === topbar.screenName
+					|| (SendaTheme.pickerScreen === "" && topbar.modelData === Quickshell.screens[0])
+			}
+		}
 
 		// Clicks on empty parts of the bar close the open panel. Buttons sit above
 		// this area, so they still receive their clicks.

@@ -48,6 +48,23 @@ Rectangle {
                 font.weight: Font.Bold
             }
             Text {
+                text: "󰏘"
+                Layout.rightMargin: Theme.spacing.md
+                color: Theme.colors.overlay
+                font.family: Theme.font.title.family
+                font.pixelSize: Theme.scaled(16)
+
+                MouseArea {
+                    anchors.fill: parent
+                    anchors.margins: -6
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        OverlayService.closeCurrentPanel();
+                        SendaTheme.openPicker(OverlayService.currentScreen);
+                    }
+                }
+            }
+            Text {
                 text: "󰒓"
                 color: Theme.colors.overlay
                 font.family: Theme.font.title.family
