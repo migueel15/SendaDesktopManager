@@ -14,8 +14,49 @@ Rectangle {
 
     readonly property Repeater items: itemsRepeater
     property bool expanded: false
+    property TrayItem pinDragSource: null
+    property bool pinDragOverTarget: false
+    readonly property bool pinDragging: pinDragSource !== null
+
+    function updatePinDrag(source, globalX, globalY) {
+        if (!expanded) {
+            source.endPinDrag();
+            return;
+        }
+        pinDragSource = source;
+        // Use the effective window positions, including compositor adjustments.
+        const point = pinnedZone.mapFromGlobal(globalX, globalY);
+        pinDragOverTarget = point.x >= 0 && point.y >= 0
+                && point.x < pinnedZone.width && point.y < pinnedZone.height;
+    }
+
+    function finishPinDrag(dropInside) {
+        const source = pinDragSource;
+        const id = source && dropInside && pinDragOverTarget ? source.modelData.id : "";
+        pinDragSource = null;
+        pinDragOverTarget = false;
+        if (source)
+            source.endPinDrag();
+        // Clean up before pin() hides or destroys a delegate.
+        if (id !== "")
+            TrayPins.pin(id);
+    }
+
+    onExpandedChanged: {
+        if (!expanded)
+            finishPinDrag(false);
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        context: Qt.ApplicationShortcut
+        enabled: root.pinDragging
+        onActivated: root.finishPinDrag(false)
+    }
     readonly property font emptyStateFont: Theme.font.overlay
     readonly property color emptyStateColor: Theme.colors.overlay
+    readonly property color pinTargetColor: Theme.colors.primary
+    readonly property real pinTargetRadius: Theme.rounding.small
     readonly property bool hasTrayItems: SystemTray.items.values.length > 0
 
     function isPinned(id) {
@@ -65,6 +106,16 @@ Rectangle {
         Repeater {
             model: root.pinnedItems
             delegate: TrayItem { pinned: true }
+        }
+
+        Rectangle {
+            visible: root.pinDragging
+            width: 24
+            height: 24
+            radius: root.pinTargetRadius
+            border.width: 1
+            border.color: root.pinTargetColor
+            color: root.pinDragOverTarget ? root.pinTargetColor : "transparent"
         }
     }
 
@@ -146,6 +197,10 @@ Rectangle {
         }
         visible: root.expanded || trayExtensionContent.height > 0.01
         color: "transparent"
+        onVisibleChanged: {
+            if (!visible)
+                root.finishPinDrag(false);
+        }
 
         BarComponents.BarExtension {
             id: trayExtensionContent
@@ -156,7 +211,7 @@ Rectangle {
             conflictGroup: "tray-popups"
             autoHideStartsOnExpand: true
             autoHideDelay: 500
-            autoHidePaused: root.trayMenuOpen || expandButtonHover.hovered
+            autoHidePaused: root.pinDragging || root.trayMenuOpen || expandButtonHover.hovered
             onCloseRequested: root.expanded = false
 
             Row {
@@ -169,8 +224,16 @@ Rectangle {
                     id: itemsRepeater
                     model: SystemTray.items
                     delegate: TrayItem {
+                        id: popupItem
                         pinned: root.isPinned(modelData.id)
                         visible: !pinned
+                        pinDragEnabled: true
+                        onPinDragMoved: (globalX, globalY) => root.updatePinDrag(popupItem, globalX, globalY)
+                        onPinDragReleased: (globalX, globalY) => {
+                            root.updatePinDrag(popupItem, globalX, globalY);
+                            root.finishPinDrag(true);
+                        }
+                        onPinDragCanceled: root.finishPinDrag(false)
                     }
                 }
 
