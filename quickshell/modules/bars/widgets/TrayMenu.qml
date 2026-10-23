@@ -13,6 +13,9 @@ PopupWindow {
     id: root
 
     required property var rootMenu
+    property bool showUnpin: false
+
+    signal unpinRequested()
 
     // Stack of opened submenu handles; the last one is shown.
     property var menuStack: []
@@ -76,6 +79,7 @@ PopupWindow {
     }
 
     Rectangle {
+        id: menuBackground
         anchors.fill: parent
         focus: true
         Keys.onEscapePressed: {
@@ -104,6 +108,7 @@ PopupWindow {
             }
 
             Repeater {
+                id: appEntries
                 model: opener.children
 
                 delegate: Loader {
@@ -142,6 +147,30 @@ PopupWindow {
                             }
                         }
                     }
+                }
+            }
+
+            Rectangle {
+                visible: root.showUnpin && root.menuStack.length === 0 && appEntries.count > 0
+                Layout.fillWidth: true
+                implicitHeight: 9
+                color: "transparent"
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: parent.width - 8
+                    height: 1
+                    color: menuBackground.border.color
+                }
+            }
+
+            MenuRow {
+                visible: root.showUnpin && root.menuStack.length === 0
+                label: "Desanclar de la barra"
+                leadingIcon: "󰐃"
+                onActivated: {
+                    root.close();
+                    root.unpinRequested();
                 }
             }
         }

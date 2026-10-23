@@ -4,6 +4,7 @@ import QtQuick
 import QtQml
 import Quickshell
 import Quickshell.Services.SystemTray
+import qs.services
 
 MouseArea {
     id: root
@@ -11,6 +12,7 @@ MouseArea {
     required property SystemTrayItem modelData
 
     property int iconSize: 18
+    property bool pinned: false
     property string observedIconSource: ""
     readonly property bool menuOpen: menu.visible
     readonly property bool usingFallback: trayIcon.usingFallback
@@ -32,10 +34,14 @@ MouseArea {
 
     function openMenu() {
         const window = root.QsWindow.window;
-        if (!modelData.hasMenu || !window)
+        if ((!pinned && (!modelData.hasMenu || !modelData.menu)) || !window)
             return;
         const pos = root.mapToItem(window.contentItem, 0, root.height);
         menu.toggle(window, pos.x, pos.y + 5);
+    }
+
+    function unpin() {
+        TrayPins.unpin(modelData.id);
     }
 
     function findDesktopIconSource() {
@@ -72,6 +78,8 @@ MouseArea {
     TrayMenu {
         id: menu
         rootMenu: root.modelData.menu
+        showUnpin: root.pinned
+        onUnpinRequested: root.unpin()
     }
 
     Connections {

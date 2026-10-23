@@ -1,7 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import Quickshell.Services.SystemTray
 import Quickshell
 import QtQuick
 import qs.common
+import qs.services
 import qs.common.components
 import qs.common.components.icons
 import qs.common.components.barextension as BarComponents
@@ -11,10 +14,37 @@ Rectangle {
 
     readonly property Repeater items: itemsRepeater
     property bool expanded: false
+    readonly property font emptyStateFont: Theme.font.overlay
+    readonly property color emptyStateColor: Theme.colors.overlay
+    readonly property bool hasTrayItems: SystemTray.items.values.length > 0
+
+    function isPinned(id) {
+        return TrayPins.isPinned(id);
+    }
+
+    readonly property var pinnedItems: {
+        const liveItems = SystemTray.items.values;
+        const result = [];
+        for (const id of TrayPins.pinnedIds) {
+            for (const item of liveItems) {
+                if (item.id === id)
+                    result.push(item);
+            }
+        }
+        return result;
+    }
+    readonly property int unpinnedCount: {
+        let count = 0;
+        for (const item of SystemTray.items.values) {
+            if (!TrayPins.isPinned(item.id))
+                count++;
+        }
+        return count;
+    }
     readonly property bool trayMenuOpen: {
         for (let i = 0; i < itemsRepeater.count; i++) {
-            const item = itemsRepeater.itemAt(i);
-            if (item && item.menuOpen) return true;
+            const item = itemsRepeater.itemAt(i) as TrayItem;
+            if (item && !item.pinned && item.menuOpen) return true;
         }
         return false;
     }
@@ -23,8 +53,20 @@ Rectangle {
     visible: width > 0 && height > 0 // To avoid warnings about being visible with no size
 
     height: parent.height
-    implicitWidth: expandButton.width
+    implicitWidth: pinnedZone.width + (pinnedZone.width > 0 ? 4 : 0) + expandButton.width
     color: "transparent"
+
+    Row {
+        id: pinnedZone
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 2
+
+        Repeater {
+            model: root.pinnedItems
+            delegate: TrayItem { pinned: true }
+        }
+    }
 
     // Expand/collapse button
     Rectangle {
@@ -33,7 +75,8 @@ Rectangle {
         width: Theme.barButtonSize
         radius: Theme.rounding.normal
         anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
+        anchors.left: pinnedZone.right
+        anchors.leftMargin: pinnedZone.width > 0 ? 4 : 0
 
         // Same hover pill as the other bar buttons; stays lit while expanded.
         color: expandButtonHover.hovered || root.expanded ? Theme.colors.surfaceVariant : "transparent"
@@ -125,7 +168,18 @@ Rectangle {
                 Repeater {
                     id: itemsRepeater
                     model: SystemTray.items
-                    delegate: TrayItem {}
+                    delegate: TrayItem {
+                        pinned: root.isPinned(modelData.id)
+                        visible: !pinned
+                    }
+                }
+
+                Text {
+                    visible: root.hasTrayItems && root.unpinnedCount === 0
+                    text: "Todos los iconos están anclados"
+                    font: root.emptyStateFont
+                    color: root.emptyStateColor
+                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
         }
