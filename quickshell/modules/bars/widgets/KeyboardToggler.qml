@@ -1,13 +1,10 @@
-import Quickshell
 import QtQuick
 
-import Quickshell.Io
-
 import qs.common
+import qs.services
 
 Rectangle {
 		id: root
-		property bool keyboardEnabled : true
 
 		height: parent.height
 		width: Theme.barButtonSize
@@ -34,10 +31,9 @@ Rectangle {
 		id: textIcon
     anchors.centerIn: parent
 
-		text : root.keyboardEnabled ? "󰌌": "󰌐"
+		text : SendaManager.keyboardEnabled ? "󰌌": "󰌐"
 
 		font : Theme.font.base
-		// color: keyboardEnabled ? Theme.colors.text : Theme.colors.surfaceVariant
 		color: Theme.colors.text
 
 
@@ -49,21 +45,6 @@ Rectangle {
 		hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
 
-		onClicked: {
-			if (!toggleKeyboardProc.running){
-				toggleKeyboardProc.running = true;
-			}
-		}
-	}
-
-	Process {
-		id : toggleKeyboardProc
-		running: false
-		command: ["hyprctl", "eval", "Senda.keyboard.toggle()"]
-		onExited: function(exitCode,exitStatus){
-			if (exitCode === 0){
-				root.keyboardEnabled = !root.keyboardEnabled
-			}
-		}
+		onClicked: SendaManager.toggleKeyboard()
 	}
 }
