@@ -536,6 +536,28 @@
       border: 1px solid transparent;
     }
 
+    .channel {
+      display: inline-flex;
+      gap: 0.4rem;
+      padding: 0.3rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--code-bg);
+    }
+
+    .channel button {
+      min-width: 0;
+      padding: 0.45rem 0.9rem;
+      border-color: transparent;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .channel button[aria-checked="true"] {
+      background: var(--accent);
+      color: var(--code-bg);
+    }
+
     .install-row {
       display: flex;
       align-items: stretch;
@@ -815,12 +837,16 @@
       </div>
 
       <div class="install reveal">
+        <div class="channel" role="radiogroup" aria-label="Canal de instalación">
+          <button type="button" role="radio" aria-checked="true" data-channel="stable">Estable</button>
+          <button type="button" role="radio" aria-checked="false" data-channel="nightly">Nightly</button>
+        </div>
         <div class="install-row">
           <pre><code id="install-command">curl -fsSL https://senda.dorlab.net/install.sh | bash</code></pre>
           <button type="button" id="copy-button">Copiar</button>
         </div>
         <p class="note" id="copy-status" role="status" aria-live="polite"></p>
-        <p class="note">
+        <p class="note" id="channel-note">
           Tras instalar, ejecuta <code>senda setup</code>.
         </p>
         <ul class="requirements" aria-label="Requisitos">
@@ -844,6 +870,29 @@
       var button = document.getElementById('copy-button');
       var command = document.getElementById('install-command');
       var status = document.getElementById('copy-status');
+      var note = document.getElementById('channel-note');
+      var channels = document.querySelectorAll('[data-channel]');
+      var commands = {
+        stable: 'curl -fsSL https://senda.dorlab.net/install.sh | bash',
+        nightly: 'curl -fsSL https://senda.dorlab.net/install.sh | bash -s -- --nightly'
+      };
+      var notes = {
+        stable: 'Tras instalar, ejecuta <code>senda setup</code>. Recibes solo las releases estables.',
+        nightly: 'Se compila en cada cambio de <code>main</code>: estar al día, pero puede tener fallos. Tras instalar, ejecuta <code>senda setup</code>.'
+      };
+
+      // Cambia el comando y la nota según el canal elegido.
+      channels.forEach(function (option) {
+        option.addEventListener('click', function () {
+          var channel = option.getAttribute('data-channel');
+          channels.forEach(function (other) {
+            other.setAttribute('aria-checked', String(other === option));
+          });
+          command.textContent = commands[channel];
+          note.innerHTML = notes[channel];
+          status.textContent = '';
+        });
+      });
 
       if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
         button.hidden = true;

@@ -1,16 +1,28 @@
 #!/usr/bin/env bash
 # Installs the latest Senda release (Linux amd64) into a user-local bin directory.
+# Use --nightly to install the newest nightly build (built from main) instead.
 # Never requires root and never uses sudo.
 set -euo pipefail
 
 REPO="migueel15/SendaDesktopManager"
 API_URL="https://api.github.com/repos/${REPO}/releases/latest"
+RELEASES_API_URL="https://api.github.com/repos/${REPO}/releases?per_page=50"
 DOWNLOAD_BASE="https://github.com/${REPO}/releases/download"
 
 die() {
   echo "Error: $*" >&2
   exit 1
 }
+
+# 0. Choose the channel: stable (default) or nightly.
+channel="stable"
+for arg in "$@"; do
+  case "$arg" in
+    --nightly) channel="nightly" ;;
+    --stable) channel="stable" ;;
+    *) die "opción no reconocida: $arg" ;;
+  esac
+done
 
 # 1. Refuse to run as root.
 if [ "${EUID}" -eq 0 ]; then
@@ -32,15 +44,30 @@ for cmd in curl sha256sum; do
   fi
 done
 
-# 4. Read the latest release tag without requiring jq.
-api_response=$(curl --proto '=https' --tlsv1.2 -fsSL "$API_URL") \
-  || die "no se pudo consultar la última versión en GitHub."
-tag=$(printf '%s\n' "$api_response" \
-  | grep -m1 '"tag_name"' \
-  | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/') || true
+# 4. Read the latest release tag without requiring jq. Nightly builds are
+#    pre-releases tagged nightly-<yyyymmddhhmmss>-<sha>; the API lists the
+#    newest first, so the first nightly tag is the latest build.
+if [ "$channel" = "nightly" ]; then
+  api_response=$(curl --proto '=https' --tlsv1.2 -fsSL "$RELEASES_API_URL") \
+    || die "no se pudo consultar las compilaciones nightly en GitHub."
+  tag=$(printf '%s\n' "$api_response" \
+    | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"nightly-[^"]*"' \
+    | head -n1 \
+    | sed -E 's/.*"(nightly-[^"]*)"$/\1/') || true
 
-if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  die "la etiqueta de la última versión no es válida: '${tag}'."
+  if [[ ! "$tag" =~ ^nightly-[0-9]{14}-[0-9a-f]{7,40}$ ]]; then
+    die "no hay compilaciones nightly disponibles."
+  fi
+else
+  api_response=$(curl --proto '=https' --tlsv1.2 -fsSL "$API_URL") \
+    || die "no se pudo consultar la última versión en GitHub."
+  tag=$(printf '%s\n' "$api_response" \
+    | grep -m1 '"tag_name"' \
+    | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/') || true
+
+  if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    die "la etiqueta de la última versión no es válida: '${tag}'."
+  fi
 fi
 
 asset="senda-${tag}-linux-amd64"
@@ -51,7 +78,7 @@ tmp_target=""
 trap 'rm -rf "$tmp_dir"; rm -f "${tmp_target:-}"' EXIT
 
 # 6. Download the binary and the checksums file.
-echo "Descargando Senda ${tag}..."
+echo "Descargando Senda ${tag} (${channel})..."
 curl --proto '=https' --tlsv1.2 -fsSL -o "$tmp_dir/$asset" \
   "$DOWNLOAD_BASE/$tag/$asset" \
   || die "no se pudo descargar el binario ${asset}."
