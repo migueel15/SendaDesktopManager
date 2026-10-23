@@ -132,10 +132,10 @@ func TestMissingRequirementsChecksCommandsAndPackages(t *testing.T) {
 	present := packageOnly()
 	delete(present, "inter-font")
 
-	missing := MissingRequirements(lookPathFound(commandsExcept("awww", "ddcutil")...),
+	missing := MissingRequirements(lookPathFound(commandsExcept("qs", "ddcutil")...),
 		func(pkg string) bool { return present[pkg] })
 	want := []Requirement{
-		{Command: "awww", Package: "awww"},
+		{Command: "qs", Package: "quickshell"},
 		{Command: "ddcutil", Package: "ddcutil"},
 		{Package: "inter-font"},
 	}
@@ -241,7 +241,7 @@ func TestCheckDependenciesInstallsKnownAndReportsAUR(t *testing.T) {
 	out := &strings.Builder{}
 	opts := Options{
 		Out:      out,
-		LookPath: lookPathFound(commandsExcept("qs", "nmcli", "awww")...),
+		LookPath: lookPathFound(commandsExcept("qs", "nmcli", "blueberry")...),
 		Pacman:   pacman,
 	}
 
@@ -296,7 +296,7 @@ func TestRunRefusesSendaHomeBeforeDownloading(t *testing.T) {
 		Getenv:        envFunc(map[string]string{"XDG_CURRENT_DESKTOP": "Hyprland", "SENDA_HOME": "/tmp/dev"}),
 		Euid:          1000,
 		OSReleasePath: osRelease,
-		LookPath:      lookPathFound("qs", "awww", "jq", "nmcli", "wpctl", "hyprlock", "python3"),
+		LookPath:      lookPathFound("qs", "jq", "nmcli", "wpctl", "hyprlock", "python3"),
 		Pacman:        &fakePacman{},
 		ReleaseAPI:    "http://127.0.0.1:1",
 	}
