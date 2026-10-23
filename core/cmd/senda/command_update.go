@@ -26,8 +26,8 @@ const (
 )
 
 // updateCmd returns the command that updates senda and its Quickshell files
-// to the latest GitHub release. With --check it only reports whether a newer
-// release exists.
+// to the latest GitHub release of its channel (stable or nightly). With
+// --check it only reports whether a newer release exists.
 func updateCmd() *cobra.Command {
 	var check bool
 	cmd := &cobra.Command{
@@ -45,6 +45,13 @@ func updateCmd() *cobra.Command {
 	return cmd
 }
 
+// latestTag returns the newest release for this build's channel: nightly
+// builds follow the newest nightly pre-release, stable builds the latest
+// stable release.
+func latestTag(ctx context.Context) (string, error) {
+	return release.LatestTagForChannel(ctx, latestReleaseAPI, version.IsNightly())
+}
+
 // availableUpdate reports whether latest differs from the installed build.
 // Development builds never report an update, because they cannot be updated.
 func availableUpdate(current string, latest string) bool {
@@ -52,7 +59,7 @@ func availableUpdate(current string, latest string) bool {
 }
 
 func runCheck(cmd *cobra.Command) error {
-	tag, err := release.LatestTag(cmd.Context(), latestReleaseAPI)
+	tag, err := latestTag(cmd.Context())
 	if err != nil {
 		return err
 	}
@@ -74,7 +81,7 @@ func runUpdate(cmd *cobra.Command) error {
 	}
 
 	ctx := cmd.Context()
-	tag, err := release.LatestTag(ctx, latestReleaseAPI)
+	tag, err := latestTag(ctx)
 	if err != nil {
 		return err
 	}

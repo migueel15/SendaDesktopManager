@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,49 +22,89 @@ import (
 
 const (
 	repoPath        = "/repos/migueel15/SendaDesktopManager/releases/latest"
+	releasesPath    = "/repos/migueel15/SendaDesktopManager/releases?per_page=50"
 	apiTimeout      = 30 * time.Second
 	downloadTimeout = 5 * time.Minute
 )
 
-// tagPattern accepts only release tags of the form vX.Y.Z.
+// tagPattern accepts only stable release tags of the form vX.Y.Z.
 var tagPattern = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
 
-// LatestTag asks the releases API under baseURL for the latest release and
-// returns its validated tag name. baseURL is https://api.github.com in
+// nightlyTagPattern accepts nightly tags: nightly-<UTC yyyymmddhhmmss>-<short sha>.
+var nightlyTagPattern = regexp.MustCompile(`^nightly-[0-9]{14}-[0-9a-f]{7,40}$`)
+
+// LatestTag asks the releases API under baseURL for the latest stable release
+// and returns its validated tag name. baseURL is https://api.github.com in
 // production; tests may use a plain http://127.0.0.1 server.
 func LatestTag(ctx context.Context, baseURL string) (string, error) {
-	if err := checkURL(baseURL); err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(baseURL, "/")+repoPath, nil)
-	if err != nil {
-		return "", fmt.Errorf("crear la petición de la última versión: %w", err)
-	}
-	req.Header.Set("Accept", "application/vnd.github+json")
-
-	client := &http.Client{Timeout: apiTimeout}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("consultar la última versión: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("consultar la última versión: estado HTTP %d", resp.StatusCode)
-	}
-
 	var latest struct {
 		TagName string `json:"tag_name"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&latest); err != nil {
-		return "", fmt.Errorf("leer la respuesta de la última versión: %w", err)
+	if err := getJSON(ctx, baseURL+repoPath, &latest); err != nil {
+		return "", err
 	}
 
 	if !tagPattern.MatchString(latest.TagName) {
 		return "", fmt.Errorf("etiqueta de versión no válida: %q", latest.TagName)
 	}
 	return latest.TagName, nil
+}
+
+// LatestTagForChannel returns the newest release tag of the given channel:
+// the latest stable release, or the newest nightly pre-release.
+func LatestTagForChannel(ctx context.Context, baseURL string, nightly bool) (string, error) {
+	if nightly {
+		return LatestNightlyTag(ctx, baseURL)
+	}
+	return LatestTag(ctx, baseURL)
+}
+
+// LatestNightlyTag returns the tag of the newest nightly pre-release. The
+// releases API lists newest first, so the first match is the latest build.
+func LatestNightlyTag(ctx context.Context, baseURL string) (string, error) {
+	var releases []struct {
+		TagName    string `json:"tag_name"`
+		Prerelease bool   `json:"prerelease"`
+	}
+	if err := getJSON(ctx, baseURL+releasesPath, &releases); err != nil {
+		return "", err
+	}
+
+	for _, r := range releases {
+		if r.Prerelease && nightlyTagPattern.MatchString(r.TagName) {
+			return r.TagName, nil
+		}
+	}
+	return "", errors.New("no hay compilaciones nightly disponibles")
+}
+
+// getJSON performs a GET request to url and decodes the JSON body into out.
+func getJSON(ctx context.Context, url string, out any) error {
+	if err := checkURL(url); err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return fmt.Errorf("crear la petición de la última versión: %w", err)
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	client := &http.Client{Timeout: apiTimeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("consultar la última versión: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("consultar la última versión: estado HTTP %d", resp.StatusCode)
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
+		return fmt.Errorf("leer la respuesta de la última versión: %w", err)
+	}
+	return nil
 }
 
 // Download fetches url and writes the response body to dst.
