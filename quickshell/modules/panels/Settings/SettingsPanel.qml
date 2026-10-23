@@ -4,9 +4,9 @@ import QtQuick.Layouts
 import qs.common
 import qs.services
 
-// Settings window with a sidebar of sections. Every change goes through the
-// senda CLI. Opened with `senda settings` or from the dashboard. The overlay
-// hosts it in a SendaPanel shared with the dashboard.
+// Settings window with a sidebar of sections. Configuration goes through the
+// senda CLI; tray pins use TrayPins. Opened with `senda settings` or from the
+// dashboard. The overlay hosts it in a SendaPanel shared with the dashboard.
 Item {
     id: root
 
@@ -17,6 +17,7 @@ Item {
     // same position.
     readonly property var sections: [
         { label: "Apariencia" },
+        { label: "Barra" },
         { label: "Calendario" },
         { label: "Tiempo" },
         { label: "Dictado" },
@@ -144,7 +145,7 @@ Item {
 
                 Text {
                     Layout.fillWidth: true
-                    visible: SendaSettings.notice !== ""
+                    visible: root.sections[root.currentSection]?.label !== "Barra" && SendaSettings.notice !== ""
                     text: SendaSettings.notice
                     color: SendaSettings.noticeIsError ? Theme.colors.warning : Theme.colors.success
                     font.family: Theme.font.overlay.family
@@ -158,6 +159,11 @@ Item {
                     currentIndex: root.currentSection
 
                     AppearanceSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    BarSettingsPage {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }
