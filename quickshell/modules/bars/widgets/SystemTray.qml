@@ -1,7 +1,10 @@
+pragma ComponentBehavior: Bound
+
 import Quickshell.Services.SystemTray
 import Quickshell
 import QtQuick
 import qs.common
+import qs.services
 import qs.common.components
 import qs.common.components.icons
 import qs.common.components.barextension as BarComponents
@@ -11,10 +14,78 @@ Rectangle {
 
     readonly property Repeater items: itemsRepeater
     property bool expanded: false
+    property TrayItem pinDragSource: null
+    property bool pinDragOverTarget: false
+    readonly property bool pinDragging: pinDragSource !== null
+
+    function updatePinDrag(source, globalX, globalY) {
+        if (!expanded) {
+            source.endPinDrag();
+            return;
+        }
+        pinDragSource = source;
+        // Use the effective window positions, including compositor adjustments.
+        const point = pinnedZone.mapFromGlobal(globalX, globalY);
+        pinDragOverTarget = point.x >= 0 && point.y >= 0
+                && point.x < pinnedZone.width && point.y < pinnedZone.height;
+    }
+
+    function finishPinDrag(dropInside) {
+        const source = pinDragSource;
+        const id = source && dropInside && pinDragOverTarget ? source.modelData.id : "";
+        pinDragSource = null;
+        pinDragOverTarget = false;
+        if (source)
+            source.endPinDrag();
+        // Clean up before pin() hides or destroys a delegate.
+        if (id !== "")
+            TrayPins.pin(id);
+    }
+
+    onExpandedChanged: {
+        if (!expanded)
+            finishPinDrag(false);
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        context: Qt.ApplicationShortcut
+        enabled: root.pinDragging
+        onActivated: root.finishPinDrag(false)
+    }
+    readonly property font emptyStateFont: Theme.font.overlay
+    readonly property color emptyStateColor: Theme.colors.overlay
+    readonly property color pinTargetColor: Theme.colors.primary
+    readonly property real pinTargetRadius: Theme.rounding.small
+    readonly property bool hasTrayItems: SystemTray.items.values.length > 0
+
+    function isPinned(id) {
+        return TrayPins.isPinned(id);
+    }
+
+    readonly property var pinnedItems: {
+        const liveItems = SystemTray.items.values;
+        const result = [];
+        for (const id of TrayPins.pinnedIds) {
+            for (const item of liveItems) {
+                if (item.id === id)
+                    result.push(item);
+            }
+        }
+        return result;
+    }
+    readonly property int unpinnedCount: {
+        let count = 0;
+        for (const item of SystemTray.items.values) {
+            if (!TrayPins.isPinned(item.id))
+                count++;
+        }
+        return count;
+    }
     readonly property bool trayMenuOpen: {
         for (let i = 0; i < itemsRepeater.count; i++) {
-            const item = itemsRepeater.itemAt(i);
-            if (item && item.menuOpen) return true;
+            const item = itemsRepeater.itemAt(i) as TrayItem;
+            if (item && !item.pinned && item.menuOpen) return true;
         }
         return false;
     }
@@ -23,8 +94,30 @@ Rectangle {
     visible: width > 0 && height > 0 // To avoid warnings about being visible with no size
 
     height: parent.height
-    implicitWidth: expandButton.width
+    implicitWidth: pinnedZone.width + (pinnedZone.width > 0 ? 4 : 0) + expandButton.width
     color: "transparent"
+
+    Row {
+        id: pinnedZone
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 2
+
+        Repeater {
+            model: root.pinnedItems
+            delegate: TrayItem { pinned: true }
+        }
+
+        Rectangle {
+            visible: root.pinDragging
+            width: 24
+            height: 24
+            radius: root.pinTargetRadius
+            border.width: 1
+            border.color: root.pinTargetColor
+            color: root.pinDragOverTarget ? root.pinTargetColor : "transparent"
+        }
+    }
 
     // Expand/collapse button
     Rectangle {
@@ -33,7 +126,8 @@ Rectangle {
         width: Theme.barButtonSize
         radius: Theme.rounding.normal
         anchors.verticalCenter: parent.verticalCenter
-        anchors.left: parent.left
+        anchors.left: pinnedZone.right
+        anchors.leftMargin: pinnedZone.width > 0 ? 4 : 0
 
         // Same hover pill as the other bar buttons; stays lit while expanded.
         color: expandButtonHover.hovered || root.expanded ? Theme.colors.surfaceVariant : "transparent"
@@ -103,6 +197,10 @@ Rectangle {
         }
         visible: root.expanded || trayExtensionContent.height > 0.01
         color: "transparent"
+        onVisibleChanged: {
+            if (!visible)
+                root.finishPinDrag(false);
+        }
 
         BarComponents.BarExtension {
             id: trayExtensionContent
@@ -113,7 +211,7 @@ Rectangle {
             conflictGroup: "tray-popups"
             autoHideStartsOnExpand: true
             autoHideDelay: 500
-            autoHidePaused: root.trayMenuOpen || expandButtonHover.hovered
+            autoHidePaused: root.pinDragging || root.trayMenuOpen || expandButtonHover.hovered
             onCloseRequested: root.expanded = false
 
             Row {
@@ -125,7 +223,26 @@ Rectangle {
                 Repeater {
                     id: itemsRepeater
                     model: SystemTray.items
-                    delegate: TrayItem {}
+                    delegate: TrayItem {
+                        id: popupItem
+                        pinned: root.isPinned(modelData.id)
+                        visible: !pinned
+                        pinDragEnabled: true
+                        onPinDragMoved: (globalX, globalY) => root.updatePinDrag(popupItem, globalX, globalY)
+                        onPinDragReleased: (globalX, globalY) => {
+                            root.updatePinDrag(popupItem, globalX, globalY);
+                            root.finishPinDrag(true);
+                        }
+                        onPinDragCanceled: root.finishPinDrag(false)
+                    }
+                }
+
+                Text {
+                    visible: root.hasTrayItems && root.unpinnedCount === 0
+                    text: "Todos los iconos están anclados"
+                    font: root.emptyStateFont
+                    color: root.emptyStateColor
+                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
         }

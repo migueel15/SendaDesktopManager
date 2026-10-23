@@ -4,6 +4,7 @@ import QtQuick
 import QtQml
 import Quickshell
 import Quickshell.Services.SystemTray
+import qs.services
 
 MouseArea {
     id: root
@@ -11,6 +12,16 @@ MouseArea {
     required property SystemTrayItem modelData
 
     property int iconSize: 18
+    property bool pinned: false
+    property bool pinDragEnabled: false
+    property bool pinDragging: false
+    property bool pinDragEligible: false
+    property bool suppressClick: false
+    property point pressPosition: Qt.point(0, 0)
+
+    signal pinDragMoved(real globalX, real globalY)
+    signal pinDragReleased(real globalX, real globalY)
+    signal pinDragCanceled()
     property string observedIconSource: ""
     readonly property bool menuOpen: menu.visible
     readonly property bool usingFallback: trayIcon.usingFallback
@@ -27,15 +38,66 @@ MouseArea {
     implicitWidth: iconSize + 6
     implicitHeight: iconSize + 6
     cursorShape: Qt.PointingHandCursor
+    preventStealing: pinDragEnabled
 
     Component.onCompleted: observedIconSource = publishedIconSource
+    Component.onDestruction: {
+        if (pinDragging)
+            pinDragCanceled();
+    }
+
+    function endPinDrag() {
+        pinDragging = false;
+        pinDragEligible = false;
+    }
+
+    onPressed: event => {
+        if (pressedButtons !== event.button)
+            return;
+        suppressClick = false;
+        pinDragEligible = pinDragEnabled && !pinned && event.button === Qt.LeftButton;
+        pressPosition = mapToGlobal(event.x, event.y);
+    }
+
+    onPositionChanged: event => {
+        if (!pinDragEligible)
+            return;
+        // Global coordinates stay stable if showing the target moves the popup.
+        const point = mapToGlobal(event.x, event.y);
+        if (!pinDragging && Math.hypot(point.x - pressPosition.x, point.y - pressPosition.y) > Qt.styleHints.startDragDistance) {
+            pinDragging = true;
+            suppressClick = true;
+        }
+        if (pinDragging)
+            pinDragMoved(point.x, point.y);
+    }
+
+    onReleased: event => {
+        if (event.button !== Qt.LeftButton)
+            return;
+        pinDragEligible = false;
+        if (pinDragging) {
+            const point = mapToGlobal(event.x, event.y);
+            pinDragReleased(point.x, point.y);
+        }
+    }
+
+    onCanceled: {
+        pinDragEligible = false;
+        if (pinDragging)
+            pinDragCanceled();
+    }
 
     function openMenu() {
         const window = root.QsWindow.window;
-        if (!modelData.hasMenu || !window)
+        if ((!pinned && (!modelData.hasMenu || !modelData.menu)) || !window)
             return;
         const pos = root.mapToItem(window.contentItem, 0, root.height);
         menu.toggle(window, pos.x, pos.y + 5);
+    }
+
+    function unpin() {
+        TrayPins.unpin(modelData.id);
     }
 
     function findDesktopIconSource() {
@@ -54,6 +116,8 @@ MouseArea {
     }
 
     onClicked: event => {
+        if (suppressClick)
+            return;
         if (event.button === Qt.MiddleButton) {
             modelData.secondaryActivate();
         } else if (event.button === Qt.RightButton || modelData.onlyMenu) {
@@ -72,6 +136,8 @@ MouseArea {
     TrayMenu {
         id: menu
         rootMenu: root.modelData.menu
+        showUnpin: root.pinned
+        onUnpinRequested: root.unpin()
     }
 
     Connections {
