@@ -1,0 +1,27 @@
+{
+  "name": "my-theme",
+  "wallpaper": "wallpaper.png",
+  "colors": {
+    "base": "#0A0E16",
+    "background": "#141A26",
+    "surface": "#11161F",
+    "border": "#222B3A",
+    "surfaceVariant": "#263042",
+    "surfaceRaised": "#1A2130",
+    "surfaceRaisedBorder": "#3E4A60",
+    "overlay": "#8695AD",
+    "textMuted": "#C6CFDD",
+    "white": "#F2F7FF",
+    "primary": "#7AA7FF",
+    "secondary": "#CFE3FF",
+    "accent": "#3D6FD1",
+    "accentDeep": "#0F1E38",
+    "selection": "#1F3A66",
+    "focus": "#7AA7FF",
+    "success": "#6FD3A0",
+    "warning": "#F2C46D",
+    "error": "#F27A8A",
+    "info": "#A79CFF",
+    "text": "#E8EEF7"
+  }
+}

@@ -204,7 +204,7 @@ func readPidData() int {
 	data, err := os.ReadFile(pidFile)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			fmt.Println("Error reading quickshell pid:", err)
+			fmt.Fprintln(os.Stderr, "Error reading quickshell pid:", err)
 		}
 		return -1
 	}
@@ -213,7 +213,7 @@ func readPidData() int {
 
 	pid, err := strconv.Atoi(pidStr)
 	if err != nil || pid <= 0 {
-		fmt.Println("Invalid quickshell pid")
+		fmt.Fprintln(os.Stderr, "Invalid quickshell pid")
 		return -1
 	}
 	return pid
