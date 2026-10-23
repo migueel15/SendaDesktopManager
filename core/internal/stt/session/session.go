@@ -94,7 +94,9 @@ func (m *Machine) Apply(in Input) (State, error) {
 
 type Deps struct {
 	// DuckAudio returns cleanup for one active dictation, never standby.
-	DuckAudio      func(context.Context) (func(context.Context) error, error)
+	DuckAudio func(context.Context) (func(context.Context) error, error)
+	// MuteDiscord mutes Discord before the microphone opens and returns the restoration, or nil when it changed nothing.
+	MuteDiscord    func(context.Context) func(context.Context) error
 	Engine         stt.Engine
 	Deliverer      stt.Deliverer
 	Submap         stt.Submap
@@ -303,6 +305,16 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 				}
 				if err != nil {
 					return err
+				}
+			}
+			if deps.MuteDiscord != nil {
+				if restore := deps.MuteDiscord(ctx); restore != nil {
+					// Discord problems are reported but never end the dictation.
+					defer func() {
+						if err := cleanup(restore); err != nil {
+							fmt.Fprintf(os.Stderr, "Aviso: %v\n", err)
+						}
+					}()
 				}
 			}
 			if err := cleanup(deps.Submap.Reset); err != nil {

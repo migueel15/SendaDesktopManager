@@ -14,6 +14,8 @@ Al iniciar Quickshell, el widget pone en marcha el puente local. El puente conec
 
 El botón de mute se muestra activo mientras estás muteado o ensordecido. Al pulsarlo mientras estás ensordecido, el puente desactiva mute y deafen. Al pulsar solo el botón de deafen para salir del ensordecimiento, conserva el estado previo del micrófono.
 
+Durante un dictado de `senda stt`, Senda silencia el micro si estaba abierto y lo desmutea al terminar solo si fue él quien lo silenció. Ver [stt.md](stt.md).
+
 Al pasar el cursor sobre los avatares se abre una extensión con todos los participantes del canal. Cada fila muestra el avatar a la izquierda, el nombre y el botón de mute local a su derecha, y debajo un control de volumen individual de 0 a 200 %. Al pulsar el avatar de una fila, Discord abre el perfil de esa persona para acceder a su chat. Los iconos junto al nombre indican si la persona tiene el micrófono silenciado o el audio ensordecido, ya sea por sí misma o por el servidor. En el tramo de 0 a 100 %, el slider convierte la escala perceptual visible a la amplitud RPC con una curva de potencia 2,8, y aplica la conversión inversa al mostrar valores recibidos de Discord; de 100 a 200 % conserva una relación lineal. Los cambios se aplican al soltar el control y el indicador sigue el arrastre. Esta extensión comparte el grupo `tray-popups` con Spotify y se cierra medio segundo después de salir de ella y de la sección de avatares.
 
 Al pulsar un avatar pequeño de la barra, Discord abre el canal de voz actual. Al pulsar el avatar de una persona en la extensión, Discord abre su perfil para acceder al chat.

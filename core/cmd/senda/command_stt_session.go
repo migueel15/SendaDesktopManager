@@ -25,10 +25,15 @@ func sttSessionCmd() *cobra.Command {
 			return session.Deps{}, fmt.Errorf("no se pudo leer la configuración del dictado: %w", err)
 		}
 		settings := stt.LoadSettings(values)
+		command, err := os.Executable()
+		if err != nil {
+			command = "senda"
+		}
 		return session.Deps{
 			Engine: engine.New(), Deliverer: deliver.New(stt.ExecRunner),
-			DuckAudio: control.DuckAudio(stt.ExecRunner, settings),
-			Submap:    binds.NewSubmap(stt.ExecRunner), Notifier: control.NewNotifier(),
+			DuckAudio:   control.DuckAudio(stt.ExecRunner, settings),
+			MuteDiscord: control.MuteDiscord(stt.ExecRunner, command),
+			Submap:      binds.NewSubmap(stt.ExecRunner), Notifier: control.NewNotifier(),
 			Settings: settings, ModelDir: models.NewStore(stt.ModelsDir()).ModelDir(settings.ModelID),
 		}, nil
 	})
