@@ -1,0 +1,41 @@
+# Temas
+
+Senda usa un tema activo para los colores de Quickshell y el fondo de pantalla. El tema integrado `zenda-ice` es de solo lectura. Los temas de usuario se guardan en `$XDG_CONFIG_HOME/senda/themes/<nombre>/` (por defecto `~/.config/senda/themes/<nombre>/`).
+
+## Formato
+
+Cada carpeta contiene `theme.json` y una imagen. Puedes partir de [`template.json`](../quickshell/themes/template.json); [`theme.schema.json`](../quickshell/themes/theme.schema.json) describe el contrato C-2. El objeto JSON tiene exactamente `name`, `wallpaper` y `colors`, sin campos adicionales. `wallpaper` admite una ruta absoluta o relativa a la carpeta del tema.
+
+Las 21 claves obligatorias de `colors` son `base`, `background`, `surface`, `border`, `surfaceVariant`, `surfaceRaised`, `surfaceRaisedBorder`, `overlay`, `textMuted`, `white`, `primary`, `secondary`, `accent`, `accentDeep`, `selection`, `focus`, `success`, `warning`, `error`, `info` y `text`. Cada valor debe tener forma `#RRGGBB`; no se admiten colores adicionales.
+
+El nombre usa minúsculas, números y guiones entre segmentos, con un máximo de 40 caracteres. En un tema de usuario debe coincidir con el nombre de la carpeta y no puede reservar el nombre de un tema integrado. La imagen debe existir y poder decodificarse por completo como PNG, JPEG o GIF. `senda theme validate` señala el campo que falla.
+
+## Comandos
+
+```sh
+senda theme list                 # incluye temas inválidos y muestra su error
+senda theme list --json
+senda theme validate mi-tema
+senda theme validate /ruta/theme.json --json
+senda theme current              # nombre efectivo
+senda theme current --json       # incluye fallback y warning
+senda theme apply mi-tema
+senda theme delete mi-tema
+senda theme watch mi-tema --notify
+```
+
+`list`, `validate` y `current` admiten `--json`; `validate` y `current` admiten `--notify`. `apply` y `delete` admiten `--no-reload`. `watch` emite una línea JSON tras detectar un cambio estable en `theme.json` o la imagen; admite `--interval` (por defecto `1s`) y `--notify` para los cambios inválidos. Solo los cambios válidos del tema activo se aplican en vivo. Si la shell está abierta, `apply` solicita recarga; un cambio inválido conserva los colores anteriores.
+
+Para guardar un tema desde la CLI, `save` recibe **un** objeto JSON por stdin con `name`, `colors`, `wallpaper` (ruta de imagen origen) y, opcionalmente, `original` (nombre de un tema de usuario que se está editando). Copia la imagen al tema y valida antes de sustituir los archivos. Admite `--json` y `--no-reload`.
+
+```sh
+cat tema-para-guardar.json | senda theme save --json
+```
+
+`SENDA_THEME` en el entorno tiene prioridad sobre el valor del [archivo de configuración](configuration.md). `apply` escribe la selección en ese archivo. Si falta el tema seleccionado o es inválido, `current` vuelve a `zenda-ice` y muestra un aviso; borrar el tema activo también guarda `zenda-ice` como selección.
+
+## Selector y editor
+
+El botón de temas está junto al botón de ajustes del panel del tiempo. El selector muestra una tarjeta por tema, con vista previa, colores y errores de validación. Pulsa una tarjeta válida para aplicarla. **Nuevo tema** abre el editor con un tema válido como base; **Editar** permite modificar un tema de usuario o crear una copia del integrado. El editor permite elegir una imagen local y cambiar nombre y 21 colores. **Borrar** aparece solo para temas de usuario y pide confirmación.
+
+El editor comprueba el nombre, los colores y la carga de una imagen PNG, JPEG o GIF antes de habilitar el guardado; la CLI vuelve a validar el contenido. Al editar el tema activo, se recarga la shell. `SendaTheme` vigila el tema activo y aplica los cambios válidos sin reiniciar Quickshell.

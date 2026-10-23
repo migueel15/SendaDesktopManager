@@ -1,6 +1,6 @@
 # Sistema de diseño
 
-Guía visual común a la barra, los paneles y los pop-ups de Senda. Todos los valores viven en `quickshell/common/Theme.qml`; los componentes los toman de ahí y no escriben colores, tamaños ni duraciones a mano.
+Guía visual común a la barra, los paneles y los pop-ups de Senda. Los componentes toman sus tokens de `quickshell/common/Theme.qml`. Los colores se cargan desde el [tema activo](themes.md); los valores de las tablas corresponden a `zenda-ice`. Las escalas de tamaño y movimiento permanecen en `Theme.qml`.
 
 ## Principios
 
