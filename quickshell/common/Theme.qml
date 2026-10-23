@@ -6,7 +6,7 @@ import QtQuick
 QtObject {
 	id: root
 
-	property string currentTheme: "senda"
+	property string currentTheme: "zenda-ice"
 
 	// Spanish names for days and months, whatever the system locale is.
 	readonly property var locale: Qt.locale("es_ES")
@@ -28,6 +28,17 @@ QtObject {
 		root.fontScale = valid ? value / 100 : 1.0;
 	}
 
+	function applyColors(map) {
+		const keys = ["base", "background", "surface", "border", "surfaceVariant",
+			"surfaceRaised", "surfaceRaisedBorder", "overlay", "textMuted", "white",
+			"primary", "secondary", "accent", "accentDeep", "selection", "focus",
+			"success", "warning", "error", "info", "text"];
+		for (const key of keys) {
+			if (map && Object.prototype.hasOwnProperty.call(map, key))
+				root.colors[key] = map[key];
+		}
+	}
+
 	readonly property Colors colors: Colors {}
 	readonly property Rounding rounding: Rounding {}
 	readonly property Spacing spacing: Spacing {}
@@ -40,37 +51,37 @@ QtObject {
 	// Accent: Abismo, Cobalto, Hielo, Escarcha.
 	component Colors: QtObject {
 		// Desktop background, darker than bars and panels.
-		readonly property color base: "#0A0E16"
+		property color base: "#0A0E16"
 		// Bars and panels (Grafito).
-		readonly property color background: "#141A26"
+		property color background: "#141A26"
 		// Cards inside panels.
-		readonly property color surface: "#11161F"
-		readonly property color border: "#222B3A"
+		property color surface: "#11161F"
+		property color border: "#222B3A"
 		// Hover fills and inactive borders (Pizarra).
-		readonly property color surfaceVariant: "#263042"
+		property color surfaceVariant: "#263042"
 		// Selectors that unfold under a card, a step lighter than surface.
-		readonly property color surfaceRaised: "#1A2130"
-		readonly property color surfaceRaisedBorder: "#3E4A60"
+		property color surfaceRaised: "#1A2130"
+		property color surfaceRaisedBorder: "#3E4A60"
 		// Secondary text (Humo).
-		readonly property color overlay: "#8695AD"
-		readonly property color textMuted: "#C6CFDD"
-		readonly property color white: "#F2F7FF"
+		property color overlay: "#8695AD"
+		property color textMuted: "#C6CFDD"
+		property color white: "#F2F7FF"
 		// Hielo.
-		readonly property color primary: "#7AA7FF"
+		property color primary: "#7AA7FF"
 		// Escarcha.
-		readonly property color secondary: "#CFE3FF"
+		property color secondary: "#CFE3FF"
 		// Cobalto.
-		readonly property color accent: "#3D6FD1"
-		readonly property color accentDeep: "#0F1E38"
+		property color accent: "#3D6FD1"
+		property color accentDeep: "#0F1E38"
 		// Selected or active items: deep fill with a Hielo border and text.
-		readonly property color selection: "#1F3A66"
-		readonly property color focus: "#7AA7FF"
-		readonly property color success: "#6FD3A0"
-		readonly property color warning: "#F2C46D"
-		readonly property color error: "#F27A8A"
-		readonly property color info: "#A79CFF"
+		property color selection: "#1F3A66"
+		property color focus: "#7AA7FF"
+		property color success: "#6FD3A0"
+		property color warning: "#F2C46D"
+		property color error: "#F27A8A"
+		property color info: "#A79CFF"
 		// Bruma.
-		readonly property color text: "#E8EEF7"
+		property color text: "#E8EEF7"
 	}
 
 	component Rounding: QtObject {

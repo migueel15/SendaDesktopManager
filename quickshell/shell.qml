@@ -13,10 +13,13 @@ import qs.modules.panels
 import Quickshell.Wayland
 
 import qs.modules.wallpaper
+import qs.services
 import qs.modules.stt
 
 ShellRoot {
 	id: root
+
+	Component.onCompleted: SendaTheme.start()
 
 	Material.theme: Material.Dark
 	Material.accent: Material.Purple
