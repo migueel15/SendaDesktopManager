@@ -1,0 +1,72 @@
+name: Nightly
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "site/**"
+      - "docs/**"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+jobs:
+  nightly:
+    name: Build and publish nightly
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: core/go.mod
+
+      - name: Compute nightly tag
+        id: tag
+        run: |
+          echo "tag=nightly-$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+      - name: Package nightly assets
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          SENDA_GOOGLE_CLIENT_ID: ${{ secrets.SENDA_GOOGLE_CLIENT_ID }}
+          SENDA_GOOGLE_CLIENT_SECRET: ${{ secrets.SENDA_GOOGLE_CLIENT_SECRET }}
+        run: |
+          core/scripts/package-release.sh "$TAG" "$RUNNER_TEMP/release"
+
+      - name: Create nightly pre-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          assets="$RUNNER_TEMP/release"
+          gh release create "$TAG" \
+            "$assets/senda-$TAG-linux-amd64" \
+            "$assets/senda-quickshell-$TAG.tar.gz" \
+            "$assets/checksums.txt" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "Nightly $TAG" \
+            --notes "Compilación automática de main en $GITHUB_SHA."
+
+      - name: Prune old nightly pre-releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Newest first: keep the 20 most recent nightly pre-releases and delete the rest.
+          gh release list --limit 200 --json tagName,isPrerelease \
+            --jq '.[] | select(.isPrerelease and (.tagName | startswith("nightly-"))) | .tagName' \
+            | tail -n +21 \
+            | while read -r old; do
+                gh release delete "$old" --cleanup-tag --yes
+              done

@@ -305,3 +305,40 @@ func TestReplaceFileAtomic(t *testing.T) {
 		t.Fatalf("directory has %d entries, want 2 (src and dst only, no temporary leftovers)", len(entries))
 	}
 }
+
+func TestLatestNightlyTagPicksNewestNightlyPrerelease(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/repos/migueel15/SendaDesktopManager/releases" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Write([]byte(`[
+			{"tag_name":"v0.5.0","prerelease":false},
+			{"tag_name":"nightly-20261023180000-abc1234","prerelease":true},
+			{"tag_name":"nightly-20261022180000-def5678","prerelease":true}
+		]`))
+	}))
+	defer srv.Close()
+
+	tag, err := LatestNightlyTag(context.Background(), srv.URL)
+	if err != nil {
+		t.Fatalf("LatestNightlyTag() error = %v", err)
+	}
+	if tag != "nightly-20261023180000-abc1234" {
+		t.Fatalf("LatestNightlyTag() = %q, want the newest nightly", tag)
+	}
+}
+
+func TestLatestNightlyTagIgnoresNonNightlyReleases(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`[
+			{"tag_name":"v0.5.0","prerelease":true},
+			{"tag_name":"nightly-20261023180000-abc1234","prerelease":false}
+		]`))
+	}))
+	defer srv.Close()
+
+	if _, err := LatestNightlyTag(context.Background(), srv.URL); err == nil {
+		t.Fatal("LatestNightlyTag() accepted a release that is not a nightly pre-release")
+	}
+}

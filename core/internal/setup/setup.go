@@ -14,6 +14,7 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/release"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/engine"
+	"github.com/migueel15/SendaDesktopManager/core/internal/version"
 )
 
 // Pacman is the package manager boundary used by the dependency step.
@@ -218,7 +219,8 @@ func confirmInstall(in *bufio.Reader, out io.Writer) bool {
 	return strings.EqualFold(strings.TrimSpace(line), "s")
 }
 
-// installQuickshell downloads the latest release's Quickshell tarball, verifies
+// installQuickshell downloads the Quickshell tarball of the latest release of
+// this build's channel, verifies
 // it and installs it into DataDir. It is skipped when that release is already
 // installed.
 func installQuickshell(ctx context.Context, opts Options) error {
@@ -226,7 +228,7 @@ func installQuickshell(ctx context.Context, opts Options) error {
 		return errors.New("SENDA_HOME está definido; setup solo instala releases")
 	}
 
-	tag, err := release.LatestTag(ctx, opts.ReleaseAPI)
+	tag, err := release.LatestTagForChannel(ctx, opts.ReleaseAPI, version.IsNightly())
 	if err != nil {
 		return err
 	}

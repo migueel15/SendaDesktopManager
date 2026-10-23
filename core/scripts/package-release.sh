@@ -5,7 +5,8 @@
 #   checksums.txt                     sha256 checksums of both files above
 #
 # Usage: package-release.sh <tag> <output-dir>
-#   <tag> must look like vX.Y.Z (for example v0.1.0).
+#   <tag> must look like vX.Y.Z (for example v0.1.0) or, for nightly builds,
+#   nightly-<yyyymmddhhmmss>-<short sha>.
 #
 # Requires SENDA_GOOGLE_CLIENT_ID and SENDA_GOOGLE_CLIENT_SECRET. They are
 # compiled into the binary so the release works without each user creating a
@@ -20,8 +21,8 @@ fi
 TAG="$1"
 OUTPUT_ARG="$2"
 
-if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "Invalid tag '$TAG': expected format vX.Y.Z" >&2
+if [[ ! "$TAG" =~ ^(v[0-9]+\.[0-9]+\.[0-9]+|nightly-[0-9]{14}-[0-9a-f]{7,40})$ ]]; then
+  echo "Invalid tag '$TAG': expected format vX.Y.Z or nightly-<yyyymmddhhmmss>-<sha>" >&2
   exit 1
 fi
 
