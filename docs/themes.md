@@ -36,6 +36,6 @@ cat tema-para-guardar.json | senda theme save --json
 
 ## Selector y editor
 
-El botón de temas está junto al botón de ajustes del panel del tiempo. El selector muestra una tarjeta por tema, con vista previa, colores y errores de validación. Pulsa una tarjeta válida para aplicarla. **Nuevo tema** abre el editor con un tema válido como base; **Editar** permite modificar un tema de usuario o crear una copia del integrado. El editor permite elegir una imagen local y cambiar nombre y 21 colores. **Borrar** aparece solo para temas de usuario y pide confirmación.
+El botón de temas está junto al botón de ajustes del panel del tiempo. El selector muestra una tarjeta por tema, con vista previa, colores y errores de validación. Pulsa una tarjeta válida para aplicarla. **Nuevo tema** abre el editor con un tema válido como base; **Editar** permite modificar un tema de usuario o crear una copia del integrado. El editor permite cambiar nombre y 21 colores, y elegir el wallpaper escribiendo su ruta o con **Elegir…**, que abre un explorador de imágenes PNG, JPEG y GIF dentro del propio popup (empieza en la carpeta de la imagen actual o en Imágenes). Pulsar fuera del popup lo cierra. **Borrar** aparece solo para temas de usuario y pide confirmación.
 
 El editor comprueba el nombre, los colores y la carga de una imagen PNG, JPEG o GIF antes de habilitar el guardado; la CLI vuelve a validar el contenido. Al editar el tema activo, se recarga la shell. `SendaTheme` vigila el tema activo y aplica los cambios válidos sin reiniciar Quickshell.
