@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Dialogs
 import QtQuick.Layouts
 import qs.common
 import qs.services
@@ -26,6 +25,7 @@ Item {
     property string errorMessage: ""
     property bool pendingSave: false
     property bool initialized: false
+    property bool browsing: false
     readonly property bool nameValid: draftName.length <= 40
         && /^[a-z0-9]+(-[a-z0-9]+)*$/.test(draftName)
     readonly property bool colorsValid: colorKeys.every(key =>
@@ -85,14 +85,6 @@ Item {
             root.errorMessage = error;
         }
     }
-    FileDialog {
-        id: wallpaperDialog
-        title: "Elegir wallpaper"
-        fileMode: FileDialog.OpenFile
-        nameFilters: ["Imágenes (*.png *.jpg *.jpeg *.gif *.PNG *.JPG *.JPEG *.GIF)"]
-        onAccepted: root.draftWallpaper = decodeURIComponent(selectedFile.toString().replace(/^file:\/\//, ""))
-    }
-
     component Field: TextField {
         font: Theme.font.body
         color: Theme.colors.text
@@ -269,7 +261,16 @@ Item {
                         placeholderText: "/ruta/a/imagen.png"
                         onTextEdited: root.draftWallpaper = text
                     }
-                    Action { text: "Elegir…"; onClicked: wallpaperDialog.open() }
+                    Action { text: "Elegir…"; onClicked: root.browsing = !root.browsing }
+                }
+                WallpaperBrowser {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: implicitHeight
+                    visible: root.browsing
+                    startPath: root.draftWallpaper
+                    onVisibleChanged: if (visible) open()
+                    onPicked: path => { root.draftWallpaper = path; root.browsing = false; }
+                    onCancelled: root.browsing = false
                 }
                 Image {
                     id: thumbnail
