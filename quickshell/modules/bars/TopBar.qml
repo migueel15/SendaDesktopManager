@@ -44,23 +44,41 @@ Variants {
 		PanelWindow {
 			id: themeWindow
 			screen: topbar.modelData
-			anchors.top: true
+			// Full screen under the bar, so a click outside the popup can close it,
+			// as the dashboard does.
+			anchors { top: true; bottom: true; left: true; right: true }
 			margins.top: topbar.implicitHeight
-			implicitWidth: Math.min(Theme.scaled(760), screen.width)
-			implicitHeight: Math.max(1, screen.height - topbar.implicitHeight)
 			exclusionMode: ExclusionMode.Ignore
 			WlrLayershell.namespace: "Senda:ThemePicker"
 			WlrLayershell.layer: WlrLayer.Overlay
 			WlrLayershell.keyboardFocus: themePicker.expanded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 			color: "transparent"
 			visible: themePicker.onPickerScreen && (SendaTheme.pickerOpen || themePicker.height > 0.01)
-			mask: Region { item: themePicker }
+			// While open the whole window takes input (backdrop); while folding, only the popup.
+			mask: Region { item: themePicker.expanded ? backdrop : themePicker }
+
+			MouseArea {
+				id: backdrop
+				anchors.fill: parent
+				enabled: themePicker.expanded
+				onPressed: SendaTheme.closePicker()
+			}
+
+			// Swallows clicks on empty parts of the popup so they do not reach the backdrop.
+			MouseArea {
+				x: themePicker.x
+				y: themePicker.y
+				width: themePicker.width
+				height: themePicker.height
+				enabled: themePicker.expanded
+			}
 
 			ThemePicker {
 				id: themePicker
-				width: themeWindow.width
+				width: Math.min(Theme.scaled(760), themeWindow.width)
+				x: Math.round((themeWindow.width - width) / 2)
 				y: -collapseLift
-				maximumHeight: themeWindow.implicitHeight
+				maximumHeight: themeWindow.height
 				onPickerScreen: SendaTheme.pickerScreen === topbar.screenName
 					|| (SendaTheme.pickerScreen === "" && topbar.modelData === Quickshell.screens[0])
 			}
