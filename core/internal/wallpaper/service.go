@@ -14,6 +14,6 @@ func NewService(backend Backend) *Service {
 	}
 }
 
-func (s *Service) Set(w Wallpaper, options SetOptions) {
-	s.backend.Set(w, options)
+func (s *Service) Set(w Wallpaper, options SetOptions) error {
+	return s.backend.Set(w, options)
 }

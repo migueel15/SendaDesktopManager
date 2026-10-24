@@ -40,7 +40,7 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Uso | Paquetes |
    |---|---|
    | Shell y compositor | `quickshell`, `hyprland`, `hyprlock` |
-   | Fondo de pantalla | `awww` |
+   | Fondo de pantalla | Integrado en Quickshell; no requiere otro paquete. |
    | Red, audio y batería | `networkmanager`, `wireplumber`, `upower` |
    | Bluetooth | `bluez`, `bluez-utils`, `blueberry` |
    | Brillo de monitores externos | `ddcutil` |

@@ -30,7 +30,21 @@ Singleton {
 
     function setWallpaper(screen, path, x, y) {
         const position = `${x},${y}`;
-        run([binaryPath, "wallpaper", "set", "--transition-fps", 200, "--transition-type", "grow", "--pos", position, path]);
+        let localPath = String(path);
+        if (localPath.startsWith("file://")) {
+            localPath = localPath.slice(7);
+            if (localPath.startsWith("localhost/"))
+                localPath = localPath.slice(9);
+            if (!localPath.startsWith("/"))
+                return;
+            try {
+                localPath = decodeURIComponent(localPath);
+            } catch (error) {
+                console.warn("Senda: invalid wallpaper file URL:", error);
+                return;
+            }
+        }
+        run([binaryPath, "wallpaper", "set", "--monitor", screen.name, "--transition-type", "grow", "--pos", position, localPath]);
     }
 
     function run(command) {

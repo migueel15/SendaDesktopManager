@@ -16,6 +16,7 @@ type Animation struct {
 	FPS      int
 	Origin   *Position
 	Angle    *int
+	Bezier   [4]float64
 }
 
 type AnimationKind string
@@ -27,6 +28,9 @@ const (
 	AnimationWipe   AnimationKind = "wipe"
 	AnimationRandom AnimationKind = "random"
 	AnimationWave   AnimationKind = "wave"
+	AnimationCenter AnimationKind = "center"
+	AnimationAny    AnimationKind = "any"
+	AnimationOuter  AnimationKind = "outer"
 )
 
 type ResizeMode string
@@ -39,8 +43,8 @@ const (
 )
 
 type Position struct {
-	X int
-	Y int
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type SetOptions struct {

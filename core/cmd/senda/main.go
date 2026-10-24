@@ -3,21 +3,16 @@ package main
 import (
 	"os"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper"
-	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper/adapter/awww"
 	"github.com/spf13/cobra"
 )
 
 func main() {
-	backend := awww.NewBackend()
-	service := wallpaper.NewService(backend)
-
 	rootCmd := &cobra.Command{
 		Use:   "senda",
 		Short: "senda desktop manager",
 	}
 
-	rootCmd.AddCommand(NewWallpaperCmd(service))
+	rootCmd.AddCommand(NewWallpaperCmd())
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.AddCommand(streamAudioCmd)
 	rootCmd.AddCommand(userCmd)
@@ -29,6 +24,7 @@ func main() {
 	rootCmd.AddCommand(settingsCmd())
 	rootCmd.AddCommand(windowCmd())
 	rootCmd.AddCommand(notificationsCmd)
+	rootCmd.AddCommand(themeCmd())
 	rootCmd.AddCommand(sttCmd())
 	rootCmd.AddCommand(versionCmd())
 	rootCmd.AddCommand(updateCmd())

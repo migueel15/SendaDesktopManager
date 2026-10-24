@@ -4,18 +4,6 @@ import QtQuick
 
 import qs.modules.wallpaper
 
-//
-// Variants {
-//     id: root
-//     model: Quickshell.screens
-//
-//     required property var panelController
-//
-//     delegate: PanelWindow {
-//         id: topbar
-//
-//         required property var modelData
-
 Variants {
     id: root
     model: Quickshell.screens
@@ -36,6 +24,11 @@ Variants {
             right: true
             left: true
             bottom: true
+        }
+
+        WallpaperView {
+            anchors.fill: parent
+            screenName: wallpaperLayer.screen.name
         }
 
         WallpaperDropArea {
