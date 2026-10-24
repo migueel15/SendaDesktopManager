@@ -51,13 +51,9 @@ Variants {
 			exclusionMode: ExclusionMode.Ignore
 			WlrLayershell.namespace: "Senda:ThemePicker"
 			WlrLayershell.layer: WlrLayer.Overlay
-			// Exclusive keyboard focus and this full-height layer would block the file dialog,
-			// so the picker steps aside while it is open.
-			WlrLayershell.keyboardFocus: themePicker.expanded && !themePicker.fileDialogOpen
-				? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+			WlrLayershell.keyboardFocus: themePicker.expanded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 			color: "transparent"
-			visible: themePicker.onPickerScreen && !themePicker.fileDialogOpen
-				&& (SendaTheme.pickerOpen || themePicker.height > 0.01)
+			visible: themePicker.onPickerScreen && (SendaTheme.pickerOpen || themePicker.height > 0.01)
 			mask: Region { item: themePicker }
 
 			ThemePicker {

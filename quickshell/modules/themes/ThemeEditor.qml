@@ -34,8 +34,6 @@ Item {
         && /\.(png|jpe?g|gif)$/i.test(draftWallpaper) && thumbnail.status === Image.Ready
     readonly property bool canSave: nameValid && colorsValid && wallpaperValid
         && !SendaTheme.busy && !pendingSave
-    // The file dialog is its own window: the picker must step aside while it is open.
-    readonly property bool fileDialogOpen: wallpaperDialog.visible
 
     function copyBase(theme) {
         const colors = {};

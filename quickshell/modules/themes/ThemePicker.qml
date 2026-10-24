@@ -11,7 +11,6 @@ BarComponents.BarExtension {
     property real maximumHeight: 800
     property var pendingDelete: null
     readonly property bool editing: editor.source.toString() !== ""
-    readonly property bool fileDialogOpen: editor.item?.fileDialogOpen ?? false
     readonly property real listHeight: Theme.scaled(560)
     expanded: onPickerScreen && SendaTheme.pickerOpen
     expandedHeight: Math.min(maximumHeight, editing
