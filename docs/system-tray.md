@@ -42,4 +42,4 @@ end
 after_shell(apps.discord)
 ```
 
-Se usa `;` y no `&&` para que la aplicación se lance igualmente aunque la shell no arranque. La espera tiene un máximo de 30 segundos.
+Se usa `;` y no `&&` para que la aplicación se lance igualmente aunque la shell no arranque. El arranque de la shell tiene un timeout de 30 segundos; si se agota, systemd puede tardar algo más en dar el arranque por fallido.
