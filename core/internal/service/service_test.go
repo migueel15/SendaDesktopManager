@@ -13,10 +13,21 @@ func TestUnitRunsShellFromExe(t *testing.T) {
 		"Restart=on-failure",
 		"WantedBy=default.target",
 		"ExecStartPre=",
+		"Type=dbus",
+		"BusName=org.kde.StatusNotifierWatcher",
+		"TimeoutStartSec=30",
+		"RestartSec=2",
+		"StartLimitIntervalSec=0",
 	} {
 		if !strings.Contains(unit, want) {
 			t.Errorf("unit lacks %q:\n%s", want, unit)
 		}
+	}
+}
+
+func TestUnitIsNotSimple(t *testing.T) {
+	if unit := Unit("/home/u/.local/bin/senda"); strings.Contains(unit, "Type=simple") {
+		t.Errorf("unit must not be Type=simple:\n%s", unit)
 	}
 }
 

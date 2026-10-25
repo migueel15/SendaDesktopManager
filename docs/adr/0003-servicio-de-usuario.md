@@ -23,3 +23,19 @@ Tras `senda setup`, el usuario tenía que añadir `senda shell run` a la configu
 - Si la configuración de Hyprland sigue lanzando `senda shell run`, esa línea pide a systemd que arranque la unidad, por lo que no se duplica la instancia.
 - Al cerrar sesión, la unidad queda reintentando cada 2 segundos hasta que vuelve a haber una sesión de Hyprland.
 - Si se mueve el binario, hay que volver a ejecutar `senda setup` para reescribir la ruta de la unidad.
+
+## Enmienda: arranque con `Type=dbus`
+
+### Contexto
+
+Al iniciar sesión, Hyprland lanza aplicaciones como Discord a la vez que systemd arranca `senda.service`. Quickshell es quien posee `org.kde.StatusNotifierWatcher`, el vigilante de la bandeja. Las aplicaciones Electron registran su icono una sola vez al arrancar; si el vigilante aún no existe, no reintentan y el icono no aparece nunca en la bandeja ni en los anclados.
+
+### Decisión
+
+La unidad pasa de `Type=simple` a `Type=dbus` con `BusName=org.kde.StatusNotifierWatcher` y `TimeoutStartSec=30`. `systemctl --user start senda.service` vuelve solo cuando el vigilante existe, de modo que la configuración de Hyprland puede lanzar las aplicaciones con bandeja después de ese comando (véase `docs/system-tray.md`). Treinta segundos cubren la carga de Quickshell con margen y acotan la espera si nunca toma el nombre. El resto de directivas (`ExecStartPre`, `Restart=on-failure`, `RestartSec=2`, `StartLimitIntervalSec=0`, `WantedBy=default.target`) no cambia.
+
+### Consecuencias
+
+- `senda shell run` fuera de la unidad y `senda setup` pasan a bloquearse hasta que la bandeja está lista o vence el plazo.
+- `senda update` desde dentro de la unidad sigue usando `--no-block`.
+- Hay que volver a ejecutar `senda setup` para reescribir la unidad instalada.
