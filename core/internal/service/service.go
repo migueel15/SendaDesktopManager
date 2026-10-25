@@ -37,13 +37,22 @@ func UnitPath() string {
 // because plain Hyprland does not start graphical-session.target. Until the
 // compositor exports its environment, ExecStartPre fails and systemd retries,
 // so the shell starts as soon as Hyprland is up, without editing its config.
+//
+// The unit is Type=dbus with BusName=org.kde.StatusNotifierWatcher, the name
+// Quickshell owns once its tray is up. systemctl start returns only after that
+// name exists, so a session can launch tray apps after it: an Electron app
+// such as Discord registers its icon once and never retries when the watcher is
+// missing. TimeoutStartSec bounds the wait, so a shell that never takes the
+// name fails the start instead of blocking the caller forever.
 func Unit(exe string) string {
 	return fmt.Sprintf(`[Unit]
 Description=Senda desktop shell
 StartLimitIntervalSec=0
 
 [Service]
-Type=simple
+Type=dbus
+BusName=org.kde.StatusNotifierWatcher
+TimeoutStartSec=30
 ExecStartPre=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ] && [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ] && [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]'
 ExecStart=%s shell run
 Restart=on-failure

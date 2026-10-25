@@ -30,3 +30,16 @@ La lista se guarda en `$XDG_STATE_HOME/senda/tray-pinned.json`. Si `XDG_STATE_HO
 ```
 
 Cada entrada de `pinned` es el `id` de StatusNotifierItem de una aplicación. Puedes borrar el archivo y recargar Quickshell para quitar todos los anclados.
+
+## Aplicaciones que arrancan con la sesión
+
+`senda.service` es de tipo `dbus`: `systemctl --user start senda.service` no vuelve hasta que Quickshell posee `org.kde.StatusNotifierWatcher`. Las aplicaciones con icono de bandeja que se lanzan al iniciar sesión (Discord y otras basadas en Electron) registran su icono una única vez; si el vigilante aún no existe, el icono no aparece ni en la bandeja ni en los anclados. Lánzalas después de arrancar la shell. Ejemplo con un auxiliar en Lua para Hyprland:
+
+```lua
+local function after_shell(cmd)
+	hl.exec_cmd("systemctl --user start senda.service; " .. cmd)
+end
+after_shell(apps.discord)
+```
+
+Se usa `;` y no `&&` para que la aplicación se lance igualmente aunque la shell no arranque. El arranque de la shell tiene un timeout de 30 segundos; si se agota, systemd puede tardar algo más en dar el arranque por fallido.
