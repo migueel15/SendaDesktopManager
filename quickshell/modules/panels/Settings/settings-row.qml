@@ -16,15 +16,19 @@ Item {
         visible: root.separator
         color: Theme.colors.border
     }
-    RowLayout {
+    // Controls are anchored to the right edge so every row lines them up,
+    // whatever the length of its label.
+    Item {
         id: content
         width: root.width
         y: root.separator ? Theme.spacing.md + 1 : 0
-        spacing: Theme.spacing.md
+        implicitHeight: Math.max(textColumn.implicitHeight, controlLayout.implicitHeight)
         ColumnLayout {
-            implicitWidth: 0
-            Layout.fillWidth: true
-            Layout.minimumWidth: 0
+            id: textColumn
+            anchors.left: parent.left
+            anchors.right: controlLayout.left
+            anchors.rightMargin: controlLayout.width > 0 ? Theme.spacing.md : 0
+            anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacing.xs
             Text {
                 Layout.fillWidth: true
@@ -44,7 +48,9 @@ Item {
         }
         RowLayout {
             id: controlLayout
-            Layout.maximumWidth: root.width * 0.6
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(implicitWidth, root.width * 0.6)
             spacing: Theme.spacing.sm
         }
     }

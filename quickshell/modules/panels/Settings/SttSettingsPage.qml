@@ -253,7 +253,7 @@ Flickable {
                 wrapMode: Text.WrapAnywhere
             }
             SettingsButton {
-                Layout.alignment: Qt.AlignLeft
+                Layout.alignment: Qt.AlignRight
                 visible: root.shortcutReady && !SendaSttSettings.shortcut.exists
                 label: "Crear módulo"
                 enabled: !SendaSttSettings.busy
