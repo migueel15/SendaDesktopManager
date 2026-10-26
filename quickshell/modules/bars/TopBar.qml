@@ -1,6 +1,7 @@
 import Quickshell
 import QtQuick.Layouts
 import QtQuick
+import QtQuick.Shapes
 import qs.common
 import qs.services
 import qs.modules.bars.widgets
@@ -128,14 +129,37 @@ Variants {
 					}
 				}
 
-				Image {
+				// Senda symbol drawn with the active theme. Same geometry as
+				// assets/senda-logo.svg (120×120): top bar secondary, outer face
+				// white, inner fold accent darkened towards base, bottom bar primary.
+				Shape {
 					anchors.centerIn: parent
 					width: 22
 					height: 22
-					source: Qt.resolvedUrl("../../assets/senda-logo.svg")
-					sourceSize: Qt.size(22, 22)
-					fillMode: Image.PreserveAspectFit
-					smooth: true
+					preferredRendererType: Shape.CurveRenderer
+
+					transform: Scale { xScale: 22 / 120; yScale: 22 / 120 }
+
+					ShapePath {
+						strokeWidth: -1
+						fillColor: Qt.tint(Theme.colors.base, Qt.alpha(Theme.colors.accent, 0.63))
+						PathPolyline { path: [Qt.point(62, 36), Qt.point(106, 36), Qt.point(58, 84), Qt.point(62, 36)] }
+					}
+					ShapePath {
+						strokeWidth: -1
+						fillColor: Theme.colors.white
+						PathPolyline { path: [Qt.point(62, 36), Qt.point(58, 84), Qt.point(14, 84), Qt.point(62, 36)] }
+					}
+					ShapePath {
+						strokeWidth: -1
+						fillColor: Theme.colors.secondary
+						PathPolyline { path: [Qt.point(12, 14), Qt.point(84, 14), Qt.point(106, 36), Qt.point(34, 36), Qt.point(12, 14)] }
+					}
+					ShapePath {
+						strokeWidth: -1
+						fillColor: Theme.colors.primary
+						PathPolyline { path: [Qt.point(14, 84), Qt.point(86, 84), Qt.point(108, 106), Qt.point(36, 106), Qt.point(14, 84)] }
+					}
 				}
 
 				MouseArea {
