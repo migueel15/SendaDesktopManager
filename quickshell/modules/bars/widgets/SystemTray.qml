@@ -225,7 +225,7 @@ Rectangle {
                     model: SystemTray.items
                     delegate: TrayItem {
                         id: popupItem
-                        pinned: root.isPinned(modelData.id)
+                        pinned: !!modelData && root.isPinned(modelData.id)
                         visible: !pinned
                         pinDragEnabled: true
                         onPinDragMoved: (globalX, globalY) => root.updatePinDrag(popupItem, globalX, globalY)

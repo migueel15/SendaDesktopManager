@@ -224,6 +224,7 @@ PopupWindow {
             }
 
             IconImage {
+                asynchronous: true
                 visible: !!menuRow.entry && menuRow.entry.icon !== ""
                 source: menuRow.entry ? menuRow.entry.icon : ""
                 implicitSize: 16

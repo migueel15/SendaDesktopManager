@@ -36,11 +36,12 @@ Flickable {
                 delegate: SettingsRow {
                     id: presentRow
                     required property SystemTrayItem modelData
-                    label: modelData.tooltipTitle || modelData.title || modelData.id
-                    description: modelData.id
-                    BarWidgets.TrayIcon { iconSize: Theme.scaled(18); source: presentRow.modelData.icon }
+                    // Removed tray items clear modelData before their delegate is destroyed.
+                    label: modelData?.tooltipTitle || modelData?.title || modelData?.id || ""
+                    description: modelData?.id ?? ""
+                    BarWidgets.TrayIcon { iconSize: Theme.scaled(18); source: presentRow.modelData?.icon ?? "" }
                     SettingsSwitch {
-                        checkedValue: TrayPins.isPinned(presentRow.modelData.id)
+                        checkedValue: !!presentRow.modelData && TrayPins.isPinned(presentRow.modelData.id)
                         Accessible.name: `Anclar ${presentRow.label}`
                         onToggledValue: value => {
                             if (value) TrayPins.pin(presentRow.modelData.id);

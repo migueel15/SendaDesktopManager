@@ -311,6 +311,7 @@ SendaPanel {
                 border.color: Theme.colors.border
 
                 IconImage {
+                    asynchronous: true
                     id: rowAppIcon
                     anchors.fill: parent
                     anchors.margins: 5

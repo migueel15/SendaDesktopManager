@@ -233,6 +233,7 @@ Variants {
                     border.color: Theme.colors.border
 
                     IconImage {
+                        asynchronous: true
                         id: popupAppIcon
                         anchors.fill: parent
                         anchors.margins: 3

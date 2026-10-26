@@ -179,6 +179,7 @@ PanelWindow {
                     id: appIcon
                     anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
                     width: 26; height: 26
+                    asynchronous: true
                     source: Quickshell.iconPath(row.modelData.icon || "application-x-executable", true)
                     fillMode: Image.PreserveAspectFit
                 }

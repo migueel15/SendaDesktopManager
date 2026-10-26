@@ -68,6 +68,7 @@ Scope {
                 height: 35
 
                 IconImage {
+                    asynchronous: true
                     implicitSize: 18
                     source: Qt.resolvedUrl("../../assets/volume.svg")
                 }
