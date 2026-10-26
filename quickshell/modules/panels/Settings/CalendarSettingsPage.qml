@@ -32,6 +32,7 @@ Flickable {
         const next = root.selectedCalendars.includes(id)
             ? root.selectedCalendars.filter(item => item !== id)
             : [...root.selectedCalendars, id];
+        if (next.length === 0) return;
         SendaSettings.saveCalendars(next);
     }
 
@@ -101,7 +102,7 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Calendarios a mostrar"
-                description: "Cada cambio se guarda al instante. Sin selección propia se usan los calendarios marcados por Google."
+                description: "Cada cambio se guarda al instante. Debe quedar al menos un calendario seleccionado."
             }
             Repeater {
                 model: SendaSettings.connected ? SendaSettings.calendars : []
@@ -111,7 +112,7 @@ Flickable {
                     label: modelData.summary || modelData.id
                     SettingsSwitch {
                         checkedValue: root.selectedCalendars.includes(calendarRow.modelData.id)
-                        enabled: !SendaSettings.busy
+                        enabled: !SendaSettings.busy && (!checkedValue || root.selectedCalendars.length > 1)
                         Accessible.name: calendarRow.label
                         onToggledValue: root.toggleCalendar(calendarRow.modelData.id)
                     }
