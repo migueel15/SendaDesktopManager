@@ -1,6 +1,6 @@
 # Temas
 
-Senda usa un tema activo para los colores de Quickshell y el fondo de pantalla. El tema integrado `zenda-ice` es de solo lectura. Los temas de usuario se guardan en `$XDG_CONFIG_HOME/senda/themes/<nombre>/` (por defecto `~/.config/senda/themes/<nombre>/`).
+Senda usa un tema activo para los colores de Quickshell y el fondo de pantalla. Los temas integrados `zenda-ice` y `zenda-lavanda` son de solo lectura. Los temas de usuario se guardan en `$XDG_CONFIG_HOME/senda/themes/<nombre>/` (por defecto `~/.config/senda/themes/<nombre>/`).
 
 ## Formato
 
@@ -38,6 +38,10 @@ cat tema-para-guardar.json | senda theme save --json
 ```
 
 `SENDA_THEME` en el entorno tiene prioridad sobre el valor del [archivo de configuración](configuration.md). `apply` escribe la selección en ese archivo. Si falta el tema seleccionado o es inválido, `current` vuelve a `zenda-ice` y muestra un aviso; borrar el tema activo también guarda `zenda-ice` como selección.
+
+## Símbolo de la barra
+
+El símbolo de Senda en la barra superior se dibuja con los colores del tema activo: la cara superior usa `secondary`, la diagonal exterior `white`, la inferior `primary` y el pliegue interior una mezcla del 63 % de `accent` sobre `base`. `quickshell/assets/senda-logo.svg` conserva la versión fija de `zenda-ice`.
 
 ## Selector y editor
 

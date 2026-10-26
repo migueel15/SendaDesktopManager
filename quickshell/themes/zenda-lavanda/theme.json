@@ -1,0 +1,27 @@
+{
+  "name": "zenda-lavanda",
+  "wallpaper": "zenda-lavanda-05-trazas.png",
+  "colors": {
+    "base": "#0B0C14",
+    "background": "#161825",
+    "surface": "#11121D",
+    "border": "#22243A",
+    "surfaceVariant": "#2A2D42",
+    "surfaceRaised": "#1C1E2D",
+    "surfaceRaisedBorder": "#44475F",
+    "overlay": "#8B8EA8",
+    "textMuted": "#C9C8DA",
+    "white": "#F3F2FA",
+    "primary": "#8D8AF7",
+    "secondary": "#C3C0FF",
+    "accent": "#5752D9",
+    "accentDeep": "#1C1A4D",
+    "selection": "#2E2B86",
+    "focus": "#8D8AF7",
+    "success": "#6FD3A0",
+    "warning": "#F2C46D",
+    "error": "#F27A8A",
+    "info": "#7AA7FF",
+    "text": "#E9E8F4"
+  }
+}
