@@ -5,6 +5,7 @@ import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 import Quickshell.Wayland
 import qs.common
+import qs.common.components.barextension
 
 Scope {
     id: root
@@ -31,65 +32,64 @@ Scope {
         onTriggered: root.shouldShowOsd = false
     }
 
-    // The OSD window will be created and destroyed based on shouldShowOsd.
-    // PanelWindow.visible could be set instead of using a loader, but using
-    // a loader will reduce the memory overhead when the window isn't open.
-    LazyLoader {
-        active: root.shouldShowOsd
+    PanelWindow {
+        // Since the panel's screen is unset, it will be picked by the compositor
+        // when the window is shown. Most compositors pick the current active monitor.
+        WlrLayershell.namespace: "senda-volume-osd"
 
-        PanelWindow {
-            // Since the panel's screen is unset, it will be picked by the compositor
-            // when the window is created. Most compositors pick the current active monitor.
-            WlrLayershell.namespace: "senda-volume-osd"
+        // Center horizontally, just below the top bar.
+        anchors.top: true
+        exclusionMode: ExclusionMode.Ignore
+        margins.top: Theme.barSize
+        exclusiveZone: 0
 
-            // Center horizontally, just below the top bar.
-            anchors.top: true
-            exclusionMode: ExclusionMode.Ignore
-            margins.top: Theme.barSize + Theme.spacing.md
-            exclusiveZone: 0
+        implicitWidth: 250
+        implicitHeight: 35 + extension.shadowSpace
+        color: "transparent"
+        visible: root.shouldShowOsd || extension.height > 0.01
 
-            implicitWidth: 250
-            implicitHeight: 35
-            color: "transparent"
+        mask: Region {}
 
-            mask: Region {}
+        BarExtension {
+            id: extension
+            width: parent.width
+            y: -collapseLift
+            expanded: root.shouldShowOsd
+            expandedHeight: 35
+            autoHideOnPointerExit: false
 
-            Rectangle {
-                anchors.fill: parent
-                radius: Theme.rounding.full
-                color: Theme.colors.background
+            RowLayout {
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    leftMargin: 10
+                    rightMargin: 15
+                }
+                height: 35
 
-                RowLayout {
-                    anchors {
-                        fill: parent
-                        leftMargin: 10
-                        rightMargin: 15
-                    }
+                IconImage {
+                    implicitSize: 18
+                    source: Qt.resolvedUrl("../../assets/volume.svg")
+                }
 
-                    IconImage {
-                        implicitSize: 18
-                        source: Qt.resolvedUrl("../../assets/volume.svg")
-                    }
+                Rectangle {
+                    Layout.fillWidth: true
+
+                    implicitHeight: 10
+                    radius: Theme.rounding.full
+                    color: Theme.colors.surfaceVariant
 
                     Rectangle {
-                        Layout.fillWidth: true
-
-                        implicitHeight: 10
-                        radius: Theme.rounding.full
-                        color: Theme.colors.surfaceVariant
-
-                        Rectangle {
-                            anchors {
-                                left: parent.left
-                                top: parent.top
-                                bottom: parent.bottom
-                            }
-
-                            color: Theme.colors.primary
-
-                            implicitWidth: parent.width * (Pipewire.defaultAudioSink?.audio.volume ?? 0)
-                            radius: parent.radius
+                        anchors {
+                            left: parent.left
+                            top: parent.top
+                            bottom: parent.bottom
                         }
+
+                        color: Theme.colors.primary
+
+                        implicitWidth: parent.width * (Pipewire.defaultAudioSink?.audio.volume ?? 0)
+                        radius: parent.radius
                     }
                 }
             }
