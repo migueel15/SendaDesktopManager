@@ -1,0 +1,101 @@
+# Generado por Senda a partir del tema "{{.Name}}". Se sobrescribe al cambiar de tema.
+# Esquema de color de KDE (Dolphin y demás aplicaciones de KDE).
+# Uso: ln -sf ~/.config/senda/generated/kde/senda.colors ~/.local/share/color-schemes/Senda.colors
+# y elige "Senda" como esquema (en dolphinrc: [UiSettings] ColorScheme=Senda).
+{{- define "fg"}}
+ForegroundActive={{rgb .C.primary}}
+ForegroundInactive={{rgb .C.overlay}}
+ForegroundLink={{rgb .C.info}}
+ForegroundNegative={{rgb .C.error}}
+ForegroundNeutral={{rgb .C.warning}}
+ForegroundNormal={{rgb .C.text}}
+ForegroundPositive={{rgb .C.success}}
+ForegroundVisited={{rgb .C.secondary}}
+DecorationFocus={{rgb .C.focus}}
+DecorationHover={{rgb .C.primary}}
+{{- end}}
+
+[ColorEffects:Disabled]
+Color={{rgb .C.surface}}
+ColorAmount=0
+ColorEffect=0
+ContrastAmount=0.65
+ContrastEffect=1
+IntensityAmount=0.1
+IntensityEffect=2
+
+[ColorEffects:Inactive]
+ChangeSelectionColor=true
+Color={{rgb .C.surface}}
+ColorAmount=0.025
+ColorEffect=2
+ContrastAmount=0.1
+ContrastEffect=2
+Enable=false
+IntensityAmount=0
+IntensityEffect=0
+
+[Colors:Button]
+BackgroundAlternate={{rgb .C.surfaceVariant}}
+BackgroundNormal={{rgb .C.surfaceRaised}}
+{{- template "fg" .}}
+
+[Colors:Complementary]
+BackgroundAlternate={{rgb .C.surface}}
+BackgroundNormal={{rgb .C.base}}
+{{- template "fg" .}}
+
+[Colors:Header]
+BackgroundAlternate={{rgb .C.surface}}
+BackgroundNormal={{rgb .C.surfaceRaised}}
+{{- template "fg" .}}
+
+[Colors:Header][Inactive]
+BackgroundAlternate={{rgb .C.surface}}
+BackgroundNormal={{rgb .C.background}}
+{{- template "fg" .}}
+
+[Colors:Selection]
+BackgroundAlternate={{rgb .C.accentDeep}}
+BackgroundNormal={{rgb .C.selection}}
+ForegroundActive={{rgb .C.white}}
+ForegroundInactive={{rgb .C.textMuted}}
+ForegroundLink={{rgb .C.secondary}}
+ForegroundNegative={{rgb .C.error}}
+ForegroundNeutral={{rgb .C.warning}}
+ForegroundNormal={{rgb .C.white}}
+ForegroundPositive={{rgb .C.success}}
+ForegroundVisited={{rgb .C.secondary}}
+DecorationFocus={{rgb .C.focus}}
+DecorationHover={{rgb .C.primary}}
+
+[Colors:Tooltip]
+BackgroundAlternate={{rgb .C.surface}}
+BackgroundNormal={{rgb .C.surfaceRaised}}
+{{- template "fg" .}}
+
+[Colors:View]
+BackgroundAlternate={{rgb .C.surfaceRaised}}
+BackgroundNormal={{rgb (mix .C.surface .C.base 0.5)}}
+{{- template "fg" .}}
+
+[Colors:Window]
+BackgroundAlternate={{rgb .C.surfaceRaised}}
+BackgroundNormal={{rgb .C.surface}}
+{{- template "fg" .}}
+
+[General]
+ColorScheme=Senda
+Name=Senda
+shadeSortColumn=true
+
+[KDE]
+contrast=4
+
+[WM]
+activeBackground={{rgb .C.surfaceRaised}}
+activeBlend={{rgb .C.text}}
+activeForeground={{rgb .C.text}}
+inactiveBackground={{rgb .C.background}}
+inactiveBlend={{rgb .C.overlay}}
+inactiveForeground={{rgb .C.overlay}}

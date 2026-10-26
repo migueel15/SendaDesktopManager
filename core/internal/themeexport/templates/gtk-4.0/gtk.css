@@ -1,0 +1,92 @@
+/* Generado por Senda a partir del tema "{{.Name}}". Se sobrescribe al cambiar de tema.
+ * Uso: añade al principio de ~/.config/gtk-4.0/gtk.css
+ *   @import url("file:///RUTA/A/.config/senda/generated/gtk-4.0/gtk.css");
+ */
+
+/* Colores con nombre (libadwaita y GTK 4). */
+@define-color accent_color {{.C.primary}};
+@define-color accent_bg_color {{.C.accent}};
+@define-color accent_fg_color {{contrast .C.accent .C.base .C.white}};
+@define-color destructive_color {{.C.error}};
+@define-color destructive_bg_color {{mix .C.error .C.background 0.25}};
+@define-color destructive_fg_color {{contrast .C.error .C.base .C.white}};
+@define-color success_color {{.C.success}};
+@define-color success_bg_color {{mix .C.success .C.background 0.35}};
+@define-color success_fg_color {{contrast .C.success .C.base .C.white}};
+@define-color warning_color {{.C.warning}};
+@define-color warning_bg_color {{mix .C.warning .C.background 0.35}};
+@define-color warning_fg_color {{contrast .C.warning .C.base .C.white}};
+@define-color error_color {{.C.error}};
+@define-color error_bg_color {{mix .C.error .C.background 0.25}};
+@define-color error_fg_color {{contrast .C.error .C.base .C.white}};
+
+@define-color window_bg_color {{.C.surface}};
+@define-color window_fg_color {{.C.text}};
+@define-color view_bg_color {{.C.surface}};
+@define-color view_fg_color {{.C.text}};
+@define-color headerbar_bg_color {{.C.surfaceRaised}};
+@define-color headerbar_fg_color {{.C.text}};
+@define-color headerbar_border_color {{.C.border}};
+@define-color headerbar_backdrop_color {{.C.surface}};
+@define-color headerbar_shade_color {{rgba .C.base 0.36}};
+@define-color headerbar_darker_shade_color {{rgba .C.base 0.9}};
+@define-color sidebar_bg_color {{mix .C.surface .C.base 0.5}};
+@define-color sidebar_fg_color {{.C.text}};
+@define-color sidebar_backdrop_color {{mix .C.surface .C.base 0.5}};
+@define-color sidebar_border_color {{.C.border}};
+@define-color sidebar_shade_color {{rgba .C.base 0.25}};
+@define-color secondary_sidebar_bg_color {{.C.surfaceRaised}};
+@define-color secondary_sidebar_fg_color {{.C.text}};
+@define-color secondary_sidebar_backdrop_color {{.C.surfaceRaised}};
+@define-color secondary_sidebar_border_color {{.C.border}};
+@define-color secondary_sidebar_shade_color {{rgba .C.base 0.25}};
+@define-color card_bg_color {{.C.surfaceRaised}};
+@define-color card_fg_color {{.C.text}};
+@define-color card_shade_color {{rgba .C.base 0.36}};
+@define-color thumbnail_bg_color {{.C.surfaceRaised}};
+@define-color thumbnail_fg_color {{.C.text}};
+@define-color dialog_bg_color {{.C.surfaceRaised}};
+@define-color dialog_fg_color {{.C.text}};
+@define-color popover_bg_color {{.C.surfaceRaised}};
+@define-color popover_fg_color {{.C.text}};
+@define-color popover_shade_color {{rgba .C.base 0.25}};
+@define-color shade_color {{rgba .C.base 0.36}};
+@define-color scrollbar_outline_color {{rgba .C.base 0.5}};
+
+/* Variables CSS de libadwaita 1.6 o posterior. */
+:root {
+  --accent-color: {{.C.primary}};
+  --accent-bg-color: {{.C.accent}};
+  --accent-fg-color: {{contrast .C.accent .C.base .C.white}};
+  --destructive-bg-color: {{mix .C.error .C.background 0.25}};
+  --destructive-fg-color: {{contrast .C.error .C.base .C.white}};
+  --success-bg-color: {{mix .C.success .C.background 0.35}};
+  --warning-bg-color: {{mix .C.warning .C.background 0.35}};
+  --error-bg-color: {{mix .C.error .C.background 0.25}};
+  --window-bg-color: {{.C.surface}};
+  --window-fg-color: {{.C.text}};
+  --view-bg-color: {{.C.surface}};
+  --view-fg-color: {{.C.text}};
+  --headerbar-bg-color: {{.C.surfaceRaised}};
+  --headerbar-fg-color: {{.C.text}};
+  --headerbar-backdrop-color: {{.C.surface}};
+  --sidebar-bg-color: {{mix .C.surface .C.base 0.5}};
+  --sidebar-fg-color: {{.C.text}};
+  --sidebar-backdrop-color: {{mix .C.surface .C.base 0.5}};
+  --secondary-sidebar-bg-color: {{.C.surfaceRaised}};
+  --secondary-sidebar-fg-color: {{.C.text}};
+  --card-bg-color: {{.C.surfaceRaised}};
+  --card-fg-color: {{.C.text}};
+  --dialog-bg-color: {{.C.surfaceRaised}};
+  --dialog-fg-color: {{.C.text}};
+  --popover-bg-color: {{.C.surfaceRaised}};
+  --popover-fg-color: {{.C.text}};
+  --thumbnail-bg-color: {{.C.surfaceRaised}};
+  --thumbnail-fg-color: {{.C.text}};
+}
+
+selection,
+*:selected {
+  background-color: {{.C.selection}};
+  color: {{.C.white}};
+}

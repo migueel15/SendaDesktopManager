@@ -1,6 +1,6 @@
 # Temas
 
-Senda usa un tema activo para los colores de Quickshell y el fondo de pantalla. Los temas integrados `zenda-ice` y `zenda-lavanda` son de solo lectura. Los temas de usuario se guardan en `$XDG_CONFIG_HOME/senda/themes/<nombre>/` (por defecto `~/.config/senda/themes/<nombre>/`).
+Senda usa un tema activo para los colores de Quickshell y el fondo de pantalla. Los temas integrados `zenda-ice`, `zenda-lavanda` y `catppuccin-mocha` son de solo lectura. `catppuccin-mocha` usa la paleta Mocha de [Catppuccin](https://catppuccin.com), así que en Neovim reproduce los colores del esquema original. Los temas de usuario se guardan en `$XDG_CONFIG_HOME/senda/themes/<nombre>/` (por defecto `~/.config/senda/themes/<nombre>/`).
 
 ## Formato
 
@@ -23,6 +23,7 @@ senda theme apply mi-tema
 senda theme apply mi-tema --json  # devuelve el tema efectivo, con fallback y warning
 senda theme delete mi-tema
 senda theme watch mi-tema --notify
+senda theme export               # genera los archivos para otras aplicaciones
 ```
 
 `list`, `validate`, `current` y `apply` admiten `--json`; `validate` y `current` admiten `--notify`. `apply` y `delete` admiten `--no-reload`. `watch` emite una línea JSON tras detectar un cambio estable en `theme.json` o la imagen; admite `--interval` (por defecto `1s`) y `--notify` para los cambios inválidos. Solo los cambios válidos del tema activo se aplican en vivo. Si la shell está abierta, `apply` solicita recarga; un cambio inválido conserva los colores anteriores.
@@ -38,6 +39,10 @@ cat tema-para-guardar.json | senda theme save --json
 ```
 
 `SENDA_THEME` en el entorno tiene prioridad sobre el valor del [archivo de configuración](configuration.md). `apply` escribe la selección en ese archivo. Si falta el tema seleccionado o es inválido, `current` vuelve a `zenda-ice` y muestra un aviso; borrar el tema activo también guarda `zenda-ice` como selección.
+
+## Otras aplicaciones
+
+El tema activo también colorea Kitty, GTK, Qt, Hyprland y Neovim mediante archivos generados. Consulta [theme-export.md](theme-export.md).
 
 ## Símbolo de la barra
 

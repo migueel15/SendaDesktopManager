@@ -58,6 +58,9 @@ func themeSaveCmd() *cobra.Command {
 		if err != nil {
 			return err
 		}
+		if info.Active {
+			exportActiveTheme(cmd, info, true)
+		}
 		if info.Active && !noReload {
 			return reloadShellTheme(cmd)
 		}
