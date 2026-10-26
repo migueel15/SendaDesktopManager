@@ -87,12 +87,12 @@ func watchTheme(ctx context.Context, dirs theme.Dirs, name, active string, next 
 	wallpaper := ""
 	read := func() theme.Info {
 		info := theme.Info{Name: name, Builtin: builtin, Active: name == active, Dir: dir, File: file, Colors: map[string]string{}}
-		value, err := theme.Load(file)
+		value, err := theme.LoadHeader(file)
 		if _, statErr := os.Stat(dir); os.IsNotExist(statErr) {
 			err = themeFieldError("name", errors.New("theme directory does not exist"))
 		}
 		if err == nil && !builtin {
-			err = theme.Validate(value, dir, name)
+			err = theme.ValidateHeader(value, dir, name)
 		}
 		if err != nil {
 			info.Error = err.Error()

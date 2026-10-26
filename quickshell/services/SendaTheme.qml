@@ -21,6 +21,7 @@ Singleton {
     property bool started: false
     property bool closing: false
     property bool reloadPending: false
+    property int selectionGeneration: 0
     property int watchGeneration: 0
     property int watchRetries: 0
     property var watcher: null
@@ -52,6 +53,7 @@ Singleton {
             return;
         }
         currentProcess.clearManual = clearManual;
+        currentProcess.generation = selectionGeneration;
         launch(currentProcess, ["current", "--json", "--notify"]);
     }
 
@@ -69,7 +71,9 @@ Singleton {
         mutationProcess.input = input;
         mutationProcess.stdinEnabled = action === "save";
         launch(mutationProcess, action === "save"
-            ? ["save", "--json", "--no-reload"] : [action, name, "--no-reload"]);
+            ? ["save", "--json", "--no-reload"]
+            : action === "apply" ? ["apply", name, "--json", "--no-reload"]
+            : [action, name, "--no-reload"]);
     }
 
     function apply(name) { mutate("apply", name, ""); }
@@ -181,9 +185,18 @@ Singleton {
     Process {
         id: currentProcess
         property bool clearManual: false
+        property int generation: -1
         stdout: StdioCollector { id: currentOutput }
         stderr: StdioCollector { id: currentErrors }
         onExited: exitCode => {
+            // A current read started before apply must not restore the old theme.
+            if (generation !== root.selectionGeneration) {
+                if (root.reloadPending) {
+                    root.reloadPending = false;
+                    Qt.callLater(root.reload);
+                }
+                return;
+            }
             if (exitCode !== 0) {
                 root.lastError = currentErrors.text.trim() || "No se pudo cargar el tema activo";
             } else {
@@ -233,6 +246,14 @@ Singleton {
                     root.lastError = String(error);
                     root.saveFailed(root.lastError);
                 }
+            } else if (action === "apply") {
+                try {
+                    root.accept(JSON.parse(mutationOutput.text), true);
+                    root.selectionGeneration++;
+                    root.reloadPending = false;
+                    root.restartWatcher();
+                    root.refresh();
+                } catch (error) { root.lastError = String(error); }
             } else {
                 root.reload();
                 root.refresh();

@@ -173,8 +173,20 @@ func TestCheckImage(t *testing.T) {
 			if err := CheckImage(path); err != nil {
 				t.Fatal(err)
 			}
+			if err := CheckImageHeader(path); err != nil {
+				t.Fatal(err)
+			}
 			data, _ := os.ReadFile(path)
-			write(t, path, data[:len(data)/2])
+			// Find a complete header with no pixel data for each supported format.
+			for end := 1; end < len(data); end++ {
+				write(t, path, data[:end])
+				if CheckImageHeader(path) == nil {
+					break
+				}
+			}
+			if err := CheckImageHeader(path); err != nil {
+				t.Fatal(err)
+			}
 			if err := CheckImage(path); err == nil {
 				t.Fatal("accepted truncated image")
 			}
@@ -192,6 +204,9 @@ func TestCheckImage(t *testing.T) {
 	field(t, err, "wallpaper")
 	if err := CheckImage(dir); err == nil {
 		t.Fatal("accepted directory")
+	}
+	if err := CheckImageHeader(dir); err == nil {
+		t.Fatal("accepted directory header")
 	}
 }
 
@@ -254,4 +269,18 @@ func TestUnreadableWallpaper(t *testing.T) {
 	defer os.Chmod(path, 0600)
 	_, err := Load(save(t, dir, value))
 	field(t, err, "wallpaper")
+}
+
+func TestCheckImageHeaderRejectsInvalidData(t *testing.T) {
+	for _, data := range [][]byte{
+		[]byte("not an image"),
+		[]byte("GIF89a\x00\x00\x00\x00\x00\x00\x00"), // Zero dimensions.
+		[]byte("\x89PNG\r\n\x1a\ncorrupt"),
+	} {
+		path := filepath.Join(t.TempDir(), "image")
+		write(t, path, data)
+		if err := CheckImageHeader(path); err == nil {
+			t.Fatalf("accepted invalid header %q", data)
+		}
+	}
 }

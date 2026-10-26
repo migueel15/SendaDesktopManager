@@ -55,6 +55,18 @@ func (m themeManagement) find(name, active string) theme.Info {
 }
 
 func (m themeManagement) validate(target, active string) theme.Info {
+	info := m.inspect(target, active)
+	if info.Valid {
+		if err := theme.CheckImage(info.Wallpaper); err != nil {
+			info.Valid = false
+			info.Field = "wallpaper"
+			info.Error = "wallpaper: " + err.Error()
+		}
+	}
+	return info
+}
+
+func (m themeManagement) inspect(target, active string) theme.Info {
 	if !strings.ContainsAny(target, `/\`) && !strings.HasSuffix(target, ".json") {
 		return m.find(target, active)
 	}
@@ -67,7 +79,7 @@ func (m themeManagement) validate(target, active string) theme.Info {
 		}
 	}
 	info := theme.Info{File: file, Dir: filepath.Dir(file), Colors: map[string]string{}}
-	value, err := theme.Load(file)
+	value, err := theme.LoadHeader(file)
 	info.Name = value.Name
 	info.Active = info.Name == active
 	if err == nil {
@@ -93,7 +105,7 @@ func (m themeManagement) command(name string) *cobra.Command {
 		cmd.Use += " <name>"
 		cmd.Args = cobra.ExactArgs(1)
 	}
-	if name == "list" || name == "validate" || name == "current" {
+	if name == "list" || name == "validate" || name == "current" || name == "apply" {
 		cmd.Flags().BoolVar(&jsonOutput, "json", false, "Print JSON")
 	}
 	if name == "validate" || name == "current" {
@@ -140,29 +152,16 @@ func (m themeManagement) command(name string) *cobra.Command {
 			}
 			return nil
 		case "current":
-			info := m.find(active, active)
-			warning := ""
-			if !info.Valid {
-				warning = fmt.Sprintf("SENDA_THEME: %s: %s", active, info.Error)
-				if sendNotify {
-					_ = m.notify("Tema no válido", warning)
-				}
-				info = m.find(theme.DefaultTheme, theme.DefaultTheme)
-				if !info.Valid {
-					return fmt.Errorf("%s; %s: %s", warning, theme.DefaultTheme, info.Error)
-				}
+			result, err := m.current(active, sendNotify)
+			if err != nil {
+				return err
 			}
-			result := struct {
-				theme.Info
-				Fallback bool   `json:"fallback"`
-				Warning  string `json:"warning"`
-			}{info, warning != "", warning}
 			if jsonOutput {
 				return writeJSON(cmd, result)
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), info.Name)
-			if warning != "" {
-				fmt.Fprintln(cmd.ErrOrStderr(), warning)
+			fmt.Fprintln(cmd.OutOrStdout(), result.Name)
+			if result.Warning != "" {
+				fmt.Fprintln(cmd.ErrOrStderr(), result.Warning)
 			}
 			return nil
 		case "apply", "delete":
@@ -195,9 +194,43 @@ func (m themeManagement) command(name string) *cobra.Command {
 			if !noReload && (name == "apply" || info.Active) {
 				_ = m.reload(cmd)
 			}
+			if name == "apply" && jsonOutput {
+				// Match current's effective selection, including environment priority.
+				selected := info.Name
+				if value := os.Getenv("SENDA_THEME"); value != "" {
+					selected = value
+				}
+				result, err := m.current(selected, false)
+				if err != nil {
+					return err
+				}
+				return writeJSON(cmd, result)
+			}
 			return nil
 		}
 		return nil
 	}
 	return cmd
+}
+
+type currentThemeResult struct {
+	theme.Info
+	Fallback bool   `json:"fallback"`
+	Warning  string `json:"warning"`
+}
+
+func (m themeManagement) current(active string, sendNotify bool) (currentThemeResult, error) {
+	info := m.find(active, active)
+	warning := ""
+	if !info.Valid {
+		warning = fmt.Sprintf("SENDA_THEME: %s: %s", active, info.Error)
+		if sendNotify {
+			_ = m.notify("Tema no válido", warning)
+		}
+		info = m.find(theme.DefaultTheme, theme.DefaultTheme)
+		if !info.Valid {
+			return currentThemeResult{}, fmt.Errorf("%s; %s: %s", warning, theme.DefaultTheme, info.Error)
+		}
+	}
+	return currentThemeResult{info, warning != "", warning}, nil
 }
