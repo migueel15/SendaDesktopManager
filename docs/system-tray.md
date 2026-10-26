@@ -5,10 +5,10 @@ Los iconos anclados aparecen a la izquierda del botón que abre la bandeja. Los 
 ## Anclar y desanclar
 
 - Abre el desplegable y arrastra un icono hasta la zona a la izquierda del botón. Al soltarlo allí, se añade al final de los anclados.
-- También puedes abrir Ajustes → Barra y pulsar «Anclar» junto a una aplicación abierta.
+- También puedes abrir Ajustes → Barra y activar el interruptor junto a una aplicación abierta.
 - Para desanclar un icono de la barra, haz clic derecho sobre él y elige «Desanclar de la barra».
-- En Ajustes → Barra, pulsa «Desanclar» junto a una aplicación abierta.
-- Si la aplicación está cerrada, aparece en «Anclados no abiertos ahora». Pulsa «Quitar» para desanclarla.
+- En Ajustes → Barra, desactiva el interruptor junto a una aplicación abierta.
+- Si la aplicación está cerrada, aparece en «Anclados no abiertos ahora». Pulsa «Quitar ancla» para desanclarla.
 
 Los clics izquierdo y central en un icono anclado usan las mismas acciones que en el desplegable. Si todos los iconos abiertos están anclados, el desplegable muestra «Todos los iconos están anclados».
 

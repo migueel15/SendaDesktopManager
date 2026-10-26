@@ -36,9 +36,9 @@ Google mostrará un aviso de aplicación no verificada al iniciar sesión. Para 
 ## Conectar la cuenta
 
 1. Abre el panel de configuración con `senda settings` o desde el dashboard.
-2. Solo si usas tu propio cliente: introduce el ID y el secreto y pulsa **Guardar credenciales**. El secreto no se vuelve a mostrar.
+2. Solo si usas tu propio cliente: introduce el ID y el secreto y pulsa Enter en el secreto o **Guardar credenciales**. El secreto no se vuelve a mostrar.
 3. Pulsa **Conectar con Google**. Se abre el navegador; acepta el acceso. Senda recibe la respuesta en `127.0.0.1` y guarda el refresh token.
-4. Elige los calendarios a mostrar y pulsa **Guardar calendarios**.
+4. Activa los interruptores de los calendarios a mostrar. Cada cambio se guarda al instante. Sin selección propia se usan los calendarios marcados por Google.
 
 También puedes hacerlo desde la terminal con `senda calendar login`, `senda calendar status` y `senda calendar logout`.
 
