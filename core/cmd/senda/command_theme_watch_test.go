@@ -135,6 +135,22 @@ func TestThemeWatchStableChanges(t *testing.T) {
 	receive(true, "")
 	change(func() { writeThemeImage(t, info.Wallpaper, 4) })
 	receive(true, "")
+	change(func() {
+		data, err := os.ReadFile(info.Wallpaper)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(info.Wallpaper, data[:33], 0600); err != nil {
+			t.Fatal(err)
+		}
+	})
+	receive(true, "")
+	change(func() {
+		if err := os.WriteFile(info.Wallpaper, []byte("unsupported"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	})
+	receive(false, "wallpaper")
 	next := filepath.Join(info.Dir, "next.png")
 	change(func() { writeThemeImage(t, next, 5); value.Wallpaper = "next.png"; writeJSON() })
 	if got := receive(true, ""); got.Wallpaper != next {

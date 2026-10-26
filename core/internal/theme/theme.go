@@ -39,6 +39,15 @@ func invalid(field, message string) error { return &ValidationError{field, messa
 
 // Load parses the exact JSON contract and validates the wallpaper relative to path.
 func Load(path string) (Theme, error) {
+	return load(path, CheckImage)
+}
+
+// LoadHeader validates the contract and image header without decoding pixels.
+func LoadHeader(path string) (Theme, error) {
+	return load(path, CheckImageHeader)
+}
+
+func load(path string, checkImage func(string) error) (Theme, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return Theme{}, invalid("json", err.Error())
@@ -81,12 +90,21 @@ func Load(path string) (Theme, error) {
 		}
 		t.Colors[key] = value
 	}
-	return t, Validate(t, filepath.Dir(path), "")
+	return t, validate(t, filepath.Dir(path), "", checkImage)
 }
 
 // Validate accepts an explicit expected name so temporary save directories work.
 // An empty expectedName disables the folder-name constraint (builtin themes).
 func Validate(t Theme, dir, expectedName string) error {
+	return validate(t, dir, expectedName, CheckImage)
+}
+
+// ValidateHeader checks metadata and image dimensions without decoding pixels.
+func ValidateHeader(t Theme, dir, expectedName string) error {
+	return validate(t, dir, expectedName, CheckImageHeader)
+}
+
+func validate(t Theme, dir, expectedName string, checkImage func(string) error) error {
 	if len(t.Name) > 40 || !namePattern.MatchString(t.Name) {
 		return invalid("name", "expected kebab-case name of at most 40 characters")
 	}
@@ -125,7 +143,7 @@ func Validate(t Theme, dir, expectedName string) error {
 	if t.Wallpaper == "" {
 		return invalid("wallpaper", "required image path")
 	}
-	if err := CheckImage(WallpaperPath(t, dir)); err != nil {
+	if err := checkImage(WallpaperPath(t, dir)); err != nil {
 		return invalid("wallpaper", err.Error())
 	}
 	return nil
@@ -156,6 +174,27 @@ func CheckImage(path string) error {
 		return fmt.Errorf("formato no admitido (PNG, JPEG o GIF)")
 	}
 	return err
+}
+
+// CheckImageHeader accepts PNG, JPEG and GIF headers with positive dimensions.
+// A valid header does not guarantee that the remaining image data is intact.
+func CheckImageHeader(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	config, format, err := image.DecodeConfig(f)
+	if errors.Is(err, image.ErrFormat) || (err == nil && format != "png" && format != "jpeg" && format != "gif") {
+		return fmt.Errorf("formato no admitido (PNG, JPEG o GIF)")
+	}
+	if err != nil {
+		return err
+	}
+	if config.Width <= 0 || config.Height <= 0 {
+		return fmt.Errorf("invalid image dimensions")
+	}
+	return nil
 }
 
 type Dirs struct{ Builtin, User string }
@@ -190,9 +229,9 @@ func Discover(dirs Dirs) []Info {
 			}
 			dir, _ := filepath.Abs(filepath.Join(base, entry.Name()))
 			info := Info{Name: entry.Name(), Builtin: builtin, Dir: dir, File: filepath.Join(dir, "theme.json"), Colors: map[string]string{}}
-			t, err := Load(info.File)
+			t, err := LoadHeader(info.File)
 			if err == nil && !builtin {
-				err = Validate(t, dir, entry.Name())
+				err = ValidateHeader(t, dir, entry.Name())
 			}
 			if !builtin && reserved[entry.Name()] {
 				err = invalid("name", "name is reserved by a builtin theme")

@@ -241,3 +241,83 @@ func TestThemeManageEnvironmentAndConfigErrors(t *testing.T) {
 		t.Fatal(stderr, err)
 	}
 }
+
+func TestThemeImageValidationModes(t *testing.T) {
+	for _, kind := range []string{"truncated", "unsupported", "missing"} {
+		t.Run(kind, func(t *testing.T) {
+			f := newThemeManageFixture(t)
+			dir := filepath.Join(f.dirs.User, "custom")
+			wallpaper := filepath.Join(dir, "wallpaper.png")
+			data, err := os.ReadFile(wallpaper)
+			if err != nil {
+				t.Fatal(err)
+			}
+			switch kind {
+			case "truncated":
+				data = data[:33] // PNG signature and IHDR only.
+			case "unsupported":
+				data = []byte("not an image")
+			}
+			if err := os.WriteFile(wallpaper, data, 0600); err != nil {
+				t.Fatal(err)
+			}
+			if kind == "missing" {
+				if err := os.Remove(wallpaper); err != nil {
+					t.Fatal(err)
+				}
+			}
+			out, _, err := f.run("list", "--json")
+			if err != nil {
+				t.Fatal(err)
+			}
+			var infos []theme.Info
+			if err := json.Unmarshal([]byte(out), &infos); err != nil {
+				t.Fatal(err)
+			}
+			if infos[2].Valid != (kind == "truncated") {
+				t.Fatal(out)
+			}
+			out, _, err = f.run("apply", "custom", "--json", "--no-reload")
+			if kind == "truncated" {
+				var info theme.Info
+				if err != nil || json.Unmarshal([]byte(out), &info) != nil || !info.Valid || !info.Active || info.Name != "custom" || info.Wallpaper != wallpaper {
+					t.Fatal(out, err)
+				}
+			} else if err == nil || !strings.Contains(err.Error(), "wallpaper:") {
+				t.Fatal(err)
+			}
+			t.Setenv("SENDA_THEME", "custom")
+			out, _, err = f.run("current", "--json")
+			var current currentThemeResult
+			if err != nil || json.Unmarshal([]byte(out), &current) != nil || current.Fallback != (kind != "truncated") {
+				t.Fatal(out, err)
+			}
+			for _, target := range []string{"custom", filepath.Join(dir, "theme.json")} {
+				if _, _, err := f.run("validate", target); err == nil || !strings.Contains(err.Error(), "wallpaper:") {
+					t.Fatal(target, err)
+				}
+			}
+		})
+	}
+}
+
+func TestThemeApplyJSONEffectiveSelection(t *testing.T) {
+	for _, override := range []string{"", theme.DefaultTheme, "missing"} {
+		t.Run("override-"+override, func(t *testing.T) {
+			f := newThemeManageFixture(t)
+			t.Setenv("SENDA_THEME", override)
+			out, _, err := f.run("apply", "custom", "--json", "--no-reload")
+			if err != nil {
+				t.Fatal(err)
+			}
+			current, _, err := f.run("current", "--json")
+			if err != nil || out != current || f.reloads != 0 {
+				t.Fatal(out, current, err, f.reloads)
+			}
+			values, err := config.Load(f.configFile)
+			if err != nil || values["SENDA_THEME"] != "custom" {
+				t.Fatal(values, err)
+			}
+		})
+	}
+}

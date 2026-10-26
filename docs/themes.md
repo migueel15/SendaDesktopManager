@@ -8,7 +8,7 @@ Cada carpeta contiene `theme.json` y una imagen. Puedes partir de [`template.jso
 
 Las 21 claves obligatorias de `colors` son `base`, `background`, `surface`, `border`, `surfaceVariant`, `surfaceRaised`, `surfaceRaisedBorder`, `overlay`, `textMuted`, `white`, `primary`, `secondary`, `accent`, `accentDeep`, `selection`, `focus`, `success`, `warning`, `error`, `info` y `text`. Cada valor debe tener forma `#RRGGBB`; no se admiten colores adicionales.
 
-El nombre usa minúsculas, números y guiones entre segmentos, con un máximo de 40 caracteres. En un tema de usuario debe coincidir con el nombre de la carpeta y no puede reservar el nombre de un tema integrado. La imagen debe existir y poder decodificarse por completo como PNG, JPEG o GIF. `senda theme validate` señala el campo que falla.
+El nombre usa minúsculas, números y guiones entre segmentos, con un máximo de 40 caracteres. En un tema de usuario debe coincidir con el nombre de la carpeta y no puede reservar el nombre de un tema integrado. La imagen debe existir y tener una cabecera PNG, JPEG o GIF con dimensiones positivas. Al guardar o validar se exige además que pueda decodificarse por completo. `senda theme validate` señala el campo que falla.
 
 ## Comandos
 
@@ -20,11 +20,16 @@ senda theme validate /ruta/theme.json --json
 senda theme current              # nombre efectivo
 senda theme current --json       # incluye fallback y warning
 senda theme apply mi-tema
+senda theme apply mi-tema --json  # devuelve el tema efectivo, con fallback y warning
 senda theme delete mi-tema
 senda theme watch mi-tema --notify
 ```
 
-`list`, `validate` y `current` admiten `--json`; `validate` y `current` admiten `--notify`. `apply` y `delete` admiten `--no-reload`. `watch` emite una línea JSON tras detectar un cambio estable en `theme.json` o la imagen; admite `--interval` (por defecto `1s`) y `--notify` para los cambios inválidos. Solo los cambios válidos del tema activo se aplican en vivo. Si la shell está abierta, `apply` solicita recarga; un cambio inválido conserva los colores anteriores.
+`list`, `validate`, `current` y `apply` admiten `--json`; `validate` y `current` admiten `--notify`. `apply` y `delete` admiten `--no-reload`. `watch` emite una línea JSON tras detectar un cambio estable en `theme.json` o la imagen; admite `--interval` (por defecto `1s`) y `--notify` para los cambios inválidos. Solo los cambios válidos del tema activo se aplican en vivo. Si la shell está abierta, `apply` solicita recarga; un cambio inválido conserva los colores anteriores.
+
+`list`, `current`, `apply` y `watch` validan el contrato de `theme.json`, la existencia de la imagen, su formato y sus dimensiones mediante la cabecera, sin decodificar los píxeles. Por tanto, una imagen truncada después de una cabecera válida puede aceptarse en estos comandos. `validate` (por nombre o por ruta) y `save` mantienen la decodificación completa y rechazan imágenes truncadas. Todos rechazan formatos distintos de PNG, JPEG y GIF.
+
+El selector aplica directamente los colores y el fondo devueltos por `apply --json --no-reload`, sin ejecutar `current` entre medias; después actualiza el vigilante y la lista. La respuesta respeta la prioridad de `SENDA_THEME` y el fallback de `current`. La transición del fondo mantiene sus 800 ms.
 
 Para guardar un tema desde la CLI, `save` recibe **un** objeto JSON por stdin con `name`, `colors`, `wallpaper` (ruta de imagen origen) y, opcionalmente, `original` (nombre de un tema de usuario que se está editando). Copia la imagen al tema y valida antes de sustituir los archivos. Admite `--json` y `--no-reload`.
 

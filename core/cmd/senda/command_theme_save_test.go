@@ -196,3 +196,31 @@ func TestThemeSaveCommandJSON(t *testing.T) {
 		t.Fatalf("%s %v", out.String(), err)
 	}
 }
+
+func TestThemeSaveRejectsInvalidImageData(t *testing.T) {
+	for _, kind := range []string{"truncated", "unsupported"} {
+		t.Run(kind, func(t *testing.T) {
+			input, options := saveFixture(t)
+			data, err := os.ReadFile(input.Wallpaper)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if kind == "truncated" {
+				data = data[:33]
+			} else {
+				data = []byte("not an image")
+			}
+			if err := os.WriteFile(input.Wallpaper, data, 0600); err != nil {
+				t.Fatal(err)
+			}
+			_, err = saveUserTheme(input, options)
+			var validation *theme.ValidationError
+			if !errors.As(err, &validation) || validation.Field != "wallpaper" {
+				t.Fatal(err)
+			}
+			if len(theme.Discover(options.dirs)) != 0 {
+				t.Fatal("installed invalid image")
+			}
+		})
+	}
+}
