@@ -49,8 +49,16 @@ Singleton {
         }
     }
 
+    // Focus-loss commits can overlap a click on another setting. Serialize
+    // those writes instead of dropping the second change.
+    QtObject {
+        id: saveQueue
+        property var pending: []
+    }
+
     function save(changes, successMessage) {
         if (saveProcess.running) {
+            saveQueue.pending = saveQueue.pending.concat([{ changes: changes, message: successMessage }]);
             return;
         }
         root.notice = "";
@@ -187,12 +195,18 @@ Singleton {
             if (exitCode === 0) {
                 root.notice = root.pendingSuccess;
                 root.noticeIsError = false;
-                root.refresh();
                 // The weather reads the saved location, so it can only be
                 // requested once the save has finished.
                 SendaWeather.refresh();
             } else {
                 root.showError(saveErrors.text, "No se pudo guardar la configuración");
+            }
+            if (saveQueue.pending.length > 0) {
+                const next = saveQueue.pending[0];
+                saveQueue.pending = saveQueue.pending.slice(1);
+                root.save(next.changes, next.message);
+            } else {
+                root.refresh();
             }
         }
     }

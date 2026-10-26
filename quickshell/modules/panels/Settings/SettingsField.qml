@@ -13,10 +13,13 @@ Rectangle {
     signal accepted()
     signal committed()
     property bool dirty: false
+    property string originalText: ""
 
     function commit() {
         if (!root.dirty) return;
         root.dirty = false;
+        if (input.text === root.originalText) return;
+        root.originalText = input.text;
         root.committed();
     }
 
@@ -42,7 +45,10 @@ Rectangle {
         echoMode: root.secret ? TextInput.Password : TextInput.Normal
         onTextEdited: root.dirty = true
         onAccepted: { root.accepted(); root.commit(); }
-        onActiveFocusChanged: if (!activeFocus) root.commit()
+        onActiveFocusChanged: {
+            if (activeFocus) root.originalText = input.text;
+            else root.commit();
+        }
     }
 
     Text {

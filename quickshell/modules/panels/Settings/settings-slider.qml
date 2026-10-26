@@ -10,6 +10,10 @@ RowLayout {
     property real to: 150
     property real stepSize: 10
     signal committed(real value)
+    // Reconcile with persisted state after a save, including a failed write.
+    onValueChanged: slider.value = root.value
+    onEnabledChanged: if (enabled) slider.value = root.value
+    Component.onCompleted: slider.value = root.value
     spacing: Theme.spacing.sm
     Controls.Slider {
         id: slider
@@ -19,7 +23,6 @@ RowLayout {
         to: root.to
         stepSize: root.stepSize
         snapMode: Controls.Slider.SnapAlways
-        value: root.value
         onPressedChanged: if (!pressed) root.committed(value)
         Keys.onReleased: event => {
             if ([Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down, Qt.Key_Home, Qt.Key_End].includes(event.key))

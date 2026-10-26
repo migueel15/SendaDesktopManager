@@ -22,7 +22,7 @@ El atajo predeterminado es `Alt + ñ`. Púlsalo para empezar a escuchar y otra v
 
 La cancelación con `Esc` está desactivada por ahora. La sesión puede mostrar el aviso «Esc no está disponible en esta sesión.»; para cancelar, usa `senda stt cancel`. La segunda pulsación del atajo termina el dictado y entrega el texto.
 
-En Ajustes → Dictado puedes activar o desactivar «Atenuar volumen durante el dictado» y guardar el volumen deseado entre 0 y 100 %. Por defecto está activado al 10 %. Los cambios se aplican al siguiente dictado, también con el modelo precargado. Durante cada dictado con la opción activada, Senda ajusta la salida al porcentaje elegido y restaura el volumen anterior al terminar, cancelar o producirse un error. No cambia el silencio ni el volumen del micrófono. La precarga en reposo no modifica el volumen.
+En Ajustes → Dictado puedes activar o desactivar «Atenuar volumen durante el dictado» y ajustar el volumen deseado entre 0 y 100 % (Enter o pérdida de foco). Por defecto está activado al 10 %. Los cambios se aplican al siguiente dictado, también con el modelo precargado. Durante cada dictado con la opción activada, Senda ajusta la salida al porcentaje elegido y restaura el volumen anterior al terminar, cancelar o producirse un error. No cambia el silencio ni el volumen del micrófono. La precarga en reposo no modifica el volumen.
 
 Si el puente de Discord está autorizado y el micro de Discord está abierto (ni silenciado ni ensordecido) al empezar la captura, Senda lo silencia durante el dictado y lo desmutea al entregar, cancelar o fallar, solo si fue Senda quien lo silenció. Si el micro estaba silenciado o ensordecido, no lo toca. Nunca cambia el ensordecido: si Discord está ensordecido al terminar, el micro queda silenciado y lo desmuteas tú. Si el puente no está autorizado o no responde en un segundo, el dictado sigue sin silenciar Discord.
 
@@ -42,7 +42,7 @@ Mientras dictas, un dock sale del marco inferior de la pantalla, con su mismo co
 
 ## Ajustes
 
-En Ajustes → Dictado se puede elegir idioma (español, detección automática o un código de idioma), modo de entrega y terminales reconocidas. También se puede configurar el atajo, ver si el módulo está cargado y qué binds entran en conflicto. La CLI permite consultar o cambiar el atajo:
+En Ajustes → Dictado se puede elegir idioma (español, detección automática o un código de idioma), modo de entrega y terminales reconocidas. Los interruptores y selectores guardan al cambiar; los campos editados (volumen, idioma, terminales y atajo) guardan con Enter o al perder el foco. También se puede configurar el atajo, ver si el módulo está cargado y qué binds entran en conflicto. La CLI permite consultar o cambiar el atajo:
 
 ```sh
 senda stt shortcut show

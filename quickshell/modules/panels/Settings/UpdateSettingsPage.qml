@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 
-import qs.common
 import qs.services
 
 // Update settings: the installed version, the newer one when there is one, and

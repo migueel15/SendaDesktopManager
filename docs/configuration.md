@@ -52,7 +52,7 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 
 Si no hay localidad elegida, el clima usa la capital del país de tu zona horaria del sistema (`/etc/localtime`), por ejemplo Madrid para `Europe/Madrid`. Las zonas que no corresponden a un país concreto, como UTC, no tienen valor por defecto. Elegir una localidad en el panel sustituye al valor por defecto.
 
-Estas claves las escribe el panel de configuración (`senda settings`) con `senda config set`. También puedes editarlas a mano; el archivo se mantiene con permisos `0600`.
+Estas claves las escribe el panel de configuración (`senda settings`) con `senda config set`. En Ajustes, los interruptores y selectores guardan al cambiar; el deslizador de texto guarda al soltar y los campos editados con Enter o al perder el foco. Las credenciales de Google se confirman juntas desde el segundo campo o con «Guardar credenciales». El resultado aparece en el pie del panel sin desplazar las opciones. También puedes editarlas a mano; el archivo se mantiene con permisos `0600`.
 
 El refresh token de Google no está en este archivo. Se guarda en `$XDG_STATE_HOME/senda/google-calendar.json` (por defecto `~/.local/state/senda/google-calendar.json`), también con permisos `0600`. Se borra con `senda calendar logout`.
 

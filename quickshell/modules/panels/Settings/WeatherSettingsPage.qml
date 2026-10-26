@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 
-import qs.common
 import qs.services
 
 // Weather settings: the location used by "EL TIEMPO", chosen by searching.
