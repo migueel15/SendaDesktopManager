@@ -102,7 +102,9 @@ BarComponents.BarExtension {
                 implicitHeight: confirmation.implicitHeight + Theme.spacing.md * 2
                 visible: root.pendingDelete !== null
                 radius: Theme.rounding.normal
-                color: Theme.colors.surfaceRaised
+                color: Qt.rgba(Theme.colors.error.r, Theme.colors.error.g, Theme.colors.error.b, 0.14)
+                border.width: 2
+                border.color: Theme.colors.error
                 ColumnLayout {
                     id: confirmation
                     anchors.fill: parent
@@ -110,6 +112,13 @@ BarComponents.BarExtension {
                     Text {
                         Layout.fillWidth: true
                         text: `¿Borrar el tema «${root.pendingDelete?.name ?? ""}»?`
+                        font: Theme.font.title
+                        color: Theme.colors.error
+                        wrapMode: Text.Wrap
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Se eliminarán su carpeta y su imagen. No se puede deshacer."
                         font: Theme.font.body
                         color: Theme.colors.text
                         wrapMode: Text.Wrap
@@ -121,6 +130,7 @@ BarComponents.BarExtension {
                         }
                         ActionButton {
                             text: "Borrar tema"
+                            destructive: true
                             enabled: !SendaTheme.busy
                             onClicked: {
                                 if (root.pendingDelete?.builtin === false)
@@ -139,6 +149,9 @@ BarComponents.BarExtension {
                 cellWidth: width / Math.max(1, Math.floor(width / Theme.scaled(210)))
                 cellHeight: Theme.scaled(220) + Theme.spacing.sm
                 model: SendaTheme.themes
+                // The list steps back while a deletion waits for confirmation.
+                enabled: root.pendingDelete === null
+                opacity: enabled ? 1 : 0.35
                 ScrollBar.vertical: ScrollBar {}
                 delegate: ThemeCard {
                     required property var modelData
@@ -153,18 +166,23 @@ BarComponents.BarExtension {
     }
     component ActionButton: Button {
         id: button
+        property bool destructive: false
         font: Theme.font.body
         padding: Theme.spacing.sm
         background: Rectangle {
             radius: Theme.rounding.normal
-            color: button.hovered ? Theme.colors.surfaceVariant : Theme.colors.surface
+            color: button.destructive ? (button.hovered ? Qt.lighter(Theme.colors.error, 1.1) : Theme.colors.error)
+                : button.hovered ? Theme.colors.surfaceVariant : Theme.colors.surface
+            opacity: button.enabled ? 1 : 0.5
             border.width: 1
-            border.color: button.activeFocus ? Theme.colors.focus : Theme.colors.surfaceVariant
+            border.color: button.activeFocus ? Theme.colors.focus
+                : button.destructive ? Theme.colors.error : Theme.colors.surfaceVariant
         }
         contentItem: Text {
             text: button.text
             font: button.font
-            color: button.enabled ? Theme.colors.text : Theme.colors.overlay
+            color: !button.enabled ? Theme.colors.overlay
+                : button.destructive ? Theme.colors.base : Theme.colors.text
         }
     }
 }

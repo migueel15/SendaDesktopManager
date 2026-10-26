@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import qs.common
 import qs.services
 
@@ -295,6 +296,7 @@ Singleton {
     IpcHandler {
         target: "theme"
         function reload() { root.reload(); }
-        function openPicker() { root.openPicker(""); }
+        // Opens on the focused monitor, where the user is looking.
+        function openPicker() { root.openPicker(Hyprland.focusedMonitor?.name ?? ""); }
     }
 }
