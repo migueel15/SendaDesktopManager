@@ -11,8 +11,18 @@ Rectangle {
     property bool secret: false
 
     signal accepted()
+    signal committed()
+    property bool dirty: false
 
-    implicitHeight: 32
+    function commit() {
+        if (!root.dirty) return;
+        root.dirty = false;
+        root.committed();
+    }
+
+    function focusInput() { input.forceActiveFocus(); }
+
+    implicitHeight: input.implicitHeight + Theme.spacing.lg
     radius: Theme.rounding.small
     color: Theme.colors.background
     border.width: 1
@@ -30,7 +40,9 @@ Rectangle {
         font.family: Theme.font.base.family
         font.pixelSize: Theme.scaled(12)
         echoMode: root.secret ? TextInput.Password : TextInput.Normal
-        onAccepted: root.accepted()
+        onTextEdited: root.dirty = true
+        onAccepted: { root.accepted(); root.commit(); }
+        onActiveFocusChanged: if (!activeFocus) root.commit()
     }
 
     Text {

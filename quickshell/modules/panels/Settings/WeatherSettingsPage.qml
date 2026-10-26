@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 
@@ -16,65 +18,39 @@ Flickable {
         width: root.width
         spacing: 12
 
-        Text {
-            Layout.fillWidth: true
-            text: {
-                if (SendaSettings.values.SENDA_WEATHER_LOCATION) return `Localidad: ${SendaSettings.values.SENDA_WEATHER_LOCATION}`;
-                if (SendaSettings.defaultWeatherLocation) return `Localidad: ${SendaSettings.defaultWeatherLocation} (por defecto, según tu zona horaria)`;
-                return "Localidad: sin elegir";
-            }
-            color: Theme.colors.text
-            font.family: Theme.font.base.family
-            font.pixelSize: Theme.scaled(13)
-            elide: Text.ElideRight
-        }
+        SettingsGroup {
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 8
-
-            SettingsField {
-                id: searchField
-                Layout.fillWidth: true
-                placeholder: "Busca tu localidad"
-                onAccepted: SendaSettings.searchPlaces(searchField.text)
-            }
-            SettingsButton {
-                label: "Buscar"
-                enabled: !SendaSettings.busy && searchField.text.trim().length >= 2
-                onClicked: SendaSettings.searchPlaces(searchField.text)
-            }
-        }
-
-        Repeater {
-            model: SendaSettings.places
-
-            delegate: Rectangle {
-                required property var modelData
-
-                Layout.fillWidth: true
-                implicitHeight: 34
-                radius: Theme.rounding.small
-                color: placeMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-
-                Text {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    verticalAlignment: Text.AlignVCenter
-                    text: [modelData.name, modelData.admin, modelData.country].filter(part => part).join(", ")
-                    color: Theme.colors.text
-                    font.family: Theme.font.base.family
-                    font.pixelSize: Theme.scaled(12)
-                    elide: Text.ElideRight
-                }
-
-                MouseArea {
-                    id: placeMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
+            SettingsRow {
+                separator: false
+                label: "Localidad"
+                description: SendaSettings.values.SENDA_WEATHER_LOCATION
+                    || (SendaSettings.defaultWeatherLocation ? `${SendaSettings.defaultWeatherLocation} (según tu zona horaria)` : "Sin elegir")
+                SettingsField {
+                    id: searchField
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 140
+                    placeholder: "Busca tu localidad"
                     enabled: !SendaSettings.busy
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: SendaSettings.saveLocation(modelData)
+                    onAccepted: if (!SendaSettings.busy) SendaSettings.searchPlaces(text)
+                }
+                SettingsButton {
+                    label: "Buscar"
+                    enabled: !SendaSettings.busy && searchField.text.trim().length >= 2
+                    onClicked: SendaSettings.searchPlaces(searchField.text)
+                }
+            }
+            Repeater {
+                model: SendaSettings.places
+                delegate: SettingsRow {
+                    id: placeRow
+                    required property var modelData
+                    label: modelData.name
+                    description: [modelData.admin, modelData.country].filter(part => part).join(", ")
+                    SettingsButton {
+                        label: "Elegir"
+                        enabled: !SendaSettings.busy
+                        onClicked: SendaSettings.saveLocation(placeRow.modelData)
+                    }
                 }
             }
         }

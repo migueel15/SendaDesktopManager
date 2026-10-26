@@ -1,0 +1,15 @@
+SettingsGroup 1.0 settings-group.qml
+SettingsRow 1.0 settings-row.qml
+SettingsSwitch 1.0 settings-switch.qml
+SettingsSegments 1.0 settings-segments.qml
+SettingsSlider 1.0 settings-slider.qml
+SettingsStatus 1.0 settings-status.qml
+AppearanceSettingsPage 1.0 AppearanceSettingsPage.qml
+BarSettingsPage 1.0 BarSettingsPage.qml
+CalendarSettingsPage 1.0 CalendarSettingsPage.qml
+SettingsButton 1.0 SettingsButton.qml
+SettingsField 1.0 SettingsField.qml
+SettingsPanel 1.0 SettingsPanel.qml
+SttSettingsPage 1.0 SttSettingsPage.qml
+UpdateSettingsPage 1.0 UpdateSettingsPage.qml
+WeatherSettingsPage 1.0 WeatherSettingsPage.qml

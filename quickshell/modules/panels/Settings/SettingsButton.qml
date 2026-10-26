@@ -12,9 +12,9 @@ Rectangle {
     signal clicked()
 
     implicitWidth: buttonText.implicitWidth + 24
-    implicitHeight: 30
+    implicitHeight: buttonText.implicitHeight + Theme.spacing.lg
     radius: Theme.rounding.small
-    color: mouse.pressed && enabled ? Theme.colors.surfaceVariant : root.primary ? Theme.colors.primary : "transparent"
+    color: mouse.pressed && enabled ? Theme.colors.surfaceVariant : root.primary ? Theme.colors.primary : Theme.colors.surface
     border.width: root.primary ? 0 : 1
     border.color: Theme.colors.surfaceVariant
     opacity: enabled ? 1 : 0.4

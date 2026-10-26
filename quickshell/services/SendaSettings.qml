@@ -53,6 +53,8 @@ Singleton {
         if (saveProcess.running) {
             return;
         }
+        root.notice = "";
+        root.noticeIsError = false;
         root.pendingSuccess = successMessage;
         // The JSON is written once the process has started, because writing
         // before that loses the data and `config set` then receives nothing.

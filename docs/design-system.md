@@ -111,3 +111,20 @@ Bordes siempre de 1 px.
 ## Movimiento
 
 Escala `Theme.motion`: `fast` 120 ms para hover y cambios de color · `normal` 180 ms para desplazamientos y fundidos pequeños · `slow` 310 ms para paneles que se despliegan. Curva `OutCubic`.
+
+## Componentes de Ajustes
+
+Las seis páginas mantienen su navegación lateral con icono Nerd Font y texto. La selección usa `selection`, texto `white` e icono `primary`. El contenido conserva el título de sección y se desplaza independientemente del pie de estado.
+
+Los componentes locales se registran en `Settings/qmldir`; sus archivos usan nombres en minúsculas:
+
+| Componente | Uso |
+|---|---|
+| `SettingsGroup` | Tarjeta `surface`, borde `border` de 1 px, radio `normal` y relleno `md`. |
+| `SettingsRow` | Etiqueta `body`, descripción opcional `caption` en `overlay`, controles a la derecha y separador de 1 px. La primera fila omite el separador. |
+| `SettingsSwitch` | Píldora binaria: `primary` activo, `surfaceVariant` inactivo, foco `focus`. Conserva el valor confirmado por el servicio. |
+| `SettingsSegments` | Opciones exclusivas sobre `base`; la selección se guarda al pulsar. |
+| `SettingsSlider` | Deslizador con porcentaje visible; guarda al soltar o al finalizar una pulsación de teclado. Escala de texto 80–150 %, paso 10. |
+| `SettingsStatus` | Pie reservado de dos líneas: éxito breve (3,5 s), error persistente hasta la siguiente operación. No desplaza el contenido. |
+
+Los campos de texto confirman con Enter o al perder el foco solo si se han editado. Las credenciales de Google se confirman juntas desde el segundo campo o mediante su acción específica. Las acciones de búsqueda, instalación, comprobación y actualización siguen siendo botones.

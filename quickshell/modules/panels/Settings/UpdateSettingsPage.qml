@@ -17,41 +17,25 @@ Flickable {
         width: root.width
         spacing: 12
 
-        Text {
-            Layout.fillWidth: true
-            text: SendaUpdate.available
-                ? `${SendaUpdate.current} → ${SendaUpdate.latest}`
-                : `Versión ${SendaUpdate.current || "sin comprobar"}`
-            color: SendaUpdate.available ? Theme.colors.success : Theme.colors.text
-            font.family: Theme.font.base.family
-            font.pixelSize: Theme.scaled(13)
-        }
+        SettingsGroup {
 
-        Text {
-            Layout.fillWidth: true
-            visible: SendaUpdate.message !== ""
-            text: SendaUpdate.message
-            color: Theme.colors.warning
-            font.family: Theme.font.overlay.family
-            font.pixelSize: Theme.scaled(11)
-            wrapMode: Text.WordWrap
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 10
-
-            SettingsButton {
-                label: "Comprobar"
-                enabled: !SendaUpdate.busy
-                onClicked: SendaUpdate.check()
-            }
-
-            SettingsButton {
-                label: "Actualizar"
-                primary: true
-                enabled: SendaUpdate.available
-                onClicked: SendaUpdate.install()
+            SettingsRow {
+                separator: false
+                label: SendaUpdate.available
+                    ? `${SendaUpdate.current} → ${SendaUpdate.latest}`
+                    : `Versión ${SendaUpdate.current || "sin comprobar"}`
+                description: SendaUpdate.message
+                SettingsButton {
+                    label: "Comprobar"
+                    enabled: !SendaUpdate.busy
+                    onClicked: SendaUpdate.check()
+                }
+                SettingsButton {
+                    label: "Actualizar"
+                    primary: true
+                    enabled: SendaUpdate.available
+                    onClicked: SendaUpdate.install()
+                }
             }
         }
     }
