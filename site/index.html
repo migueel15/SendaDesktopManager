@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <link rel="icon" type="image/svg+xml" href="img/senda-logo.svg">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Senda es un entorno gráfico para Hyprland: una barra superior con widgets y plugins, un centro de control y una bandeja del sistema. Actualmente para Arch Linux.">
@@ -49,7 +50,7 @@
       white-space: pre;
     }
 
-    /* Fondo con halos animados */
+    /* Fondo con viento animado */
     .backdrop {
       position: fixed;
       inset: 0;
@@ -58,22 +59,28 @@
       pointer-events: none;
     }
 
-    .blob {
+    /* Ráfagas de viento: trazos ondulados que recorren la pantalla. */
+    .wind {
       position: absolute;
-      width: 46vmax;
-      height: 46vmax;
-      border-radius: 50%;
-      filter: blur(90px);
-      opacity: 0.22;
-      animation: drift 22s ease-in-out infinite alternate;
+      inset: 0;
+      width: 100%;
+      height: 100%;
     }
 
-    .blob-a { background: var(--accent); top: -18vmax; left: -12vmax; }
-    .blob-b { background: var(--accent-2); bottom: -20vmax; right: -14vmax; animation-duration: 28s; }
+    .wind path {
+      fill: none;
+      stroke: var(--c);
+      stroke-width: var(--sw, 1.4);
+      stroke-linecap: round;
+      opacity: var(--o);
+      /* pathLength="1000": a short dash travels from one end to the other. */
+      stroke-dasharray: var(--len) 3000;
+      stroke-dashoffset: var(--len);
+      animation: wind var(--t) linear var(--d) infinite;
+    }
 
-    @keyframes drift {
-      from { transform: translate(0, 0) scale(1); }
-      to   { transform: translate(6vmax, 4vmax) scale(1.12); }
+    @keyframes wind {
+      to { stroke-dashoffset: -1000; }
     }
 
     /* Cabecera */
@@ -111,14 +118,13 @@
     .logo {
       width: 1.9rem;
       height: 1.9rem;
-      border-radius: 9px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
       display: grid;
       place-items: center;
-      color: var(--bg);
-      font-family: var(--mono);
-      font-weight: 800;
-      font-size: 0.95rem;
+    }
+
+    .logo svg {
+      width: 100%;
+      height: 100%;
     }
 
     .topnav {
@@ -161,14 +167,14 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      background: var(--accent);
       border-color: transparent;
       color: var(--bg);
     }
 
     .btn-primary:hover {
       border-color: transparent;
-      box-shadow: 0 10px 30px -10px rgba(122, 162, 247, 0.6);
+      background: #8fb2f9;
     }
 
     /* Hero */
@@ -213,6 +219,13 @@
       line-height: 1.08;
       letter-spacing: -0.02em;
       margin: 0 0 1.1rem;
+    }
+
+    .hero-title {
+      font-size: clamp(4.5rem, 14vw, 9rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      margin: 0 0 1.4rem;
     }
 
     .gradient-text {
@@ -441,7 +454,7 @@
       left: 12%;
       right: 12%;
       height: 2px;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      background: var(--accent);
       opacity: 0.35;
       transform-origin: left;
     }
@@ -493,7 +506,6 @@
       border-radius: var(--radius);
       border: 1px dashed rgba(122, 162, 247, 0.35);
       background:
-        linear-gradient(135deg, rgba(122, 162, 247, 0.06), rgba(187, 154, 247, 0.06)),
         var(--surface);
       display: grid;
       place-items: center;
@@ -530,10 +542,8 @@
       position: relative;
       padding: 2.25rem;
       border-radius: 20px;
-      background:
-        linear-gradient(var(--surface), var(--surface)) padding-box,
-        linear-gradient(120deg, var(--accent), var(--accent-2)) border-box;
-      border: 1px solid transparent;
+      background: var(--surface);
+      border: 1px solid var(--accent);
     }
 
     .channel {
@@ -609,6 +619,95 @@
 
     button[hidden] {
       display: none;
+    }
+
+    .carousel {
+      position: relative;
+      margin: 2rem 0 0;
+    }
+
+    .carousel-track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .carousel-track::-webkit-scrollbar { display: none; }
+
+    .carousel-slide {
+      flex: 0 0 100%;
+      margin: 0;
+      scroll-snap-align: center;
+    }
+
+    .carousel-slide img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .carousel-caption {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin: 0.8rem 0 0;
+      text-align: center;
+      min-height: 1.5em;
+    }
+
+    /* The carousel buttons opt out of the global button style. */
+    .carousel .carousel-button,
+    .carousel .carousel-dots button {
+      flex: none;
+      min-width: 0;
+      padding: 0;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .carousel .carousel-button {
+      position: absolute;
+      top: calc(50% - 1.6rem);
+      width: 2.6rem;
+      height: 2.6rem;
+      border: 1px solid var(--border);
+      background: rgba(19, 23, 32, 0.8);
+      color: var(--text, #fff);
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .carousel .carousel-button:hover,
+    .carousel .carousel-button:focus-visible { border-color: var(--accent); background: rgba(19, 23, 32, 0.95); color: var(--text); }
+    .carousel .carousel-button.prev { left: 0.8rem; }
+    .carousel .carousel-button.next { right: 0.8rem; }
+
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+
+    .carousel .carousel-dots button {
+      width: 0.6rem;
+      height: 0.6rem;
+      border: 0;
+      background: var(--border);
+    }
+
+    .carousel .carousel-dots button:hover,
+    .carousel .carousel-dots button[aria-current="true"] { background: var(--accent); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .carousel-track { scroll-behavior: auto; }
     }
 
     .note {
@@ -691,6 +790,9 @@
       button {
         width: 100%;
       }
+
+      .carousel .carousel-button { width: 2.6rem; }
+      .carousel .carousel-dots button { width: 0.6rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -710,18 +812,30 @@
 </head>
 <body>
   <div class="backdrop" aria-hidden="true">
-    <div class="blob blob-a"></div>
-    <div class="blob blob-b"></div>
+    <svg class="wind" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+      <path pathLength="1000" data-y="29.9" data-amp="21.0" data-waves="2.20" data-phase="3.01" d="M-300 32.7 L-266 27.9 L-232 23.2 L-198 18.8 L-164 15.0 L-130 12.0 L-96 10.0 L-62 9.0 L-28 9.1 L6 10.3 L40 12.6 L74 15.7 L108 19.6 L142 24.1 L176 28.9 L210 33.7 L244 38.3 L278 42.5 L312 46.0 L346 48.7 L380 50.4 L414 51.0 L448 50.5 L482 48.9 L516 46.3 L550 42.8 L584 38.7 L618 34.1 L652 29.3 L686 24.5 L720 20.0 L754 16.1 L788 12.8 L822 10.5 L856 9.2 L890 9.0 L924 9.9 L958 11.8 L992 14.7 L1026 18.4 L1060 22.8 L1094 27.5 L1128 32.3 L1162 37.0 L1196 41.3 L1230 45.1 L1264 48.0 L1298 50.0 L1332 50.9 L1366 50.7 L1400 49.5 L1434 47.1 L1468 43.9 L1502 40.0 L1536 35.5 L1570 30.7 L1604 25.9 L1638 21.3 L1672 17.1 L1706 13.7 L1740 11.1" style="--t: 18.2s; --d: -20.6s; --o: 0.38; --len: 351; --c: var(--accent-2); --sw: 1.8"/>
+      <path pathLength="1000" data-y="112.4" data-amp="18.4" data-waves="2.37" data-phase="0.09" d="M-300 114.0 L-266 118.5 L-232 122.5 L-198 126.0 L-164 128.6 L-130 130.3 L-96 130.8 L-62 130.2 L-28 128.5 L6 125.9 L40 122.4 L74 118.3 L108 113.8 L142 109.3 L176 104.9 L210 101.0 L244 97.8 L278 95.5 L312 94.2 L346 94.0 L380 95.0 L414 97.0 L448 99.9 L482 103.6 L516 107.9 L550 112.4 L584 116.9 L618 121.2 L652 124.9 L686 127.8 L720 129.8 L754 130.8 L788 130.6 L822 129.2 L856 126.9 L890 123.7 L924 119.8 L958 115.4 L992 110.8 L1026 106.4 L1060 102.3 L1094 98.8 L1128 96.1 L1162 94.5 L1196 93.9 L1230 94.5 L1264 96.2 L1298 98.8 L1332 102.3 L1366 106.4 L1400 110.8 L1434 115.4 L1468 119.8 L1502 123.7 L1536 126.9 L1570 129.3 L1604 130.6 L1638 130.8 L1672 129.8 L1706 127.8 L1740 124.9" style="--t: 25.3s; --d: -11.1s; --o: 0.23; --len: 279; --c: var(--accent); --sw: 1.2"/>
+      <path pathLength="1000" data-y="218.3" data-amp="21.1" data-waves="1.98" data-phase="6.25" d="M-300 217.7 L-266 222.0 L-232 226.2 L-198 230.1 L-164 233.4 L-130 236.2 L-96 238.1 L-62 239.2 L-28 239.4 L6 238.7 L40 237.1 L74 234.8 L108 231.7 L142 228.0 L176 224.0 L210 219.7 L244 215.3 L278 211.1 L312 207.1 L346 203.7 L380 200.9 L414 198.8 L448 197.6 L482 197.2 L516 197.8 L550 199.3 L584 201.5 L618 204.5 L652 208.1 L686 212.1 L720 216.4 L754 220.7 L788 225.0 L822 229.0 L856 232.5 L890 235.4 L924 237.6 L958 239.0 L992 239.4 L1026 239.0 L1060 237.7 L1094 235.5 L1128 232.7 L1162 229.2 L1196 225.2 L1230 220.9 L1264 216.6 L1298 212.3 L1332 208.3 L1366 204.7 L1400 201.6 L1434 199.3 L1468 197.9 L1502 197.3 L1536 197.5 L1570 198.7 L1604 200.8 L1638 203.5 L1672 207.0 L1706 210.9 L1740 215.1" style="--t: 23.7s; --d: -10.6s; --o: 0.30; --len: 304; --c: var(--accent); --sw: 1.2"/>
+      <path pathLength="1000" data-y="287.7" data-amp="21.1" data-waves="2.21" data-phase="5.89" d="M-300 279.6 L-266 284.3 L-232 289.2 L-198 294.0 L-164 298.4 L-130 302.3 L-96 305.4 L-62 307.6 L-28 308.7 L6 308.6 L40 307.5 L74 305.3 L108 302.1 L142 298.2 L176 293.7 L210 288.9 L244 284.0 L278 279.3 L312 275.1 L346 271.6 L380 268.9 L414 267.2 L448 266.6 L482 267.1 L516 268.8 L550 271.4 L584 274.9 L618 279.1 L652 283.8 L686 288.7 L720 293.5 L754 298.0 L788 301.9 L822 305.1 L856 307.4 L890 308.6 L924 308.7 L958 307.6 L992 305.5 L1026 302.5 L1060 298.6 L1094 294.2 L1128 289.4 L1162 284.5 L1196 279.8 L1230 275.5 L1264 271.9 L1298 269.1 L1332 267.3 L1366 266.6 L1400 267.0 L1434 268.5 L1468 271.1 L1502 274.5 L1536 278.7 L1570 283.3 L1604 288.1 L1638 293.0 L1672 297.5 L1706 301.6 L1740 304.8" style="--t: 16.2s; --d: -19.3s; --o: 0.22; --len: 225; --c: var(--accent-2); --sw: 1.2"/>
+      <path pathLength="1000" data-y="366.6" data-amp="18.8" data-waves="1.88" data-phase="3.04" d="M-300 368.5 L-266 364.8 L-232 361.2 L-198 357.8 L-164 354.7 L-130 352.1 L-96 350.0 L-62 348.6 L-28 347.9 L6 347.9 L40 348.6 L74 350.1 L108 352.1 L142 354.8 L176 357.8 L210 361.3 L244 364.9 L278 368.6 L312 372.2 L346 375.6 L380 378.7 L414 381.3 L448 383.3 L482 384.7 L516 385.4 L550 385.4 L584 384.6 L618 383.2 L652 381.1 L686 378.5 L720 375.4 L754 372.0 L788 368.3 L822 364.6 L856 361.0 L890 357.6 L924 354.6 L958 352.0 L992 350.0 L1026 348.6 L1060 347.9 L1094 347.9 L1128 348.7 L1162 350.1 L1196 352.2 L1230 354.9 L1264 358.0 L1298 361.4 L1332 365.0 L1366 368.7 L1400 372.3 L1434 375.7 L1468 378.8 L1502 381.4 L1536 383.4 L1570 384.7 L1604 385.4 L1638 385.4 L1672 384.6 L1706 383.1 L1740 381.0" style="--t: 17.9s; --d: -1.0s; --o: 0.39; --len: 280; --c: var(--accent); --sw: 1.8"/>
+      <path pathLength="1000" data-y="436.1" data-amp="13.2" data-waves="2.24" data-phase="5.04" d="M-300 423.6 L-266 425.0 L-232 426.9 L-198 429.3 L-164 432.2 L-130 435.2 L-96 438.3 L-62 441.2 L-28 443.9 L6 446.1 L40 447.8 L74 448.9 L108 449.2 L142 448.9 L176 447.8 L210 446.1 L244 443.8 L278 441.1 L312 438.1 L346 435.1 L380 432.0 L414 429.2 L448 426.8 L482 424.9 L516 423.6 L550 423.0 L584 423.1 L618 423.9 L652 425.4 L686 427.4 L720 430.0 L754 432.8 L788 435.9 L822 439.0 L856 441.9 L890 444.5 L924 446.6 L958 448.1 L992 449.0 L1026 449.2 L1060 448.7 L1094 447.4 L1128 445.6 L1162 443.2 L1196 440.5 L1230 437.4 L1264 434.4 L1298 431.4 L1332 428.7 L1366 426.3 L1400 424.5 L1434 423.4 L1468 422.9 L1502 423.2 L1536 424.2 L1570 425.8 L1604 428.0 L1638 430.6 L1672 433.5 L1706 436.6 L1740 439.6" style="--t: 22.6s; --d: -24.7s; --o: 0.40; --len: 238; --c: var(--accent); --sw: 1.2"/>
+      <path pathLength="1000" data-y="519.5" data-amp="17.6" data-waves="2.41" data-phase="1.26" d="M-300 536.3 L-266 537.1 L-232 536.7 L-198 535.3 L-164 532.9 L-130 529.7 L-96 525.7 L-62 521.4 L-28 517.0 L6 512.7 L40 508.9 L74 505.7 L108 503.4 L142 502.1 L176 501.9 L210 502.8 L244 504.8 L278 507.7 L312 511.4 L346 515.5 L380 519.9 L414 524.3 L448 528.4 L482 531.9 L516 534.6 L550 536.4 L584 537.1 L618 536.7 L652 535.1 L686 532.6 L720 529.3 L754 525.3 L788 521.0 L822 516.6 L856 512.3 L890 508.5 L924 505.4 L958 503.2 L992 502.0 L1026 501.9 L1060 503.0 L1094 505.1 L1128 508.0 L1162 511.8 L1196 516.0 L1230 520.4 L1264 524.7 L1298 528.8 L1332 532.2 L1366 534.8 L1400 536.5 L1434 537.1 L1468 536.5 L1502 534.9 L1536 532.3 L1570 528.9 L1604 524.9 L1638 520.5 L1672 516.1 L1706 511.9 L1740 508.2" style="--t: 25.2s; --d: -23.1s; --o: 0.29; --len: 313; --c: var(--accent-2); --sw: 1.2"/>
+      <path pathLength="1000" data-y="628.5" data-amp="18.0" data-waves="1.85" data-phase="3.04" d="M-300 630.3 L-266 626.8 L-232 623.4 L-198 620.2 L-164 617.2 L-130 614.7 L-96 612.8 L-62 611.4 L-28 610.6 L6 610.5 L40 611.1 L74 612.4 L108 614.2 L142 616.6 L176 619.4 L210 622.6 L244 626.0 L278 629.5 L312 632.9 L346 636.2 L380 639.2 L414 641.8 L448 643.9 L482 645.4 L516 646.3 L550 646.5 L584 646.1 L618 645.0 L652 643.3 L686 641.0 L720 638.3 L754 635.2 L788 631.8 L822 628.3 L856 624.9 L890 621.5 L924 618.5 L958 615.8 L992 613.6 L1026 611.9 L1060 610.9 L1094 610.5 L1128 610.8 L1162 611.7 L1196 613.3 L1230 615.5 L1264 618.1 L1298 621.2 L1332 624.5 L1366 627.9 L1400 631.4 L1434 634.8 L1468 637.9 L1502 640.7 L1536 643.0 L1570 644.8 L1604 646.0 L1638 646.5 L1672 646.4 L1706 645.5 L1740 644.1" style="--t: 18.7s; --d: -21.7s; --o: 0.23; --len: 346; --c: var(--accent); --sw: 1.2"/>
+      <path pathLength="1000" data-y="679.2" data-amp="11.1" data-waves="2.16" data-phase="3.28" d="M-300 677.7 L-266 675.2 L-232 673.0 L-198 671.1 L-164 669.6 L-130 668.6 L-96 668.1 L-62 668.2 L-28 668.8 L6 670.0 L40 671.7 L74 673.7 L108 676.0 L142 678.5 L176 681.0 L210 683.4 L244 685.6 L278 687.5 L312 688.9 L346 689.9 L380 690.3 L414 690.1 L448 689.4 L482 688.2 L516 686.5 L550 684.4 L584 682.1 L618 679.6 L652 677.1 L686 674.7 L720 672.6 L754 670.7 L788 669.3 L822 668.4 L856 668.1 L890 668.3 L924 669.0 L958 670.3 L992 672.1 L1026 674.2 L1060 676.5 L1094 679.0 L1128 681.5 L1162 683.9 L1196 686.0 L1230 687.8 L1264 689.2 L1298 690.0 L1332 690.3 L1366 690.0 L1400 689.2 L1434 687.9 L1468 686.1 L1502 684.0 L1536 681.6 L1570 679.1 L1604 676.6 L1638 674.2 L1672 672.1 L1706 670.4 L1740 669.1" style="--t: 21.7s; --d: -8.3s; --o: 0.42; --len: 248; --c: var(--accent); --sw: 1.8"/>
+      <path pathLength="1000" data-y="766.8" data-amp="12.7" data-waves="1.88" data-phase="5.82" d="M-300 761.2 L-266 763.5 L-232 766.0 L-198 768.5 L-164 770.9 L-130 773.2 L-96 775.2 L-62 776.9 L-28 778.3 L6 779.1 L40 779.5 L74 779.4 L108 778.8 L142 777.8 L176 776.3 L210 774.5 L244 772.3 L278 770.0 L312 767.5 L346 765.0 L380 762.6 L414 760.3 L448 758.3 L482 756.6 L516 755.3 L550 754.5 L584 754.1 L618 754.2 L652 754.9 L686 755.9 L720 757.4 L754 759.3 L788 761.5 L822 763.8 L856 766.3 L890 768.8 L924 771.2 L958 773.5 L992 775.5 L1026 777.1 L1060 778.4 L1094 779.2 L1128 779.5 L1162 779.4 L1196 778.7 L1230 777.6 L1264 776.1 L1298 774.2 L1332 772.0 L1366 769.6 L1400 767.2 L1434 764.7 L1468 762.2 L1502 760.0 L1536 758.0 L1570 756.4 L1604 755.2 L1638 754.4 L1672 754.1 L1706 754.3 L1740 755.0" style="--t: 19.5s; --d: -15.5s; --o: 0.27; --len: 246; --c: var(--accent-2); --sw: 1.2"/>
+      <path pathLength="1000" data-y="848.2" data-amp="24.8" data-waves="1.69" data-phase="2.69" d="M-300 859.0 L-266 854.9 L-232 850.6 L-198 846.2 L-164 841.9 L-130 837.8 L-96 834.0 L-62 830.6 L-28 827.8 L6 825.7 L40 824.2 L74 823.5 L108 823.6 L142 824.5 L176 826.0 L210 828.3 L244 831.2 L278 834.7 L312 838.5 L346 842.7 L380 847.1 L414 851.4 L448 855.7 L482 859.8 L516 863.4 L550 866.6 L584 869.3 L618 871.3 L652 872.5 L686 873.0 L720 872.7 L754 871.7 L788 869.9 L822 867.5 L856 864.4 L890 860.8 L924 856.9 L958 852.7 L992 848.3 L1026 843.9 L1060 839.7 L1094 835.7 L1128 832.2 L1162 829.1 L1196 826.6 L1230 824.8 L1264 823.8 L1298 823.5 L1332 824.0 L1366 825.2 L1400 827.2 L1434 829.8 L1468 833.0 L1502 836.7 L1536 840.7 L1570 845.0 L1604 849.4 L1638 853.7 L1672 857.9 L1706 861.7 L1740 865.2" style="--t: 17.6s; --d: -1.0s; --o: 0.31; --len: 281; --c: var(--accent); --sw: 1.2"/>
+    </svg>
   </div>
 
   <header class="topbar">
     <div class="topbar-inner">
       <a class="brand" href="#inicio" aria-label="Senda, inicio">
-        <span class="logo" aria-hidden="true">S</span>
+        <span class="logo" aria-hidden="true"><svg viewBox="0 0 120 120"><polygon points="62,36 106,36 58,84" fill="#2B4A7A"/><polygon points="62,36 58,84 14,84" fill="#F2F7FF"/><polygon points="12,14 84,14 106,36 34,36" fill="#CFE3FF"/><polygon points="14,84 86,84 108,106 36,106" fill="#7AA7FF"/></svg></span>
         Senda
       </a>
       <nav class="topnav" aria-label="Principal">
         <a class="optional" href="#caracteristicas">Funciones</a>
+        <a class="optional" href="#novedades">Novedades</a>
         <a class="optional" href="#como-funciona">Cómo funciona</a>
         <a href="#instalacion">Instalar</a>
         <a href="https://github.com/migueel15/SendaDesktopManager">GitHub</a>
@@ -733,7 +847,7 @@
     <div class="hero" id="inicio">
       <div>
         <p class="badge"><span class="dot" aria-hidden="true"></span>En desarrollo temprano · Arch Linux + Hyprland</p>
-        <h1>Un entorno <span class="gradient-text">visual</span> para tu escritorio Hyprland.</h1>
+        <h1 class="hero-title">Senda<span class="gradient-text">.</span></h1>
         <p class="lead">
           Senda es una barra superior con widgets y plugins, un centro de control y una bandeja
           del sistema. La CLI complementa el día a día, pero el centro de todo es la interfaz.
@@ -760,7 +874,7 @@
       <div class="section-head reveal">
         <p class="section-kicker">Qué incluye</p>
         <h2>Una barra que lo controla todo</h2>
-        <p>Widgets y plugins en la barra, un centro de control y funciones que se irán ampliando con el tiempo.</p>
+        <p>Barra, notificaciones, centro de control y dashboard propios, con plugins para Discord y Spotify.</p>
       </div>
 
       <ul class="features">
@@ -769,26 +883,42 @@
             <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M7 6.5h.01M10 6.5h.01"/></svg>
           </div>
           <h3>Barra superior</h3>
-          <p>Espacios de trabajo, reloj, notificaciones y widgets integrados en la barra de Hyprland.</p>
+          <p>Espacios de trabajo, reloj, estado del sistema y widgets integrados en la barra de Hyprland.</p>
         </li>
 
-        <li class="feature reveal" style="--delay: 0.08s">
+        <li class="feature reveal" style="--delay: 0.06s">
           <div class="feature-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M14 4h-2a2 2 0 1 0-4 0H6v4a2 2 0 1 1 0 4v4h4a2 2 0 1 1 4 0h4v-4a2 2 0 1 0 0-4V4z"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
           </div>
-          <h3>Plugins</h3>
-          <p>Spotify y Discord muestran su estado y sus controles en la barra. Se añadirán más plugins con el tiempo.</p>
+          <h3>Notificaciones propias</h3>
+          <p>Senda recibe las notificaciones del escritorio: pop-ups apilados, un panel con las pendientes, modo No molestar y descarte deslizando.</p>
         </li>
 
-        <li class="feature reveal" style="--delay: 0.16s">
+        <li class="feature reveal" style="--delay: 0.12s">
           <div class="feature-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
           </div>
           <h3>Centro de control</h3>
-          <p>Un panel desplegable con audio y Bluetooth. Más controles llegarán en futuras versiones.</p>
+          <p>Un panel desplegable con volumen, dispositivos de audio, Bluetooth y el menú del sistema para bloquear, reiniciar o apagar.</p>
+        </li>
+
+        <li class="feature reveal" style="--delay: 0.18s">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          </div>
+          <h3>Dashboard</h3>
+          <p>Reloj, calendario, agenda de Google Calendar, el tiempo y la música en reproducción en un solo vistazo.</p>
         </li>
 
         <li class="feature reveal" style="--delay: 0.24s">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M14 4h-2a2 2 0 1 0-4 0H6v4a2 2 0 1 1 0 4v4h4a2 2 0 1 1 4 0h4v-4a2 2 0 1 0 0-4V4z"/></svg>
+          </div>
+          <h3>Plugins para Discord y Spotify</h3>
+          <p>Controla Spotify desde la barra (pista, reproducir y saltar) y tu llamada de Discord: silencia el micro, ensordécete o mira quién habla.</p>
+        </li>
+
+        <li class="feature reveal" style="--delay: 0.3s">
           <div class="feature-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
           </div>
@@ -800,6 +930,73 @@
       <p class="note reveal">
         La CLI complementa la interfaz: también cambia el fondo de pantalla mediante Quickshell y lleva el foco
         a una ventana, por ejemplo con <code>senda window focus discord</code>.
+      </p>
+    </section>
+
+    <section id="novedades">
+      <div class="section-head reveal">
+        <p class="section-kicker">Novedades</p>
+        <h2>Un tema para todo tu escritorio</h2>
+        <p>Senda ahora tiene temas propios, y el tema activo colorea también tus aplicaciones.</p>
+      </div>
+
+      <ul class="features">
+        <li class="feature reveal" style="--delay: 0s">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="15.5" cy="10" r="1.2"/><path d="M12 21a3 3 0 0 1 0-6h1.5a2 2 0 0 0 0-4"/></svg>
+          </div>
+          <h3>Temas dinámicos</h3>
+          <p>Elige entre zenda-ice, zenda-lavanda y catppuccin-mocha o crea los tuyos con el editor: colores, fondo y vista previa, aplicados al instante.</p>
+        </li>
+
+        <li class="feature reveal" style="--delay: 0.08s">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path d="M7 8l3 2-3 2"/></svg>
+          </div>
+          <h3>Un tema para tus aplicaciones</h3>
+          <p>El tema activo se exporta a Kitty, GTK 3 y 4, Qt, KDE y Neovim, con un esquema extenso para sus plugins más usados.</p>
+        </li>
+
+        <li class="feature reveal" style="--delay: 0.16s">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg>
+          </div>
+          <h3>Fondos con transiciones</h3>
+          <p>Cada tema trae su fondo de pantalla, que cambia con una transición suave y se recuerda por monitor.</p>
+        </li>
+
+        <li class="feature reveal" style="--delay: 0.24s">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/></svg>
+          </div>
+          <h3>Ajustes renovados</h3>
+          <p>Páginas de ajustes rediseñadas con guardado inmediato, y la página de actualización muestra las novedades de cada versión.</p>
+        </li>
+      </ul>
+
+      <div class="carousel reveal" role="region" aria-roledescription="carrusel" aria-label="Capturas de Senda">
+        <div class="carousel-track" tabindex="0">
+          <figure class="carousel-slide" aria-roledescription="diapositiva" aria-label="1 de 3">
+            <img src="img/escritorio-catppuccin.webp" width="1600" height="900" alt="Escritorio de Senda con la barra superior y el fondo de trazas del tema catppuccin-mocha">
+            <figcaption hidden>El escritorio con el tema catppuccin-mocha y su fondo de trazas.</figcaption>
+          </figure>
+          <figure class="carousel-slide" aria-roledescription="diapositiva" aria-label="2 de 3">
+            <img src="img/neovim-catppuccin.webp" width="1600" height="900" loading="lazy" alt="Neovim en Kitty coloreado con el tema catppuccin-mocha generado por Senda">
+            <figcaption hidden>Kitty y Neovim siguen al tema activo automáticamente.</figcaption>
+          </figure>
+          <figure class="carousel-slide" aria-roledescription="diapositiva" aria-label="3 de 3">
+            <img src="img/selector-de-temas.webp" width="1600" height="900" loading="lazy" alt="Selector de temas de Senda con las tarjetas de catppuccin-mocha, zenda-ice y zenda-lavanda">
+            <figcaption hidden>El selector de temas: elige uno y se aplica al instante.</figcaption>
+          </figure>
+        </div>
+        <button type="button" class="carousel-button prev" aria-label="Captura anterior">‹</button>
+        <button type="button" class="carousel-button next" aria-label="Captura siguiente">›</button>
+        <p class="carousel-caption" aria-live="polite"></p>
+        <div class="carousel-dots" role="group" aria-label="Elegir captura"></div>
+      </div>
+
+      <p class="note reveal">
+        ¿Quieres probarlo antes que nadie? El canal <strong>nightly</strong> se compila en cada cambio; elígelo en la sección de instalación.
       </p>
     </section>
 
@@ -939,6 +1136,96 @@
           card.style.setProperty('--my', (event.clientY - rect.top) + 'px');
         });
       });
+    })();
+
+    // Carrusel de capturas: botones, puntos, teclado y deslizamiento nativo.
+    document.querySelectorAll('.carousel').forEach((carousel) => {
+      const track = carousel.querySelector('.carousel-track');
+      const slides = [...track.children];
+      const caption = carousel.querySelector('.carousel-caption');
+      const dots = carousel.querySelector('.carousel-dots');
+      let current = 0;
+      const buttons = slides.map((slide, index) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.setAttribute('aria-label', `Captura ${index + 1}`);
+        dot.addEventListener('click', () => go(index));
+        dots.append(dot);
+        return dot;
+      });
+      function show(index) {
+        current = index;
+        caption.textContent = slides[index].querySelector('figcaption').textContent;
+        buttons.forEach((dot, i) => dot.setAttribute('aria-current', String(i === index)));
+      }
+      function go(index) {
+        const target = (index + slides.length) % slides.length;
+        track.scrollTo({ left: slides[target].offsetLeft - track.offsetLeft });
+        show(target);
+      }
+      carousel.querySelector('.prev').addEventListener('click', () => go(current - 1));
+      carousel.querySelector('.next').addEventListener('click', () => go(current + 1));
+      track.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') { go(current - 1); event.preventDefault(); }
+        if (event.key === 'ArrowRight') { go(current + 1); event.preventDefault(); }
+      });
+      let pending;
+      track.addEventListener('scroll', () => {
+        clearTimeout(pending);
+        pending = setTimeout(() => show(Math.round(track.scrollLeft / track.clientWidth)), 80);
+      });
+      show(0);
+    });
+
+    // Efecto ojo de pez: las líneas del viento se abomban alrededor del ratón.
+    (() => {
+      const wind = document.querySelector('.wind');
+      if (!wind || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const paths = [...wind.querySelectorAll('path')].map((path) => ({
+        path,
+        y: Number(path.dataset.y),
+        amp: Number(path.dataset.amp),
+        waves: Number(path.dataset.waves),
+        phase: Number(path.dataset.phase),
+      }));
+      const steps = 120, radius = 190, power = 0.45;
+      const target = { x: 0, y: 0, k: 0 }, lens = { x: 0, y: 0, k: 0 };
+      let frame = 0;
+
+      function draw() {
+        lens.x += (target.x - lens.x) * 0.18;
+        lens.y += (target.y - lens.y) * 0.18;
+        lens.k += (target.k - lens.k) * 0.12;
+        for (const line of paths) {
+          let d = '';
+          for (let i = 0; i <= steps; i++) {
+            let x = -300 + 2040 * i / steps;
+            let y = line.y + line.amp * Math.sin(line.phase + line.waves * 2 * Math.PI * i / steps);
+            const dx = x - lens.x, dy = y - lens.y, r = Math.hypot(dx, dy);
+            if (r < radius && lens.k > 0.001) {
+              const push = 1 + power * lens.k * (1 - r / radius) ** 2;
+              x = lens.x + dx * push;
+              y = lens.y + dy * push;
+            }
+            d += (i ? ' L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+          }
+          line.path.setAttribute('d', d);
+        }
+        const settled = Math.abs(target.k - lens.k) < 0.002 && Math.abs(target.x - lens.x) < 0.5 && Math.abs(target.y - lens.y) < 0.5;
+        frame = settled ? 0 : requestAnimationFrame(draw);
+      }
+
+      function schedule() { if (!frame) frame = requestAnimationFrame(draw); }
+
+      addEventListener('pointermove', (event) => {
+        const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(wind.getScreenCTM().inverse());
+        target.x = point.x;
+        target.y = point.y;
+        if (target.k === 0) { lens.x = point.x; lens.y = point.y; }
+        target.k = 1;
+        schedule();
+      }, { passive: true });
+      document.documentElement.addEventListener('pointerleave', () => { target.k = 0; schedule(); });
     })();
   </script>
 </body>

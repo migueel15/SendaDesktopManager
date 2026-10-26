@@ -63,10 +63,20 @@ func runCheck(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
+	available := availableUpdate(version.Version, tag)
+	// The changelog is informative: if GitHub cannot list it, the check still
+	// reports the update.
+	changes := []release.Change{}
+	if available {
+		if list, err := release.Changelog(cmd.Context(), latestReleaseAPI, version.Version, tag); err == nil {
+			changes = list
+		}
+	}
 	return writeJSON(cmd, map[string]any{
 		"current":   version.Version,
 		"latest":    tag,
-		"available": availableUpdate(version.Version, tag),
+		"available": available,
+		"changes":   changes,
 	})
 }
 

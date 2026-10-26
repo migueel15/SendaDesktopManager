@@ -20,13 +20,15 @@ type themeManagement struct {
 	configFile string
 	notify     func(string, string) error
 	reload     func(*cobra.Command) error
+	// export follows a change of the effective theme; nil disables it.
+	export func(*cobra.Command, theme.Info)
 }
 
 func init() {
 	for _, name := range []string{"list", "validate", "current", "apply", "delete"} {
 		name := name
 		registerThemeSubcommand(func() *cobra.Command {
-			return (themeManagement{theme.DefaultDirs(), paths.ConfigFile(), notify.Send, reloadShellTheme}).command(name)
+			return (themeManagement{theme.DefaultDirs(), paths.ConfigFile(), notify.Send, reloadShellTheme, func(cmd *cobra.Command, info theme.Info) { exportActiveTheme(cmd, info, true) }}).command(name)
 		})
 	}
 }
@@ -193,6 +195,13 @@ func (m themeManagement) command(name string) *cobra.Command {
 			}
 			if !noReload && (name == "apply" || info.Active) {
 				_ = m.reload(cmd)
+			}
+			if m.export != nil && (name == "apply" || info.Active) {
+				// Export what current resolves, so SENDA_THEME and the fallback apply.
+				effective, _ := m.active()
+				if result, err := m.current(effective, false); err == nil {
+					m.export(cmd, result.Info)
+				}
 			}
 			if name == "apply" && jsonOutput {
 				// Match current's effective selection, including environment priority.

@@ -14,6 +14,8 @@ Singleton {
     property string current: ""
     property string latest: ""
     property bool available: false
+    // feat, fix and perf commits between the installed and the latest release.
+    property var changes: []
     property string message: ""
     // Release whose notice the user closed. A new release shows the notice again.
     property string dismissedTag: ""
@@ -67,6 +69,7 @@ Singleton {
                 root.current = data.current;
                 root.latest = data.latest;
                 root.available = data.available;
+                root.changes = Array.isArray(data.changes) ? data.changes : [];
                 root.message = "";
             } catch (error) {
                 root.message = "La respuesta de la comprobación no es válida";

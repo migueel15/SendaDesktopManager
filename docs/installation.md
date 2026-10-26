@@ -88,6 +88,10 @@ Según el código de `core/cmd/senda/command_update.go`:
 
 Si la versión instalada ya coincide con la última release, no hace nada. Si el binario ya está en la última versión pero el archivo `version` del directorio de datos no coincide (por ejemplo, tras la primera instalación), sincroniza solo los archivos de Quickshell.
 
+### Comprobar sin actualizar
+
+`senda update --check` imprime un JSON con `current`, `latest`, `available` y `changes`. Cuando hay una versión nueva, `changes` lista los commits `feat`, `fix` y `perf` entre la versión instalada y la nueva, del más antiguo al más reciente, cada uno con `type`, `scope` y `summary`. Se obtiene de la API de comparación de GitHub. Si esa consulta falla, `changes` queda vacío y la comprobación sigue informando de la actualización. La página **Actualización** de los ajustes muestra esta lista agrupada en «Nuevo», «Correcciones» y «Rendimiento».
+
 `senda update` se niega a ejecutarse en binarios de desarrollo y cuando `SENDA_HOME` está definido (ver [configuration.md](configuration.md)).
 
 ## Desinstalar (`senda uninstall`)
