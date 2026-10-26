@@ -74,8 +74,13 @@ El icono de Senda de la esquina superior izquierda despliega el lanzador desde
 la barra en ese monitor. Al abrirlo, el campo de búsqueda recibe el foco. Escribe para filtrar aplicaciones; usa las
 flechas y Enter para abrir una, o selecciónala con el ratón. Escape o un clic
 fuera lo cierra. Las aplicaciones ocultas en su entrada de escritorio no se muestran.
-Las aplicaciones abiertas desde el lanzador aparecen primero, de la más reciente a
-la más antigua; las demás se ordenan por nombre. Esto también se aplica al filtrar.
+Con la búsqueda vacía aparecen primero las aplicaciones abiertas desde el lanzador,
+de la más reciente a la más antigua; las demás se ordenan por nombre. Al escribir,
+se priorizan las coincidencias del nombre: exactas, al principio, en cualquier
+parte y, después, las letras en el mismo orden aunque no sean consecutivas (por
+ejemplo, `t3c` encuentra «T3 Code»). También se buscan el nombre genérico, la
+descripción, el identificador y las palabras clave. Entre coincidencias del mismo
+tipo, las aplicaciones recientes van primero y el resto se ordena por nombre.
 Se recuerdan hasta 100 aplicaciones en `$XDG_STATE_HOME/senda/launcher-recent.json`
 (por defecto `~/.local/state/senda/launcher-recent.json`). Solo se registran las
 aperturas realizadas desde este lanzador.

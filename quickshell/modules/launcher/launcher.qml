@@ -5,56 +5,54 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import qs.common
 import qs.common.components.barextension
+import qs.services
+import "search.js" as Search
 
 PanelWindow {
     id: root
-    property string screenName: ""
+    readonly property string screenName: OverlayService.currentScreen
     property var results: []
     property var recentIds: []
     property var pendingIds: []
     property bool historyReady: false
     property bool historyWritable: true
-    property bool expanded: false
+    readonly property bool expanded: OverlayService.isOpen("launcher")
     readonly property string historyDirectory: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/senda"
     screen: Quickshell.screens.find(s => s.name === root.screenName) || Quickshell.screens[0] || null
     anchors { top: true; bottom: true; left: true; right: true }
-    margins.top: Theme.barSize
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.namespace: "Senda:Launcher"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: root.expanded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    aboveWindows: true
+    focusable: true
     color: "transparent"
     visible: root.expanded || panel.height > 0.01
-    mask: Region { item: root.expanded ? backdrop : panel }
+    mask: Region { item: inputArea }
+
+    Item { id: inputArea; anchors.fill: parent; anchors.topMargin: Theme.barSize }
 
     function refresh() {
         const query = search.text.trim().toLocaleLowerCase();
-        root.results = DesktopEntries.applications.values.filter(entry => {
-            if (entry.noDisplay || !entry.name) return false;
-            const terms = [entry.name, entry.genericName, entry.comment, entry.id].concat(entry.keywords || []);
-            return terms.some(term => (term || "").toLocaleLowerCase().includes(query));
-        }).sort((a, b) => {
-            const aIndex = root.recentIds.indexOf(a.id);
-            const bIndex = root.recentIds.indexOf(b.id);
-            if (aIndex !== -1 || bIndex !== -1)
-                return aIndex === -1 ? 1 : bIndex === -1 ? -1 : aIndex - bIndex;
-            return a.name.localeCompare(b.name);
-        });
+        root.results = Search.sortEntries(DesktopEntries.applications.values, query, root.recentIds);
         list.currentIndex = root.results.length ? 0 : -1;
     }
     function toggle(name) {
-        if (root.expanded) { root.expanded = false; return; }
-        root.screenName = name || Hyprland.focusedMonitor?.name || "";
-        search.text = "";
-        root.refresh();
-        root.expanded = true;
-        Qt.callLater(() => search.forceActiveFocus());
+        OverlayService.togglePanel("launcher", name || Hyprland.focusedMonitor?.name || "");
+    }
+    function close() {
+        if (root.expanded) OverlayService.closeCurrentPanel();
+    }
+    onExpandedChanged: {
+        if (root.expanded) {
+            search.text = "";
+            root.refresh();
+            Qt.callLater(() => { if (root.expanded) search.forceActiveFocus(); });
+        }
     }
     function launch(index) {
         if (index < 0 || index >= root.results.length) return;
         const entry = root.results[index];
         root.recordLaunch(entry.id);
-        root.expanded = false;
+        root.close();
         entry.execute();
     }
     function addRecent(id) {
@@ -131,15 +129,15 @@ PanelWindow {
         target: DesktopEntries.applications
         function onValuesChanged() { root.refresh(); }
     }
-    MouseArea { id: backdrop; anchors.fill: parent; enabled: root.expanded; onClicked: root.expanded = false }
+    MouseArea { anchors.fill: parent; anchors.topMargin: Theme.barSize; enabled: root.expanded; onClicked: root.close() }
     BarExtension {
         id: panel
         width: Math.min(Theme.scaled(640), parent.width - 24)
         expanded: root.expanded
-        expandedHeight: Math.min(Theme.scaled(520), Math.max(0, parent.height - shadowSpace))
+        expandedHeight: Math.min(Theme.scaled(520), Math.max(0, parent.height - Theme.barSize - shadowSpace))
         autoHideOnPointerExit: false
         anchors.horizontalCenter: parent.horizontalCenter
-        y: -collapseLift
+        y: Theme.barSize - collapseLift
         MouseArea { anchors.fill: parent }
         Item {
             id: searchBox
@@ -154,7 +152,7 @@ PanelWindow {
                 font.pixelSize: Theme.scaled(16)
                 clip: true
                 onTextChanged: root.refresh()
-                Keys.onEscapePressed: root.expanded = false
+                Keys.onEscapePressed: root.close()
                 Keys.onDownPressed: { if (list.count) list.currentIndex = Math.min(list.currentIndex + 1, list.count - 1); }
                 Keys.onUpPressed: { if (list.count) list.currentIndex = Math.max(list.currentIndex - 1, 0); }
                 Keys.onReturnPressed: root.launch(list.currentIndex)

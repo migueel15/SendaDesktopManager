@@ -31,7 +31,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     // Stay mapped while a panel folds back into the bar.
-    visible: OverlayService.currentPanel !== "" || popupContent.anyPanelVisible
+    visible: (OverlayService.currentPanel !== "" && OverlayService.currentPanel !== "launcher") || popupContent.anyPanelVisible
     color: "transparent"
 
     aboveWindows: true
@@ -59,7 +59,7 @@ PanelWindow {
     Item {
         id: popupContent
         anchors.fill: parent
-        focus: OverlayService.currentPanel !== ""
+        focus: OverlayService.currentPanel !== "" && OverlayService.currentPanel !== "launcher"
 
         readonly property bool anyPanelVisible: {
             for (const child of children) {
