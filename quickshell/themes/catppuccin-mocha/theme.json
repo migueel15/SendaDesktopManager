@@ -1,0 +1,27 @@
+{
+  "name": "catppuccin-mocha",
+  "wallpaper": "catppuccin-mocha-05-trazas.png",
+  "colors": {
+    "base": "#11111B",
+    "background": "#1E1E2E",
+    "surface": "#181825",
+    "border": "#313244",
+    "surfaceVariant": "#45475A",
+    "surfaceRaised": "#313244",
+    "surfaceRaisedBorder": "#585B70",
+    "overlay": "#7F849C",
+    "textMuted": "#BAC2DE",
+    "white": "#F5E0DC",
+    "primary": "#89B4FA",
+    "secondary": "#B4BEFE",
+    "accent": "#B580F4",
+    "accentDeep": "#2A2540",
+    "selection": "#45475A",
+    "focus": "#89B4FA",
+    "success": "#A6E3A1",
+    "warning": "#F9E2AF",
+    "error": "#F38BA8",
+    "info": "#74C7EC",
+    "text": "#CDD6F4"
+  }
+}
