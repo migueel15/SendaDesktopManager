@@ -68,6 +68,28 @@ las nuevas pulsaciones se ignoran en todas las barras.
 El estado del icono empieza como activado al iniciar o recargar Quickshell; no
 consulta el estado real de Hyprland ni detecta cambios hechos fuera de la barra.
 
+## Lanzador de aplicaciones
+
+El icono de Senda de la esquina superior izquierda despliega el lanzador desde
+la barra en ese monitor. Al abrirlo, el campo de búsqueda recibe el foco. Escribe para filtrar aplicaciones; usa las
+flechas y Enter para abrir una, o selecciónala con el ratón. Escape o un clic
+fuera lo cierra. Las aplicaciones ocultas en su entrada de escritorio no se muestran.
+Las aplicaciones abiertas desde el lanzador aparecen primero, de la más reciente a
+la más antigua; las demás se ordenan por nombre. Esto también se aplica al filtrar.
+Se recuerdan hasta 100 aplicaciones en `$XDG_STATE_HOME/senda/launcher-recent.json`
+(por defecto `~/.local/state/senda/launcher-recent.json`). Solo se registran las
+aperturas realizadas desde este lanzador.
+
+También puedes abrirlo o cerrarlo desde una terminal o un atajo del compositor:
+
+```sh
+senda launcher toggle
+```
+
+El comando usa el monitor enfocado por Hyprland. Para elegir uno explícitamente,
+añade `--screen <nombre>`; el icono de la barra usa esta opción para abrirlo en
+su propio monitor. La shell de Senda debe estar en ejecución.
+
 ## Variables de entorno solo para desarrollo
 
 `SENDA_HOME` cambia el directorio de datos a una ruta concreta, normalmente un checkout del repositorio. Solo se lee del entorno para elegir ese directorio: si aparece en el archivo de configuración, no cambia la ruta de datos.

@@ -24,6 +24,7 @@ func main() {
 	rootCmd.AddCommand(settingsCmd())
 	rootCmd.AddCommand(windowCmd())
 	rootCmd.AddCommand(notificationsCmd)
+	rootCmd.AddCommand(newLauncherCmd())
 	rootCmd.AddCommand(themeCmd())
 	rootCmd.AddCommand(sttCmd())
 	rootCmd.AddCommand(versionCmd())

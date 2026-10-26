@@ -79,7 +79,7 @@ Variants {
 				width: Math.min(Theme.scaled(760), themeWindow.width)
 				x: Math.round((themeWindow.width - width) / 2)
 				y: -collapseLift
-				maximumHeight: themeWindow.height
+				maximumHeight: Math.max(0, themeWindow.height - themePicker.shadowSpace)
 				onPickerScreen: SendaTheme.pickerScreen === topbar.screenName
 					|| (SendaTheme.pickerScreen === "" && topbar.modelData === Quickshell.screens[0])
 			}
@@ -95,16 +95,9 @@ Variants {
 		}
 
 		Process {
-			id: reloadProc
-			running: false
-			command: ["bash", Qt.resolvedUrl("../../utils/reloadHyprland.sh").toString().replace("file://", "")]
-
-			onRunningChanged: {
-				if (!running) {
-					// Process finished, reset state
-					reloadProc.running = false;
-				}
-			}
+			id: launcherProc
+			command: [Quickshell.env("SENDA_BIN") || "senda", "launcher", "toggle", "--screen", topbar.screenName]
+			onExited: exitCode => { if (exitCode !== 0) console.warn("Launcher command failed:", exitCode); }
 		}
 
 		// Left section: logo, workspaces, and the active task. Same 4 px gap and
@@ -115,7 +108,7 @@ Variants {
 			anchors.leftMargin: 8
 			spacing: 4
 
-			// Logo with the same hover pill as the other bar buttons. Click reloads Hyprland.
+			// Logo opens the application launcher on this monitor.
 			Rectangle {
 				Layout.preferredWidth: Theme.barButtonSize
 				Layout.preferredHeight: Theme.barButtonSize
@@ -167,7 +160,7 @@ Variants {
 					anchors.fill: parent
 					hoverEnabled: true
 					cursorShape: Qt.PointingHandCursor
-					onClicked: reloadProc.running = true
+					onClicked: { if (!launcherProc.running) launcherProc.running = true; }
 				}
 			}
 

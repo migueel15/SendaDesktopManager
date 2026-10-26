@@ -253,7 +253,7 @@ Rectangle {
         // Size the window for the open extension, so the unfold animates inside it
         // instead of resizing the Wayland surface on every frame. Growing the
         // window while shrinking keeps a resize animation from being cut off.
-        implicitHeight: Math.max(1, trackExtensionContent.expandedHeight, trackExtensionContent.height)
+        implicitHeight: Math.max(1, trackExtensionContent.expandedHeight, trackExtensionContent.height) + trackExtensionContent.shadowSpace
         // Let clicks below the visible shape reach the windows underneath.
         mask: Region {
             item: trackExtensionContent

@@ -40,6 +40,7 @@ ShellRoot {
 	VolumeOSD {}
 
 	SttDock {}
+	LazyLoader { id: launcher; active: true; source: Qt.resolvedUrl("modules/launcher/launcher.qml") }
 
 	Variants {
 		id: panelCtrl

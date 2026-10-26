@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import QtQuick.Effects
 import qs.common
 import qs.services
 
@@ -11,6 +12,7 @@ Item {
 	property bool expanded: false
 	property real expandedHeight: Theme.barSize
 	property color backgroundColor: Theme.colors.background
+	readonly property int shadowSpace: 20
 	property real cornerRadius: Theme.barBorderRadius
 	property real contentFadeDistance: 50
 	property real contentHideThreshold: 3
@@ -46,7 +48,7 @@ Item {
 
 	height: expanded ? expandedHeight : 0
 	visible: expanded || height > 0.01
-	clip: true
+	clip: false
 
 	Behavior on height {
 		id: heightBehavior
@@ -107,7 +109,19 @@ Item {
 		}
 	}
 
+	MultiEffect {
+		anchors.fill: backgroundShape
+		source: backgroundShape
+		visible: root.height > root.contentHideThreshold
+		shadowEnabled: true
+		shadowColor: "#b0000000"
+		blurMax: 16
+		shadowBlur: 0.8
+		shadowVerticalOffset: 4
+	}
+
 	Shape {
+		id: backgroundShape
 		anchors.fill: parent
 		preferredRendererType: Shape.CurveRenderer
 
@@ -154,6 +168,7 @@ Item {
 
 	Item {
 		id: contentArea
+		clip: true
 		x: root.curveWidth
 		width: Math.max(0, root.width - 2 * root.curveWidth)
 		height: root.height

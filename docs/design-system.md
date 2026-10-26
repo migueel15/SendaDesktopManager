@@ -87,6 +87,8 @@ Bordes siempre de 1 px.
 ## Superficies
 
 - **Panel:** fondo `background`, sin borde propio; se despliega desde la barra.
+- **Extensión de barra:** comparte el fondo de la barra y añade una sombra suave que sigue su contorno al desplegarse.
+- **Marco del escritorio:** una sombra interior sigue la barra, los bordes y las esquinas curvas de cada monitor.
 - **Tarjeta:** fondo `surface`, borde `border`, radio `normal`, relleno `md`.
 - **Desplegable o menú:** fondo `background` o `surfaceRaised`, borde `border` o `surfaceRaisedBorder`, radio `normal`, relleno `xs` con filas de radio `small`.
 
