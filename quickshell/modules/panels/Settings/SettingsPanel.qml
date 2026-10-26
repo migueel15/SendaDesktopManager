@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 
@@ -16,12 +18,12 @@ Item {
     // Sidebar entries. Each one needs a page in the StackLayout below, in the
     // same position.
     readonly property var sections: [
-        { label: "Apariencia" },
-        { label: "Barra" },
-        { label: "Calendario" },
-        { label: "Tiempo" },
-        { label: "Dictado" },
-        { label: "Actualización" }
+        { label: "Apariencia", icon: "󰏘" },
+        { label: "Barra", icon: "󰍜" },
+        { label: "Calendario", icon: "󰃭" },
+        { label: "Tiempo", icon: "󰖐" },
+        { label: "Dictado", icon: "󰍬" },
+        { label: "Actualización", icon: "󰚰" }
     ]
     property int currentSection: 0
 
@@ -41,28 +43,39 @@ Item {
         }
     }
 
+    Connections {
+        target: SendaSettings
+        function onNoticeChanged() { feedback.show(SendaSettings.notice, SendaSettings.noticeIsError); }
+        function onNoticeIsErrorChanged() { feedback.show(SendaSettings.notice, SendaSettings.noticeIsError); }
+    }
+    Connections {
+        target: SendaSttSettings
+        function onNoticeChanged() { feedback.show(SendaSttSettings.notice, SendaSttSettings.noticeIsError); }
+        function onNoticeIsErrorChanged() { feedback.show(SendaSttSettings.notice, SendaSttSettings.noticeIsError); }
+    }
+
     // Same card style as the dashboard and the control center.
     component SettingsCard: Rectangle {
         radius: Theme.rounding.normal
         color: Theme.colors.surface
         border.width: 1
-        border.color: Theme.colors.surfaceVariant
+        border.color: Theme.colors.border
     }
 
     RowLayout {
         anchors.fill: parent
-        spacing: 12
+        spacing: Theme.spacing.md
 
         SettingsCard {
-            // Fixed at 22% of the window, so the sections never take over the content.
-            Layout.preferredWidth: root.width * 0.22
-            Layout.minimumWidth: root.width * 0.22
-            Layout.maximumWidth: root.width * 0.22
+            // Reserve room for the longest label at the active text scale.
+            Layout.preferredWidth: Math.max(root.width * 0.24, Theme.scaled(145))
+            Layout.minimumWidth: Math.max(root.width * 0.24, Theme.scaled(145))
+            Layout.maximumWidth: Math.max(root.width * 0.24, Theme.scaled(145))
             Layout.fillHeight: true
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 12
+                anchors.margins: Theme.spacing.md
                 spacing: 4
 
                 Text {
@@ -78,24 +91,33 @@ Item {
                     model: root.sections
 
                     delegate: Rectangle {
+                        id: sectionEntry
                         required property var modelData
                         required property int index
 
                         readonly property bool selected: root.currentSection === index
 
                         Layout.fillWidth: true
-                        implicitHeight: 34
+                        implicitHeight: Theme.scaled(24) + Theme.spacing.md
                         radius: Theme.rounding.small
-                        color: selected ? Theme.colors.surfaceVariant
-                            : sectionMouse.containsMouse ? Qt.rgba(Theme.colors.surfaceVariant.r, Theme.colors.surfaceVariant.g, Theme.colors.surfaceVariant.b, 0.5)
-                            : "transparent"
+                        color: selected ? Theme.colors.selection
+                            : sectionMouse.containsMouse ? Theme.colors.surfaceVariant : Theme.colors.surface
 
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
                             anchors.leftMargin: 12
-                            text: modelData.label
-                            color: parent.selected ? Theme.colors.primary : Theme.colors.text
+                            text: sectionEntry.modelData.icon
+                            font: Theme.font.icon
+                            color: parent.selected ? Theme.colors.primary : Theme.colors.overlay
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.left: parent.left
+                            anchors.leftMargin: Theme.spacing.xl + Theme.spacing.md
+                            text: sectionEntry.modelData.label
+                            color: parent.selected ? Theme.colors.white : Theme.colors.text
                             font.family: Theme.font.base.family
                             font.pixelSize: Theme.scaled(13)
                             font.weight: parent.selected ? Font.Bold : Font.Normal
@@ -106,7 +128,7 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.currentSection = index
+                            onClicked: root.currentSection = sectionEntry.index
                         }
                     }
                 }
@@ -130,7 +152,7 @@ Item {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 18
+                anchors.margins: Theme.spacing.lg
                 spacing: 10
 
                 Text {
@@ -141,16 +163,6 @@ Item {
                     font.family: Theme.font.title.family
                     font.pixelSize: Theme.scaled(16)
                     font.weight: Font.Bold
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    visible: root.sections[root.currentSection]?.label !== "Barra" && SendaSettings.notice !== ""
-                    text: SendaSettings.notice
-                    color: SendaSettings.noticeIsError ? Theme.colors.warning : Theme.colors.success
-                    font.family: Theme.font.overlay.family
-                    font.pixelSize: Theme.scaled(12)
-                    wrapMode: Text.WordWrap
                 }
 
                 StackLayout {
@@ -187,6 +199,11 @@ Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }
+                }
+                SettingsStatus {
+                    id: feedback
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.scaled(30)
                 }
             }
         }

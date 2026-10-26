@@ -28,68 +28,17 @@ Flickable {
     ColumnLayout {
         id: column
         width: root.width
-        spacing: 12
-
-        Text {
-            Layout.fillWidth: true
-            text: "Tamaño de la letra"
-            color: Theme.colors.text
-            font.family: Theme.font.base.family
-            font.pixelSize: Theme.scaled(13)
-        }
-
-        Text {
-            Layout.fillWidth: true
-            text: "Aumenta o reduce el texto de la interfaz. Afecta al dashboard, al centro de control y a los paneles."
-            color: Theme.colors.overlay
-            font.family: Theme.font.overlay.family
-            font.pixelSize: Theme.scaled(11)
-            wrapMode: Text.WordWrap
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 10
-
-            SettingsButton {
-                label: "−"
-                enabled: !SendaSettings.busy && root.currentPercent > root.minPercent
-                onClicked: root.changeTo(root.currentPercent - root.stepPercent)
+        SettingsGroup {
+            SettingsRow {
+                separator: false
+                label: "Tamaño de la letra"
+                description: "Escala toda la interfaz entre 80 y 150 %."
+                SettingsSlider {
+                    value: root.currentPercent
+                    enabled: !SendaSettings.busy
+                    onCommitted: value => root.changeTo(value)
+                }
             }
-
-            Text {
-                Layout.preferredWidth: 70
-                horizontalAlignment: Text.AlignHCenter
-                text: `${root.currentPercent}%`
-                color: Theme.colors.text
-                font.family: Theme.font.title.family
-                font.pixelSize: Theme.scaled(16)
-                font.weight: Font.Bold
-            }
-
-            SettingsButton {
-                label: "+"
-                enabled: !SendaSettings.busy && root.currentPercent < root.maxPercent
-                onClicked: root.changeTo(root.currentPercent + root.stepPercent)
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            SettingsButton {
-                label: "Restablecer"
-                enabled: !SendaSettings.busy && root.currentPercent !== 100
-                onClicked: root.changeTo(100)
-            }
-        }
-
-        Text {
-            Layout.fillWidth: true
-            text: `Rango permitido: ${root.minPercent}% a ${root.maxPercent}%.`
-            color: Theme.colors.overlay
-            font.family: Theme.font.overlay.family
-            font.pixelSize: Theme.scaled(11)
         }
     }
 }
