@@ -3,8 +3,8 @@
   "wallpaper": "catppuccin-mocha-05-trazas.png",
   "colors": {
     "base": "#11111B",
-    "background": "#1E1E2E",
-    "surface": "#181825",
+    "background": "#181825",
+    "surface": "#1E1E2E",
     "border": "#313244",
     "surfaceVariant": "#45475A",
     "surfaceRaised": "#313244",

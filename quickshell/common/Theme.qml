@@ -53,9 +53,9 @@ QtObject {
 		// Desktop background, darker than bars and panels.
 		property color base: "#0A0E16"
 		// Bars and panels (Grafito).
-		property color background: "#141A26"
+		property color background: "#11161F"
 		// Cards inside panels.
-		property color surface: "#11161F"
+		property color surface: "#141A26"
 		property color border: "#222B3A"
 		// Hover fills and inactive borders (Pizarra).
 		property color surfaceVariant: "#263042"

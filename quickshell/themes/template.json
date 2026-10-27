@@ -3,8 +3,8 @@
   "wallpaper": "wallpaper.png",
   "colors": {
     "base": "#0A0E16",
-    "background": "#141A26",
-    "surface": "#11161F",
+    "background": "#11161F",
+    "surface": "#141A26",
     "border": "#222B3A",
     "surfaceVariant": "#263042",
     "surfaceRaised": "#1A2130",

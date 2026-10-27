@@ -125,7 +125,7 @@ Los neutros (`base`, `mantle`, `crust`, `surface0-2`, `overlay0-2`, `subtext0-1`
 
 ## Fondos de las aplicaciones
 
-La barra, el marco y los paneles de Senda usan `background`. Para que una ventana se distinga de un panel abierto encima, las plantillas usan `surface`, algo más oscuro, como fondo principal de Kitty, Neovim, GTK, Qt y KDE. Las zonas secundarias (barras laterales de GTK, vistas de Qt y KDE, `mantle` en Neovim) usan una mezcla aún más oscura de `surface` y `base`.
+La barra, el marco y los paneles de Senda usan `background`. Para que una ventana se distinga de un panel abierto encima, las plantillas usan `surface`, más claro en los temas integrados, como fondo principal de Kitty, Neovim, GTK, Qt y KDE. Las zonas secundarias (barras laterales de GTK, vistas de Qt y KDE, `mantle` en Neovim) usan una mezcla aún más oscura de `surface` y `base`.
 
 ## Colores de terminal
 

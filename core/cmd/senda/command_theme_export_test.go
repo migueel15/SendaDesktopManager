@@ -39,7 +39,7 @@ func TestThemeExportCommandWritesActiveTheme(t *testing.T) {
 		t.Fatalf("%s %v", out.String(), err)
 	}
 	data, err := os.ReadFile(filepath.Join(config, "senda", "generated", "kitty", "senda.conf"))
-	if err != nil || !strings.Contains(string(data), "background              #11121D") {
+	if err != nil || !strings.Contains(string(data), "background              #161825") {
 		t.Fatalf("%s %v", data, err)
 	}
 }

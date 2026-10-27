@@ -3,8 +3,8 @@
   "wallpaper": "zenda-lavanda-05-trazas.png",
   "colors": {
     "base": "#0B0C14",
-    "background": "#161825",
-    "surface": "#11121D",
+    "background": "#11121D",
+    "surface": "#161825",
     "border": "#22243A",
     "surfaceVariant": "#2A2D42",
     "surfaceRaised": "#1C1E2D",
