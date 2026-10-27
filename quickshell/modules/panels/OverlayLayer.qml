@@ -28,7 +28,10 @@ PanelWindow {
         right: true
     }
 
-    exclusionMode: ExclusionMode.Ignore
+    // Respect reserved desktop areas, while extending back over the top bar.
+    exclusionMode: ExclusionMode.Normal
+    exclusiveZone: 0
+    margins.top: -Theme.barSize
 
     // Stay mapped while a panel folds back into the bar.
     visible: (OverlayService.currentPanel !== "" && OverlayService.currentPanel !== "launcher") || popupContent.anyPanelVisible

@@ -48,8 +48,8 @@ Variants {
 			// Full screen under the bar, so a click outside the popup can close it,
 			// as the dashboard does.
 			anchors { top: true; bottom: true; left: true; right: true }
-			margins.top: topbar.implicitHeight
-			exclusionMode: ExclusionMode.Ignore
+			exclusionMode: ExclusionMode.Normal
+			exclusiveZone: 0
 			WlrLayershell.namespace: "Senda:ThemePicker"
 			WlrLayershell.layer: WlrLayer.Overlay
 			WlrLayershell.keyboardFocus: themePicker.expanded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None

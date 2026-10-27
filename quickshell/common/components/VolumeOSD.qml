@@ -39,8 +39,7 @@ Scope {
 
         // Center horizontally, just below the top bar.
         anchors.top: true
-        exclusionMode: ExclusionMode.Ignore
-        margins.top: Theme.barSize
+        exclusionMode: ExclusionMode.Normal
         exclusiveZone: 0
 
         implicitWidth: 250

@@ -20,7 +20,9 @@ PanelWindow {
     readonly property string historyDirectory: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/senda"
     screen: Quickshell.screens.find(s => s.name === root.screenName) || Quickshell.screens[0] || null
     anchors { top: true; bottom: true; left: true; right: true }
-    exclusionMode: ExclusionMode.Ignore
+    exclusionMode: ExclusionMode.Normal
+    exclusiveZone: 0
+    margins.top: -Theme.barSize
     WlrLayershell.namespace: "Senda:Launcher"
     aboveWindows: true
     focusable: true
