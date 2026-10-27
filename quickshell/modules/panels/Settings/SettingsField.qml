@@ -44,7 +44,13 @@ Rectangle {
         font.pixelSize: Theme.scaled(12)
         echoMode: root.secret ? TextInput.Password : TextInput.Normal
         onTextEdited: root.dirty = true
-        onAccepted: { root.accepted(); root.commit(); }
+        // Enter confirms and ends editing; handlers of accepted() may still
+        // move the focus elsewhere, such as to the next field.
+        onAccepted: {
+            input.focus = false;
+            root.commit();
+            root.accepted();
+        }
         onActiveFocusChanged: {
             if (activeFocus) root.originalText = input.text;
             else root.commit();
