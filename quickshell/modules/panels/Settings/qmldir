@@ -3,6 +3,7 @@ SettingsRow 1.0 settings-row.qml
 SettingsSwitch 1.0 settings-switch.qml
 SettingsSegments 1.0 settings-segments.qml
 SettingsSlider 1.0 settings-slider.qml
+SettingsShortcut 1.0 settings-shortcut.qml
 SettingsStatus 1.0 settings-status.qml
 AppearanceSettingsPage 1.0 AppearanceSettingsPage.qml
 BarSettingsPage 1.0 BarSettingsPage.qml

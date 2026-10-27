@@ -52,7 +52,7 @@ func TestConflictsSkipsDescribedSendaLuaBind(t *testing.T) {
 	data := `[{"modmask":8,"submap":"","key":"ntilde","dispatcher":"__lua","arg":"11","description":"Senda STT toggle"},
       {"modmask":8,"submap":"","key":"ntilde","dispatcher":"__lua","arg":"12"}]`
 	conflicts, err := Conflicts(context.Background(), fixedRunner(data, nil), "ALT + ntilde")
-	if err != nil || len(conflicts) != 1 || conflicts[0] != "__lua 12" {
+	if err != nil || len(conflicts) != 1 || conflicts[0] != "un atajo de tu configuración sin descripción" {
 		t.Fatalf("Conflicts() = %v, %v", conflicts, err)
 	}
 }

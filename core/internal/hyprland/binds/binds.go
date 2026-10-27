@@ -200,7 +200,10 @@ func Conflicts(ctx context.Context, run stt.Runner, shortcut string) ([]string, 
 			continue
 		}
 		label := strings.TrimSpace(bind.Description)
-		if label == "" {
+		if label == "" && bind.Dispatcher == "__lua" {
+			// Lua binds expose only an internal function id.
+			label = "un atajo de tu configuración sin descripción"
+		} else if label == "" {
 			label = strings.TrimSpace(bind.Dispatcher + " " + bind.Arg)
 		}
 		conflicts = append(conflicts, label)

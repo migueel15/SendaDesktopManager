@@ -23,11 +23,15 @@ type Status struct {
 	ModuleActive      bool     `json:"moduleActive"`
 	IdleConfigPath    string   `json:"idleConfigPath"`
 	IdleMode          string   `json:"idleMode"`
+	DefaultLock       string   `json:"defaultLockShortcut"`
+	DefaultDictation  string   `json:"defaultDictationShortcut"`
 	Warnings          []string `json:"warnings"`
 }
 
 func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
 	status := Status{LockShortcut: s.LockShortcut, DictationShortcut: s.DictationShortcut, IdleSeconds: s.IdleSeconds, Blur: s.Blur, ModulePath: ModulePath(), IdleConfigPath: IdlePath(), IdleMode: s.IdleMode, Warnings: []string{}}
+	defaults := DefaultSettings()
+	status.DefaultLock, status.DefaultDictation = defaults.LockShortcut, defaults.DictationShortcut
 	if InSession() {
 		if run == nil {
 			run = stt.ExecRunner

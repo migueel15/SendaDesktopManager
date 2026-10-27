@@ -26,7 +26,16 @@ func integrationTestEnv(t *testing.T) {
 	if err := os.MkdirAll(bin, 0700); err != nil {
 		t.Fatal(err)
 	}
-	script := "#!/bin/sh\ncase \"$1\" in\nrepl) printf 'dev\\t@/fake/senda.lua\\n';;\nreload) echo ok;;\nconfigerrors) :;;\n-j) echo '[]';;\nesac\n"
+	script := `#!/bin/sh
+case "$1" in
+repl) printf 'dev\t@/fake/senda.lua\n';;
+reload) echo ok;;
+configerrors) :;;
+-j) echo '[{"modmask":64,"key":"d","submap":"","description":"Lanzador"},{"modmask":68,"key":"l","submap":"","description":"Senda lock"}]';;
+dispatch) echo "$2" >> "$HOME/dispatched"; echo ok;;
+eval) echo eval >> "$HOME/dispatched"; echo ok;;
+esac
+`
 	if err := os.WriteFile(filepath.Join(bin, "hyprctl"), []byte(script), 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +65,7 @@ func TestHyprlandCLIAndDictationShareSettings(t *testing.T) {
 	if err = json.Unmarshal([]byte(out), &obj); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"lockShortcut", "dictationShortcut", "idleSeconds", "blur", "modulePath", "moduleActive", "idleConfigPath", "idleMode", "warnings"}
+	want := []string{"lockShortcut", "dictationShortcut", "idleSeconds", "blur", "modulePath", "moduleActive", "idleConfigPath", "idleMode", "defaultLockShortcut", "defaultDictationShortcut", "warnings"}
 	if len(obj) != len(want) {
 		t.Fatalf("JSON keys %v", obj)
 	}
@@ -138,5 +147,47 @@ func TestHyprlandIdleModeChoice(t *testing.T) {
 	}
 	if out, err := runCommand(t, hyprlandCmd(), "set", "--idle-mode", "other"); err == nil {
 		t.Fatalf("accepted invalid mode: %s", out)
+	}
+}
+
+func TestHyprlandCheckReportsConflicts(t *testing.T) {
+	integrationTestEnv(t)
+	for _, tc := range []struct {
+		target, shortcut, want string
+		conflicts              int
+	}{
+		{"lock", "super + d", "SUPER + d", 1},
+		{"lock", "SUPER + CTRL + l", "SUPER + CTRL + l", 0},
+		{"dictation", "CTRL + SUPER + L", "CTRL + SUPER + l", 1},
+		{"lock", "ALT + ntilde", "ALT + ntilde", 1},
+		{"dictation", "SUPER + F5", "SUPER + f5", 0},
+	} {
+		out, err := runCommand(t, hyprlandCmd(), "check", "--for", tc.target, "--shortcut", tc.shortcut)
+		if err != nil {
+			t.Fatalf("%v %s", err, out)
+		}
+		var got shortcutCheck
+		if err := json.Unmarshal([]byte(out), &got); err != nil {
+			t.Fatal(err)
+		}
+		if got.Shortcut != tc.want || len(got.Conflicts) != tc.conflicts {
+			t.Fatalf("%s %q: %+v", tc.target, tc.shortcut, got)
+		}
+	}
+	if _, err := runCommand(t, hyprlandCmd(), "check", "--for", "lock", "--shortcut", "SUPER + !"); err == nil {
+		t.Fatal("accepted an invalid key")
+	}
+}
+
+func TestHyprlandCaptureSwitchesSubmap(t *testing.T) {
+	integrationTestEnv(t)
+	for _, step := range []string{"start", "stop"} {
+		if out, err := runCommand(t, hyprlandCmd(), "capture", step); err != nil {
+			t.Fatalf("%s: %v %s", step, err, out)
+		}
+	}
+	data, _ := os.ReadFile(filepath.Join(os.Getenv("HOME"), "dispatched"))
+	if string(data) != "eval\nhl.dsp.submap(\"senda_capture\")\nhl.dsp.submap(\"reset\")\n" {
+		t.Fatalf("dispatched: %q", data)
 	}
 }

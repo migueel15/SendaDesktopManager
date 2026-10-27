@@ -16,6 +16,10 @@ import (
 // the running Hyprland is how Senda knows that the module is loaded.
 const ProbeFunction = "senda_module_version"
 
+// CaptureSubmap has no binds besides Escape, so Hyprland lets every other key
+// combination reach Senda while a shortcut is being recorded.
+const CaptureSubmap = "senda_capture"
+
 type Settings struct {
 	LockShortcut      string
 	DictationShortcut string

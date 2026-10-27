@@ -44,7 +44,7 @@ Mientras dictas, un dock sale del marco inferior de la pantalla, con su mismo co
 
 ## Ajustes
 
-En Ajustes → Dictado se puede elegir idioma (español, detección automática o un código de idioma), modo de entrega y terminales reconocidas. Los interruptores y selectores guardan al cambiar; los campos editados (volumen, idioma, terminales y atajo) guardan con Enter o al perder el foco. También se puede configurar el atajo, ver si el módulo está cargado y qué binds entran en conflicto. La CLI permite consultar o cambiar el atajo:
+En Ajustes → Dictado se puede elegir idioma (español, detección automática o un código de idioma), modo de entrega y terminales reconocidas. Los interruptores y selectores guardan al cambiar; los campos editados (volumen, idioma, terminales y atajo) guardan con Enter o al perder el foco. El atajo se edita en Ajustes → Sistema (consulta [Bloqueo de pantalla](lock-screen.md#cambiar-los-atajos)); Dictado lo muestra. La CLI permite consultar o cambiar el atajo:
 
 ```sh
 senda stt shortcut show

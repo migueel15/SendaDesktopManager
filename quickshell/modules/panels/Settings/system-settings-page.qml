@@ -13,9 +13,30 @@ Flickable {
     Connections {
         target: SendaHyprlandSettings
         function onValuesChanged() {
-            lockField.text = SendaHyprlandSettings.values.lockShortcut;
-            dictationField.text = SendaHyprlandSettings.values.dictationShortcut;
             idleField.text = String(SendaHyprlandSettings.values.idleSeconds);
+        }
+    }
+
+    // Check mark that fades in and out when its setting is saved. It always
+    // takes its space, so the row does not move.
+    component SavedMark: Text {
+        id: mark
+        property string flag: ""
+        text: "\uf00c"
+        color: Theme.colors.success
+        font.family: Theme.iconFamily
+        font.pixelSize: Theme.scaled(13)
+        opacity: 0
+        Accessible.ignored: true
+        Connections {
+            target: SendaHyprlandSettings
+            function onSaved(flag) { if (flag === mark.flag) pulse.restart(); }
+        }
+        SequentialAnimation {
+            id: pulse
+            NumberAnimation { target: mark; property: "opacity"; to: 1; duration: 120 }
+            PauseAnimation { duration: 900 }
+            NumberAnimation { target: mark; property: "opacity"; to: 0; duration: 400 }
         }
     }
 
@@ -26,9 +47,8 @@ Flickable {
 
         Text {
             Layout.fillWidth: true
-            visible: SendaHyprlandSettings.busy || !SendaHyprlandSettings.loaded
-            text: SendaHyprlandSettings.writing ? "Guardando ajustes…"
-                : SendaHyprlandSettings.busy ? "Consultando ajustes…" : "No se han podido cargar los ajustes."
+            visible: !SendaHyprlandSettings.busy && !SendaHyprlandSettings.loaded
+            text: "No se han podido cargar los ajustes."
             color: Theme.colors.overlay
             font: Theme.font.caption
             wrapMode: Text.WordWrap
@@ -42,33 +62,30 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Atajo de bloqueo"
-                SettingsField {
-                    id: lockField
-                    Layout.preferredWidth: 180
-                    enabled: SendaHyprlandSettings.loaded && !SendaHyprlandSettings.busy
-                    text: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.lockShortcut : ""
-                    placeholder: "Super + L"
-                    onCommitted: if (!SendaHyprlandSettings.save("--lock-shortcut", text)) text = SendaHyprlandSettings.values.lockShortcut
+                SettingsShortcut {
+                    target: "lock"
+                    enabled: SendaHyprlandSettings.loaded
+                    value: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.lockShortcut : ""
+                    defaultValue: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.defaultLockShortcut : ""
                 }
             }
             SettingsRow {
                 label: "Atajo de dictado"
-                SettingsField {
-                    id: dictationField
-                    Layout.preferredWidth: 180
-                    enabled: SendaHyprlandSettings.loaded && !SendaHyprlandSettings.busy
-                    text: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.dictationShortcut : ""
-                    placeholder: "Alt + ñ"
-                    onCommitted: if (!SendaHyprlandSettings.save("--dictation-shortcut", text.replace(/ñ/gi, "ntilde"))) text = SendaHyprlandSettings.values.dictationShortcut
+                SettingsShortcut {
+                    target: "dictation"
+                    enabled: SendaHyprlandSettings.loaded
+                    value: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.dictationShortcut : ""
+                    defaultValue: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.defaultDictationShortcut : ""
                 }
             }
             SettingsRow {
                 label: "Tiempo de inactividad"
                 description: "Segundos, de 0 a 86400. 0 desactiva el bloqueo automático."
+                SavedMark { flag: "--idle-seconds" }
                 SettingsField {
                     id: idleField
                     Layout.preferredWidth: 100
-                    enabled: SendaHyprlandSettings.loaded && !SendaHyprlandSettings.busy
+                    enabled: SendaHyprlandSettings.loaded
                     text: SendaHyprlandSettings.loaded ? String(SendaHyprlandSettings.values.idleSeconds) : ""
                     placeholder: "Segundos"
                     onCommitted: if (!SendaHyprlandSettings.save("--idle-seconds", text.trim())) text = String(SendaHyprlandSettings.values.idleSeconds)
@@ -76,9 +93,10 @@ Flickable {
             }
             SettingsRow {
                 label: "Desenfocar pantalla de bloqueo"
+                SavedMark { flag: "--blur" }
                 SettingsSwitch {
                     checkedValue: SendaHyprlandSettings.loaded && SendaHyprlandSettings.values.blur
-                    enabled: SendaHyprlandSettings.loaded && !SendaHyprlandSettings.busy
+                    enabled: SendaHyprlandSettings.loaded
                     Accessible.name: "Desenfocar pantalla de bloqueo"
                     onToggledValue: value => SendaHyprlandSettings.save("--blur", value)
                 }

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
@@ -175,6 +177,78 @@ func hyprlandCmd() *cobra.Command {
 			return nil
 		}
 	}
-	cmd.AddCommand(show, set)
+	cmd.AddCommand(show, set, captureCmd(), checkCmd())
 	return cmd
+}
+
+// captureCmd enters or leaves the empty submap used while recording a shortcut.
+func captureCmd() *cobra.Command {
+	cmd := &cobra.Command{Use: "capture", Short: "Modo de grabación de atajos", SilenceUsage: true}
+	start := &cobra.Command{Use: "start", SilenceUsage: true, Short: "Desactivar los atajos de Hyprland para grabar uno", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		return integration.StartCapture(cmd.Context(), shortcutRunner)
+	}}
+	stop := &cobra.Command{Use: "stop", SilenceUsage: true, Short: "Restaurar los atajos de Hyprland", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		return integration.StopCapture(cmd.Context(), shortcutRunner)
+	}}
+	cmd.AddCommand(start, stop)
+	return cmd
+}
+
+type shortcutCheck struct {
+	Shortcut  string   `json:"shortcut"`
+	Conflicts []string `json:"conflicts"`
+}
+
+// checkCmd validates a shortcut and lists the Hyprland binds that already use
+// it, ignoring the Senda bind it would replace.
+func checkCmd() *cobra.Command {
+	var shortcut, target string
+	cmd := &cobra.Command{Use: "check", SilenceUsage: true, Short: "Comprobar si un atajo está libre", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		if target != "lock" && target != "dictation" {
+			return fmt.Errorf("--for debe ser lock o dictation")
+		}
+		normalized, err := binds.NormalizeShortcut(shortcut)
+		if err != nil {
+			return err
+		}
+		s, err := integration.ReadSettings()
+		if err != nil {
+			return fmt.Errorf("leer ajustes: %w", err)
+		}
+		result := shortcutCheck{Shortcut: normalized, Conflicts: []string{}}
+		other, otherLabel := s.DictationShortcut, "Senda: dictado"
+		if target == "dictation" {
+			other, otherLabel = s.LockShortcut, "Senda: bloqueo"
+		}
+		if o, err := binds.NormalizeShortcut(other); err == nil && sameShortcut(o, normalized) {
+			result.Conflicts = append(result.Conflicts, otherLabel)
+		}
+		if integration.InSession() {
+			conflicts, err := binds.Conflicts(cmd.Context(), shortcutRunner, normalized)
+			if err != nil {
+				return err
+			}
+			for _, c := range conflicts {
+				if c == "Senda lock" || c == "Senda: cancelar grabación de atajo" {
+					continue
+				}
+				result.Conflicts = append(result.Conflicts, c)
+			}
+		}
+		return writeJSON(cmd, result)
+	}}
+	cmd.Flags().StringVar(&shortcut, "shortcut", "", "Atajo a comprobar")
+	cmd.Flags().StringVar(&target, "for", "", "Atajo de Senda que se cambiaría: lock o dictation")
+	return cmd
+}
+
+// sameShortcut ignores modifier order and key case.
+func sameShortcut(a, b string) bool {
+	norm := func(s string) string {
+		parts := strings.Split(s, " + ")
+		mods := append([]string(nil), parts[:len(parts)-1]...)
+		sort.Strings(mods)
+		return strings.Join(mods, "+") + "+" + strings.ToLower(parts[len(parts)-1])
+	}
+	return norm(a) == norm(b)
 }
