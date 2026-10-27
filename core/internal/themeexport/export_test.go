@@ -2,6 +2,7 @@ package themeexport
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,7 +48,7 @@ func TestDeriveGivesSixteenDistinctColors(t *testing.T) {
 }
 
 func TestRenderBuiltinTemplates(t *testing.T) {
-	want := []string{"kitty/senda.conf", "gtk-3.0/gtk.css", "gtk-4.0/gtk.css", "qt/senda.conf", "hyprland/colors.conf", "nvim/colors/senda.lua", "nvim/lua/lualine/themes/senda.lua", "kde/senda.colors"}
+	want := []string{"kitty/senda.conf", "gtk-3.0/gtk.css", "gtk-4.0/gtk.css", "qt/senda.conf", "hyprland/colors.conf", "nvim/colors/senda.lua", "nvim/lua/lualine/themes/senda.lua", "kde/senda.colors", "t3code/senda.json"}
 	for _, value := range builtinThemes(t) {
 		rendered, err := Render(Derive(value.Name, value.Colors), "")
 		if err != nil {
@@ -58,11 +59,18 @@ func TestRenderBuiltinTemplates(t *testing.T) {
 			if content == "" || strings.Contains(content, "{{") || strings.Contains(content, "<no value>") {
 				t.Fatalf("%s %s:\n%s", value.Name, path, content)
 			}
-			if !strings.Contains(content, value.Name) {
+			if path != "t3code/senda.json" && !strings.Contains(content, value.Name) {
 				t.Fatalf("%s %s: missing theme name", value.Name, path)
 			}
 		}
 		qt := string(rendered[filepath.FromSlash("qt/senda.conf")])
+		var t3 struct {
+			Name, Appearance, Canvas, Accent string
+			Colors                           map[string]string
+		}
+		if err := json.Unmarshal(rendered[filepath.FromSlash("t3code/senda.json")], &t3); err != nil || t3.Name != "Senda" || t3.Appearance != "dark" || t3.Canvas != value.Colors["background"] || t3.Accent != value.Colors["primary"] || t3.Colors["error"] != value.Colors["error"] {
+			t.Fatalf("%s: invalid T3 theme: %+v, %v", value.Name, t3, err)
+		}
 		for _, line := range strings.Split(qt, "\n") {
 			if strings.Contains(line, "_colors=") && strings.Count(line, "#ff") != 21 {
 				t.Fatalf("qt roles: %s", line)
@@ -90,7 +98,7 @@ func TestExportUserTemplatesOverrideAndExtend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(written) != 9 {
+	if len(written) != 10 {
 		t.Fatal(written)
 	}
 	kitty, _ := os.ReadFile(filepath.Join(dirs.Output, "kitty", "senda.conf"))
@@ -104,6 +112,27 @@ func TestExportUserTemplatesOverrideAndExtend(t *testing.T) {
 	leftovers, _ := filepath.Glob(filepath.Join(dirs.Output, "kitty", ".*"))
 	if len(leftovers) != 0 {
 		t.Fatal(leftovers)
+	}
+}
+
+func TestT3ThemeExportThroughLinkedDirectory(t *testing.T) {
+	value := builtinThemes(t)[0]
+	output := t.TempDir()
+	themes := t.TempDir()
+	if err := os.Symlink(themes, filepath.Join(output, "t3code")); err != nil {
+		t.Fatal(err)
+	}
+	name := "Tema \"especial\""
+	if _, err := Export(name, value.Colors, Dirs{Output: output}); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(filepath.Join(themes, "senda.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var theme struct{ Name string }
+	if err := json.Unmarshal(data, &theme); err != nil || theme.Name != "Senda" {
+		t.Fatalf("invalid theme %s: %v", data, err)
 	}
 }
 

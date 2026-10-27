@@ -32,8 +32,22 @@ Se escriben en `$XDG_CONFIG_HOME/senda/generated/` (por defecto `~/.config/senda
 | Qt (qt5ct / qt6ct) | `qt/senda.conf` | En `[Appearance]` de `qt6ct.conf`: `custom_palette=true` y `color_scheme_path=` con la ruta absoluta del archivo | Al abrir de nuevo la aplicación |
 | KDE (Dolphin…) | `kde/senda.colors` | Enlace en `~/.local/share/color-schemes/Senda.colors` y esquema **Senda** (ver Qt) | Al abrir de nuevo la aplicación |
 | Neovim | `nvim/colors/senda.lua` y `nvim/lua/lualine/themes/senda.lua` | Ver más abajo | Automática en las instancias que usan `senda` |
+| T3 Code | `t3code/senda.json` | Ver más abajo | Automática en clientes compatibles que usen el tema publicado |
 
 Hyprland define además una variable `$senda_<color>` por cada color del tema, que puedes usar en tu propia configuración, y ajusta los bordes de ventanas y grupos.
+
+### T3 Code
+
+T3 Code vigila su directorio de temas. Para que detecte cada actualización atómica, enlaza el directorio de salida de Senda al directorio de temas de T3 Code antes de exportar. Si `generated/t3code` ya existe como directorio, revisa su contenido y muévelo antes de crear el enlace; no lo sobrescribas.
+
+```sh
+mkdir -p ~/.t3/userdata/themes ~/.config/senda/generated
+ln -s ~/.t3/userdata/themes ~/.config/senda/generated/t3code
+senda theme export --no-reload
+t3 theme set senda
+```
+
+Si usas `XDG_CONFIG_HOME` o un directorio de estado personalizado de T3 Code, sustituye las rutas por las correspondientes. `t3 theme show` muestra el directorio de publicación. El tema publicado se actualiza al exportar; los clientes compatibles que lo tengan seleccionado reciben los colores sin reiniciar. La aplicación móvil, `app.t3.codes` y las conexiones adicionales no siguen los temas del entorno. Un tema personalizado guardado con el mismo ID tiene prioridad.
 
 ### GTK
 

@@ -1,0 +1,10 @@
+{
+  "name": "Senda",
+  "appearance": "{{if .Dark}}dark{{else}}light{{end}}",
+  "canvas": "{{.C.background}}",
+  "accent": "{{.C.primary}}",
+  "colors": {
+    "terminalSelection": "{{.C.selection}}",
+    "error": "{{.C.error}}"
+  }
+}
