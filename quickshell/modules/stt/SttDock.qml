@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import qs.common
@@ -62,15 +63,66 @@ Scope {
 
             // The dock grows out of the bottom screen frame, like a drop.
             readonly property int cornerSize: Theme.barBorderRadius
+            readonly property int shadowSpace: 20
 
             anchors.bottom: true
             exclusiveZone: 0
 
             // Keep the layer surface stable while only the pill changes size.
-            implicitWidth: maximumWidth + cornerSize * 2
-            implicitHeight: maximumHeight
+            implicitWidth: Math.min(screen.width, maximumWidth + cornerSize * 2 + shadowSpace * 2)
+            implicitHeight: maximumHeight + shadowSpace
             color: "transparent"
             mask: Region { item: content }
+
+            // The shadow follows the pill and its joins without intercepting input.
+            Item {
+                id: shadowShape
+                x: content.x - rootWindow.cornerSize
+                y: content.y
+                width: content.width + rootWindow.cornerSize * 2
+                height: content.height
+                opacity: content.opacity
+
+                Rectangle {
+                    x: rootWindow.cornerSize
+                    width: content.width
+                    height: parent.height
+                    radius: content.radius
+                    color: Theme.colors.background
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        height: Math.min(parent.radius, Math.floor(parent.height / 2))
+                        color: parent.color
+                    }
+                }
+                BarCorner {
+                    position: "bottom-right"
+                    cornerRadius: rootWindow.cornerSize
+                    shapeColor: Theme.colors.background
+                    anchors.left: parent.left
+                    anchors.bottom: parent.bottom
+                }
+                BarCorner {
+                    position: "bottom-left"
+                    cornerRadius: rootWindow.cornerSize
+                    shapeColor: Theme.colors.background
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                }
+            }
+
+            MultiEffect {
+                anchors.fill: shadowShape
+                source: shadowShape
+                opacity: content.opacity
+                shadowEnabled: true
+                shadowColor: "#b0000000"
+                blurMax: 16
+                shadowBlur: 0.8
+                shadowVerticalOffset: 0
+            }
 
             Rectangle {
                 id: content
@@ -154,26 +206,29 @@ Scope {
                             color: Theme.colors.primary
 
                             transform: Scale {
+                                id: barScale
                                 origin.x: animatedBar.width / 2
                                 origin.y: animatedBar.height / 2
                                 yScale: Theme.spacing.sm / Theme.spacing.xl
 
-                                SequentialAnimation on yScale {
-                                    running: rootWindow.showBars && rootWindow.visible && !SendaStt.dockClosing
-                                    loops: Animation.Infinite
-                                    PauseAnimation { duration: animatedBar.index * Theme.motion.fast }
-                                    NumberAnimation {
-                                        to: 1
-                                        duration: Theme.motion.slow
-                                        easing.type: Theme.motion.easing
-                                    }
-                                    NumberAnimation {
-                                        to: Theme.spacing.sm / Theme.spacing.xl
-                                        duration: Theme.motion.slow
-                                        easing.type: Theme.motion.easing
-                                    }
-                                    PauseAnimation { duration: (4 - animatedBar.index) * Theme.motion.fast }
+                                Behavior on yScale {
+                                    NumberAnimation { duration: Theme.motion.normal; easing.type: Theme.motion.easing }
                                 }
+                            }
+
+                            Timer {
+                                readonly property real restingScale: Theme.spacing.sm / Theme.spacing.xl
+                                readonly property real maximumScale: animatedBar.index === 2 ? 1
+                                    : (animatedBar.index === 1 || animatedBar.index === 3 ? 0.8 : 0.6)
+                                running: rootWindow.listening && SendaStt.audioActive && rootWindow.visible && !SendaStt.dockClosing
+                                repeat: true
+                                triggeredOnStart: true
+                                interval: Theme.motion.normal
+                                onTriggered: {
+                                    barScale.yScale = restingScale + (maximumScale - restingScale) * (0.3 + Math.random() * 0.7);
+                                    interval = Theme.motion.fast + Math.round(Math.random() * Theme.motion.normal);
+                                }
+                                onRunningChanged: if (!running) barScale.yScale = restingScale
                             }
                         }
                     }

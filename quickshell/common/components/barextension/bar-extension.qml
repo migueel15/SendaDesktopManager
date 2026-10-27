@@ -117,7 +117,7 @@ Item {
 		shadowColor: "#b0000000"
 		blurMax: 16
 		shadowBlur: 0.8
-		shadowVerticalOffset: 4
+		shadowVerticalOffset: 2
 	}
 
 	Shape {

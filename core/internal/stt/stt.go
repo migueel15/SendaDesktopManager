@@ -16,6 +16,7 @@ type EventType string
 const (
 	EventLoaded    EventType = "loaded"
 	EventReady     EventType = "ready"
+	EventActivity  EventType = "activity"
 	EventPartial   EventType = "partial"
 	EventFinal     EventType = "final"
 	EventDelivered EventType = "delivered"
@@ -28,7 +29,11 @@ type Event struct {
 	Type    EventType `json:"event"`
 	Text    string    `json:"text,omitempty"`
 	Message string    `json:"message,omitempty"`
+	Active  bool      `json:"active,omitempty"`
 }
+
+// ActivityStream optionally exposes recent microphone activity independently of transcription.
+type ActivityStream interface{ Activity() <-chan bool }
 
 // Commands are read one per line from the session's stdin.
 const (

@@ -35,6 +35,29 @@ func shellProcess(t *testing.T, body string) *process {
 
 const readyLine = `printf '%s\n' '{"event":"ready"}'; `
 
+func TestActivityDoesNotReplaceTranscription(t *testing.T) {
+	p := shellProcess(t, readyLine+`printf '%s\n' '{"event":"activity","active":true}' '{"event":"partial","text":"hola"}'; read cmd; printf '%s\n' '{"event":"final","text":"hola"}'`)
+	select {
+	case active := <-p.Activity():
+		if !active {
+			t.Fatal("activity not forwarded")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("activity not received")
+	}
+	select {
+	case result := <-p.Results():
+		if result.Text != "hola" {
+			t.Fatalf("result = %q", result.Text)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("transcription not received")
+	}
+	if _, err := p.Stop(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestStopReturnsFinalAndClosesResults(t *testing.T) {
 	p := shellProcess(t, readyLine+`printf '%s\n' '{"event":"partial","text":"hola"}'; read cmd; test "$cmd" = stop || exit 2; printf '%s\n' '{"event":"final","text":"hola mundo"}'`)
 	select {

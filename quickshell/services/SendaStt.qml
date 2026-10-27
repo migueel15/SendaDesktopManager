@@ -16,6 +16,8 @@ Singleton {
     // without releasing the engine; cancel in preparing/standby ends the process.
     property string phase: "idle"
     property string transcript: ""
+    property bool audioActive: false
+    onPhaseChanged: if (phase !== "listening") audioActive = false
     property string errorMessage: ""
     property bool dockVisible: false
     property bool dockClosing: false
@@ -203,6 +205,12 @@ Singleton {
     }
 
     Timer {
+        id: activityTimer
+        interval: 500
+        onTriggered: root.audioActive = false
+    }
+
+    Timer {
         id: closeTimer
         // Slightly longer than the dock's close animation, so it is not cut off.
         interval: Theme.motion.slow + 50
@@ -274,6 +282,12 @@ Singleton {
                     case "partial":
                         root.transcript = event.text || "";
                         if (root.phase === "starting") root.phase = "listening";
+                        break;
+                    case "activity":
+                        if (root.phase === "listening") {
+                            root.audioActive = event.active === true;
+                            activityTimer.restart();
+                        }
                         break;
                     case "final":
                         root.transcript = event.text || root.transcript;

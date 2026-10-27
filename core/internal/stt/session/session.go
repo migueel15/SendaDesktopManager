@@ -455,6 +455,7 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 				}
 			}
 			var results <-chan stt.Result
+			var activity <-chan bool
 			last := ""
 			partial := func(r stt.Result) error {
 				if r.Text == last {
@@ -496,8 +497,19 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 						return err
 					}
 					results = stream.Results()
+					if source, ok := stream.(stt.ActivityStream); ok {
+						activity = source.Activity()
+					}
 					if m.State() == Stopping {
 						beginStop()
+					}
+				case active, ok := <-activity:
+					if !ok {
+						activity = nil
+					} else if m.State() == Listening {
+						if err := emit(stt.Event{Type: stt.EventActivity, Active: active}); err != nil {
+							return err
+						}
 					}
 				case r, ok := <-results:
 					if !ok {

@@ -18,11 +18,17 @@ sys.stdin = os.fdopen(read_fd)
 
 
 class Samples:
+    def __init__(self, value=0):
+        self.value = value
+
     def astype(self, _):
         return self
 
-    def __truediv__(self, _):
-        return self
+    def __truediv__(self, value):
+        return Samples(self.value / value)
+
+    def __mul__(self, other):
+        return Samples(self.value * other.value)
 
 
 class Stream:
@@ -84,10 +90,10 @@ class Recorder:
     def produce(self):
         try:
             if mode != "microphone-error":
-                for _ in range(2):
-                    if self.stopped.wait(0.06):
+                for sample in (10000, 0):
+                    if self.stopped.wait(0.12):
                         break
-                    os.write(self.writer, bytes(3200))
+                    os.write(self.writer, sample.to_bytes(2, "little", signed=True) * 1600)
                 self.stopped.wait(1)
         finally:
             os.close(self.writer)
@@ -119,7 +125,9 @@ class Output(io.StringIO):
 
 recognizer = Recognizer()
 sys.modules["numpy"] = types.SimpleNamespace(
-    frombuffer=lambda *a, **kw: Samples(), zeros=lambda *a, **kw: Samples(), float32=float)
+    frombuffer=lambda data, **kw: Samples(int.from_bytes(data[:2], "little", signed=True)),
+    zeros=lambda *a, **kw: Samples(), float32=float,
+    mean=lambda samples: samples.value, sqrt=lambda value: value ** 0.5)
 sys.modules["sherpa_onnx"] = types.SimpleNamespace(OnlineRecognizer=Recognizer)
 subprocess.Popen = Recorder
 manifest = dict(Encoder="custom.onnx", Decoder="decoder", Joiner="joiner", Tokens="tokens",
@@ -141,6 +149,9 @@ finally:
 assert events[0]["event"] == ("loaded" if resident else "ready"), events
 assert providers == ["cuda", "cpu"], providers
 assert options and all(option == ("language", "") for option in options), options
+if mode in ("normal", "resident-stop"):
+    assert [e.get("active", False) for e in events if e["event"] == "activity"] == ([True, False] * (2 if resident else 1)), events
+events = [e for e in events if e["event"] != "activity"]
 if resident:
     assert len(streams) == 3 and len({id(s) for s in streams}) == 3, streams
     assert len(recorders) == 2 and all(r.stopped.is_set() for r in recorders)

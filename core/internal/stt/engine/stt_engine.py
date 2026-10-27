@@ -63,11 +63,17 @@ def main():
         proc, wav = None, None
         diagnostics = deque(maxlen=8)
         segments, previous = [], ""
+        last_activity = 0.0
         def text():
             return " ".join(segments + [r.get_result(s).strip()]).strip()
         def decode(data):
-            nonlocal previous
-            s.accept_waveform(16000, np.frombuffer(data, dtype="<i2").astype(np.float32)/32768)
+            nonlocal previous, last_activity
+            samples = np.frombuffer(data, dtype="<i2").astype(np.float32) / 32768
+            now = time.monotonic()
+            if now - last_activity >= 0.1:
+                emit("activity", active=bool(np.sqrt(np.mean(samples * samples)) >= 0.015))
+                last_activity = now
+            s.accept_waveform(16000, samples)
             while r.is_ready(s):
                 r.decode_stream(s)
             current = text()

@@ -19,6 +19,7 @@ import (
 type dictation struct {
 	p                         *process
 	results                   chan stt.Result
+	activity                  chan bool
 	ready, done               chan struct{}
 	command, final            string
 	err                       error
@@ -26,7 +27,7 @@ type dictation struct {
 }
 
 func newDictation(p *process) *dictation {
-	return &dictation{p: p, results: make(chan stt.Result, 1), ready: make(chan struct{}), done: make(chan struct{})}
+	return &dictation{p: p, results: make(chan stt.Result, 1), activity: make(chan bool, 1), ready: make(chan struct{}), done: make(chan struct{})}
 }
 
 type process struct {
@@ -57,6 +58,7 @@ func (d *dictation) complete(err error) {
 	}
 	d.err, d.ended = err, true
 	close(d.results)
+	close(d.activity)
 	close(d.done)
 	if d.p.standby {
 		d.p.loaded = make(chan struct{})
@@ -182,6 +184,12 @@ func (p *process) read(stdout io.ReadCloser, stderr *diagnostics) {
 		case e.Type == stt.EventReady && d != nil && !d.isReady && !d.ended:
 			d.isReady = true
 			close(d.ready)
+		case e.Type == stt.EventActivity && d != nil && d.isReady && !d.ended && !d.finalSeen:
+			select {
+			case <-d.activity:
+			default:
+			}
+			d.activity <- e.Active
 		case d != nil && d.isReady && !d.ended && !d.finalSeen && (e.Type == stt.EventPartial || e.Type == stt.EventFinal):
 			d.final = e.Text
 			d.finalSeen = e.Type == stt.EventFinal
@@ -194,7 +202,7 @@ func (p *process) read(stdout io.ReadCloser, stderr *diagnostics) {
 				d.complete(nil)
 			}
 		// A partial already in flight when cancel was sent can be discarded.
-		case d != nil && d.ended && d.command == stt.CommandCancel && e.Type == stt.EventPartial:
+		case d != nil && d.ended && d.command == stt.CommandCancel && (e.Type == stt.EventPartial || e.Type == stt.EventActivity):
 		default:
 			if p.err == nil {
 				p.err = fmt.Errorf("Secuencia no válida del motor de voz: %s", e.Type)
@@ -238,6 +246,8 @@ func (p *process) read(stdout io.ReadCloser, stderr *diagnostics) {
 func (p *process) Results() <-chan stt.Result   { return p.current.results }
 func (p *process) Err() error                   { p.mu.Lock(); defer p.mu.Unlock(); return p.err }
 func (d *dictation) Results() <-chan stt.Result { return d.results }
+func (d *dictation) Activity() <-chan bool      { return d.activity }
+func (p *process) Activity() <-chan bool        { return p.current.activity }
 func (d *dictation) Err() error                 { d.p.mu.Lock(); defer d.p.mu.Unlock(); return d.err }
 
 func (p *process) terminate() {

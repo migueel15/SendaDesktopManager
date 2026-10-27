@@ -24,6 +24,8 @@ La cancelación con `Esc` está desactivada por ahora. La sesión puede mostrar 
 
 En Ajustes → Dictado puedes activar o desactivar «Atenuar volumen durante el dictado» y ajustar el volumen deseado entre 0 y 100 % (Enter o pérdida de foco). Por defecto está activado al 10 %. Los cambios se aplican al siguiente dictado, también con el modelo precargado. Durante cada dictado con la opción activada, Senda ajusta la salida al porcentaje elegido y restaura el volumen anterior al terminar, cancelar o producirse un error. No cambia el silencio ni el volumen del micrófono. La precarga en reposo no modifica el volumen.
 
+Las barras del dock se animan cuando el nivel capturado por el micrófono supera un umbral y quedan quietas durante el silencio. El ruido ambiental también puede activar el indicador: mide audio, no distingue voces de otros sonidos.
+
 Si el puente de Discord está autorizado y el micro de Discord está abierto (ni silenciado ni ensordecido) al empezar la captura, Senda lo silencia durante el dictado y lo desmutea al entregar, cancelar o fallar, solo si fue Senda quien lo silenció. Si el micro estaba silenciado o ensordecido, no lo toca. Nunca cambia el ensordecido: si Discord está ensordecido al terminar, el micro queda silenciado y lo desmuteas tú. Si el puente no está autorizado o no responde en un segundo, el dictado sigue sin silenciar Discord.
 
 ## Precarga del modelo
