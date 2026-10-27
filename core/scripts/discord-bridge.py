@@ -24,6 +24,8 @@ EXCHANGE = "https://streamkit.discord.com/overlay/token"
 OP_HANDSHAKE, OP_FRAME, OP_CLOSE, OP_PING, OP_PONG = range(5)
 IN_CREATE, IN_MOVED_TO, IN_DELETE, IN_MOVED_FROM, IN_ISDIR = 0x100, 0x80, 0x200, 0x40, 0x40000000
 IN_IGNORED = 0x8000
+CHANNEL_EVENTS = ("SPEAKING_START", "SPEAKING_STOP", "VOICE_STATE_CREATE", "VOICE_STATE_UPDATE",
+                  "VOICE_STATE_DELETE")
 INOTIFY_MASK = IN_CREATE | IN_MOVED_TO | IN_DELETE | IN_MOVED_FROM
 RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
 SOCKET = RUNTIME / "senda-discord.sock"
@@ -313,16 +315,16 @@ class Bridge:
                         "guild": data.get("guild_name", ""), "guild_id": data.get("guild_id")}
                         if data.get("id") else None)
                     if not data.get("id") or data.get("id") != previous_channel_id:
+                        if previous_channel_id:
+                            await self.channel_subscriptions(previous_channel_id, "UNSUBSCRIBE")
                         self.state["self_speaking"] = False
                         self.state["speaking"] = []
                         self.state["participants"] = []
                     if data.get("id"):
                         for voice_state in data.get("voice_states", []):
                             self.update_participant(voice_state)
-                        for event in ("SPEAKING_START", "SPEAKING_STOP"):
-                            await self.subscribe(event, {"channel_id": data["id"]})
-                        for event in ("VOICE_STATE_CREATE", "VOICE_STATE_UPDATE", "VOICE_STATE_DELETE"):
-                            await self.subscribe(event, {"channel_id": data["id"]})
+                        if data["id"] != previous_channel_id:
+                            await self.channel_subscriptions(data["id"])
                 elif name == "SELECT_VOICE_CHANNEL":
                     await self.command("GET_SELECTED_VOICE_CHANNEL")
                 elif name in ("GET_VOICE_SETTINGS", "SET_VOICE_SETTINGS"):
@@ -338,6 +340,8 @@ class Bridge:
                         for setting in ("mute", "deaf"):
                             if setting in data:
                                 self.state[setting] = bool(data[setting])
+                    elif evt in CHANNEL_EVENTS and not self.is_current_channel(data):
+                        pass
                     elif evt == "SPEAKING_START":
                         user_id = str(data.get("user_id") or "")
                         self.state["speaking"] = list(set(self.state["speaking"] + [user_id]))
@@ -360,9 +364,17 @@ class Bridge:
             self.writer = self.reader = None
             await self.broadcast()
 
-    async def subscribe(self, event, args=None):
+    def is_current_channel(self, data):
+        channel_id = data.get("channel_id")
+        return not channel_id or channel_id == (self.state["channel"] or {}).get("id")
+
+    async def channel_subscriptions(self, channel_id, cmd="SUBSCRIBE"):
+        for event in CHANNEL_EVENTS:
+            await self.subscribe(event, {"channel_id": channel_id}, cmd)
+
+    async def subscribe(self, event, args=None, cmd="SUBSCRIBE"):
         self.nonce += 1
-        message = {"cmd": "SUBSCRIBE", "evt": event, "nonce": str(self.nonce)}
+        message = {"cmd": cmd, "evt": event, "nonce": str(self.nonce)}
         if args:
             message["args"] = args
         await self.send_discord(OP_FRAME, message)
