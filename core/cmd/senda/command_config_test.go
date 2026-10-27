@@ -23,6 +23,48 @@ func TestReadChangesAcceptsEditableSettings(t *testing.T) {
 	}
 }
 
+func TestWidgetSettingsPersistenceAndValidation(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	for _, input := range []string{`{"SENDA_WIDGET_SPOTIFY":"invalid"}`, `{"SENDA_WIDGET_DISCORD":"TRUE"}`} {
+		if _, err := readChanges(strings.NewReader(input)); err == nil {
+			t.Fatalf("accepted invalid widget setting %s", input)
+		}
+	}
+	cmd := configSetCmd()
+	cmd.SetIn(strings.NewReader(`{"SENDA_WIDGET_SPOTIFY":"false","SENDA_WIDGET_DISCORD":"true"}`))
+	cmd.SetOut(io.Discard)
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	get := configGetCmd()
+	var out bytes.Buffer
+	get.SetOut(&out)
+	if err := get.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	var result struct {
+		Values map[string]string `json:"values"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &result); err != nil {
+		t.Fatal(err)
+	}
+	for key, want := range map[string]string{keyWidgetSpotify: "false", keyWidgetDiscord: "true"} {
+		if got := result.Values[key]; got != want {
+			t.Errorf("%s = %q, want %q", key, got, want)
+		}
+	}
+}
+
+func TestDiscordStopWithoutBridgeOrScript(t *testing.T) {
+	t.Setenv("XDG_RUNTIME_DIR", t.TempDir())
+	t.Setenv("SENDA_DISCORD_BRIDGE", "/missing/discord-bridge.py")
+	cmd := discordCmd()
+	cmd.SetArgs([]string{"stop"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("discord stop with no bridge: %v", err)
+	}
+}
+
 func TestConfigSTTDefaultsAndPersistence(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	get := func() map[string]string {

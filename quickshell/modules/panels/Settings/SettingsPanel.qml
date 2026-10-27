@@ -20,6 +20,7 @@ Item {
     readonly property var sections: [
         { label: "Apariencia", icon: "󰏘" },
         { label: "Barra", icon: "󰍜" },
+        { label: "Widgets", icon: "󰕮" },
         { label: "Calendario", icon: "󰃭" },
         { label: "Tiempo", icon: "󰖐" },
         { label: "Dictado", icon: "󰍬" },
@@ -176,6 +177,11 @@ Item {
                     }
 
                     BarSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    WidgetsSettingsPage {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }

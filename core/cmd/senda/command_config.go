@@ -23,6 +23,8 @@ const (
 	keyWeatherLat         = "SENDA_WEATHER_LAT"
 	keyWeatherLon         = "SENDA_WEATHER_LON"
 	keyUIFontScale        = "SENDA_UI_FONT_SCALE"
+	keyWidgetSpotify      = "SENDA_WIDGET_SPOTIFY"
+	keyWidgetDiscord      = "SENDA_WIDGET_DISCORD"
 )
 
 // Bounds of the interface font scale, in percent. 100 is the default size.
@@ -42,6 +44,8 @@ var editableSettings = map[string]bool{
 	keyWeatherLat:         true,
 	keyWeatherLon:         true,
 	keyUIFontScale:        true,
+	keyWidgetSpotify:      true,
+	keyWidgetDiscord:      true,
 	stt.KeyLanguage:       true,
 	stt.KeyPreload:        true,
 	stt.KeyAudioDucking:   true,
@@ -80,6 +84,8 @@ func configGetCmd() *cobra.Command {
 					keyWeatherLat:       values[keyWeatherLat],
 					keyWeatherLon:       values[keyWeatherLon],
 					keyUIFontScale:      values[keyUIFontScale],
+					keyWidgetSpotify:    values[keyWidgetSpotify],
+					keyWidgetDiscord:    values[keyWidgetDiscord],
 					stt.KeyPreload:      strconv.FormatBool(sttSettings.Preload),
 					stt.KeyAudioDucking: strconv.FormatBool(sttSettings.AudioDucking),
 					stt.KeyAudioVolume:  strconv.Itoa(sttSettings.AudioVolume),
@@ -146,7 +152,7 @@ func validateSetting(key, value string) error {
 		return validateCoordinate(key, strings.TrimSpace(value), 180)
 	case keyUIFontScale:
 		return validateFontScale(strings.TrimSpace(value))
-	case stt.KeyPreload, stt.KeyAudioDucking:
+	case stt.KeyPreload, stt.KeyAudioDucking, keyWidgetSpotify, keyWidgetDiscord:
 		if value != "" && value != "true" && value != "false" {
 			return fmt.Errorf("%s must be true or false", key)
 		}

@@ -202,12 +202,22 @@ Variants {
 			anchors.right: parent.right
 			anchors.rightMargin: 8
 
-			NowPlaying {
+			Loader {
 				id: nowPlaying
+				Layout.preferredHeight: parent.height * 0.8
+				Layout.alignment: Qt.AlignVCenter
+				active: SendaSettings.configLoaded && SendaSettings.values.SENDA_WIDGET_SPOTIFY !== "false"
+				visible: active && (item?.hasTrack ?? false)
+				sourceComponent: NowPlaying {}
 			}
 
-			DiscordVoice {
+			Loader {
 				id: discordVoice
+				Layout.preferredHeight: parent.height * 0.8
+				Layout.alignment: Qt.AlignVCenter
+				active: SendaSettings.configLoaded && SendaSettings.values.SENDA_WIDGET_DISCORD !== "false"
+				visible: active && (item?.voiceState.authenticated || (item?.voiceState.connected && item?.voiceState.auth_required))
+				sourceComponent: DiscordVoice {}
 			}
 
 			// Separates the contextual widgets from the fixed ones.

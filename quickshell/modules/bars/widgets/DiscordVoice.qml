@@ -100,7 +100,6 @@ Rectangle {
     Component.onCompleted: {
         root.refresh();
         watchSocket.connected = true;
-        root.invoke("connect");
     }
 
     Timer {

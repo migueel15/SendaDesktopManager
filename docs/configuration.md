@@ -54,6 +54,8 @@ Si no hay localidad elegida, el clima usa la capital del país de tu zona horari
 
 Estas claves las escribe el panel de configuración (`senda settings`) con `senda config set`. En Ajustes, los interruptores y selectores guardan al cambiar; el deslizador de texto guarda al soltar y los campos editados con Enter o al perder el foco. Las credenciales de Google se confirman juntas desde el segundo campo o con «Guardar credenciales». El resultado aparece en el pie del panel sin desplazar las opciones. También puedes editarlas a mano; el archivo se mantiene con permisos `0600`.
 
+En Ajustes → Widgets se pueden habilitar o deshabilitar los controles de Spotify y Discord de la barra. Ambos están habilitados por defecto. Sus preferencias se guardan como `SENDA_WIDGET_SPOTIFY` y `SENDA_WIDGET_DISCORD`, con valores `true` o `false`; un valor vacío restaura el comportamiento predeterminado. Al deshabilitar Discord se detiene su puente; si hay un dictado en curso, se espera a que termine para permitir la restauración del micrófono. Sin el puente, el dictado no silencia Discord automáticamente. El widget de Spotify utiliza MPRIS y no inicia un proceso propio.
+
 El refresh token de Google no está en este archivo. Se guarda en `$XDG_STATE_HOME/senda/google-calendar.json` (por defecto `~/.local/state/senda/google-calendar.json`), también con permisos `0600`. Se borra con `senda calendar logout`.
 
 El archivo `.env` ya no se lee.

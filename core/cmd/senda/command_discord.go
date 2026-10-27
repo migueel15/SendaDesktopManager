@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/discordbridge"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/spf13/cobra"
 )
@@ -34,8 +36,11 @@ func discordCmd() *cobra.Command {
 			}
 			return nil
 		},
-		ValidArgs: []string{"status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "set-user-volume", "set-user-mute", "reset-user", "shutdown"},
+		ValidArgs: []string{"status", "connect", "authorize", "mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen", "leave", "set-user-volume", "set-user-mute", "reset-user", "shutdown", "stop"},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if args[0] == "stop" {
+				return discordbridge.Stop(discordbridge.SocketPath(), 3*time.Second)
+			}
 			script, err := discordBridgePath()
 			if err != nil {
 				return err

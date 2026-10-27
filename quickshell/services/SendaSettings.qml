@@ -16,6 +16,40 @@ Singleton {
     readonly property string binaryPath: Quickshell.env("SENDA_BIN") || "senda"
 
     property var values: ({})
+    property bool configLoaded: false
+    readonly property bool discordWidgetEnabled: configLoaded && values.SENDA_WIDGET_DISCORD !== "false"
+    // Resolve the dictation singleton after this singleton has finished loading:
+    // dictation itself reads SendaSettings during initialization.
+    property var sttService: null
+    readonly property bool discordStopSafe: sttService !== null && (!sttService.sessionActive
+        || (sttService.standbySession && !sttService.dictationRequested
+            && (sttService.phase === "standby" || sttService.phase === "preparing")))
+    property int discordApplied: -1
+    property bool discordActionEnabled: false
+    onDiscordWidgetEnabledChanged: reconcileDiscord()
+    onDiscordStopSafeChanged: reconcileDiscord()
+    onConfigLoadedChanged: reconcileDiscord()
+
+    function reconcileDiscord() {
+        if (!configLoaded || discordProcess.running) return;
+        const wanted = discordWidgetEnabled ? 1 : 0;
+        if (discordApplied === wanted || (!wanted && !discordStopSafe)) return;
+        discordActionEnabled = !!wanted;
+        discordProcess.command = [binaryPath, "discord", wanted ? "connect" : "stop"];
+        discordProcess.running = true;
+    }
+
+    Process {
+        id: discordProcess
+        stderr: StdioCollector { id: discordErrors }
+        onExited: exitCode => {
+            root.discordApplied = root.discordActionEnabled ? 1 : 0;
+            // connect may fail when Discord is closed even though the bridge started.
+            if (exitCode !== 0 && !root.discordActionEnabled)
+                root.showError(discordErrors.text, "No se pudo detener el puente de Discord");
+            root.reconcileDiscord();
+        }
+    }
     property bool secretConfigured: false
     // True when this build ships Senda's own Google OAuth client.
     property bool embeddedClient: false
@@ -132,17 +166,20 @@ Singleton {
         }
         onExited: exitCode => {
             if (exitCode !== 0) {
+                root.configLoaded = true;
                 root.showError(configErrors.text, "No se pudo leer la configuración");
                 return;
             }
             try {
                 const data = JSON.parse(configOutput.text);
                 root.values = data.values;
+                root.configLoaded = true;
                 root.secretConfigured = data.googleClientSecretConfigured;
                 root.embeddedClient = data.embeddedGoogleClient;
                 root.defaultWeatherLocation = data.defaultWeatherLocation ?? "";
                 Theme.setFontScale(data.values.SENDA_UI_FONT_SCALE);
             } catch (error) {
+                root.configLoaded = true;
                 root.showError("La configuración no es válida", "");
             }
         }
@@ -273,7 +310,10 @@ Singleton {
 
     // Reads the settings once at startup, so the interface scale applies before
     // the panel is opened.
-    Component.onCompleted: root.refresh()
+    Component.onCompleted: {
+        root.refresh();
+        Qt.callLater(() => { root.sttService = SendaStt; });
+    }
 
     // `senda settings` calls this through the running shell.
     IpcHandler {
