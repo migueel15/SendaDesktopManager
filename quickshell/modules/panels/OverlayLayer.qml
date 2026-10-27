@@ -8,6 +8,7 @@ import qs.modules.panels.Dashboard
 import qs.modules.panels.Settings
 import qs.modules.panels.Tasks
 import qs.modules.panels.notifications
+import qs.modules.launcher
 import Quickshell.Wayland
 
 PanelWindow {
@@ -34,7 +35,7 @@ PanelWindow {
     margins.top: -Theme.barSize
 
     // Stay mapped while a panel folds back into the bar.
-    visible: (OverlayService.currentPanel !== "" && OverlayService.currentPanel !== "launcher") || popupContent.anyPanelVisible
+    visible: OverlayService.currentPanel !== "" || popupContent.anyPanelVisible
     color: "transparent"
 
     aboveWindows: true
@@ -62,7 +63,7 @@ PanelWindow {
     Item {
         id: popupContent
         anchors.fill: parent
-        focus: OverlayService.currentPanel !== "" && OverlayService.currentPanel !== "launcher"
+        focus: OverlayService.currentPanel !== ""
 
         readonly property bool anyPanelVisible: {
             for (const child of children) {
@@ -121,6 +122,9 @@ PanelWindow {
             screenName: overlayLayer.screenName
         }
         NotificationsPanel {
+            screenName: overlayLayer.screenName
+        }
+        LauncherPanel {
             screenName: overlayLayer.screenName
         }
     }

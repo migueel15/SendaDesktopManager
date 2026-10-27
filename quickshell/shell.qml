@@ -43,7 +43,6 @@ ShellRoot {
 
 	SttDock {}
 	LockScreen {}
-	LazyLoader { id: launcher; active: true; source: Qt.resolvedUrl("modules/launcher/launcher.qml") }
 
 	Variants {
 		id: panelCtrl
