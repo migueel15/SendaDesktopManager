@@ -81,22 +81,34 @@ Item {
         onPressed: mouse => mouse.accepted = true
     }
 
-    BarExtension {
-        id: extension
-        width: parent.width
-        cornerRadius: root.curveWidth
-        expanded: root.open
-        expandedHeight: (root.targetHeight ?? 0) + 2 * root.padding
-        autoHideOnPointerExit: false
-        resizeDuration: root.resizeDuration
+    // The shadow stops at the bottom edge of the bar, as in the bar's popup
+    // windows, which start below the bar: this layer also covers the bar, and
+    // an unclipped shadow would darken its edge.
+    Item {
+        id: shadowClip
+        clip: true
+        x: -extension.shadowSpace
+        width: parent.width + 2 * extension.shadowSpace
+        height: parent.height + extension.shadowSpace
 
-        Item {
-            id: contentItem
-            // Fixed size, so the content is revealed instead of squashed while unfolding.
-            x: root.padding
-            y: root.padding
-            width: Math.max(0, (root.targetWidth ?? 0) - 2 * root.padding)
-            height: root.targetHeight ?? 0
+        BarExtension {
+            id: extension
+            x: extension.shadowSpace
+            width: root.width
+            cornerRadius: root.curveWidth
+            expanded: root.open
+            expandedHeight: (root.targetHeight ?? 0) + 2 * root.padding
+            autoHideOnPointerExit: false
+            resizeDuration: root.resizeDuration
+
+            Item {
+                id: contentItem
+                // Fixed size, so the content is revealed instead of squashed while unfolding.
+                x: root.padding
+                y: root.padding
+                width: Math.max(0, (root.targetWidth ?? 0) - 2 * root.padding)
+                height: root.targetHeight ?? 0
+            }
         }
     }
 }
