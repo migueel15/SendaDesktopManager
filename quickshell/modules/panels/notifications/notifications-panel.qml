@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Widgets
 
 import qs.common
@@ -15,6 +16,10 @@ SendaPanel {
     targetWidth: 460
     targetHeight: Math.min(680, parent.height - Theme.barSize - 48)
     targetX: parent.width - width - 8
+
+    // Each opening starts at the newest notification; while open, the
+    // position is kept.
+    onOpenChanged: if (open) notificationList.positionViewAtBeginning()
 
     ColumnLayout {
         anchors.fill: parent
@@ -106,7 +111,13 @@ SendaPanel {
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 rightMargin: notificationScrollBar.visible ? notificationScrollBar.width + 6 : 0
-                model: Notifications.recentNotifications
+                // ScriptModel applies only the differences between arrays, so
+                // dismissing one notification keeps the scroll position and
+                // plays the remove transition instead of rebuilding the list.
+                model: ScriptModel {
+                    values: Notifications.recentNotifications
+                    objectProp: "id"
+                }
 
                 ScrollBar.vertical: ScrollBar {
                     id: notificationScrollBar
