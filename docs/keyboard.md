@@ -1,0 +1,5 @@
+# Teclados físicos
+
+`senda keyboard devices` enumera los dispositivos de entrada, su inclusión y su correspondencia con Hyprland. `senda keyboard off` desactiva los teclados físicos detectados; `on` reactiva los detectados y los guardados en el último bloqueo; `toggle` alterna y `status` muestra el estado y los dispositivos. Los dispositivos virtuales se excluyen. Los teclados físicos sin correspondencia en Hyprland generan un aviso. La interfaz de teclas de un ratón puede considerarse teclado sin afectar a su movimiento.
+
+El estado es volátil en `$XDG_RUNTIME_DIR/senda/keyboard.json`: es la fuente de verdad de Senda, ya que Hyprland no expone el valor real. Una recarga de configuración de Hyprland lo restablece a `on`. No cambies manualmente el estado de dispositivos desde otras herramientas si necesitas que `status` sea exacto. Si hay un fallo se muestra `error`; ejecuta `senda keyboard on` para intentar recuperar los dispositivos. `off` se rechaza mientras se solicita o mantiene el bloqueo de pantalla.

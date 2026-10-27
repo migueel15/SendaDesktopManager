@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/release"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/engine"
@@ -30,30 +30,28 @@ type Pacman interface {
 // Options holds the environment and external commands that Run uses. Tests
 // replace them with fakes; the command wires the real implementations.
 type Options struct {
-	In               io.Reader
-	Out              io.Writer
-	Getenv           func(string) string
-	Euid             int
-	OSReleasePath    string
-	LookPath         func(file string) (string, error)
-	Pacman           Pacman
-	Executable       func() (string, error)
-	StartShell       func(exe string) error
-	RuntimeInstalled func() bool
-	InstallRuntime   func(context.Context, io.Writer) error
-	BindsPath        func() string
-	EnsureBinds      func(path, executable string) (bool, error)
-	BindsLoaded      func(context.Context) (bool, error)
-	ReleaseAPI       string
-	ReleaseDownload  string
+	In                 io.Reader
+	Out                io.Writer
+	Getenv             func(string) string
+	Euid               int
+	OSReleasePath      string
+	LookPath           func(file string) (string, error)
+	Pacman             Pacman
+	Executable         func() (string, error)
+	ValidateExecutable func(string) error
+	StartShell         func(exe string) error
+	RuntimeInstalled   func() bool
+	InstallRuntime     func(context.Context, io.Writer) error
+	ReleaseAPI         string
+	ReleaseDownload    string
 }
 
 // checksumsAsset is the checksums file published with every release.
 const checksumsAsset = "checksums.txt"
 
 // Run performs the setup steps in order and stops at the first failed
-// prerequisite. It never edits Hyprland files: autostart is handled by the
-// senda.service user unit.
+// prerequisite. It preserves existing Hyprland configuration; autostart is
+// handled by the senda.service user unit.
 func Run(ctx context.Context, opts Options) error {
 	if opts.In == nil {
 		opts.In = strings.NewReader("")
@@ -87,8 +85,15 @@ func Run(ctx context.Context, opts Options) error {
 	if err != nil {
 		return err
 	}
-	if err := ensureBinds(ctx, opts, exe); err != nil {
+	validate := opts.ValidateExecutable
+	if validate == nil {
+		validate = integration.ValidateExecutable
+	}
+	if err := validate(exe); err != nil {
 		return err
+	}
+	if err := ensureLockIntegration(paths.ConfigDir(), exe, opts.Out); err != nil {
+		return fmt.Errorf("preparar integración de bloqueo: %w", err)
 	}
 	if err := opts.StartShell(exe); err != nil {
 		return fmt.Errorf("instalar el servicio de Senda: %w", err)
@@ -121,36 +126,6 @@ func ensureRuntime(ctx context.Context, opts Options, in *bufio.Reader) error {
 		return fmt.Errorf("instalar motor de dictado: %w", err)
 	}
 	fmt.Fprintln(opts.Out, "Motor de dictado instalado")
-	return nil
-}
-
-func ensureBinds(ctx context.Context, opts Options, exe string) error {
-	path := opts.BindsPath
-	if path == nil {
-		path = binds.Path
-	}
-	ensure := opts.EnsureBinds
-	if ensure == nil {
-		ensure = binds.EnsureDefault
-	}
-	created, err := ensure(path(), exe)
-	if err != nil {
-		return fmt.Errorf("crear módulo de atajos de dictado: %w", err)
-	}
-	if created {
-		fmt.Fprintln(opts.Out, "Módulo de atajos de dictado creado:", path())
-	}
-	loaded := opts.BindsLoaded
-	if loaded == nil {
-		loaded = func(ctx context.Context) (bool, error) { return binds.Loaded(ctx, nil) }
-	}
-	ok, err := loaded(ctx)
-	if err != nil {
-		fmt.Fprintln(opts.Out, "No se pudo comprobar si Hyprland carga el módulo de atajos:", err)
-	}
-	if err != nil || !ok {
-		fmt.Fprintln(opts.Out, "Añade esta línea a tu configuración de Hyprland para activar el dictado:", binds.RequireLine())
-	}
 	return nil
 }
 

@@ -296,7 +296,7 @@ func TestRunRefusesSendaHomeBeforeDownloading(t *testing.T) {
 		Getenv:        envFunc(map[string]string{"XDG_CURRENT_DESKTOP": "Hyprland", "SENDA_HOME": "/tmp/dev"}),
 		Euid:          1000,
 		OSReleasePath: osRelease,
-		LookPath:      lookPathFound("qs", "jq", "nmcli", "wpctl", "hyprlock", "python3"),
+		LookPath:      lookPathFound("qs", "jq", "nmcli", "wpctl", "python3"),
 		Pacman:        &fakePacman{},
 		ReleaseAPI:    "http://127.0.0.1:1",
 	}

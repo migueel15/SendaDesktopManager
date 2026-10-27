@@ -36,32 +36,10 @@ func TestEnsureRuntimeDeclinedContinues(t *testing.T) {
 	}
 }
 
-func TestEnsureBindsPreservesExistingModule(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "senda_binds.lua")
-	const original = "user changes\n"
-	if err := os.WriteFile(path, []byte(original), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	out := &strings.Builder{}
-	err := ensureBinds(context.Background(), Options{
-		Out: out, BindsPath: func() string { return path },
-		BindsLoaded: func(context.Context) (bool, error) { return false, nil },
-	}, "/usr/bin/senda")
-	if err != nil {
-		t.Fatal(err)
-	}
-	data, err := os.ReadFile(path)
-	if err != nil || string(data) != original {
-		t.Fatalf("existing module changed: %q, %v", data, err)
-	}
-	if !strings.Contains(out.String(), `require("modules.senda_binds")`) {
-		t.Fatalf("missing require instruction: %q", out)
-	}
-}
-
 func TestRunContinuesAfterRuntimeDeclined(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, "config"))
+	t.Setenv("HYPRLAND_INSTANCE_SIGNATURE", "")
 	t.Setenv("XDG_DATA_HOME", filepath.Join(home, "data"))
 	osRelease := filepath.Join(home, "os-release")
 	if err := os.WriteFile(osRelease, []byte("ID=arch\n"), 0o644); err != nil {
@@ -90,11 +68,10 @@ func TestRunContinuesAfterRuntimeDeclined(t *testing.T) {
 		Euid:   1000, OSReleasePath: osRelease,
 		LookPath: lookPathFound(commandsExcept()...), Pacman: &fakePacman{present: packageOnly()},
 		ReleaseAPI: server.URL, Executable: func() (string, error) { return exe, nil },
-		RuntimeInstalled: func() bool { return false },
-		InstallRuntime:   func(context.Context, io.Writer) error { installed = true; return nil },
-		BindsPath:        func() string { return filepath.Join(home, "hypr", "modules", "senda_binds.lua") },
-		BindsLoaded:      func(context.Context) (bool, error) { return false, nil },
-		StartShell:       func(string) error { started = true; return nil },
+		ValidateExecutable: func(string) error { return nil },
+		RuntimeInstalled:   func() bool { return false },
+		InstallRuntime:     func(context.Context, io.Writer) error { installed = true; return nil },
+		StartShell:         func(string) error { started = true; return nil },
 	})
 	if err != nil || installed || !started {
 		t.Fatalf("Run after decline: err=%v installed=%t started=%t output=%q", err, installed, started, out)

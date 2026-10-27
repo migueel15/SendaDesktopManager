@@ -4,6 +4,7 @@ import Quickshell.Io
 import QtQuick.Layouts
 
 import qs.common
+import qs.services
 
 // Power menu, attached under the user card like the other selectors.
 DropdownCard {
@@ -15,11 +16,6 @@ DropdownCard {
     contentHeight: contentColumn.implicitHeight + 20
 
     // Processes for system actions
-    Process {
-        id: lockProcess
-        running: false
-        command: ["hyprlock"]
-    }
 
     Process {
         id: logoutProcess
@@ -83,7 +79,7 @@ DropdownCard {
             text: "Bloquear"
             onClicked: {
                 systemMenu.isOpen = false;
-                lockProcess.running = true;
+                LockService.lock();
             }
         }
 

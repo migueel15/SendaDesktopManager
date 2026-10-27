@@ -46,6 +46,9 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 | `SENDA_STT_PRELOAD` | Precarga del modelo en la shell: `true` la activa; cualquier otro valor la deja desactivada. Predeterminado: desactivada. |
 | `SENDA_STT_LANGUAGE` | Idioma del reconocimiento. Predeterminado `es`; también admite `auto` y códigos de idioma. |
 | `SENDA_STT_PASTE_MODE` | Entrega del resultado: `paste` (predeterminado) o `clipboard`. |
+| `SENDA_LOCK_SHORTCUT` | Atajo de bloqueo de Hyprland. Predeterminado: `SUPER + CTRL + l`. |
+| `SENDA_IDLE_SECONDS` | Segundos de inactividad antes del bloqueo; `0` lo desactiva. Predeterminado: `600`. |
+| `SENDA_LOCK_BLUR` | Activa el desenfoque de la pantalla de bloqueo. Predeterminado: `true`. |
 | `SENDA_STT_SHORTCUT` | Atajo de Hyprland para iniciar y detener el dictado. Predeterminado: `ALT + ntilde` (Alt + ñ). |
 | `SENDA_STT_TERMINALS` | Clases de ventanas de terminal separadas por comas; determinan dónde se usa Ctrl+Shift+V. |
 | `SENDA_THEME` | Nombre del tema activo. Predeterminado: `zenda-ice`. La variable de entorno tiene prioridad; ver [temas](themes.md). |
@@ -109,3 +112,7 @@ Otras variables de entorno que usa Senda:
 
 - `SENDA_BIN_DIR`: directorio donde `install.sh` instala el binario. Por defecto `~/.local/bin`. Solo se lee del entorno, porque el instalador es un script de shell que no lee el archivo de configuración.
 - `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_RUNTIME_DIR`: rutas base de XDG. Si son relativas, se ignoran.
+
+## Integración de Hyprland
+
+Los cuatro ajustes de bloqueo y dictado se leen del archivo de Senda y se cambian juntos con `senda hyprland set`; usa `senda hyprland show --json` para consultar rutas, estado y avisos. Los modificadores y teclas se validan antes de escribir. Un ejecutable temporal generado por `go run` no se acepta: utiliza un binario persistente, tanto en desarrollo como en una release. Consulta [Bloqueo de pantalla](lock-screen.md).

@@ -65,15 +65,15 @@ Las clases de ventana de terminal se configuran en `SENDA_STT_TERMINALS`. Los va
 
 ## Activar el atajo de Hyprland
 
-`senda setup` crea `~/.config/hypr/modules/senda_binds.lua` si no existe. No modifica `hyprland.lua`: añade esta línea a tu configuración de Hyprland para cargar el módulo:
+`senda setup` genera el módulo común `~/.config/hypr/modules/senda.lua`. Si no se ha migrado una referencia antigua, añade esta línea a tu configuración de Hyprland:
 
 ```lua
-require("modules.senda_binds")
+require("modules.senda")
 ```
 
 Revisa los conflictos que informa Ajustes o `senda stt shortcut show`. Si otra acción usa la misma combinación, elige otra en Ajustes o con `senda stt shortcut set <combo>`. Hyprland no carga el atajo hasta que se requiere el módulo. Si editas manualmente `hyprland.lua`, recarga Hyprland o usa `senda stt shortcut apply` para regenerar y recargar el módulo.
 
-Al ejecutar `senda uninstall`, Senda intenta cancelar el dictado y, si existe `senda_binds.lua`, lo reemplaza por un módulo desactivado y recarga Hyprland. Después elimina los directorios de datos y configuración de Senda. Puedes quitar también `require("modules.senda_binds")` de `hyprland.lua`; el instalador y `setup` no editan ese archivo.
+Al ejecutar `senda uninstall`, Senda intenta cancelar el dictado y retira el módulo generado y las referencias que haya marcado como propias. Las referencias añadidas manualmente deben retirarse manualmente. Los archivos que no tengan una cabecera de Senda se conservan.
 
 ## Problemas habituales
 

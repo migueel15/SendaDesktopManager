@@ -25,3 +25,7 @@ El dictado necesita un motor de reconocimiento, modelos descargables y un atajo 
 ## Revisión (2026-10-22)
 
 En f-002 se elimina el submapa `senda_stt` y se deshabilita la cancelación con `Esc`. El atajo de Hyprland inicia o termina el dictado; para cancelarlo se usa `senda stt cancel`.
+
+## Enmienda: módulo único
+
+Se sustituyen las decisiones 4 y 5 sobre `senda_binds.lua` por `modules/senda.lua`, compartido por bloqueo y dictado. Los ajustes se guardan en el archivo de Senda y el atajo anterior se importa. Solo se migran referencias y módulos antiguos identificados como propios cuando la operación es inequívoca; las referencias manuales nuevas siguen bajo control del usuario. `senda uninstall` retira el módulo propio y la referencia marcada por Senda.

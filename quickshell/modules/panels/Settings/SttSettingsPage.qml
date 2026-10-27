@@ -6,22 +6,14 @@ import QtQuick.Layouts
 import qs.common
 import qs.services
 
-// Dictation runtime, model catalog and Hyprland shortcut settings.
+// Dictation runtime, model catalog and settings.
 Flickable {
     id: root
 
     contentHeight: column.implicitHeight
     clip: true
 
-    readonly property bool shortcutReady: typeof SendaSttSettings.shortcut !== "undefined"
-        && SendaSttSettings.shortcut !== null
-        && typeof SendaSttSettings.shortcut.shortcut === "string"
-
-    function displayShortcut(value) {
-        return value.replace(/ntilde/gi, "ñ").replace(/ALT/gi, "Alt")
-            .replace(/SUPER/gi, "Super").replace(/CTRL|CONTROL/gi, "Ctrl")
-            .replace(/SHIFT/gi, "Shift");
-    }
+    signal openSystemRequested()
 
     function formatSize(bytes) {
         if (!bytes || bytes <= 0) return "Tamaño desconocido";
@@ -221,57 +213,14 @@ Flickable {
         SettingsGroup {
             SettingsRow {
                 separator: false
-                label: "Atajo de Hyprland"
-                description: root.shortcutReady && SendaSttSettings.shortcut.loaded ? "Módulo cargado en Hyprland" : "Módulo no cargado en Hyprland"
-                SettingsField {
-                    id: shortcutField
-                    Layout.preferredWidth: 180
-                    Layout.fillWidth: true
-                    visible: root.shortcutReady
-                    enabled: !SendaSttSettings.busy
-                    placeholder: "Alt + ñ"
-                    text: root.displayShortcut(root.shortcutReady ? (SendaSttSettings.shortcut.shortcut || "ALT + ntilde") : "ALT + ntilde")
-                    onCommitted: if (text.trim()) SendaSttSettings.setShortcut(text.replace(/ñ/gi, "ntilde"))
+                label: "Atajo de dictado"
+                description: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.dictationShortcut
+                    : SendaHyprlandSettings.busy ? "Consultando ajustes del sistema…" : "No se pudo consultar el atajo"
+                SettingsButton {
+                    label: "Abrir Sistema"
+                    onClicked: root.openSystemRequested()
                 }
             }
-            Text {
-                Layout.fillWidth: true
-                visible: root.shortcutReady && !!SendaSttSettings.shortcut.path
-                text: root.shortcutReady ? `Archivo: ${SendaSttSettings.shortcut.path || ""}` : ""
-                color: Theme.colors.overlay
-                font.family: Theme.font.overlay.family
-                font.pixelSize: Theme.scaled(11)
-                wrapMode: Text.WrapAnywhere
-            }
-            Text {
-                Layout.fillWidth: true
-                visible: root.shortcutReady && !!SendaSttSettings.shortcut.exists && !SendaSttSettings.shortcut.loaded
-                text: root.shortcutReady ? `El archivo existe, pero el módulo no está cargado. Añade esta línea a tu configuración de Hyprland:\n${SendaSttSettings.shortcut.requireLine || 'require("modules.senda_binds")'}` : ""
-                color: Theme.colors.warning
-                font.family: Theme.font.overlay.family
-                font.pixelSize: Theme.scaled(11)
-                wrapMode: Text.WrapAnywhere
-            }
-            SettingsButton {
-                Layout.alignment: Qt.AlignRight
-                visible: root.shortcutReady && !SendaSttSettings.shortcut.exists
-                label: "Crear módulo"
-                enabled: !SendaSttSettings.busy
-                onClicked: SendaSttSettings.applyShortcut()
-            }
-            Repeater {
-                model: root.shortcutReady ? (SendaSttSettings.shortcut.conflicts || []) : []
-                delegate: Text {
-                    required property string modelData
-                    Layout.fillWidth: true
-                    text: "ALT+ñ ya está asignado"
-                    color: Theme.colors.warning
-                    font.family: Theme.font.overlay.family
-                    font.pixelSize: Theme.scaled(11)
-                    wrapMode: Text.WordWrap
-                }
-            }
-
         }
     }
 }

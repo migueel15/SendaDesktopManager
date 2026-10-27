@@ -14,3 +14,4 @@ SttSettingsPage 1.0 SttSettingsPage.qml
 UpdateSettingsPage 1.0 UpdateSettingsPage.qml
 WeatherSettingsPage 1.0 WeatherSettingsPage.qml
 WidgetsSettingsPage 1.0 widgets-settings-page.qml
+SystemSettingsPage 1.0 system-settings-page.qml

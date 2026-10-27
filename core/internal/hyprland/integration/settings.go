@@ -1,0 +1,48 @@
+package integration
+
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/config"
+	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+)
+
+const (
+	KeyLockShortcut = "SENDA_LOCK_SHORTCUT"
+	KeyIdleSeconds  = "SENDA_IDLE_SECONDS"
+	KeyBlur         = "SENDA_LOCK_BLUR"
+)
+
+// LoadSettings uses the existing dictation key so upgrades retain the shortcut.
+func LoadSettings(values map[string]string) (Settings, error) {
+	s := DefaultSettings()
+	if v := values[KeyLockShortcut]; v != "" {
+		s.LockShortcut = v
+	}
+	if v := values[stt.KeyShortcut]; v != "" {
+		s.DictationShortcut = v
+	}
+	if v := values[KeyIdleSeconds]; v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			return s, fmt.Errorf("segundos de inactividad inválidos: %w", err)
+		}
+		s.IdleSeconds = n
+	}
+	if v := values[KeyBlur]; v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return s, fmt.Errorf("valor de blur inválido: %w", err)
+		}
+		s.Blur = b
+	}
+	return s, nil
+}
+
+func SaveSettings(path string, s Settings) error {
+	if _, _, err := Render(s, "/usr/bin/senda"); err != nil {
+		return err
+	}
+	return config.Set(path, map[string]string{KeyLockShortcut: s.LockShortcut, stt.KeyShortcut: s.DictationShortcut, KeyIdleSeconds: strconv.Itoa(s.IdleSeconds), KeyBlur: strconv.FormatBool(s.Blur)})
+}

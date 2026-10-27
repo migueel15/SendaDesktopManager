@@ -5,6 +5,7 @@ import Quickshell.Widgets
 import QtQuick.Layouts
 
 import qs.common
+import qs.services
 import qs.common.components
 
 Rectangle {
@@ -105,7 +106,7 @@ Rectangle {
                 spacing: 5
                 IconButtom {
                     icon: ""
-                    command: ["hyprlock"]
+                    onClick: () => LockService.lock()
                 }
 
                 IconButtom {

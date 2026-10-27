@@ -21,11 +21,24 @@ Singleton {
 
     Process {
         id: keyboardToggleProcess
-        command: ["hyprctl", "eval", "Senda.keyboard.toggle()"]
+        command: [root.binaryPath, "keyboard", "toggle"]
         onExited: function(exitCode, exitStatus) {
             if (exitCode === 0)
-                keyboardState.enabled = !keyboardState.enabled;
+                keyboardStatus.running = true;
         }
+    }
+
+    Component.onCompleted: {
+        keyboardStatus.running = true;
+        keyboardWatch.running = true;
+    }
+    Process { id: keyboardWatch; command: [root.binaryPath, "keyboard", "watch"]; onExited: watchRetry.restart() }
+    Timer { id: watchRetry; interval: 1000; onTriggered: keyboardWatch.running = true }
+    Timer { interval: 3000; running: true; repeat: true; onTriggered: if (!keyboardStatus.running) keyboardStatus.running = true }
+    Process {
+        id: keyboardStatus
+        command: [root.binaryPath, "keyboard", "status"]
+        stdout: StdioCollector { onStreamFinished: { try { keyboardState.enabled = JSON.parse(text).status === "on"; } catch (e) { console.warn("Estado del teclado:", e); } } }
     }
 
     function setWallpaper(screen, path, x, y) {

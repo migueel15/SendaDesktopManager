@@ -12,7 +12,7 @@ type Requirement struct {
 var Requirements = []Requirement{
 	{Command: "qs", Package: "quickshell"},
 	{Command: "hyprctl", Package: "hyprland"},
-	{Command: "hyprlock", Package: "hyprlock"},
+	{Command: "hypridle", Package: "hypridle"},
 	{Command: "jq", Package: "jq"},
 	{Command: "nmcli", Package: "networkmanager"},
 	{Command: "wpctl", Package: "wireplumber"},

@@ -15,6 +15,7 @@ import Quickshell.Wayland
 import qs.modules.wallpaper
 import qs.services
 import qs.modules.stt
+import qs.modules.lock
 import qs.common
 
 ShellRoot {
@@ -41,6 +42,7 @@ ShellRoot {
 	VolumeOSD {}
 
 	SttDock {}
+	LockScreen {}
 	LazyLoader { id: launcher; active: true; source: Qt.resolvedUrl("modules/launcher/launcher.qml") }
 
 	Variants {

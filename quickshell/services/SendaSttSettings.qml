@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Io
 import qs.services
 
-// The CLI owns the STT configuration, model files and Hyprland binding.
+// The CLI owns the STT configuration and model files.
 Singleton {
     id: root
 
@@ -15,7 +15,6 @@ Singleton {
     property var models: []
     property string installingId: ""
     property real progress: 0
-    property var shortcut: ({})
     property string notice: ""
     property bool noticeIsError: false
 
@@ -24,10 +23,9 @@ Singleton {
     property bool cancelRequested: false
     property bool runtimeRefreshQueued: false
     property bool modelsRefreshQueued: false
-    property bool shortcutRefreshQueued: false
 
     readonly property bool busy: root.operation !== "" || runtimeProcess.running
-        || modelsProcess.running || shortcutProcess.running
+        || modelsProcess.running
 
     readonly property bool preloadEnabled: SendaStt.preloadEnabled
     readonly property string preloadState: SendaStt.preloadState
@@ -66,7 +64,6 @@ Singleton {
     function refresh() {
         root.startRead(runtimeProcess, [root.binaryPath, "stt", "runtime", "status", "--json"], "runtimeRefreshQueued");
         root.startRead(modelsProcess, [root.binaryPath, "stt", "models", "list", "--json"], "modelsRefreshQueued");
-        root.startRead(shortcutProcess, [root.binaryPath, "stt", "shortcut", "show", "--json"], "shortcutRefreshQueued");
     }
 
     function finishRead(process, queuedProperty, command) {
@@ -126,16 +123,6 @@ Singleton {
         }
     }
 
-    function setShortcut(combo) {
-        if (combo && combo.trim()) {
-            root.startWrite("setShortcut", [root.binaryPath, "stt", "shortcut", "set", combo.trim(), "--json"], "Atajo guardado");
-        }
-    }
-
-    function applyShortcut() {
-        root.startWrite("applyShortcut", [root.binaryPath, "stt", "shortcut", "apply"], "Atajo aplicado");
-    }
-
     Process {
         id: runtimeProcess
         stdout: StdioCollector { id: runtimeOutput }
@@ -173,26 +160,6 @@ Singleton {
                 }
             }
             root.finishRead(modelsProcess, "modelsRefreshQueued", [root.binaryPath, "stt", "models", "list", "--json"]);
-        }
-    }
-
-    Process {
-        id: shortcutProcess
-        stdout: StdioCollector { id: shortcutOutput }
-        stderr: StdioCollector { id: shortcutErrors }
-        onExited: exitCode => {
-            if (exitCode !== 0) {
-                root.showError(shortcutErrors.text, "No se pudo consultar el atajo");
-            } else {
-                try {
-                    const data = JSON.parse(shortcutOutput.text);
-                    if (typeof data.shortcut !== "string") throw new Error("invalid shortcut");
-                    root.shortcut = data;
-                } catch (error) {
-                    root.showError("El estado del atajo no es válido", "");
-                }
-            }
-            root.finishRead(shortcutProcess, "shortcutRefreshQueued", [root.binaryPath, "stt", "shortcut", "show", "--json"]);
         }
     }
 

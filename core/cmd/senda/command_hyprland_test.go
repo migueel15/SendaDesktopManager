@@ -1,0 +1,119 @@
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
+	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/spf13/cobra"
+)
+
+func integrationTestEnv(t *testing.T) {
+	t.Helper()
+	dir := t.TempDir()
+	t.Setenv("HOME", dir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(dir, "config"))
+	t.Setenv("XDG_RUNTIME_DIR", filepath.Join(dir, "runtime"))
+	t.Setenv("HYPRLAND_INSTANCE_SIGNATURE", "fake")
+	t.Setenv("WAYLAND_DISPLAY", "fake")
+	bin := filepath.Join(dir, "bin")
+	if err := os.MkdirAll(bin, 0700); err != nil {
+		t.Fatal(err)
+	}
+	script := "#!/bin/sh\ncase \"$1\" in\nrepl) echo true;;\nreload) echo ok;;\nconfigerrors) :;;\n-j) echo '[]';;\nesac\n"
+	if err := os.WriteFile(filepath.Join(bin, "hyprctl"), []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	oldExe, oldIdle := hyprlandExecutable, applyIdle
+	hyprlandExecutable = func() (string, error) { return "/usr/bin/senda", nil }
+	applyIdle = func() string { return "" }
+	t.Cleanup(func() { hyprlandExecutable = oldExe; applyIdle = oldIdle })
+}
+func runCommand(t *testing.T, cmd *cobra.Command, args ...string) (string, error) {
+	t.Helper()
+	var out bytes.Buffer
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs(args)
+	err := cmd.Execute()
+	return out.String(), err
+}
+func TestHyprlandCLIAndDictationShareSettings(t *testing.T) {
+	integrationTestEnv(t)
+	out, err := runCommand(t, hyprlandCmd(), "set", "--lock-shortcut", "SUPER + x", "--dictation-shortcut", "ALT + d", "--idle-seconds", "0", "--blur", "false", "--json")
+	if err != nil {
+		t.Fatalf("set: %v %s", err, out)
+	}
+	var obj map[string]any
+	if err = json.Unmarshal([]byte(out), &obj); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"lockShortcut", "dictationShortcut", "idleSeconds", "blur", "modulePath", "moduleActive", "idleConfigPath", "warnings"}
+	if len(obj) != len(want) {
+		t.Fatalf("JSON keys %v", obj)
+	}
+	for _, key := range want {
+		if _, ok := obj[key]; !ok {
+			t.Fatalf("missing %s", key)
+		}
+	}
+	if obj["lockShortcut"] != "SUPER + x" || obj["dictationShortcut"] != "ALT + d" || obj["idleSeconds"] != float64(0) || obj["blur"] != false || obj["moduleActive"] != true {
+		t.Fatalf("status %v", obj)
+	}
+	idle, err := os.ReadFile(integration.IdlePath())
+	if err != nil || strings.Contains(string(idle), "listener {") {
+		t.Fatalf("idle %q %v", idle, err)
+	}
+	out, err = runCommand(t, sttShortcutCmd(), "set", "CTRL + d", "--json")
+	if err != nil {
+		t.Fatalf("stt set: %v %s", err, out)
+	}
+	var old map[string]any
+	if err = json.Unmarshal([]byte(out), &old); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"shortcut", "path", "exists", "loaded", "requireLine", "conflicts"} {
+		if _, ok := old[key]; !ok {
+			t.Fatalf("missing legacy key %s", key)
+		}
+	}
+	if old["shortcut"] != "CTRL + d" || old["path"] != integration.ModulePath() {
+		t.Fatalf("old status %v", old)
+	}
+	out, err = runCommand(t, hyprlandCmd(), "show", "--json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = json.Unmarshal([]byte(out), &obj); err != nil || obj["dictationShortcut"] != "CTRL + d" {
+		t.Fatalf("show %s %v", out, err)
+	}
+}
+func TestHyprlandInvalidSettingsNeverWrite(t *testing.T) {
+	integrationTestEnv(t)
+	if _, err := runCommand(t, hyprlandCmd(), "set", "--json"); err != nil {
+		t.Fatal(err)
+	}
+	pathsToCheck := []string{paths.ConfigFile(), integration.ModulePath(), integration.IdlePath()}
+	before := make([][]byte, len(pathsToCheck))
+	for i, p := range pathsToCheck {
+		before[i], _ = os.ReadFile(p)
+	}
+	for _, args := range [][]string{{"set", "--lock-shortcut", "!"}, {"set", "--idle-seconds", "-1"}, {"set", "--blur", "yes"}, {"set", "--dictation-shortcut", "SUPER + CTRL + l"}} {
+		if out, err := runCommand(t, hyprlandCmd(), args...); err == nil {
+			t.Fatalf("accepted %v: %s", args, out)
+		}
+		for i, p := range pathsToCheck {
+			now, err := os.ReadFile(p)
+			if err != nil || !reflect.DeepEqual(now, before[i]) {
+				t.Fatalf("changed %s on %v", p, args)
+			}
+		}
+	}
+}

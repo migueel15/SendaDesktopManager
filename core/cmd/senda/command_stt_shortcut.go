@@ -8,10 +8,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
 	"github.com/spf13/cobra"
 )
 
@@ -41,23 +39,18 @@ func sttShortcutCmd() *cobra.Command {
 	set := &cobra.Command{
 		Use: "set <combo>", Short: "Configurar el atajo de dictado", Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			shortcut, err := binds.NormalizeShortcut(args[0])
+			s, err := integration.ReadSettings()
 			if err != nil {
 				return err
 			}
-			data, err := renderShortcut(shortcut)
+			s.DictationShortcut, err = binds.NormalizeShortcut(args[0])
 			if err != nil {
+				return fmt.Errorf("atajo de dictado: %w", err)
+			}
+			if _, err = applyHyprland(cmd.Context(), s); err != nil {
 				return err
 			}
-			if err := config.Set(paths.ConfigFile(), map[string]string{stt.KeyShortcut: shortcut}); err != nil {
-				return err
-			}
-			if err := binds.Write(binds.Path(), data); err != nil {
-				return err
-			}
-			if err := binds.Reload(cmd.Context(), shortcutRunner); err != nil {
-				return err
-			}
+
 			status, err := currentShortcutStatus(cmd.Context())
 			if err != nil {
 				return err
@@ -70,20 +63,15 @@ func sttShortcutCmd() *cobra.Command {
 	apply := &cobra.Command{
 		Use: "apply", Short: "Aplicar el atajo en Hyprland", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			shortcut, err := configuredShortcut()
+			s, err := integration.ReadSettings()
 			if err != nil {
 				return err
 			}
-			data, err := renderShortcut(shortcut)
-			if err != nil {
+			if _, err = applyHyprland(cmd.Context(), s); err != nil {
 				return err
 			}
-			if err := binds.Write(binds.Path(), data); err != nil {
-				return err
-			}
-			if err := binds.Reload(cmd.Context(), shortcutRunner); err != nil {
-				return err
-			}
+			shortcut := s.DictationShortcut
+
 			fmt.Fprintln(cmd.OutOrStdout(), "Atajo aplicado:", shortcut)
 			return nil
 		},
@@ -93,42 +81,33 @@ func sttShortcutCmd() *cobra.Command {
 }
 
 func configuredShortcut() (string, error) {
-	values, err := config.Load(paths.ConfigFile())
+	s, err := integration.ReadSettings()
 	if err != nil {
 		return "", err
 	}
-	shortcut := values[stt.KeyShortcut]
-	if shortcut == "" {
-		shortcut = stt.DefaultShortcut
-	}
-	return binds.NormalizeShortcut(shortcut)
-}
-
-func renderShortcut(shortcut string) ([]byte, error) {
-	executable, err := os.Executable()
-	if err != nil {
-		return nil, err
-	}
-	return binds.Render(shortcut, executable)
+	return binds.NormalizeShortcut(s.DictationShortcut)
 }
 
 func currentShortcutStatus(ctx context.Context) (shortcutStatus, error) {
-	shortcut, err := configuredShortcut()
+	s, err := integration.ReadSettings()
 	if err != nil {
 		return shortcutStatus{}, err
 	}
-	status := shortcutStatus{Shortcut: shortcut, Path: binds.Path(), RequireLine: binds.RequireLine(), Conflicts: []string{}}
-	if _, err := os.Stat(status.Path); err == nil {
+	state := integration.Inspect(ctx, s, shortcutRunner)
+	status := shortcutStatus{Shortcut: s.DictationShortcut, Path: state.ModulePath, Loaded: state.ModuleActive, RequireLine: integration.RequireLine, Conflicts: []string{}}
+	if _, err = os.Stat(status.Path); err == nil {
 		status.Exists = true
 	} else if !os.IsNotExist(err) {
 		return status, err
 	}
-	status.Loaded, err = binds.Loaded(ctx, shortcutRunner)
-	if err != nil {
-		return status, err
+	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" {
+		conflicts, err := binds.Conflicts(ctx, shortcutRunner, s.DictationShortcut)
+		if err != nil {
+			return status, err
+		}
+		status.Conflicts = conflicts
 	}
-	status.Conflicts, err = binds.Conflicts(ctx, shortcutRunner, shortcut)
-	return status, err
+	return status, nil
 }
 
 func printShortcutStatus(cmd *cobra.Command, status shortcutStatus, asJSON bool) error {

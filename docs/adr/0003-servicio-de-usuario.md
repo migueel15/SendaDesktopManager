@@ -39,3 +39,7 @@ La unidad pasa de `Type=simple` a `Type=dbus` con `BusName=org.kde.StatusNotifie
 - `senda shell run` fuera de la unidad y `senda setup` pasan a bloquearse hasta que la bandeja está lista o vence el plazo.
 - `senda update` desde dentro de la unidad sigue usando `--no-block`.
 - Hay que volver a ejecutar `senda setup` para reescribir la unidad instalada.
+
+## Enmienda: integración de Hyprland
+
+El módulo propio de Senda y hypridle son independientes de `senda.service`. La migración puede sustituir una línea `require` antigua inequívoca por una referencia marcada de Senda; el resto de la configuración del usuario se conserva. El servicio sigue sin requerir la carga del módulo.

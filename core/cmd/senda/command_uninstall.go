@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/discordbridge"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/service"
 	"github.com/spf13/cobra"
@@ -41,24 +41,27 @@ func runUninstall(cmd *cobra.Command, yes bool) error {
 		},
 		closeShell: closeShell,
 		stopBridge: func() error { return discordbridge.Stop(discordbridge.SocketPath(), 3*time.Second) },
-		bindsPath:  binds.Path, stat: os.Stat, writeBinds: binds.Write,
-		reloadBinds: func(ctx context.Context) error { return binds.Reload(ctx, nil) },
-		removeAll:   os.RemoveAll,
+		removeIntegration: func() ([]string, error) {
+			idleWarning := integration.StopIdle()
+			warnings, err := integration.RemoveManaged()
+			if idleWarning != "" {
+				warnings = append(warnings, idleWarning)
+			}
+			return warnings, err
+		},
+		removeAll: os.RemoveAll,
 	})
 }
 
 type uninstallDeps struct {
-	getenv        func(string) string
-	executable    func() (string, error)
-	removeService func() error
-	cancelSession func(context.Context) error
-	closeShell    func() bool
-	stopBridge    func() error
-	bindsPath     func() string
-	stat          func(string) (os.FileInfo, error)
-	writeBinds    func(string, []byte) error
-	reloadBinds   func(context.Context) error
-	removeAll     func(string) error
+	getenv            func(string) string
+	executable        func() (string, error)
+	removeService     func() error
+	cancelSession     func(context.Context) error
+	closeShell        func() bool
+	stopBridge        func() error
+	removeIntegration func() ([]string, error)
+	removeAll         func(string) error
 }
 
 func runUninstallWith(cmd *cobra.Command, yes bool, deps uninstallDeps) error {
@@ -92,17 +95,12 @@ func runUninstallWith(cmd *cobra.Command, yes bool, deps uninstallDeps) error {
 	if err := deps.cancelSession(cmd.Context()); err != nil {
 		fmt.Fprintln(cmd.ErrOrStderr(), "aviso: no se pudo cancelar el dictado:", err)
 	}
-	bindPath := deps.bindsPath()
-	if _, err := deps.stat(bindPath); err == nil {
-		if err := deps.writeBinds(bindPath, binds.RenderDisabled()); err != nil {
-			return fmt.Errorf("desactivar atajos de dictado: %w", err)
-		}
-		if err := deps.reloadBinds(cmd.Context()); err != nil {
-			fmt.Fprintln(cmd.ErrOrStderr(), "aviso: no se pudo recargar Hyprland:", err)
-		}
-		fmt.Fprintln(out, "Atajos de dictado desactivados; puedes quitar", binds.RequireLine(), "de tu configuración de Hyprland")
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("comprobar módulo de atajos de dictado: %w", err)
+	warnings, err := deps.removeIntegration()
+	if err != nil {
+		return fmt.Errorf("retirar integración de Hyprland: %w", err)
+	}
+	for _, warning := range warnings {
+		fmt.Fprintln(cmd.ErrOrStderr(), "aviso:", warning)
 	}
 
 	if err := deps.removeService(); err != nil {
@@ -115,6 +113,10 @@ func runUninstallWith(cmd *cobra.Command, yes bool, deps uninstallDeps) error {
 	}
 
 	for _, target := range targets {
+		if target == paths.ConfigDir() && len(warnings) > 0 {
+			fmt.Fprintln(cmd.ErrOrStderr(), "aviso: se conserva el directorio de configuración por seguridad:", target)
+			continue
+		}
 		if err := deps.removeAll(target); err != nil {
 			return fmt.Errorf("eliminar %s: %w", target, err)
 		}
