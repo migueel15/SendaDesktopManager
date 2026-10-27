@@ -92,7 +92,7 @@ func Run(ctx context.Context, opts Options) error {
 	if err := validate(exe); err != nil {
 		return err
 	}
-	if err := ensureLockIntegration(paths.ConfigDir(), exe, opts.Out); err != nil {
+	if err := ensureLockIntegration(ctx, exe, reader, opts.Out); err != nil {
 		return fmt.Errorf("preparar integración de bloqueo: %w", err)
 	}
 	if err := opts.StartShell(exe); err != nil {

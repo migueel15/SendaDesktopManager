@@ -30,11 +30,21 @@ func integrationExecutable() (string, error) {
 
 var hyprlandExecutable = integrationExecutable
 var applyIdle = integration.ApplyIdle
+var stopExternalIdle = integration.StopExternalIdle
 
-func applyHyprland(ctx context.Context, s integration.Settings) (integration.Status, error) {
+func applyHyprland(ctx context.Context, s integration.Settings, idleChanged bool) (integration.Status, error) {
 	exe, err := hyprlandExecutable()
 	if err != nil {
 		return integration.Status{}, err
+	}
+	if s.IdleMode == "" {
+		// Without a recorded choice, never take over the user's hypridle.
+		s.IdleMode = integration.IdleModeUser
+	}
+	if integration.InSession() {
+		if link, err := integration.Probe(ctx, shortcutRunner); err == nil {
+			integration.Locate(link)
+		}
 	}
 	if _, _, err = integration.Render(s, exe); err != nil {
 		return integration.Status{}, err
@@ -52,17 +62,30 @@ func applyHyprland(ctx context.Context, s integration.Settings) (integration.Sta
 	if err != nil {
 		return integration.Status{}, fmt.Errorf("migrar integración: %w", err)
 	}
-	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" {
+	linkWarning, err := integration.EnsureLinked(ctx, shortcutRunner)
+	if err != nil {
+		return integration.Status{}, fmt.Errorf("vincular con Hyprland: %w", err)
+	}
+	if linkWarning != "" {
+		warnings = append(warnings, linkWarning)
+	}
+	if integration.InSession() {
 		if err = binds.Reload(ctx, shortcutRunner); err != nil {
 			return integration.Status{}, fmt.Errorf("recargar Hyprland: %w", err)
 		}
 	}
-	idleWarning := applyIdle()
+	if s.IdleMode == integration.IdleModeSenda {
+		if idleChanged {
+			if w := stopExternalIdle(); w != "" {
+				warnings = append(warnings, w)
+			}
+		}
+		if w := applyIdle(); w != "" {
+			warnings = append(warnings, w)
+		}
+	}
 	status := integration.Inspect(ctx, s, shortcutRunner)
 	status.Warnings = append(status.Warnings, warnings...)
-	if idleWarning != "" {
-		status.Warnings = append(status.Warnings, idleWarning)
-	}
 
 	return status, nil
 }
@@ -71,7 +94,7 @@ func printHyprland(cmd *cobra.Command, status integration.Status, asJSON bool) e
 	if asJSON {
 		return writeJSON(cmd, status)
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "Bloqueo: %s\nDictado: %s\nInactividad: %d s\nDesenfoque: %t\nMódulo: %s (activo: %t)\nHypridle: %s\n", status.LockShortcut, status.DictationShortcut, status.IdleSeconds, status.Blur, status.ModulePath, status.ModuleActive, status.IdleConfigPath)
+	fmt.Fprintf(cmd.OutOrStdout(), "Bloqueo: %s\nDictado: %s\nInactividad: %d s\nDesenfoque: %t\nMódulo: %s (activo: %t)\nHypridle: %s (modo: %s)\n", status.LockShortcut, status.DictationShortcut, status.IdleSeconds, status.Blur, status.ModulePath, status.ModuleActive, status.IdleConfigPath, status.IdleMode)
 	for _, warning := range status.Warnings {
 		fmt.Fprintln(cmd.OutOrStdout(), "Aviso:", warning)
 	}
@@ -89,7 +112,7 @@ func hyprlandCmd() *cobra.Command {
 		return printHyprland(cmd, integration.Inspect(cmd.Context(), s, shortcutRunner), asJSON)
 	}}
 	show.Flags().Bool("json", false, "Mostrar JSON")
-	var lock, dictation, blur string
+	var lock, dictation, blur, idleMode string
 	var idle int
 	var asJSON bool
 	set := &cobra.Command{Use: "set", Short: "Cambiar ajustes", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
@@ -115,6 +138,14 @@ func hyprlandCmd() *cobra.Command {
 				return fmt.Errorf("blur inválido: %w", err)
 			}
 		}
+		idleChanged := false
+		if cmd.Flags().Changed("idle-mode") {
+			if idleMode != integration.IdleModeSenda && idleMode != integration.IdleModeUser {
+				return fmt.Errorf("idle-mode debe ser senda o user")
+			}
+			idleChanged = idleMode != s.IdleMode
+			s.IdleMode = idleMode
+		}
 		s.LockShortcut, err = binds.NormalizeShortcut(s.LockShortcut)
 		if err != nil {
 			return fmt.Errorf("atajo de bloqueo: %w", err)
@@ -123,7 +154,7 @@ func hyprlandCmd() *cobra.Command {
 		if err != nil {
 			return fmt.Errorf("atajo de dictado: %w", err)
 		}
-		status, err := applyHyprland(cmd.Context(), s)
+		status, err := applyHyprland(cmd.Context(), s, idleChanged)
 		if err != nil {
 			return err
 		}
@@ -133,6 +164,7 @@ func hyprlandCmd() *cobra.Command {
 	set.Flags().StringVar(&dictation, "dictation-shortcut", "", "Atajo de dictado")
 	set.Flags().IntVar(&idle, "idle-seconds", 0, "Segundos de inactividad (0 desactiva)")
 	set.Flags().StringVar(&blur, "blur", "", "Desenfoque: true o false")
+	set.Flags().StringVar(&idleMode, "idle-mode", "", "hypridle: senda (configuración de Senda) o user (la tuya)")
 	set.Flags().BoolVar(&asJSON, "json", false, "Mostrar JSON")
 	for _, sub := range []*cobra.Command{show, set} {
 		sub.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return fmt.Errorf("opción inválida: %w", err) })

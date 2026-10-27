@@ -12,6 +12,14 @@ const (
 	KeyLockShortcut = "SENDA_LOCK_SHORTCUT"
 	KeyIdleSeconds  = "SENDA_IDLE_SECONDS"
 	KeyBlur         = "SENDA_LOCK_BLUR"
+	KeyIdleMode     = "SENDA_IDLE_MODE"
+)
+
+// Idle modes: Senda runs its private hypridle, or the user keeps their own.
+// An empty mode means the choice has not been made yet.
+const (
+	IdleModeSenda = "senda"
+	IdleModeUser  = "user"
 )
 
 // LoadSettings uses the existing dictation key so upgrades retain the shortcut.
@@ -37,6 +45,12 @@ func LoadSettings(values map[string]string) (Settings, error) {
 		}
 		s.Blur = b
 	}
+	switch v := values[KeyIdleMode]; v {
+	case "", IdleModeSenda, IdleModeUser:
+		s.IdleMode = v
+	default:
+		return s, fmt.Errorf("modo de hypridle inválido: %q", v)
+	}
 	return s, nil
 }
 
@@ -44,5 +58,5 @@ func SaveSettings(path string, s Settings) error {
 	if _, _, err := Render(s, "/usr/bin/senda"); err != nil {
 		return err
 	}
-	return config.Set(path, map[string]string{KeyLockShortcut: s.LockShortcut, stt.KeyShortcut: s.DictationShortcut, KeyIdleSeconds: strconv.Itoa(s.IdleSeconds), KeyBlur: strconv.FormatBool(s.Blur)})
+	return config.Set(path, map[string]string{KeyLockShortcut: s.LockShortcut, stt.KeyShortcut: s.DictationShortcut, KeyIdleSeconds: strconv.Itoa(s.IdleSeconds), KeyBlur: strconv.FormatBool(s.Blur), KeyIdleMode: s.IdleMode})
 }

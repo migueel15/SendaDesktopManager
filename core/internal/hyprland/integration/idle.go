@@ -195,3 +195,48 @@ func StopIdle() string {
 	_ = os.Remove(marker)
 	return ""
 }
+
+// StopExternalIdle stops same-user hypridle instances that do not use Senda's
+// configuration. Call it only after the user chose Senda's configuration.
+func StopExternalIdle() string {
+	entries, err := os.ReadDir("/proc")
+	if err != nil {
+		return "No se pudo inspeccionar hypridle: " + err.Error()
+	}
+	var failed []string
+	for _, entry := range entries {
+		pid, err := strconv.Atoi(entry.Name())
+		if err != nil {
+			continue
+		}
+		info, err := os.Stat(filepath.Join("/proc", entry.Name()))
+		if err != nil {
+			continue
+		}
+		owner, ok := info.Sys().(*syscall.Stat_t)
+		if !ok || int(owner.Uid) != os.Getuid() {
+			continue
+		}
+		comm, err := os.ReadFile(filepath.Join("/proc", entry.Name(), "comm"))
+		if err != nil || strings.TrimSpace(string(comm)) != "hypridle" || processUsesIdle(pid, IdlePath()) {
+			continue
+		}
+		fd, err := unix.PidfdOpen(pid, 0)
+		if err != nil {
+			continue
+		}
+		if err = unix.PidfdSendSignal(fd, unix.SIGTERM, nil, 0); err == nil {
+			poll := []unix.PollFd{{Fd: int32(fd), Events: unix.POLLIN}}
+			if n, e := unix.Poll(poll, 3000); e != nil || n == 0 {
+				failed = append(failed, entry.Name())
+			}
+		} else {
+			failed = append(failed, entry.Name())
+		}
+		unix.Close(fd)
+	}
+	if len(failed) > 0 {
+		return "No se pudo detener hypridle (PID " + strings.Join(failed, ", ") + "); deténlo manualmente."
+	}
+	return ""
+}

@@ -26,15 +26,16 @@ func integrationTestEnv(t *testing.T) {
 	if err := os.MkdirAll(bin, 0700); err != nil {
 		t.Fatal(err)
 	}
-	script := "#!/bin/sh\ncase \"$1\" in\nrepl) echo true;;\nreload) echo ok;;\nconfigerrors) :;;\n-j) echo '[]';;\nesac\n"
+	script := "#!/bin/sh\ncase \"$1\" in\nrepl) printf 'dev\\t@/fake/senda.lua\\n';;\nreload) echo ok;;\nconfigerrors) :;;\n-j) echo '[]';;\nesac\n"
 	if err := os.WriteFile(filepath.Join(bin, "hyprctl"), []byte(script), 0700); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
-	oldExe, oldIdle := hyprlandExecutable, applyIdle
+	oldExe, oldIdle, oldStop := hyprlandExecutable, applyIdle, stopExternalIdle
+	stopExternalIdle = func() string { t.Fatal("stopped hypridle without being asked"); return "" }
 	hyprlandExecutable = func() (string, error) { return "/usr/bin/senda", nil }
 	applyIdle = func() string { return "" }
-	t.Cleanup(func() { hyprlandExecutable = oldExe; applyIdle = oldIdle })
+	t.Cleanup(func() { hyprlandExecutable = oldExe; applyIdle = oldIdle; stopExternalIdle = oldStop })
 }
 func runCommand(t *testing.T, cmd *cobra.Command, args ...string) (string, error) {
 	t.Helper()
@@ -55,7 +56,7 @@ func TestHyprlandCLIAndDictationShareSettings(t *testing.T) {
 	if err = json.Unmarshal([]byte(out), &obj); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"lockShortcut", "dictationShortcut", "idleSeconds", "blur", "modulePath", "moduleActive", "idleConfigPath", "warnings"}
+	want := []string{"lockShortcut", "dictationShortcut", "idleSeconds", "blur", "modulePath", "moduleActive", "idleConfigPath", "idleMode", "warnings"}
 	if len(obj) != len(want) {
 		t.Fatalf("JSON keys %v", obj)
 	}
@@ -115,5 +116,27 @@ func TestHyprlandInvalidSettingsNeverWrite(t *testing.T) {
 				t.Fatalf("changed %s on %v", p, args)
 			}
 		}
+	}
+}
+
+func TestHyprlandIdleModeChoice(t *testing.T) {
+	integrationTestEnv(t)
+	stopped, applied := 0, 0
+	stopExternalIdle = func() string { stopped++; return "" }
+	applyIdle = func() string { applied++; return "" }
+	if out, err := runCommand(t, hyprlandCmd(), "set", "--idle-seconds", "60"); err != nil {
+		t.Fatalf("%v %s", err, out)
+	}
+	if stopped != 0 || applied != 0 {
+		t.Fatalf("hypridle touched without a choice: stop %d apply %d", stopped, applied)
+	}
+	if out, err := runCommand(t, hyprlandCmd(), "set", "--idle-mode", "senda", "--json"); err != nil || !strings.Contains(out, `"idleMode":"senda"`) {
+		t.Fatalf("%v %s", err, out)
+	}
+	if stopped != 1 || applied != 1 {
+		t.Fatalf("stop %d apply %d", stopped, applied)
+	}
+	if out, err := runCommand(t, hyprlandCmd(), "set", "--idle-mode", "other"); err == nil {
+		t.Fatalf("accepted invalid mode: %s", out)
 	}
 }

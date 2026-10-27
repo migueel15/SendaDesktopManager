@@ -47,7 +47,7 @@ func sttShortcutCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("atajo de dictado: %w", err)
 			}
-			if _, err = applyHyprland(cmd.Context(), s); err != nil {
+			if _, err = applyHyprland(cmd.Context(), s, false); err != nil {
 				return err
 			}
 
@@ -67,7 +67,7 @@ func sttShortcutCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if _, err = applyHyprland(cmd.Context(), s); err != nil {
+			if _, err = applyHyprland(cmd.Context(), s, false); err != nil {
 				return err
 			}
 			shortcut := s.DictationShortcut

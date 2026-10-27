@@ -27,7 +27,14 @@ func ValidateExecutable(exe string) error {
 	return nil
 }
 
+const moduleHeader = "-- Generado por Senda."
+
+// ModulePath is where the module is written: the file a loaded module came
+// from (see Locate) or the default location in Hyprland's modules folder.
 func ModulePath() string {
+	if moduleOverride != "" {
+		return moduleOverride
+	}
 	return filepath.Join(filepath.Dir(paths.ConfigDir()), "hypr", "modules", "senda.lua")
 }
 func IdlePath() string { return filepath.Join(paths.ConfigDir(), "hypridle.conf") }
@@ -87,7 +94,7 @@ func checkTarget(path string, headers ...string) error { _, err := owned(path, h
 // WriteFiles checks ownership before replacing either generated file. Each
 // replacement is atomic; errors are returned instead of hiding partial writes.
 func CheckTargets() error {
-	if err := checkTarget(ModulePath(), "-- Generado por Senda."); err != nil {
+	if err := checkTarget(ModulePath(), moduleHeader); err != nil {
 		return err
 	}
 	return checkTarget(IdlePath(), "# Generado por Senda.", "# Archivo de Senda.")
@@ -99,7 +106,7 @@ func WriteFiles(s Settings, executable string) error {
 		return err
 	}
 	module, idlePath := ModulePath(), IdlePath()
-	if err := checkTarget(module, "-- Generado por Senda."); err != nil {
+	if err := checkTarget(module, moduleHeader); err != nil {
 		return err
 	}
 	if err := checkTarget(idlePath, "# Generado por Senda.", "# Archivo de Senda."); err != nil {
@@ -241,7 +248,7 @@ func writePreservingMode(path string, data []byte, mode os.FileMode) error {
 func RemoveManaged() ([]string, error) {
 	var warnings []string
 	for _, path := range []string{ModulePath(), IdlePath()} {
-		header := "-- Generado por Senda."
+		header := moduleHeader
 		if path == IdlePath() {
 			header = "# Generado por Senda."
 		}

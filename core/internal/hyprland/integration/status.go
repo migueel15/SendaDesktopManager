@@ -22,20 +22,23 @@ type Status struct {
 	ModulePath        string   `json:"modulePath"`
 	ModuleActive      bool     `json:"moduleActive"`
 	IdleConfigPath    string   `json:"idleConfigPath"`
+	IdleMode          string   `json:"idleMode"`
 	Warnings          []string `json:"warnings"`
 }
 
 func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
-	status := Status{LockShortcut: s.LockShortcut, DictationShortcut: s.DictationShortcut, IdleSeconds: s.IdleSeconds, Blur: s.Blur, ModulePath: ModulePath(), IdleConfigPath: IdlePath(), Warnings: []string{}}
-	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" {
+	status := Status{LockShortcut: s.LockShortcut, DictationShortcut: s.DictationShortcut, IdleSeconds: s.IdleSeconds, Blur: s.Blur, ModulePath: ModulePath(), IdleConfigPath: IdlePath(), IdleMode: s.IdleMode, Warnings: []string{}}
+	if InSession() {
 		if run == nil {
 			run = stt.ExecRunner
 		}
-		out, err := run(ctx, nil, "hyprctl", "repl", `package.loaded["modules.senda"] ~= nil`)
+		link, err := Probe(ctx, run)
 		if err != nil {
 			status.Warnings = append(status.Warnings, "No se pudo comprobar si el módulo está cargado: "+err.Error())
 		} else {
-			status.ModuleActive = strings.TrimSpace(string(out)) == "true"
+			Locate(link)
+			status.ModulePath = ModulePath()
+			status.ModuleActive = link.Loaded
 		}
 		for _, pair := range []struct{ label, shortcut string }{{"bloqueo", s.LockShortcut}, {"dictado", s.DictationShortcut}} {
 			conflicts, err := binds.Conflicts(ctx, run, pair.shortcut)
@@ -59,11 +62,15 @@ func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
 	if !status.ModuleActive {
 		status.Warnings = append(status.Warnings, "Activa el módulo en hyprland.lua con "+RequireLine)
 	}
+	if s.IdleMode == IdleModeUser {
+		status.Warnings = append(status.Warnings, "La inactividad la gestiona tu propia configuración de hypridle; el tiempo de inactividad de Senda no se aplica.")
+		return status
+	}
 	idle, err := IdleProcesses("/proc", os.Getuid(), IdlePath())
 	if err != nil {
 		status.Warnings = append(status.Warnings, "No se pudo comprobar hypridle: "+err.Error())
 	} else if idle.External > 0 {
-		status.Warnings = append(status.Warnings, fmt.Sprintf("Hay %d instancia(s) de hypridle con otra configuración o configuración desconocida; no se modifican. Integra la configuración manualmente antes de ejecutar hypridle -c %q", idle.External, IdlePath()))
+		status.Warnings = append(status.Warnings, fmt.Sprintf("Hay %d instancia(s) de hypridle con otra configuración o configuración desconocida; no se modifican. Quita su arranque de tu configuración para no ejecutar dos instancias junto a hypridle -c %q", idle.External, IdlePath()))
 	} else if idle.Own == 0 {
 		status.Warnings = append(status.Warnings, fmt.Sprintf("hypridle de Senda no está activo; inicia una única instancia con hypridle -c %q", IdlePath()))
 	}

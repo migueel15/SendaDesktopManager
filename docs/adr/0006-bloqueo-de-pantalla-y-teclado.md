@@ -25,3 +25,7 @@ El estado refleja las operaciones de Senda, no cambios externos que Hyprland no 
 ## Enmienda: configuración común y gestión de hypridle
 
 El módulo único `senda.lua` reúne los ajustes de bloqueo y dictado; el archivo de hypridle queda en el directorio privado de configuración de Senda. `senda hyprland set` genera ambos y comprueba los conflictos. Una instancia de hypridle independiente se conserva y requiere integración manual; solo se reinicia una instancia iniciada y registrada por Senda. Una referencia antigua inequívoca puede reemplazarse por una referencia marcada, que se retira al desinstalar.
+
+## Enmienda: vinculación automática y elección de hypridle
+
+Para simplificar la instalación, `setup` y `senda hyprland set` detectan si el módulo está cargado preguntando a Hyprland por la función global `senda_module_version`, independientemente de la organización de la configuración del usuario. Si no está cargado, añaden la referencia marcada al final de `hyprland.lua`; esto sustituye la regla anterior de no modificar `hyprland.lua` y la excepción del ADR 0004. Si el usuario no tiene configuración de hypridle, Senda usa la suya y la arranca desde el módulo. Si la tiene, `setup` pregunta una vez y guarda la elección en `SENDA_IDLE_MODE`; elegir la de Senda detiene el hypridle del usuario, sin modificar su archivo.
