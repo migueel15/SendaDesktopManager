@@ -14,8 +14,10 @@ PopupWindow {
 
     required property var rootMenu
     property bool showUnpin: false
+    property bool showPin: false
 
     signal unpinRequested()
+    signal pinRequested()
 
     // Stack of opened submenu handles; the last one is shown.
     property var menuStack: []
@@ -151,7 +153,7 @@ PopupWindow {
             }
 
             Rectangle {
-                visible: root.showUnpin && root.menuStack.length === 0 && appEntries.count > 0
+                visible: (root.showUnpin || root.showPin) && root.menuStack.length === 0 && appEntries.count > 0
                 Layout.fillWidth: true
                 implicitHeight: 9
                 color: "transparent"
@@ -161,6 +163,16 @@ PopupWindow {
                     width: parent.width - 8
                     height: 1
                     color: menuBackground.border.color
+                }
+            }
+
+            MenuRow {
+                visible: root.showPin && root.menuStack.length === 0
+                label: "Anclar a la barra"
+                leadingIcon: "󰐃"
+                onActivated: {
+                    root.close();
+                    root.pinRequested();
                 }
             }
 

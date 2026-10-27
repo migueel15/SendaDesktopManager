@@ -90,7 +90,7 @@ MouseArea {
 
     function openMenu() {
         const window = root.QsWindow.window;
-        if ((!pinned && (!modelData.hasMenu || !modelData.menu)) || !window)
+        if (!window)
             return;
         const pos = root.mapToItem(window.contentItem, 0, root.height);
         menu.toggle(window, pos.x, pos.y + 5);
@@ -98,6 +98,10 @@ MouseArea {
 
     function unpin() {
         TrayPins.unpin(modelData.id);
+    }
+
+    function pin() {
+        TrayPins.pin(modelData.id);
     }
 
     function findDesktopIconSource() {
@@ -137,7 +141,9 @@ MouseArea {
         id: menu
         rootMenu: root.modelData.menu
         showUnpin: root.pinned
+        showPin: !root.pinned
         onUnpinRequested: root.unpin()
+        onPinRequested: root.pin()
     }
 
     Connections {
