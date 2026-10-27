@@ -10,10 +10,34 @@ WlSessionLockSurface {
     id: surface
     color: "transparent"
     property date now: new Date()
-    readonly property bool focused: !Hyprland.focusedMonitor || Hyprland.focusedMonitor.name === screen?.name
+    // The surface that receives keys owns the password field, even when
+    // Hyprland's focused monitor is stale, for example after opening the lid.
+    property bool typedHere: false
+    readonly property bool focused: typedHere || !Hyprland.focusedMonitor || Hyprland.focusedMonitor.name === screen?.name
+    Connections {
+        target: Hyprland
+        function onFocusedMonitorChanged() { surface.typedHere = false; }
+    }
     Timer { interval: 1000; running: true; repeat: true; onTriggered: surface.now = new Date() }
     Item {
+        id: keyCatcher
         anchors.fill: parent
+        focus: true
+        // Any key typed while the field has no focus gives it back the focus
+        // and is not lost: printable text goes into the field.
+        Keys.onPressed: event => {
+            surface.typedHere = true;
+            if (!password.enabled) return;
+            password.forceActiveFocus();
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                password.accepted();
+            } else if (event.key === Qt.Key_Backspace) {
+                password.remove(password.length - 1, password.length);
+            } else if (event.text.length > 0 && event.text.charCodeAt(0) >= 32) {
+                password.insert(password.length, event.text);
+            }
+            event.accepted = true;
+        }
         Rectangle { anchors.fill: parent; color: "#b0000000" }
         Item {
             anchors.centerIn: parent
@@ -50,6 +74,11 @@ WlSessionLockSurface {
                     NumberAnimation { target: errorOffset; property: "x"; to: 0; duration: 50 }
                 }
                 onAccepted: { const value = text; clear(); LockService.authenticate(value); }
+                // Disabling the field during authentication drops its focus;
+                // take it back as soon as it can be typed into again.
+                onEnabledChanged: if (enabled && visible) forceActiveFocus()
+                onVisibleChanged: if (enabled && visible) forceActiveFocus()
+                onActiveFocusChanged: if (!activeFocus) keyCatcher.forceActiveFocus()
             }
             Text { anchors.horizontalCenter: parent.horizontalCenter; y: 605; text: LockService.errorMessage; color: Theme.colors.error; visible: surface.focused }
         }
