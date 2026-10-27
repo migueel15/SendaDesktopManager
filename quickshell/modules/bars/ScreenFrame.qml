@@ -58,7 +58,9 @@ Variants {
 		PanelWindow {
 			screen: frame.modelData
 			anchors { top: true; bottom: true; left: true; right: true }
-			exclusionMode: ExclusionMode.Ignore
+			exclusionMode: ExclusionMode.Normal
+			exclusiveZone: 0
+			margins { top: -Theme.barSize; left: -Theme.frameSize; right: -Theme.frameSize; bottom: -Theme.frameSize }
 			focusable: false
 			aboveWindows: true
 			WlrLayershell.namespace: "Senda:FrameShadow"

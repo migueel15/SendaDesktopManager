@@ -13,7 +13,7 @@ Item {
     implicitWidth: Theme.barButtonSize
 
     readonly property string currentIcon: Notifications.dndEnabled
-        ? (Notifications.hasNotifications ? Theme.notifications.icon.notification : Theme.notifications.icon.dnd_none)
+        ? Theme.notifications.icon.dnd_none
         : (Notifications.hasNotifications ? Theme.notifications.icon.notification : Theme.notifications.icon.none)
 
 
@@ -53,17 +53,5 @@ Item {
         color: Theme.colors.text
         font: Theme.font.base
         text: root.currentIcon
-    }
-
-    Rectangle {
-        visible: Notifications.dndEnabled && Notifications.hasNotifications
-        width: 24
-        height: 2
-        radius: 1
-        color: Theme.colors.text
-        rotation: 45
-        anchors.centerIn: iconText
-        anchors.horizontalCenterOffset: -1
-        anchors.verticalCenterOffset: -1
     }
 }

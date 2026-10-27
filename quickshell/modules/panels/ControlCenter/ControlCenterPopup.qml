@@ -439,18 +439,9 @@ SendaPanel {
 
                     IconSlot {
                         anchors.fill: parent
-                        icon: "󰂚"
+                        icon: dndControl.dndEnabled ? Theme.notifications.icon.dnd_none : Theme.notifications.icon.none
                         iconColor: dndControl.dndEnabled ? Theme.colors.primary : Theme.colors.overlay
                         gapAfter: 0
-                    }
-
-                    Rectangle {
-                        width: 21
-                        height: 2
-                        anchors.centerIn: parent
-                        rotation: -45
-                        color: Theme.colors.primary
-                        visible: dndControl.dndEnabled
                     }
                 }
 

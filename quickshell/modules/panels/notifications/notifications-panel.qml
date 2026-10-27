@@ -45,7 +45,7 @@ SendaPanel {
 
             PanelAction {
                 active: Notifications.dndEnabled
-                text: Notifications.dndEnabled ? "󰂛" : "󰂚"
+                text: Notifications.dndEnabled ? Theme.notifications.icon.dnd_none : Theme.notifications.icon.none
                 accessibleLabel: Notifications.dndEnabled
                     ? "Desactivar no molestar"
                     : "Activar no molestar"
