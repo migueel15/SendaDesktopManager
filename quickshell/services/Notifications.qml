@@ -36,6 +36,20 @@ Singleton {
         id: popupModel
     }
 
+    function addScreenshot(path) {
+        if (!stateLoaded) return;
+        const dto = {
+            id: "notification-" + nextId++, receivedAt: new Date().toISOString(),
+            appName: "Senda", summary: "Captura de pantalla tomada", body: "Pulsa para editar la captura.",
+            image: "file://" + encodeURI(path), screenshotPath: path,
+            appIcon: "", desktopEntry: "", urgency: 1, expireTimeout: 0,
+            actions: [{ identifier: "default", text: "Editar captura" }], hints: []
+        };
+        unreadNotifications = unreadNotifications.concat([dto]);
+        persist();
+        if (!dndEnabled) enqueuePopup(dto);
+    }
+
     function dtoFor(notification, serviceId, receivedAt) {
         return {
             "id": serviceId,
@@ -318,7 +332,7 @@ Singleton {
     }
 
     function canActivateNotification(id) {
-        return hasDefaultAction(id) || canFocusApplication(id);
+        return Boolean(notificationForId(id)?.screenshotPath) || hasDefaultAction(id) || canFocusApplication(id);
     }
 
     function desktopEntryForNotification(id) {
@@ -347,6 +361,11 @@ Singleton {
     }
 
     function activate(id) {
+        const local = notificationForId(id);
+        if (local?.screenshotPath) {
+            if (ScreenshotService.openEditor(local.screenshotPath)) dismiss(id);
+            return true;
+        }
         const action = defaultActionFor(id);
         if (action) {
             action.invoke();

@@ -15,6 +15,7 @@ import Quickshell.Wayland
 import qs.modules.wallpaper
 import qs.services
 import qs.modules.stt
+import qs.modules.screenshot
 import qs.modules.lock
 import qs.common
 
@@ -43,6 +44,7 @@ ShellRoot {
 
 	SttDock {}
 	LockScreen {}
+	ScreenshotLayer {}
 
 	Variants {
 		id: panelCtrl

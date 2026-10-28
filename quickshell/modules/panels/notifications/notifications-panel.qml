@@ -405,6 +405,14 @@ SendaPanel {
                     onLinkActivated: link => Notifications.openBodyLink(link)
                 }
 
+                Image {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: visible ? 180 : 0
+                    visible: source.toString().length > 0 && status !== Image.Error
+                    source: row.notification.screenshotPath ? row.notification.image : ""
+                    fillMode: Image.PreserveAspectFit
+                }
+
             }
 
             // Shown on hover only, to keep the list calm.

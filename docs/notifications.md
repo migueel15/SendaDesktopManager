@@ -40,3 +40,11 @@ El almacén se actualiza con escrituras atómicas que terminan antes de continua
 ## Activación
 
 QuickShell y SwayNC implementan el servicio D-Bus `org.freedesktop.Notifications`; solo uno debe estar activo para recibir notificaciones. El inicio de SwayNC debe retirarse de la sesión cuando se active esta versión del gestor. La ruta de inicio local observada es `~/.config/hypr/modules/startup.lua`; esa configuración no forma parte de este repositorio.
+
+## Capturas de Senda
+
+El servicio de capturas crea directamente una notificación «Captura de pantalla
+tomada», con su vista previa y una acción local que abre el editor. No pasa por
+D-Bus. El registro persistido conserva la ruta de caché para que la acción siga
+funcionando desde el panel después de recargar la shell. Si el archivo ya no
+existe, pulsarla solo la descarta. Véase [Capturas de pantalla](screenshots.md).

@@ -1,0 +1,3 @@
+ScreenshotLayer 1.0 screenshot-layer.qml
+ScreenshotEditor 1.0 screenshot-editor.qml
+CropSelection 1.0 crop-selection.qml

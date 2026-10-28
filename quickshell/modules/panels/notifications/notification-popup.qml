@@ -310,6 +310,14 @@ Variants {
                 onLinkActivated: link => Notifications.openBodyLink(link)
             }
 
+            Image {
+                width: parent.width
+                height: visible ? Math.min(180, sourceSize.height * width / Math.max(1, sourceSize.width)) : 0
+                visible: source.toString().length > 0 && status !== Image.Error
+                source: card.notification?.screenshotPath ? card.notification.image : ""
+                fillMode: Image.PreserveAspectFit
+            }
+
         }
 
         NumberAnimation {
