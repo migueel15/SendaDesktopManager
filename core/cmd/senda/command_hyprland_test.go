@@ -65,7 +65,7 @@ func TestHyprlandCLIAndDictationShareSettings(t *testing.T) {
 	if err = json.Unmarshal([]byte(out), &obj); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"lockShortcut", "dictationShortcut", "idleSeconds", "blur", "modulePath", "moduleActive", "idleConfigPath", "idleMode", "defaultLockShortcut", "defaultDictationShortcut", "warnings"}
+	want := []string{"screenshotShortcut", "defaultScreenshotShortcut", "lockShortcut", "dictationShortcut", "idleSeconds", "blur", "modulePath", "moduleActive", "idleConfigPath", "idleMode", "defaultLockShortcut", "defaultDictationShortcut", "warnings"}
 	if len(obj) != len(want) {
 		t.Fatalf("JSON keys %v", obj)
 	}
@@ -156,6 +156,9 @@ func TestHyprlandCheckReportsConflicts(t *testing.T) {
 		target, shortcut, want string
 		conflicts              int
 	}{
+		{"screenshot", "Print", "print", 0},
+		{"screenshot", "ALT + ntilde", "ALT + ntilde", 1},
+		{"lock", "Print", "print", 1},
 		{"lock", "super + d", "SUPER + d", 1},
 		{"lock", "SUPER + CTRL + l", "SUPER + CTRL + l", 0},
 		{"dictation", "CTRL + SUPER + L", "CTRL + SUPER + l", 1},

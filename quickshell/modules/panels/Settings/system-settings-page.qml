@@ -79,6 +79,26 @@ Flickable {
                 }
             }
             SettingsRow {
+                label: "Atajo de captura"
+                SettingsShortcut {
+                    target: "screenshot"
+                    enabled: SendaHyprlandSettings.loaded
+                    value: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.screenshotShortcut : ""
+                    defaultValue: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.defaultScreenshotShortcut : ""
+                }
+            }
+            SettingsRow {
+                label: "Carpeta de capturas"
+                description: "Vacío usa Imágenes/Capturas. Solo se guarda al pulsar Guardar en el editor."
+                SettingsField {
+                    Layout.preferredWidth: 230
+                    enabled: SendaSettings.configLoaded
+                    text: SendaSettings.values.SENDA_SCREENSHOT_DIR || ""
+                    placeholder: "Ruta predeterminada"
+                    onCommitted: SendaSettings.save({ SENDA_SCREENSHOT_DIR: text.trim() }, "Carpeta de capturas guardada")
+                }
+            }
+            SettingsRow {
                 label: "Tiempo de inactividad"
                 description: "Segundos, de 0 a 86400. 0 desactiva el bloqueo automático."
                 SavedMark { flag: "--idle-seconds" }

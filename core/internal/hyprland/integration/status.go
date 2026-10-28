@@ -15,22 +15,25 @@ import (
 )
 
 type Status struct {
-	LockShortcut      string   `json:"lockShortcut"`
-	DictationShortcut string   `json:"dictationShortcut"`
-	IdleSeconds       int      `json:"idleSeconds"`
-	Blur              bool     `json:"blur"`
-	ModulePath        string   `json:"modulePath"`
-	ModuleActive      bool     `json:"moduleActive"`
-	IdleConfigPath    string   `json:"idleConfigPath"`
-	IdleMode          string   `json:"idleMode"`
-	DefaultLock       string   `json:"defaultLockShortcut"`
-	DefaultDictation  string   `json:"defaultDictationShortcut"`
-	Warnings          []string `json:"warnings"`
+	ScreenshotShortcut string   `json:"screenshotShortcut"`
+	DefaultScreenshot  string   `json:"defaultScreenshotShortcut"`
+	LockShortcut       string   `json:"lockShortcut"`
+	DictationShortcut  string   `json:"dictationShortcut"`
+	IdleSeconds        int      `json:"idleSeconds"`
+	Blur               bool     `json:"blur"`
+	ModulePath         string   `json:"modulePath"`
+	ModuleActive       bool     `json:"moduleActive"`
+	IdleConfigPath     string   `json:"idleConfigPath"`
+	IdleMode           string   `json:"idleMode"`
+	DefaultLock        string   `json:"defaultLockShortcut"`
+	DefaultDictation   string   `json:"defaultDictationShortcut"`
+	Warnings           []string `json:"warnings"`
 }
 
 func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
-	status := Status{LockShortcut: s.LockShortcut, DictationShortcut: s.DictationShortcut, IdleSeconds: s.IdleSeconds, Blur: s.Blur, ModulePath: ModulePath(), IdleConfigPath: IdlePath(), IdleMode: s.IdleMode, Warnings: []string{}}
+	status := Status{ScreenshotShortcut: s.ScreenshotShortcut, LockShortcut: s.LockShortcut, DictationShortcut: s.DictationShortcut, IdleSeconds: s.IdleSeconds, Blur: s.Blur, ModulePath: ModulePath(), IdleConfigPath: IdlePath(), IdleMode: s.IdleMode, Warnings: []string{}}
 	defaults := DefaultSettings()
+	status.DefaultScreenshot = defaults.ScreenshotShortcut
 	status.DefaultLock, status.DefaultDictation = defaults.LockShortcut, defaults.DictationShortcut
 	if InSession() {
 		if run == nil {
@@ -44,14 +47,14 @@ func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
 			status.ModulePath = ModulePath()
 			status.ModuleActive = link.Loaded
 		}
-		for _, pair := range []struct{ label, shortcut string }{{"bloqueo", s.LockShortcut}, {"dictado", s.DictationShortcut}} {
+		for _, pair := range []struct{ label, shortcut string }{{"bloqueo", s.LockShortcut}, {"dictado", s.DictationShortcut}, {"captura", s.ScreenshotShortcut}} {
 			conflicts, err := binds.Conflicts(ctx, run, pair.shortcut)
 			if err != nil {
 				status.Warnings = append(status.Warnings, "No se pudieron comprobar conflictos de "+pair.label+": "+err.Error())
 				continue
 			}
 			for _, conflict := range conflicts {
-				if pair.label == "bloqueo" && conflict == "Senda lock" {
+				if (pair.label == "bloqueo" && conflict == "Senda lock") || (pair.label == "captura" && conflict == "Senda screenshot") {
 					continue
 				}
 				status.Warnings = append(status.Warnings, fmt.Sprintf("Conflicto de %s (%s): %s", pair.label, pair.shortcut, conflict))

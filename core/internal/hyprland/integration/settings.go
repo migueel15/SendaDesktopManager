@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	KeyLockShortcut = "SENDA_LOCK_SHORTCUT"
-	KeyIdleSeconds  = "SENDA_IDLE_SECONDS"
-	KeyBlur         = "SENDA_LOCK_BLUR"
-	KeyIdleMode     = "SENDA_IDLE_MODE"
+	KeyScreenshotShortcut = "SENDA_SCREENSHOT_SHORTCUT"
+	KeyLockShortcut       = "SENDA_LOCK_SHORTCUT"
+	KeyIdleSeconds        = "SENDA_IDLE_SECONDS"
+	KeyBlur               = "SENDA_LOCK_BLUR"
+	KeyIdleMode           = "SENDA_IDLE_MODE"
 )
 
 // Idle modes: Senda runs its private hypridle, or the user keeps their own.
@@ -30,6 +31,9 @@ func LoadSettings(values map[string]string) (Settings, error) {
 	}
 	if v := values[stt.KeyShortcut]; v != "" {
 		s.DictationShortcut = v
+	}
+	if v := values[KeyScreenshotShortcut]; v != "" {
+		s.ScreenshotShortcut = v
 	}
 	if v := values[KeyIdleSeconds]; v != "" {
 		n, err := strconv.Atoi(v)
@@ -58,5 +62,5 @@ func SaveSettings(path string, s Settings) error {
 	if _, _, err := Render(s, "/usr/bin/senda"); err != nil {
 		return err
 	}
-	return config.Set(path, map[string]string{KeyLockShortcut: s.LockShortcut, stt.KeyShortcut: s.DictationShortcut, KeyIdleSeconds: strconv.Itoa(s.IdleSeconds), KeyBlur: strconv.FormatBool(s.Blur), KeyIdleMode: s.IdleMode})
+	return config.Set(path, map[string]string{KeyScreenshotShortcut: s.ScreenshotShortcut, KeyLockShortcut: s.LockShortcut, stt.KeyShortcut: s.DictationShortcut, KeyIdleSeconds: strconv.Itoa(s.IdleSeconds), KeyBlur: strconv.FormatBool(s.Blur), KeyIdleMode: s.IdleMode})
 }

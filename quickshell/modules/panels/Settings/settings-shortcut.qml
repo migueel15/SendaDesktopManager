@@ -13,7 +13,7 @@ import qs.services
 ColumnLayout {
     id: root
 
-    // "lock" or "dictation": the Senda shortcut this control edits.
+    // "lock", "dictation" or "screenshot": the Senda shortcut this control edits.
     property string target: "lock"
     property string value: ""
     property string defaultValue: ""
@@ -24,7 +24,7 @@ ColumnLayout {
     property var conflicts: []
     property string message: ""
 
-    readonly property string flag: target === "lock" ? "--lock-shortcut" : "--dictation-shortcut"
+    readonly property string flag: "--" + target + "-shortcut"
 
     spacing: Theme.spacing.xs
 

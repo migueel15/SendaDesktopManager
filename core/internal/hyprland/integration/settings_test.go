@@ -23,7 +23,7 @@ func TestSettingsDefaultsAndExistingShortcut(t *testing.T) {
 
 func TestSettingsRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config")
-	want := Settings{LockShortcut: "SUPER + l", DictationShortcut: "ALT + ntilde", IdleSeconds: 0, Blur: false}
+	want := Settings{ScreenshotShortcut: "SUPER + p", LockShortcut: "SUPER + l", DictationShortcut: "ALT + ntilde", IdleSeconds: 0, Blur: false}
 	if err := SaveSettings(path, want); err != nil {
 		t.Fatal(err)
 	}

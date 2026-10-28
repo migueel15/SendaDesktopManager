@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -24,6 +25,7 @@ const (
 	keyWeatherLon         = "SENDA_WEATHER_LON"
 	keyUIFontScale        = "SENDA_UI_FONT_SCALE"
 	keyWidgetSpotify      = "SENDA_WIDGET_SPOTIFY"
+	keyScreenshotDir      = "SENDA_SCREENSHOT_DIR"
 	keyWidgetDiscord      = "SENDA_WIDGET_DISCORD"
 )
 
@@ -37,6 +39,7 @@ const (
 // other key is refused, so a bad caller cannot change unrelated settings such
 // as DORLAB_API_KEY.
 var editableSettings = map[string]bool{
+	keyScreenshotDir:      true,
 	keyGoogleClientID:     true,
 	keyGoogleClientSecret: true,
 	keyGoogleCalendars:    true,
@@ -78,6 +81,7 @@ func configGetCmd() *cobra.Command {
 			sttSettings := stt.LoadSettings(values)
 			result := map[string]any{
 				"values": map[string]string{
+					keyScreenshotDir:    values[keyScreenshotDir],
 					keyGoogleClientID:   values[keyGoogleClientID],
 					keyGoogleCalendars:  values[keyGoogleCalendars],
 					keyWeatherLocation:  values[keyWeatherLocation],
@@ -146,6 +150,13 @@ func readChanges(input io.Reader) (map[string]string, error) {
 
 func validateSetting(key, value string) error {
 	switch key {
+	case keyScreenshotDir:
+		if value != "" && !filepath.IsAbs(value) && !strings.HasPrefix(value, "~/") {
+			return fmt.Errorf("la ruta de capturas debe ser absoluta o empezar por ~/")
+		}
+		if strings.ContainsAny(value, "\x00\n\r") {
+			return fmt.Errorf("ruta de capturas inválida")
+		}
 	case keyWeatherLat:
 		return validateCoordinate(key, strings.TrimSpace(value), 90)
 	case keyWeatherLon:

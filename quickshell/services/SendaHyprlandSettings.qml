@@ -40,15 +40,13 @@ Singleton {
 
     function save(flag, value) {
         if (root.busy || !root.loaded) return false;
-        const lock = flag === "--lock-shortcut" ? String(value).trim() : root.values.lockShortcut.trim();
-        const dictation = flag === "--dictation-shortcut" ? String(value).trim() : root.values.dictationShortcut.trim();
-        if (!lock || !dictation) {
-            root.showError("Los atajos no pueden estar vacíos");
-            return false;
+        const shortcuts = ["lock", "dictation", "screenshot"].map(name =>
+            flag === "--" + name + "-shortcut" ? String(value).trim() : root.values[name + "Shortcut"].trim());
+        if (shortcuts.some(value => !value)) {
+            root.showError("Los atajos no pueden estar vacíos"); return false;
         }
-        if (lock.replace(/\s/g, "").toLowerCase() === dictation.replace(/\s/g, "").toLowerCase()) {
-            root.showError("Los atajos de bloqueo y dictado deben ser distintos");
-            return false;
+        if (new Set(shortcuts.map(value => value.replace(/\s/g, "").toLowerCase())).size !== 3) {
+            root.showError("Los atajos de bloqueo, dictado y captura deben ser distintos"); return false;
         }
         if (flag === "--idle-seconds" && (!/^\d+$/.test(String(value)) || Number(value) > 86400)) {
             root.showError("El tiempo de inactividad debe ser un entero entre 0 y 86400 segundos");
@@ -74,7 +72,7 @@ Singleton {
             } else {
                 try {
                     const data = JSON.parse(readOutput.text);
-                    if (typeof data.lockShortcut !== "string" || typeof data.dictationShortcut !== "string"
+                    if (typeof data.screenshotShortcut !== "string" || typeof data.lockShortcut !== "string" || typeof data.dictationShortcut !== "string"
                         || !Number.isInteger(data.idleSeconds) || data.idleSeconds < 0 || data.idleSeconds > 86400
                         || typeof data.blur !== "boolean" || typeof data.modulePath !== "string"
                         || typeof data.moduleActive !== "boolean" || typeof data.idleConfigPath !== "string"

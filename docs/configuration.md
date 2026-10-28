@@ -46,6 +46,8 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 | `SENDA_STT_PRELOAD` | Precarga del modelo en la shell: `true` la activa; cualquier otro valor la deja desactivada. Predeterminado: desactivada. |
 | `SENDA_STT_LANGUAGE` | Idioma del reconocimiento. Predeterminado `es`; también admite `auto` y códigos de idioma. |
 | `SENDA_STT_PASTE_MODE` | Entrega del resultado: `paste` (predeterminado) o `clipboard`. |
+| `SENDA_SCREENSHOT_SHORTCUT` | Atajo de captura de pantalla. Predeterminado: `Print`. |
+| `SENDA_SCREENSHOT_DIR` | Carpeta para Guardar en el editor; vacía usa Imágenes/Capturas. Ver [capturas](screenshots.md). |
 | `SENDA_LOCK_SHORTCUT` | Atajo de bloqueo de Hyprland. Predeterminado: `SUPER + CTRL + l`. |
 | `SENDA_IDLE_SECONDS` | Segundos de inactividad antes del bloqueo; `0` lo desactiva. Predeterminado: `600`. |
 | `SENDA_LOCK_BLUR` | Activa el desenfoque de la pantalla de bloqueo. Predeterminado: `true`. |
@@ -115,4 +117,4 @@ Otras variables de entorno que usa Senda:
 
 ## Integración de Hyprland
 
-Los cuatro ajustes de bloqueo y dictado se leen del archivo de Senda y se cambian juntos con `senda hyprland set`; usa `senda hyprland show --json` para consultar rutas, estado y avisos. Los modificadores y teclas se validan antes de escribir. Un ejecutable temporal generado por `go run` no se acepta: utiliza un binario persistente, tanto en desarrollo como en una release. Consulta [Bloqueo de pantalla](lock-screen.md).
+Los ajustes de bloqueo, dictado y capturas se leen del archivo de Senda y se cambian juntos con `senda hyprland set`; usa `senda hyprland show --json` para consultar rutas, estado y avisos. Los modificadores y teclas se validan antes de escribir. Un ejecutable temporal generado por `go run` no se acepta: utiliza un binario persistente, tanto en desarrollo como en una release. Consulta [Bloqueo de pantalla](lock-screen.md).

@@ -13,7 +13,7 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"session_lock_xray = false", "session_lock_blur = false", "SUPER + CTRL + l", "ALT + ntilde", "Senda STT toggle"} {
+	for _, want := range []string{"session_lock_xray = false", "session_lock_blur = false", "SUPER + CTRL + l", "ALT + ntilde", "Senda STT toggle", "Senda screenshot", "print", "screenshot"} {
 		if !strings.Contains(string(lua), want) {
 			t.Fatalf("missing %q: %s", want, lua)
 		}
@@ -25,7 +25,7 @@ func TestRender(t *testing.T) {
 	}
 }
 func TestInvalidSettings(t *testing.T) {
-	for _, edit := range []func(*Settings){func(s *Settings) { s.LockShortcut = "INVALID+!" }, func(s *Settings) { s.IdleSeconds = -1 }, func(s *Settings) { s.DictationShortcut = s.LockShortcut }} {
+	for _, edit := range []func(*Settings){func(s *Settings) { s.ScreenshotShortcut = s.LockShortcut }, func(s *Settings) { s.ScreenshotShortcut = "" }, func(s *Settings) { s.LockShortcut = "INVALID+!" }, func(s *Settings) { s.IdleSeconds = -1 }, func(s *Settings) { s.DictationShortcut = s.LockShortcut }} {
 		s := DefaultSettings()
 		edit(&s)
 		if _, _, err := Render(s, "/bin/senda"); err == nil {

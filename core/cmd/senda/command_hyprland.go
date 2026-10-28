@@ -96,7 +96,7 @@ func printHyprland(cmd *cobra.Command, status integration.Status, asJSON bool) e
 	if asJSON {
 		return writeJSON(cmd, status)
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "Bloqueo: %s\nDictado: %s\nInactividad: %d s\nDesenfoque: %t\nMódulo: %s (activo: %t)\nHypridle: %s (modo: %s)\n", status.LockShortcut, status.DictationShortcut, status.IdleSeconds, status.Blur, status.ModulePath, status.ModuleActive, status.IdleConfigPath, status.IdleMode)
+	fmt.Fprintf(cmd.OutOrStdout(), "Bloqueo: %s\nDictado: %s\nCaptura: %s\nInactividad: %d s\nDesenfoque: %t\nMódulo: %s (activo: %t)\nHypridle: %s (modo: %s)\n", status.LockShortcut, status.DictationShortcut, status.ScreenshotShortcut, status.IdleSeconds, status.Blur, status.ModulePath, status.ModuleActive, status.IdleConfigPath, status.IdleMode)
 	for _, warning := range status.Warnings {
 		fmt.Fprintln(cmd.OutOrStdout(), "Aviso:", warning)
 	}
@@ -114,7 +114,7 @@ func hyprlandCmd() *cobra.Command {
 		return printHyprland(cmd, integration.Inspect(cmd.Context(), s, shortcutRunner), asJSON)
 	}}
 	show.Flags().Bool("json", false, "Mostrar JSON")
-	var lock, dictation, blur, idleMode string
+	var lock, dictation, screenshot, blur, idleMode string
 	var idle int
 	var asJSON bool
 	set := &cobra.Command{Use: "set", Short: "Cambiar ajustes", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
@@ -127,6 +127,9 @@ func hyprlandCmd() *cobra.Command {
 		}
 		if cmd.Flags().Changed("dictation-shortcut") {
 			s.DictationShortcut = dictation
+		}
+		if cmd.Flags().Changed("screenshot-shortcut") {
+			s.ScreenshotShortcut = screenshot
 		}
 		if cmd.Flags().Changed("idle-seconds") {
 			s.IdleSeconds = idle
@@ -162,6 +165,7 @@ func hyprlandCmd() *cobra.Command {
 		}
 		return printHyprland(cmd, status, asJSON)
 	}}
+	set.Flags().StringVar(&screenshot, "screenshot-shortcut", "", "Atajo de captura")
 	set.Flags().StringVar(&lock, "lock-shortcut", "", "Atajo de bloqueo")
 	set.Flags().StringVar(&dictation, "dictation-shortcut", "", "Atajo de dictado")
 	set.Flags().IntVar(&idle, "idle-seconds", 0, "Segundos de inactividad (0 desactiva)")
@@ -204,8 +208,8 @@ type shortcutCheck struct {
 func checkCmd() *cobra.Command {
 	var shortcut, target string
 	cmd := &cobra.Command{Use: "check", SilenceUsage: true, Short: "Comprobar si un atajo está libre", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		if target != "lock" && target != "dictation" {
-			return fmt.Errorf("--for debe ser lock o dictation")
+		if target != "lock" && target != "dictation" && target != "screenshot" {
+			return fmt.Errorf("--for debe ser lock, dictation o screenshot")
 		}
 		normalized, err := binds.NormalizeShortcut(shortcut)
 		if err != nil {
@@ -216,12 +220,13 @@ func checkCmd() *cobra.Command {
 			return fmt.Errorf("leer ajustes: %w", err)
 		}
 		result := shortcutCheck{Shortcut: normalized, Conflicts: []string{}}
-		other, otherLabel := s.DictationShortcut, "Senda: dictado"
-		if target == "dictation" {
-			other, otherLabel = s.LockShortcut, "Senda: bloqueo"
-		}
-		if o, err := binds.NormalizeShortcut(other); err == nil && sameShortcut(o, normalized) {
-			result.Conflicts = append(result.Conflicts, otherLabel)
+		for _, pair := range []struct{ target, shortcut, label string }{{"lock", s.LockShortcut, "bloqueo"}, {"dictation", s.DictationShortcut, "dictado"}, {"screenshot", s.ScreenshotShortcut, "captura"}} {
+			if pair.target == target {
+				continue
+			}
+			if o, err := binds.NormalizeShortcut(pair.shortcut); err == nil && sameShortcut(o, normalized) {
+				result.Conflicts = append(result.Conflicts, "Senda: "+pair.label)
+			}
 		}
 		if integration.InSession() {
 			conflicts, err := binds.Conflicts(cmd.Context(), shortcutRunner, normalized)
@@ -229,7 +234,7 @@ func checkCmd() *cobra.Command {
 				return err
 			}
 			for _, c := range conflicts {
-				if c == "Senda lock" || c == "Senda: cancelar grabación de atajo" {
+				if c == "Senda lock" || c == "Senda screenshot" || c == "Senda: cancelar grabación de atajo" {
 					continue
 				}
 				result.Conflicts = append(result.Conflicts, c)
@@ -238,7 +243,7 @@ func checkCmd() *cobra.Command {
 		return writeJSON(cmd, result)
 	}}
 	cmd.Flags().StringVar(&shortcut, "shortcut", "", "Atajo a comprobar")
-	cmd.Flags().StringVar(&target, "for", "", "Atajo de Senda que se cambiaría: lock o dictation")
+	cmd.Flags().StringVar(&target, "for", "", "Atajo de Senda que se cambiaría: lock, dictation o screenshot")
 	return cmd
 }
 
