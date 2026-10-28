@@ -20,13 +20,15 @@ Singleton {
     // missing argument into the text "undefined", which matches no monitor.
     function setCurrentPanel(panel: string, screenName) {
         root.returnPanel = panel === "settings" && root.currentPanel === "dashboard" ? "dashboard" : "";
-        root.currentPanel = panel;
+        // Set the monitor first: the overlay layers map when currentPanel
+        // changes, and they must already know which one takes the keyboard.
         if (screenName) {
             root.currentScreen = screenName;
         } else if (root.currentScreen === "") {
             const first = Quickshell.screens.find(screen => true);
             root.currentScreen = first ? first.name : "";
         }
+        root.currentPanel = panel;
         console.log(panel);
         currentPanelUpdated();
     }

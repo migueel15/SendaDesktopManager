@@ -39,7 +39,15 @@ PanelWindow {
     color: "transparent"
 
     aboveWindows: true
-    focusable: true
+    // On-demand focus follows the pointer, so the launcher takes the keyboard
+    // exclusively wherever the mouse is. Backdrops on other monitors never
+    // compete for it.
+    readonly property bool onCurrentScreen: OverlayService.currentScreen === screenName
+    WlrLayershell.keyboardFocus: !onCurrentScreen && OverlayService.currentPanel !== ""
+        ? WlrKeyboardFocus.None
+        : onCurrentScreen && OverlayService.currentPanel === "launcher"
+            ? WlrKeyboardFocus.Exclusive
+            : WlrKeyboardFocus.OnDemand
 
     // Leave the top bar out of the input region, so one click on another bar
     // button switches panels instead of only closing the open one.
