@@ -25,6 +25,7 @@ var Requirements = []Requirement{
 	{Command: "xdg-open", Package: "xdg-utils"},
 	{Command: "secret-tool", Package: "libsecret"},
 	{Command: "python3", Package: "python"},
+	{Command: "grim", Package: "grim"},
 	{Command: "wl-copy", Package: "wl-clipboard"},
 	{Command: "wtype", Package: "wtype"},
 	{Command: "pw-record", Package: "pipewire"},

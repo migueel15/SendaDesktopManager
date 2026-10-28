@@ -27,6 +27,7 @@ func main() {
 	rootCmd.AddCommand(newLauncherCmd())
 	rootCmd.AddCommand(keyboardCmd())
 	rootCmd.AddCommand(lockCmd())
+	rootCmd.AddCommand(screenshotCmd())
 	rootCmd.AddCommand(hyprlandCmd())
 	rootCmd.AddCommand(themeCmd())
 	rootCmd.AddCommand(sttCmd())
