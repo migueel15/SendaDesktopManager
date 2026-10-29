@@ -34,10 +34,18 @@ func (r *recorder) run(_ context.Context, stdin io.Reader, name string, args ...
 		c.stdin = string(data)
 	}
 	r.calls = append(r.calls, c)
+	if name == "hyprctl" && len(args) > 0 && args[0] == "dispatch" {
+		return []byte("ok\n"), nil
+	}
 	if name == "hyprctl" {
 		return []byte(`{"class":"` + r.class + `"}`), nil
 	}
 	return nil, nil
+}
+
+// pasteCall reports whether c is the Hyprland paste dispatch.
+func pasteCall(c call) bool {
+	return c.name == "hyprctl" && len(c.args) > 0 && c.args[0] == "dispatch"
 }
 
 func (r *recorder) find(name string) []call {
@@ -65,8 +73,10 @@ func TestAC5ClipboardModeOnlyCopies(t *testing.T) {
 	if len(copies) != 1 || copies[0].stdin != "hola mundo" {
 		t.Fatalf("wl-copy calls = %+v", copies)
 	}
-	if len(r.find("wtype")) != 0 {
-		t.Fatalf("wtype ran: %+v", r.calls)
+	for _, c := range r.calls {
+		if pasteCall(c) {
+			t.Fatalf("paste ran: %+v", r.calls)
+		}
 	}
 }
 
@@ -75,7 +85,7 @@ func TestAC5PasteModeUsesCtrlV(t *testing.T) {
 	if err := New(r.run).Deliver(context.Background(), "hola", settings(stt.PasteDirect)); err != nil {
 		t.Fatalf("Deliver = %v", err)
 	}
-	assertPaste(t, r, []string{"-M", "ctrl", "v", "-m", "ctrl"})
+	assertPaste(t, r, "hl.dsp.send_shortcut({mods = \"CTRL\", key = \"V\"})")
 }
 
 func TestAC5PasteModeInTerminalUsesCtrlShiftV(t *testing.T) {
@@ -83,10 +93,10 @@ func TestAC5PasteModeInTerminalUsesCtrlShiftV(t *testing.T) {
 	if err := New(r.run).Deliver(context.Background(), "hola", settings(stt.PasteDirect)); err != nil {
 		t.Fatalf("Deliver = %v", err)
 	}
-	assertPaste(t, r, []string{"-M", "ctrl", "-M", "shift", "v", "-m", "shift", "-m", "ctrl"})
+	assertPaste(t, r, "hl.dsp.send_shortcut({mods = \"CTRL SHIFT\", key = \"V\"})")
 }
 
-func assertPaste(t *testing.T, r *recorder, wantArgs []string) {
+func assertPaste(t *testing.T, r *recorder, wantDispatch string) {
 	t.Helper()
 	copyAt, typeAt := -1, -1
 	for i, c := range r.calls {
@@ -96,15 +106,18 @@ func assertPaste(t *testing.T, r *recorder, wantArgs []string) {
 			if c.stdin != "hola" {
 				t.Errorf("wl-copy stdin = %q", c.stdin)
 			}
-		case "wtype":
+		case "hyprctl":
+			if !pasteCall(c) {
+				continue
+			}
 			typeAt = i
-			if !slices.Equal(c.args, wantArgs) {
-				t.Errorf("wtype args = %v, want %v", c.args, wantArgs)
+			if want := []string{"dispatch", wantDispatch}; !slices.Equal(c.args, want) {
+				t.Errorf("paste args = %v, want %v", c.args, want)
 			}
 		}
 	}
 	if copyAt < 0 || typeAt < 0 || copyAt > typeAt {
-		t.Fatalf("expected wl-copy before wtype: %+v", r.calls)
+		t.Fatalf("expected wl-copy before the paste dispatch: %+v", r.calls)
 	}
 }
 

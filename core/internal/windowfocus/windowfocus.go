@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"github.com/migueel15/SendaDesktopManager/core/internal/windowfocus/adapter/hyprland"
 )
 
@@ -15,7 +16,7 @@ type Backend interface {
 
 func DetectBackend() (Backend, error) {
 	currentDesktop := strings.ToLower(os.Getenv("XDG_CURRENT_DESKTOP") + ":" + os.Getenv("DESKTOP_SESSION"))
-	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" || strings.Contains(currentDesktop, "hyprland") {
+	if hyprctl.InSession() || strings.Contains(currentDesktop, "hyprland") {
 		return hyprland.New(), nil
 	}
 

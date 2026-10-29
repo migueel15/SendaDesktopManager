@@ -6,14 +6,11 @@ import QtQuick.Layouts
 import qs.common
 import qs.services
 
-// Settings window with a sidebar of sections. Configuration goes through the
-// senda CLI; tray pins use TrayPins. Opened with `senda settings` or from the
-// dashboard. The overlay hosts it in a SendaPanel shared with the dashboard.
+// Settings content with a sidebar of sections. Configuration goes through the
+// senda CLI; tray pins use TrayPins. SettingsWindow hosts it; it opens with
+// `senda settings` or from the dashboard.
 Item {
     id: root
-
-    // Height the content needs; the host panel gives it the dashboard width.
-    readonly property real contentHeight: 520
 
     // Sidebar entries. Each one needs a page in the StackLayout below, in the
     // same position.
@@ -149,7 +146,7 @@ Item {
                 SettingsButton {
                     Layout.fillWidth: true
                     label: "Cerrar"
-                    onClicked: OverlayService.closeOrGoBack()
+                    onClicked: SendaSettings.closeWindow()
                 }
             }
         }

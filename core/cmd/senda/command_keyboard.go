@@ -1,15 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"os"
-	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/keyboard"
 	"github.com/spf13/cobra"
@@ -67,30 +63,12 @@ func lockCmd() *cobra.Command {
 
 // watchKeyboardReload tracks compositor reloads while the shell is alive.
 func watchKeyboardReload(ctx context.Context) {
-	signature := os.Getenv("HYPRLAND_INSTANCE_SIGNATURE")
-	runtime := os.Getenv("XDG_RUNTIME_DIR")
-	if signature == "" || runtime == "" {
-		return
-	}
-	path := filepath.Join(runtime, "hypr", signature, ".socket2.sock")
-	for ctx.Err() == nil {
-		conn, err := net.Dial("unix", path)
-		if err == nil {
-			go func() { <-ctx.Done(); conn.Close() }()
-			scanner := bufio.NewScanner(conn)
-			for scanner.Scan() {
-				if strings.HasPrefix(scanner.Text(), "configreloaded>>") {
-					if _, err := keyboard.DefaultController(nil).Reset(); err != nil {
-						fmt.Fprintln(os.Stderr, "keyboard reload:", err)
-					}
-				}
-			}
-			conn.Close()
-		}
-		select {
-		case <-ctx.Done():
+	hyprctl.WatchEvents(ctx, func(name, _ string) {
+		if name != hyprctl.EventConfigReloaded {
 			return
-		case <-time.After(time.Second):
 		}
-	}
+		if _, err := keyboard.DefaultController(nil).Reset(); err != nil {
+			fmt.Fprintln(os.Stderr, "keyboard reload:", err)
+		}
+	})
 }

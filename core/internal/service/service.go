@@ -5,6 +5,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +18,7 @@ const Name = "senda.service"
 
 // sessionEnv are the variables Quickshell needs to reach the compositor.
 // Hyprland exports them to the systemd user manager when it starts.
-var sessionEnv = []string{"WAYLAND_DISPLAY", "HYPRLAND_INSTANCE_SIGNATURE", "XDG_CURRENT_DESKTOP"}
+var sessionEnv = []string{"WAYLAND_DISPLAY", hyprctl.SignatureEnv, "XDG_CURRENT_DESKTOP"}
 
 // UnitPath is the location of the unit in the user's systemd directory.
 func UnitPath() string {
@@ -53,14 +54,14 @@ StartLimitIntervalSec=0
 Type=dbus
 BusName=org.kde.StatusNotifierWatcher
 TimeoutStartSec=30
-ExecStartPre=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ] && [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ] && [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]'
+ExecStartPre=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ] && [ -n "$%s" ] && [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]'
 ExecStart=%s shell run
 Restart=on-failure
 RestartSec=2
 
 [Install]
 WantedBy=default.target
-`, quoteExec(exe))
+`, hyprctl.SignatureEnv, quoteExec(exe))
 }
 
 // quoteExec quotes path for an Exec line when it contains spaces.

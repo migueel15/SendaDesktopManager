@@ -38,18 +38,19 @@ func TestInvalidActiveWindowFallsBackAndTracesSteps(t *testing.T) {
 	t.Cleanup(func() { log.SetOutput(previous) })
 	var pasteArgs []string
 	run := func(_ context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
+		if name == "hyprctl" && args[0] == "dispatch" {
+			pasteArgs = args
+			return []byte("ok"), nil
+		}
 		if name == "hyprctl" {
 			return []byte("invalid json"), nil
-		}
-		if name == "wtype" {
-			pasteArgs = args
 		}
 		return nil, nil
 	}
 	if err := New(run).Deliver(context.Background(), "texto privado", settings(stt.PasteDirect)); err != nil {
 		t.Fatal(err)
 	}
-	if !slicesEqual(pasteArgs, []string{"-M", "ctrl", "v", "-m", "ctrl"}) {
+	if !slicesEqual(pasteArgs, []string{"dispatch", "hl.dsp.send_shortcut({mods = \"CTRL\", key = \"V\"})"}) {
 		t.Fatalf("paste args = %v", pasteArgs)
 	}
 	for _, step := range []string{"copia", "ventana activa", "pegado"} {
@@ -59,7 +60,7 @@ func TestInvalidActiveWindowFallsBackAndTracesSteps(t *testing.T) {
 			}
 		}
 	}
-	if !strings.Contains(traces.String(), "ventana activa (hyprctl): respuesta inválida") || strings.Contains(traces.String(), "texto privado") {
+	if !strings.Contains(traces.String(), "ventana activa: hyprctl -j activewindow: respuesta inválida") || strings.Contains(traces.String(), "texto privado") {
 		t.Fatalf("unexpected traces: %s", traces.String())
 	}
 }
@@ -89,8 +90,7 @@ func TestProductionRunnerCapturesActiveWindow(t *testing.T) {
 	argsPath := filepath.Join(dir, "paste-args")
 	for name, body := range map[string]string{
 		"wl-copy": "cat >/dev/null",
-		"hyprctl": `printf '%s' '{"class":"kitty"}'`,
-		"wtype":   `printf '%s\n' "$@" > "$SENDA_TEST_PASTE_ARGS"`,
+		"hyprctl": `if [ "$1" = dispatch ]; then printf '%s\n' "$@" > "$SENDA_TEST_PASTE_ARGS"; echo ok; else printf '%s' '{"class":"kitty"}'; fi`,
 	} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte("#!/bin/sh\n"+body+"\n"), 0700); err != nil {
 			t.Fatal(err)
@@ -102,7 +102,7 @@ func TestProductionRunnerCapturesActiveWindow(t *testing.T) {
 		t.Fatal(err)
 	}
 	data, err := os.ReadFile(argsPath)
-	if err != nil || string(data) != "-M\nctrl\n-M\nshift\nv\n-m\nshift\n-m\nctrl\n" {
+	if err != nil || string(data) != "dispatch\nhl.dsp.send_shortcut({mods = \"CTRL SHIFT\", key = \"V\"})\n" {
 		t.Fatalf("paste args = %q, %v", data, err)
 	}
 }
@@ -116,8 +116,11 @@ func TestHyprctlFailureFallsBackToCtrlV(t *testing.T) {
 			c.stdin = string(b)
 		}
 		calls = append(calls, c)
-		if name == "hyprctl" {
+		if name == "hyprctl" && args[0] != "dispatch" {
 			return nil, errors.New("hyprctl unavailable")
+		}
+		if name == "hyprctl" {
+			return []byte("ok"), nil
 		}
 		return nil, nil
 	}
@@ -125,15 +128,15 @@ func TestHyprctlFailureFallsBackToCtrlV(t *testing.T) {
 	if err := New(run).Deliver(context.Background(), "hola", settings(stt.PasteDirect)); err != nil {
 		t.Fatalf("Deliver = %v", err)
 	}
-	if len(calls) != 3 || calls[2].name != "wtype" || !slicesEqual(calls[2].args, []string{"-M", "ctrl", "v", "-m", "ctrl"}) {
+	if len(calls) != 3 || calls[2].name != "hyprctl" || !slicesEqual(calls[2].args, []string{"dispatch", "hl.dsp.send_shortcut({mods = \"CTRL\", key = \"V\"})"}) {
 		t.Fatalf("calls = %+v", calls)
 	}
 }
 
-func TestWtypeFailureReportsClipboardFallback(t *testing.T) {
-	run := func(_ context.Context, _ io.Reader, name string, _ ...string) ([]byte, error) {
-		if name == "wtype" {
-			return nil, errors.New("wtype unavailable")
+func TestPasteFailureReportsClipboardFallback(t *testing.T) {
+	run := func(_ context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
+		if name == "hyprctl" && args[0] == "dispatch" {
+			return []byte("error: invalid dispatcher"), nil
 		}
 		if name == "hyprctl" {
 			return []byte(`{"class":"firefox"}`), nil
@@ -142,7 +145,7 @@ func TestWtypeFailureReportsClipboardFallback(t *testing.T) {
 	}
 
 	err := New(run).Deliver(context.Background(), "hola", settings(stt.PasteDirect))
-	if err == nil || !strings.Contains(err.Error(), "permanece en el portapapeles") || !strings.Contains(err.Error(), "wtype unavailable") {
+	if err == nil || !strings.Contains(err.Error(), "permanece en el portapapeles") || !strings.Contains(err.Error(), "invalid dispatcher") {
 		t.Fatalf("Deliver error = %v", err)
 	}
 }

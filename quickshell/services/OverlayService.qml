@@ -10,8 +10,7 @@ Singleton {
     // Monitor the open panel is shown on. It stays after the panel closes, so
     // later panels opened without a monitor appear where the user last was.
     property string currentScreen: ""
-    // Panel to go back to when the current one closes, e.g. the dashboard after
-    // the settings opened from it. Empty closes everything.
+    // Panel to go back to when the current one closes. Empty closes everything.
     property string returnPanel: ""
 
     // screenName is the monitor the panel opens on. Without it, the last monitor
@@ -19,7 +18,7 @@ Singleton {
     // screenName is left untyped on purpose: a typed string parameter turns a
     // missing argument into the text "undefined", which matches no monitor.
     function setCurrentPanel(panel: string, screenName) {
-        root.returnPanel = panel === "settings" && root.currentPanel === "dashboard" ? "dashboard" : "";
+        root.returnPanel = "";
         // Set the monitor first: the overlay layers map when currentPanel
         // changes, and they must already know which one takes the keyboard.
         if (screenName) {

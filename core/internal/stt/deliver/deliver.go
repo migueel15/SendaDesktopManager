@@ -3,7 +3,6 @@ package deliver
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 )
 
@@ -42,11 +42,12 @@ func New(run stt.Runner) stt.Deliverer {
 // does not race the background wl-copy. It gives up when wl-paste fails or the
 // wait expires; the paste is still attempted.
 func (d *deliverer) waitClipboard(ctx context.Context, text string) {
-	deadline := time.Now().Add(clipboardWait)
-	for {
+	started := time.Now()
+	deadline := started.Add(clipboardWait)
+	for attempt := 1; ; attempt++ {
 		current, err := d.run(ctx, nil, "wl-paste", "-n")
 		if err != nil {
-			log.Printf("stt delivery: comprobación del portapapeles (wl-paste): %v", err)
+			log.Printf("stt delivery: comprobación del portapapeles (wl-paste): intento %d tras %s: %v", attempt, time.Since(started), err)
 			return
 		}
 		if strings.TrimRight(string(current), "\n") == strings.TrimRight(text, "\n") {
@@ -75,6 +76,15 @@ func traced(ctx context.Context, run stt.Runner, stdin io.Reader, step, name str
 	return output, err
 }
 
+// timed traces the duration and result of a delivery step.
+func timed(step string, fn func() error) error {
+	started := time.Now()
+	log.Printf("stt delivery: %s: inicio", step)
+	err := fn()
+	log.Printf("stt delivery: %s: fin (%s), error=%v", step, time.Since(started), err)
+	return err
+}
+
 func (d *deliverer) Deliver(ctx context.Context, text string, s stt.Settings) error {
 	if strings.TrimSpace(text) == "" {
 		return nil
@@ -89,20 +99,21 @@ func (d *deliverer) Deliver(ctx context.Context, text string, s stt.Settings) er
 		d.waitClipboard(ctx, text)
 	}
 
-	args := []string{"-M", "ctrl", "v", "-m", "ctrl"}
-	active, err := traced(ctx, d.run, nil, "ventana activa", "hyprctl", "activewindow", "-j")
-	if err == nil {
-		var window struct {
-			Class string `json:"class"`
-		}
-		if err := json.Unmarshal(active, &window); err != nil {
-			log.Printf("stt delivery: ventana activa (hyprctl): respuesta inválida: %v", err)
-		} else if isTerminal(window.Class, s.Terminals) {
-			args = []string{"-M", "ctrl", "-M", "shift", "v", "-m", "shift", "-m", "ctrl"}
+	hypr := hyprctl.New(d.run)
+	mods := "CTRL"
+	var window hyprctl.Window
+	err := timed("ventana activa", func() (err error) { window, err = hypr.ActiveWindow(ctx); return err })
+	if err != nil {
+		log.Printf("stt delivery: ventana activa: %v", err)
+	} else {
+		terminal := isTerminal(window.Class, s.Terminals)
+		log.Printf("stt delivery: ventana activa: class=%q terminal=%t", window.Class, terminal)
+		if terminal {
+			mods = "CTRL SHIFT"
 		}
 	}
-	if _, err := traced(ctx, d.run, nil, "pegado", "wtype", args...); err != nil {
-		return fmt.Errorf("el texto permanece en el portapapeles, pero no se pudo pegar con wtype: %w", err)
+	if err := timed("pegado", func() error { return hypr.SendShortcut(ctx, mods, "V") }); err != nil {
+		return fmt.Errorf("el texto permanece en el portapapeles, pero no se pudo pegar: %w", err)
 	}
 	return nil
 }

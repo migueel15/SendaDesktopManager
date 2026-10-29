@@ -23,7 +23,7 @@ Singleton {
     readonly property bool busy: checkProcess.running
     readonly property bool noticeVisible: root.available && root.latest !== "" && root.latest !== root.dismissedTag
 
-    // Asks the settings panel to show the update section.
+    // Asks the settings window to show the update section.
     signal openRequested()
 
     function check() {
@@ -32,9 +32,9 @@ Singleton {
         }
     }
 
-    function openSettings(screenName: string) {
+    function openSettings() {
         root.openRequested();
-        OverlayService.setCurrentPanel("settings", screenName);
+        SendaSettings.openWindow();
     }
 
     function dismiss() {

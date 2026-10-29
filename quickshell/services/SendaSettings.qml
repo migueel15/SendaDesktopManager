@@ -17,6 +17,8 @@ Singleton {
 
     property var values: ({})
     property bool configLoaded: false
+    // Whether the standalone settings window is shown.
+    property bool windowOpen: false
     readonly property bool discordWidgetEnabled: configLoaded && values.SENDA_WIDGET_DISCORD !== "false"
     // Resolve the dictation singleton after this singleton has finished loading:
     // dictation itself reads SendaSettings during initialization.
@@ -72,6 +74,30 @@ Singleton {
     function start(process, command) {
         process.command = command;
         process.running = true;
+    }
+
+    // Opens the settings window through `senda settings`, which registers the
+    // Hyprland placement rule before calling showWindow over IPC.
+    function openWindow() {
+        OverlayService.closeCurrentPanel();
+        openProcess.running = true;
+    }
+
+    // When the window is already open, it is mapped again so Hyprland places
+    // it on the monitor that has the focus now.
+    function showWindow() {
+        OverlayService.closeCurrentPanel();
+        if (root.windowOpen) {
+            root.windowOpen = false;
+            Qt.callLater(() => { root.windowOpen = true; });
+        } else {
+            root.windowOpen = true;
+        }
+        root.refresh();
+    }
+
+    function closeWindow() {
+        root.windowOpen = false;
     }
 
     function refresh() {
@@ -315,13 +341,17 @@ Singleton {
         Qt.callLater(() => { root.sttService = SendaStt; });
     }
 
+    Process {
+        id: openProcess
+        command: [root.binaryPath, "settings"]
+    }
+
     // `senda settings` calls this through the running shell.
     IpcHandler {
         target: "settings"
 
         function open() {
-            OverlayService.setCurrentPanel("settings");
-            root.refresh();
+            root.showWindow();
         }
     }
 }

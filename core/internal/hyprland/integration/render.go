@@ -4,11 +4,13 @@ package integration
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"github.com/migueel15/SendaDesktopManager/core/internal/version"
 )
 
@@ -19,6 +21,16 @@ const ProbeFunction = "senda_module_version"
 // CaptureSubmap has no binds besides Escape, so Hyprland lets every other key
 // combination reach Senda while a shortcut is being recorded.
 const CaptureSubmap = "senda_capture"
+
+// SettingsWindowTitle is the title of the settings window.
+const SettingsWindowTitle = "Ajustes de Senda"
+
+// SettingsWindowRule opens the settings window floating and centred on the
+// focused monitor. The module carries it and `senda settings` registers it
+// again before opening, so it applies without regenerating the module.
+func SettingsWindowRule() hyprctl.WindowRule {
+	return hyprctl.WindowRule{Name: "Senda settings", MatchTitle: "^" + regexp.QuoteMeta(SettingsWindowTitle) + "$", Float: true, Center: true}
+}
 
 type Settings struct {
 	ScreenshotShortcut string
@@ -66,26 +78,32 @@ func Render(settings Settings, executable string) (lua, idle []byte, err error) 
 	}
 	command := "'" + strings.ReplaceAll(executable, "'", "'\\''") + "'"
 	lua = []byte(fmt.Sprintf(`-- Generado por Senda. No modificar manualmente.
-hl.config({ misc = { allow_session_lock_restore = true, session_lock_xray = %t, session_lock_blur = %t } })
-hl.bind(%s, hl.dsp.exec_cmd("loginctl lock-session"), { description = "Senda lock" })
-hl.bind(%s, hl.dsp.exec_cmd(%s), { submap_universal = true, description = "Senda STT toggle" })
-hl.bind(%s, hl.dsp.exec_cmd(%s), { description = "Senda screenshot" })
+%s
+%s
+%s
+%s
+%s
 -- Marca de detección: Senda la consulta con hyprctl para saber si el módulo
 -- está cargado, esté donde esté.
 function %s() return %s end
-`, settings.Blur, settings.Blur, strconv.Quote(lock), strconv.Quote(dictation), strconv.Quote(command+" stt toggle"), strconv.Quote(screenshot), strconv.Quote(command+" screenshot"), ProbeFunction, strconv.Quote(version.Version)))
+`, hyprctl.SessionLockConfig(settings.Blur, settings.Blur),
+		hyprctl.BindLua(lock, hyprctl.DspExec("loginctl lock-session"), hyprctl.BindOptions{Description: "Senda lock"}),
+		hyprctl.BindLua(dictation, hyprctl.DspExec(command+" stt toggle"), hyprctl.BindOptions{Description: binds.DictationDescription, Universal: true}),
+		hyprctl.BindLua(screenshot, hyprctl.DspExec(command+" screenshot"), hyprctl.BindOptions{Description: "Senda screenshot"}),
+		hyprctl.WindowRuleLua(SettingsWindowRule()),
+		ProbeFunction, strconv.Quote(version.Version)))
 	if settings.IdleMode == IdleModeSenda {
 		idleCommand := "hypridle -c '" + strings.ReplaceAll(IdlePath(), "'", "'\\''") + "'"
-		lua = append(lua, fmt.Sprintf("hl.on(\"hyprland.start\", function() hl.exec_cmd(%s) end)\n", strconv.Quote(idleCommand))...)
+		lua = append(lua, hyprctl.OnStart(idleCommand)+"\n"...)
 	}
 	idleText := fmt.Sprintf(`# Generado por Senda. No modificar manualmente.
 general {
     lock_cmd = %s lock
     before_sleep_cmd = loginctl lock-session
-    after_sleep_cmd = hyprctl dispatch 'hl.dsp.dpms({action = "on"})'
+    after_sleep_cmd = %s
     inhibit_sleep = 3
 }
-`, command)
+`, command, hyprctl.DispatchCommand(hyprctl.DspDpmsOn()))
 	if settings.IdleSeconds > 0 {
 		idleText += fmt.Sprintf("listener {\n    timeout = %d\n    on-timeout = loginctl lock-session\n}\n", settings.IdleSeconds)
 	}

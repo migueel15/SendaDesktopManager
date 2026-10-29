@@ -16,7 +16,7 @@ import (
 // ApplyIdle manages only an instance that this function started and whose
 // PID and Linux process start time still match. Other instances are untouched.
 func ApplyIdle() string {
-	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") == "" || os.Getenv("WAYLAND_DISPLAY") == "" {
+	if !InSession() || os.Getenv("WAYLAND_DISPLAY") == "" {
 		return "hypridle no se ha iniciado: no se ha detectado una sesión Wayland de Hyprland."
 	}
 	runtime := os.Getenv("XDG_RUNTIME_DIR")

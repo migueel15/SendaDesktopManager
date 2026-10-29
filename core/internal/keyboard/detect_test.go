@@ -40,7 +40,7 @@ func TestDetectPhysicalAndVirtual(t *testing.T) {
 	add("event2", "pci", "Power Button", "3", "0")
 	add("event3", "pci", "Missing", "4", "1")
 	add("event4", "pci", "Mouse ", "5", "1")
-	got, err := (Detector{SysInput: sys, UdevData: udev}).Detect([]byte(`{"keyboards":[{"name":"example-keyboard"},{"name":"example-keyboard-2"},{"name":"mouse-"}]}`))
+	got, err := (Detector{SysInput: sys, UdevData: udev}).Detect([]string{"example-keyboard", "example-keyboard-2", "mouse-"})
 	if err != nil {
 		t.Fatal(err)
 	}

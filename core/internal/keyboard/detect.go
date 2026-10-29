@@ -2,7 +2,6 @@
 package keyboard
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -32,15 +31,8 @@ func DefaultDetector() Detector {
 	}}
 }
 
-func (d Detector) Detect(hypr []byte) ([]Device, error) {
-	var devices struct {
-		Keyboards []struct {
-			Name string `json:"name"`
-		} `json:"keyboards"`
-	}
-	if err := json.Unmarshal(hypr, &devices); err != nil {
-		return nil, fmt.Errorf("hyprctl devices: %w", err)
-	}
+// Detect matches the input devices with the Hyprland keyboard names.
+func (d Detector) Detect(keyboards []string) ([]Device, error) {
 	events, err := filepath.Glob(filepath.Join(d.SysInput, "event*"))
 	if err != nil {
 		return nil, err
@@ -75,9 +67,9 @@ func (d Detector) Detect(hypr []byte) ([]Device, error) {
 		} else {
 			base := strings.ReplaceAll(strings.ToLower(item.Name), " ", "-")
 			pattern := regexp.MustCompile("^" + regexp.QuoteMeta(base) + "(?:-[0-9]+)?$")
-			for _, keyboard := range devices.Keyboards {
-				if pattern.MatchString(keyboard.Name) {
-					item.Hyprland = append(item.Hyprland, keyboard.Name)
+			for _, keyboard := range keyboards {
+				if pattern.MatchString(keyboard) {
+					item.Hyprland = append(item.Hyprland, keyboard)
 				}
 			}
 			sort.Strings(item.Hyprland)

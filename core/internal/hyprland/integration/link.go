@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 )
@@ -25,19 +26,15 @@ type Link struct {
 var probeExpression = fmt.Sprintf(`type(%[1]s) == "function" and (tostring(%[1]s()) .. "\t" .. debug.getinfo(%[1]s, "S").source) or "missing"`, ProbeFunction)
 
 // InSession reports whether hyprctl can reach a running Hyprland.
-func InSession() bool { return os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" }
+func InSession() bool { return hyprctl.InSession() }
 
 // Probe asks the running Hyprland whether the probe function exists. It does
 // not depend on how the user organises their configuration files.
 func Probe(ctx context.Context, run stt.Runner) (Link, error) {
-	if run == nil {
-		run = stt.ExecRunner
-	}
-	out, err := run(ctx, nil, "hyprctl", "repl", probeExpression)
+	text, err := hyprctl.New(run).Repl(ctx, probeExpression)
 	if err != nil {
-		return Link{}, fmt.Errorf("hyprctl repl: %s: %w", strings.TrimSpace(string(out)), err)
+		return Link{}, err
 	}
-	text := strings.TrimSpace(string(out))
 	if text == "missing" {
 		return Link{}, nil
 	}

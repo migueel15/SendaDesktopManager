@@ -9,8 +9,7 @@ import qs.common.components
 import qs.modules.panels.Dashboard
 import qs.services
 
-// Dashboard content. The overlay hosts it in a SendaPanel shared with the
-// settings, so switching between both morphs the same panel.
+// Dashboard content. The overlay hosts it in a SendaPanel.
 Item {
     id: root
 

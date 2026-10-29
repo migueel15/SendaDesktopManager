@@ -20,7 +20,7 @@ DropdownCard {
     Process {
         id: logoutProcess
         running: false
-        command: ["hyprctl", "dispatch", "hl.dsp.exit()"]
+        command: [Quickshell.env("SENDA_BIN") || "senda", "hyprland", "exit"]
     }
 
     Process {

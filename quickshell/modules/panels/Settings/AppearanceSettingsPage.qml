@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import qs.common
 import qs.services
 
-// Appearance settings: the size of the interface text. 100% is the default.
+// Appearance settings: the theme and the size of the interface text.
 Flickable {
     id: root
 
@@ -25,9 +25,29 @@ Flickable {
         );
     }
 
+    Component.onCompleted: SendaTheme.refresh()
+
     ColumnLayout {
         id: column
         width: root.width
+        SettingsGroup {
+            SettingsRow {
+                separator: false
+                label: "Tema"
+                description: SendaTheme.lastError !== "" ? SendaTheme.lastError : "Colores y fondo de todo el escritorio."
+            }
+            Repeater {
+                model: SendaTheme.themes.filter(theme => theme.valid)
+                delegate: SettingsButton {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    label: modelData.name
+                    primary: modelData.name === Theme.currentTheme
+                    enabled: !SendaTheme.busy
+                    onClicked: SendaTheme.apply(modelData.name)
+                }
+            }
+        }
         SettingsGroup {
             SettingsRow {
                 separator: false

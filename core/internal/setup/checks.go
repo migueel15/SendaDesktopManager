@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"io"
 	"strings"
 )
@@ -53,7 +54,7 @@ func osReleaseID(r io.Reader) (string, error) {
 // XDG_CURRENT_DESKTOP or through the Hyprland instance signature.
 func CheckCompositor(getenv func(string) string) error {
 	desktop := strings.ToLower(getenv("XDG_CURRENT_DESKTOP"))
-	if strings.Contains(desktop, "hyprland") || getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" {
+	if strings.Contains(desktop, "hyprland") || hyprctl.InSessionEnv(getenv) {
 		return nil
 	}
 	return errors.New("solo se soporta Hyprland; ejecuta senda setup dentro de una sesión de Hyprland")

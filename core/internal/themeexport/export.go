@@ -3,10 +3,13 @@
 package themeexport
 
 import (
+	"io"
+
 	"bytes"
 	"context"
 	"embed"
 	"fmt"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -169,8 +172,11 @@ func Reload(run Runner) {
 	defer cancel()
 	// kitty rereads its configuration, including included files, on SIGUSR1.
 	_ = run(ctx, "pkill", "-USR1", "-x", "kitty")
-	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" {
-		_ = run(ctx, "hyprctl", "reload")
+	if hyprctl.InSession() {
+		hypr := hyprctl.New(func(ctx context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
+			return nil, run(ctx, name, args...)
+		})
+		_ = hypr.Reload(ctx)
 	}
 	// Only Neovim instances already using the senda colorscheme reload it.
 	runtime := os.Getenv("XDG_RUNTIME_DIR")

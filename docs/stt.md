@@ -61,7 +61,7 @@ Los modos de entrega son:
 | `paste` (predeterminado) | Copia el texto y simula `Ctrl+V`; en una terminal reconocida simula `Ctrl+Shift+V`. |
 | `clipboard` | Copia el texto sin simular pegado. |
 
-Las clases de ventana de terminal se configuran en `SENDA_STT_TERMINALS`. Los valores predeterminados son `kitty`, `foot`, `Alacritty`, `org.wezfurlong.wezterm` y `com.mitchellh.ghostty`. La detección usa la clase de la ventana activa de Hyprland. La entrega usa `wl-copy` y `wtype`; en modo `paste`, antes de pegar comprueba con `wl-paste` que el portapapeles ya contiene el texto (espera como máximo un segundo).
+Las clases de ventana de terminal se configuran en `SENDA_STT_TERMINALS`. Los valores predeterminados son `kitty`, `foot`, `Alacritty`, `org.wezfurlong.wezterm` y `com.mitchellh.ghostty`. La detección usa la clase de la ventana activa de Hyprland. La entrega copia el texto con `wl-copy` y pega con el dispatcher `send_shortcut` de Hyprland (Ctrl+V, o Ctrl+Shift+V en terminal), que envía el atajo a la ventana activa sin crear un teclado virtual; en modo `paste`, antes de pegar comprueba con `wl-paste` que el portapapeles ya contiene el texto (espera como máximo un segundo).
 
 ## Activar el atajo de Hyprland
 
@@ -82,4 +82,4 @@ Al ejecutar `senda uninstall`, Senda intenta cancelar el dictado y retira el mó
 - **No se detecta micrófono:** conecta o selecciona una entrada de audio predeterminada y comprueba que no sea un monitor de salida.
 - **El atajo no hace nada:** comprueba que `senda stt shortcut show` indique el módulo cargado y añade el `require` a `hyprland.lua` si falta.
 - **El atajo ya está asignado:** consulta los conflictos y elige otra combinación.
-- **El texto no se pega:** comprueba que `wl-copy` y `wtype` estén instalados. En terminal, confirma que su clase esté incluida en `SENDA_STT_TERMINALS`.
+- **El texto no se pega:** comprueba que `wl-copy` esté instalado y que `hyprctl` responda en la sesión. En terminal, confirma que su clase esté incluida en `SENDA_STT_TERMINALS`.

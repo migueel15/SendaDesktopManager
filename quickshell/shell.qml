@@ -9,6 +9,7 @@ import qs.modules.bars
 import qs.modules.bars.components
 import qs.common.components
 import qs.modules.panels
+import qs.modules.panels.Settings
 
 import Quickshell.Wayland
 
@@ -45,6 +46,7 @@ ShellRoot {
 	SttDock {}
 	LockScreen {}
 	ScreenshotLayer {}
+	SettingsWindow {}
 
 	Variants {
 		id: panelCtrl

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/spf13/cobra"
@@ -181,7 +182,10 @@ func hyprlandCmd() *cobra.Command {
 			return nil
 		}
 	}
-	cmd.AddCommand(show, set, captureCmd(), checkCmd())
+	exit := &cobra.Command{Use: "exit", Short: "Cerrar la sesión de Hyprland", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		return hyprctl.New(nil).Exit(cmd.Context())
+	}}
+	cmd.AddCommand(show, set, exit, captureCmd(), checkCmd())
 	return cmd
 }
 

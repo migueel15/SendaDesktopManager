@@ -5,7 +5,6 @@ import qs.common.components
 import qs.services
 import qs.modules.panels.ControlCenter
 import qs.modules.panels.Dashboard
-import qs.modules.panels.Settings
 import qs.modules.panels.Tasks
 import qs.modules.panels.notifications
 import qs.modules.launcher
@@ -87,18 +86,12 @@ PanelWindow {
             targetX: parent.width - width - 5
         }
 
-        // The dashboard and the settings open in the same place, so they share
-        // one panel. Both use the dashboard width, so switching only morphs the height.
         SendaPanel {
-            id: centerPanel
-            names: ["dashboard", "settings"]
+            names: ["dashboard"]
             screenName: overlayLayer.screenName
 
-            readonly property bool showSettings: activeName === "settings"
-            readonly property var activeContent: showSettings ? settings : dashboard
-
             targetWidth: dashboard.contentWidth + 2 * padding
-            targetHeight: activeContent.contentHeight
+            targetHeight: dashboard.contentHeight
             targetX: parent.width / 2 - width / 2
 
             DashboardPanel {
@@ -106,23 +99,6 @@ PanelWindow {
                 // Fixed size, so it is not squashed while the panel morphs.
                 width: contentWidth
                 height: contentHeight
-                opacity: centerPanel.showSettings ? 0 : 1
-                visible: opacity > 0
-                Behavior on opacity {
-                    NumberAnimation { duration: centerPanel.animationDuration / 2 }
-                }
-            }
-
-            SettingsPanel {
-                id: settings
-                // Fixed size, so it is not squashed while the panel morphs.
-                width: dashboard.contentWidth
-                height: contentHeight
-                opacity: centerPanel.showSettings ? 1 : 0
-                visible: opacity > 0
-                Behavior on opacity {
-                    NumberAnimation { duration: centerPanel.animationDuration / 2 }
-                }
             }
         }
 

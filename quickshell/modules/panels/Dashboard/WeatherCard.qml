@@ -74,7 +74,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: -6
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: OverlayService.setCurrentPanel("settings")
+                    onClicked: SendaSettings.openWindow()
                 }
             }
         }
@@ -143,7 +143,7 @@ Rectangle {
                 anchors.fill: parent
                 enabled: SendaWeather.status === "unconfigured"
                 cursorShape: Qt.PointingHandCursor
-                onClicked: OverlayService.setCurrentPanel("settings")
+                onClicked: SendaSettings.openWindow()
             }
         }
     }

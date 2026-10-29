@@ -255,7 +255,7 @@ Rectangle {
                     anchors.fill: parent
                     enabled: SendaCalendar.status === "disconnected"
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: OverlayService.setCurrentPanel("settings")
+                    onClicked: SendaSettings.openWindow()
                 }
             }
 

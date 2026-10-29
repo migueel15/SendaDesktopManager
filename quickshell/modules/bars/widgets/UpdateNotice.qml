@@ -36,7 +36,7 @@ RowLayout {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: SendaUpdate.openSettings(root.screenName)
+            onClicked: SendaUpdate.openSettings()
         }
     }
 

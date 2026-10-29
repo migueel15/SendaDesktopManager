@@ -58,6 +58,7 @@ Singleton {
     property bool engineCancelled: false
     property bool retiring: false
     property bool shuttingDown: false
+    property string sessionErrorText: ""
 
     function refreshPreload() {
         root.loadFailures = 0;
@@ -97,6 +98,7 @@ Singleton {
         root.errorMessage = "";
         root.phase = standby ? "preparing" : "starting";
         session.command = [root.binaryPath, "stt", "session"].concat(standby ? ["--standby"] : []);
+        root.sessionErrorText = "";
         session.running = true;
     }
 
@@ -319,7 +321,13 @@ Singleton {
             }
         }
 
-        stderr: StdioCollector { id: sessionErrors }
+        // Log each stderr line so delivery traces reach the shell log.
+        stderr: SplitParser {
+            onRead: line => {
+                console.log("[senda stt] " + line);
+                root.sessionErrorText += line + "\n";
+            }
+        }
         onExited: exitCode => {
             const wasRetiring = root.retiring;
             const requested = root.dictationRequested;
@@ -347,7 +355,7 @@ Singleton {
             }
             if (loadFailed) {
                 root.loadFailures += 1;
-                root.preloadError = root.errorMessage || sessionErrors.text.trim() || "No se pudo precargar el modelo";
+                root.preloadError = root.errorMessage || root.sessionErrorText.trim() || "No se pudo precargar el modelo";
                 root.errorMessage = root.preloadError;
                 root.phase = "error";
             }

@@ -100,7 +100,7 @@ func currentShortcutStatus(ctx context.Context) (shortcutStatus, error) {
 	} else if !os.IsNotExist(err) {
 		return status, err
 	}
-	if os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != "" {
+	if integration.InSession() {
 		conflicts, err := binds.Conflicts(ctx, shortcutRunner, s.DictationShortcut)
 		if err != nil {
 			return status, err

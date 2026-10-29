@@ -1,15 +1,15 @@
 package keyboard
 
 import (
+	"context"
+
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
-	"strconv"
-	"strings"
 	"syscall"
 )
 
@@ -27,20 +27,15 @@ type Controller struct {
 func DefaultController(locked func() (bool, error)) Controller {
 	return Controller{Directory: filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "senda"), Locked: locked,
 		Detect: func() ([]Device, error) {
-			b, e := exec.Command("hyprctl", "devices", "-j").Output()
+			names, e := hyprctl.New(nil).Keyboards(context.Background())
 			if e != nil {
 				return nil, e
 			}
-			return DefaultDetector().Detect(b)
+			return DefaultDetector().Detect(names)
 		},
 		Apply: func(name string, on bool) error {
-			code := "hl.device({name=" + strconv.Quote(name) + ", enabled=" + strconv.FormatBool(on) + "})"
-			out, e := exec.Command("hyprctl", "eval", code).CombinedOutput()
-			if e != nil {
-				return fmt.Errorf("%s: %w: %s", name, e, strings.TrimSpace(string(out)))
-			}
-			if strings.TrimSpace(string(out)) != "ok" {
-				return fmt.Errorf("%s: %s", name, strings.TrimSpace(string(out)))
+			if e := hyprctl.New(nil).SetDeviceEnabled(context.Background(), name, on); e != nil {
+				return fmt.Errorf("%s: %w", name, e)
 			}
 			return nil
 		},

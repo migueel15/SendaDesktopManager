@@ -46,7 +46,7 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Bluetooth | `bluez`, `bluez-utils`, `blueberry` |
    | Brillo de monitores externos | `ddcutil` |
    | Sonidos del sistema | `ffmpeg`, `sound-theme-freedesktop` |
-   | Enlaces, dictado y scripts | `xdg-utils`, `jq`, `python`, `wl-clipboard`, `wtype`, `pipewire` |
+   | Enlaces, dictado y scripts | `xdg-utils`, `jq`, `python`, `wl-clipboard`, `pipewire` |
    | Acceso al keyring de Google Calendar | `libsecret`; requiere además un proveedor Secret Service configurado y desbloqueado, véase [Google Calendar](google-calendar.md) |
    | Fuentes | `inter-font`, `ttf-nerd-fonts-symbols` |
 
