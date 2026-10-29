@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -21,8 +20,6 @@ import (
 )
 
 const (
-	repoPath        = "/repos/migueel15/SendaDesktopManager/releases/latest"
-	releasesPath    = "/repos/migueel15/SendaDesktopManager/releases?per_page=50"
 	apiTimeout      = 30 * time.Second
 	downloadTimeout = 5 * time.Minute
 )
@@ -32,51 +29,6 @@ var tagPattern = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
 
 // nightlyTagPattern accepts nightly tags: nightly-<UTC yyyymmddhhmmss>-<short sha>.
 var nightlyTagPattern = regexp.MustCompile(`^nightly-[0-9]{14}-[0-9a-f]{7,40}$`)
-
-// LatestTag asks the releases API under baseURL for the latest stable release
-// and returns its validated tag name. baseURL is https://api.github.com in
-// production; tests may use a plain http://127.0.0.1 server.
-func LatestTag(ctx context.Context, baseURL string) (string, error) {
-	var latest struct {
-		TagName string `json:"tag_name"`
-	}
-	if err := getJSON(ctx, baseURL+repoPath, &latest); err != nil {
-		return "", err
-	}
-
-	if !tagPattern.MatchString(latest.TagName) {
-		return "", fmt.Errorf("etiqueta de versión no válida: %q", latest.TagName)
-	}
-	return latest.TagName, nil
-}
-
-// LatestTagForChannel returns the newest release tag of the given channel:
-// the latest stable release, or the newest nightly pre-release.
-func LatestTagForChannel(ctx context.Context, baseURL string, nightly bool) (string, error) {
-	if nightly {
-		return LatestNightlyTag(ctx, baseURL)
-	}
-	return LatestTag(ctx, baseURL)
-}
-
-// LatestNightlyTag returns the tag of the newest nightly pre-release. The
-// releases API lists newest first, so the first match is the latest build.
-func LatestNightlyTag(ctx context.Context, baseURL string) (string, error) {
-	var releases []struct {
-		TagName    string `json:"tag_name"`
-		Prerelease bool   `json:"prerelease"`
-	}
-	if err := getJSON(ctx, baseURL+releasesPath, &releases); err != nil {
-		return "", err
-	}
-
-	for _, r := range releases {
-		if r.Prerelease && nightlyTagPattern.MatchString(r.TagName) {
-			return r.TagName, nil
-		}
-	}
-	return "", errors.New("no hay compilaciones nightly disponibles")
-}
 
 // getJSON performs a GET request to url and decodes the JSON body into out.
 func getJSON(ctx context.Context, url string, out any) error {
@@ -88,7 +40,7 @@ func getJSON(ctx context.Context, url string, out any) error {
 	if err != nil {
 		return fmt.Errorf("crear la petición de la última versión: %w", err)
 	}
-	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("Cache-Control", "no-cache")
 
 	client := &http.Client{Timeout: apiTimeout}
 	resp, err := client.Do(req)

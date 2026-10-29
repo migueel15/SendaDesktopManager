@@ -57,7 +57,7 @@ func TestRunContinuesAfterRuntimeDeclined(t *testing.T) {
 		t.Fatal(err)
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.WriteString(w, `{"tag_name":"v1.2.3"}`)
+		_, _ = io.WriteString(w, `{"tag":"v1.2.3"}`)
 	}))
 	defer server.Close()
 	installed, started := false, false
@@ -67,7 +67,7 @@ func TestRunContinuesAfterRuntimeDeclined(t *testing.T) {
 		Getenv: envFunc(map[string]string{"XDG_CURRENT_DESKTOP": "Hyprland"}),
 		Euid:   1000, OSReleasePath: osRelease,
 		LookPath: lookPathFound(commandsExcept()...), Pacman: &fakePacman{present: packageOnly()},
-		ReleaseAPI: server.URL, Executable: func() (string, error) { return exe, nil },
+		ReleasesURL: server.URL, Executable: func() (string, error) { return exe, nil },
 		ValidateExecutable: func(string) error { return nil },
 		RuntimeInstalled:   func() bool { return false },
 		InstallRuntime:     func(context.Context, io.Writer) error { installed = true; return nil },

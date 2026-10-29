@@ -5,8 +5,10 @@
 set -euo pipefail
 
 REPO="migueel15/SendaDesktopManager"
-API_URL="https://api.github.com/repos/${REPO}/releases/latest"
-RELEASES_API_URL="https://api.github.com/repos/${REPO}/releases?per_page=50"
+# latest.json names the latest release of each channel. It is read from the
+# download URLs, which are not subject to the GitHub API rate limit.
+STABLE_MANIFEST_URL="https://github.com/${REPO}/releases/latest/download/latest.json"
+NIGHTLY_MANIFEST_URL="https://github.com/${REPO}/releases/download/nightly/latest.json"
 DOWNLOAD_BASE="https://github.com/${REPO}/releases/download"
 
 die() {
@@ -44,30 +46,24 @@ for cmd in curl sha256sum; do
   fi
 done
 
-# 4. Read the latest release tag without requiring jq. Nightly builds are
-#    pre-releases tagged nightly-<yyyymmddhhmmss>-<sha>; the API lists the
-#    newest first, so the first nightly tag is the latest build.
+# 4. Read the latest release tag of the channel from its manifest, without
+#    requiring jq.
 if [ "$channel" = "nightly" ]; then
-  api_response=$(curl --proto '=https' --tlsv1.2 -fsSL "$RELEASES_API_URL") \
-    || die "no se pudo consultar las compilaciones nightly en GitHub."
-  tag=$(printf '%s\n' "$api_response" \
-    | grep -o '"tag_name"[[:space:]]*:[[:space:]]*"nightly-[^"]*"' \
-    | head -n1 \
-    | sed -E 's/.*"(nightly-[^"]*)"$/\1/') || true
-
-  if [[ ! "$tag" =~ ^nightly-[0-9]{14}-[0-9a-f]{7,40}$ ]]; then
-    die "no hay compilaciones nightly disponibles."
-  fi
+  manifest_url="$NIGHTLY_MANIFEST_URL"
+  tag_regex='^nightly-[0-9]{14}-[0-9a-f]{7,40}$'
 else
-  api_response=$(curl --proto '=https' --tlsv1.2 -fsSL "$API_URL") \
-    || die "no se pudo consultar la última versión en GitHub."
-  tag=$(printf '%s\n' "$api_response" \
-    | grep -m1 '"tag_name"' \
-    | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/') || true
+  manifest_url="$STABLE_MANIFEST_URL"
+  tag_regex='^v[0-9]+\.[0-9]+\.[0-9]+$'
+fi
+manifest=$(curl --proto '=https' --tlsv1.2 -fsSL "$manifest_url") \
+  || die "no se pudo consultar la última versión en GitHub."
+tag=$(printf '%s' "$manifest" \
+  | grep -o '"tag"[[:space:]]*:[[:space:]]*"[^"]*"' \
+  | head -n1 \
+  | sed -E 's/.*"([^"]*)"$/\1/') || true
 
-  if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    die "la etiqueta de la última versión no es válida: '${tag}'."
-  fi
+if [[ ! "$tag" =~ $tag_regex ]]; then
+  die "la etiqueta de la última versión no es válida: '${tag}'."
 fi
 
 asset="senda-${tag}-linux-amd64"

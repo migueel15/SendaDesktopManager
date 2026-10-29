@@ -14,55 +14,12 @@ import (
 	"testing"
 )
 
-func TestLatestTagParsesReleaseAPI(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/repos/migueel15/SendaDesktopManager/releases/latest" {
-			http.NotFound(w, r)
-			return
-		}
-		w.Write([]byte(`{"tag_name":"v1.2.3","name":"ignored"}`))
-	}))
-	defer srv.Close()
-
-	tag, err := LatestTag(context.Background(), srv.URL)
-	if err != nil {
-		t.Fatalf("LatestTag() error = %v", err)
-	}
-	if tag != "v1.2.3" {
-		t.Fatalf("LatestTag() = %q, want v1.2.3", tag)
-	}
-}
-
-func TestLatestTagRejectsInvalidTag(t *testing.T) {
-	for _, tagName := range []string{"1.2.3", "v1.2", "v1.2.3-beta", "v1.2.3/../x", ""} {
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`{"tag_name":"` + tagName + `"}`))
-		}))
-
-		if _, err := LatestTag(context.Background(), srv.URL); err == nil {
-			t.Errorf("LatestTag() accepted tag %q", tagName)
-		}
-		srv.Close()
-	}
-}
-
-func TestLatestTagReportsHTTPError(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "rate limited", http.StatusForbidden)
-	}))
-	defer srv.Close()
-
-	if _, err := LatestTag(context.Background(), srv.URL); err == nil {
-		t.Fatal("LatestTag() succeeded on HTTP 403")
-	}
-}
-
 func TestRejectsNonHTTPSURLs(t *testing.T) {
 	ctx := context.Background()
-	if _, err := LatestTag(ctx, "http://example.com"); err == nil {
+	if _, err := LatestTagForChannel(ctx, "http://example.com", false); err == nil {
 		t.Error("LatestTag() accepted plain http to a remote host")
 	}
-	if _, err := LatestTag(ctx, "http://127.0.0.1.example.com"); err == nil {
+	if _, err := LatestTagForChannel(ctx, "http://127.0.0.1.example.com", false); err == nil {
 		t.Error("LatestTag() accepted a loopback-prefixed host name")
 	}
 	if err := Download(ctx, "ftp://127.0.0.1/file", filepath.Join(t.TempDir(), "f")); err == nil {
@@ -303,42 +260,5 @@ func TestReplaceFileAtomic(t *testing.T) {
 	}
 	if len(entries) != 2 {
 		t.Fatalf("directory has %d entries, want 2 (src and dst only, no temporary leftovers)", len(entries))
-	}
-}
-
-func TestLatestNightlyTagPicksNewestNightlyPrerelease(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/repos/migueel15/SendaDesktopManager/releases" {
-			http.NotFound(w, r)
-			return
-		}
-		w.Write([]byte(`[
-			{"tag_name":"v0.5.0","prerelease":false},
-			{"tag_name":"nightly-20261023180000-abc1234","prerelease":true},
-			{"tag_name":"nightly-20261022180000-def5678","prerelease":true}
-		]`))
-	}))
-	defer srv.Close()
-
-	tag, err := LatestNightlyTag(context.Background(), srv.URL)
-	if err != nil {
-		t.Fatalf("LatestNightlyTag() error = %v", err)
-	}
-	if tag != "nightly-20261023180000-abc1234" {
-		t.Fatalf("LatestNightlyTag() = %q, want the newest nightly", tag)
-	}
-}
-
-func TestLatestNightlyTagIgnoresNonNightlyReleases(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`[
-			{"tag_name":"v0.5.0","prerelease":true},
-			{"tag_name":"nightly-20261023180000-abc1234","prerelease":false}
-		]`))
-	}))
-	defer srv.Close()
-
-	if _, err := LatestNightlyTag(context.Background(), srv.URL); err == nil {
-		t.Fatal("LatestNightlyTag() accepted a release that is not a nightly pre-release")
 	}
 }

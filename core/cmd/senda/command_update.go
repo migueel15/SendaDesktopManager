@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	latestReleaseAPI = "https://api.github.com"
-	releaseDownload  = "https://github.com/migueel15/SendaDesktopManager/releases/download"
-	checksumsAsset   = "checksums.txt"
+	releasesURL     = "https://github.com/migueel15/SendaDesktopManager/releases"
+	releaseDownload = releasesURL + "/download"
+	checksumsAsset  = "checksums.txt"
 )
 
 // updateCmd returns the command that updates senda and its Quickshell files
@@ -49,7 +49,7 @@ func updateCmd() *cobra.Command {
 // builds follow the newest nightly pre-release, stable builds the latest
 // stable release.
 func latestTag(ctx context.Context) (string, error) {
-	return release.LatestTagForChannel(ctx, latestReleaseAPI, version.IsNightly())
+	return release.LatestTagForChannel(ctx, releasesURL, version.IsNightly())
 }
 
 // availableUpdate reports whether latest differs from the installed build.
@@ -59,22 +59,18 @@ func availableUpdate(current string, latest string) bool {
 }
 
 func runCheck(cmd *cobra.Command) error {
-	tag, err := latestTag(cmd.Context())
+	manifest, err := release.FetchManifest(cmd.Context(), releasesURL, version.IsNightly())
 	if err != nil {
 		return err
 	}
-	available := availableUpdate(version.Version, tag)
-	// The changelog is informative: if GitHub cannot list it, the check still
-	// reports the update.
+	available := availableUpdate(version.Version, manifest.Tag)
 	changes := []release.Change{}
 	if available {
-		if list, err := release.Changelog(cmd.Context(), latestReleaseAPI, version.Version, tag); err == nil {
-			changes = list
-		}
+		changes = manifest.Changes(version.Version)
 	}
 	return writeJSON(cmd, map[string]any{
 		"current":   version.Version,
-		"latest":    tag,
+		"latest":    manifest.Tag,
 		"available": available,
 		"changes":   changes,
 	})

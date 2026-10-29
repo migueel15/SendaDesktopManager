@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -30,6 +32,14 @@ jobs:
         run: |
           core/scripts/package-release.sh "$TAG" "$RUNNER_TEMP/release"
 
+      - name: Write update manifest
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          core/scripts/release-manifest.sh "$TAG" \
+            "https://github.com/migueel15/SendaDesktopManager/releases/latest/download/latest.json" \
+            "$RUNNER_TEMP/release/latest.json"
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,5 +51,6 @@ jobs:
             "$assets/senda-$TAG-linux-amd64" \
             "$assets/senda-quickshell-$TAG.tar.gz" \
             "$assets/checksums.txt" \
+            "$assets/latest.json" \
             --title "$TAG" \
             --generate-notes

@@ -78,7 +78,9 @@ Singleton {
     }
 
     Timer {
-        interval: 6 * 60 * 60 * 1000
+        // latest.json comes from the release downloads, not the rate-limited
+        // GitHub API, so frequent checks are cheap.
+        interval: 10 * 60 * 1000
         running: true
         repeat: true
         onTriggered: root.check()

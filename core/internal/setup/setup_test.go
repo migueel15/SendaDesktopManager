@@ -298,7 +298,7 @@ func TestRunRefusesSendaHomeBeforeDownloading(t *testing.T) {
 		OSReleasePath: osRelease,
 		LookPath:      lookPathFound("qs", "jq", "nmcli", "wpctl", "python3"),
 		Pacman:        &fakePacman{},
-		ReleaseAPI:    "http://127.0.0.1:1",
+		ReleasesURL:   "http://127.0.0.1:1",
 	}
 
 	err := Run(context.Background(), opts)

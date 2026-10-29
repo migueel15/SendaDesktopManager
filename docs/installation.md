@@ -16,7 +16,7 @@ La URL se sirve con GitHub Pages en el dominio personalizado `senda.dorlab.net`,
 
 1. Se niega a ejecutarse como root.
 2. Comprueba que el sistema es Linux x86_64 y que existen `curl` y `sha256sum`.
-3. Consulta la última release en la API de GitHub y valida que la etiqueta tiene la forma `vX.Y.Z`.
+3. Lee la etiqueta de la última release del canal en su `latest.json` (estable: `releases/latest/download/latest.json`; nightly: `releases/download/nightly/latest.json`) y valida su forma. Son URLs de descarga, no de la API de GitHub, así que no cuentan para su límite de 60 peticiones por hora.
 4. Descarga el binario `senda-<tag>-linux-amd64` y `checksums.txt`. Todas las descargas usan HTTPS (`--proto '=https' --tlsv1.2`).
 5. Verifica la suma SHA-256 del binario. Si falla, no instala nada.
 6. Copia el binario a `${SENDA_BIN_DIR:-$HOME/.local/bin}/senda` con un renombrado atómico y permisos `755`.
@@ -87,7 +87,7 @@ senda update
 
 Según el código de `core/cmd/senda/command_update.go`:
 
-1. Obtiene la última release de GitHub.
+1. Obtiene la última release del canal desde su `latest.json`, sin usar la API de GitHub.
 2. Si la release es distinta de la versión del binario, descarga y verifica por SHA-256 el nuevo binario.
 3. Descarga y verifica por SHA-256 `senda-quickshell-<tag>.tar.gz`.
 4. Reemplaza en `$XDG_DATA_HOME/senda` (por defecto `~/.local/share/senda`) las entradas `quickshell/`, `scripts/` y `version`.
@@ -98,7 +98,9 @@ Si la versión instalada ya coincide con la última release, no hace nada. Si el
 
 ### Comprobar sin actualizar
 
-`senda update --check` imprime un JSON con `current`, `latest`, `available` y `changes`. Cuando hay una versión nueva, `changes` lista los commits `feat`, `fix` y `perf` entre la versión instalada y la nueva, del más antiguo al más reciente, cada uno con `type`, `scope` y `summary`. Se obtiene de la API de comparación de GitHub. Si esa consulta falla, `changes` queda vacío y la comprobación sigue informando de la actualización. La página **Actualización** de los ajustes muestra esta lista agrupada en «Nuevo», «Correcciones» y «Rendimiento».
+`senda update --check` imprime un JSON con `current`, `latest`, `available` y `changes`. Cuando hay una versión nueva, `changes` lista los commits `feat`, `fix` y `perf` entre la versión instalada y la nueva, del más antiguo al más reciente, cada uno con `type`, `scope` y `summary`. Se obtiene del mismo `latest.json`, que guarda los commits de las últimas 50 releases del canal; si la versión instalada ya no figura en él, se listan todas las que contiene. Quickshell ejecuta esta comprobación al arrancar y cada 10 minutos.
+
+Cada release estable publica su `latest.json` como un archivo más. El workflow nightly lo sube a una pre-release fija con la etiqueta `nightly`, que se actualiza en cada compilación y no se borra al limpiar las nightlies antiguas. Lo genera `core/scripts/release-manifest.sh`. La página **Actualización** de los ajustes muestra esta lista agrupada en «Nuevo», «Correcciones» y «Rendimiento».
 
 `senda update` se niega a ejecutarse en binarios de desarrollo y cuando `SENDA_HOME` está definido (ver [configuration.md](configuration.md)).
 

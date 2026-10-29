@@ -42,7 +42,7 @@ type Options struct {
 	StartShell         func(exe string) error
 	RuntimeInstalled   func() bool
 	InstallRuntime     func(context.Context, io.Writer) error
-	ReleaseAPI         string
+	ReleasesURL        string
 	ReleaseDownload    string
 }
 
@@ -203,7 +203,7 @@ func installQuickshell(ctx context.Context, opts Options) error {
 		return errors.New("SENDA_HOME está definido; setup solo instala releases")
 	}
 
-	tag, err := release.LatestTagForChannel(ctx, opts.ReleaseAPI, version.IsNightly())
+	tag, err := release.LatestTagForChannel(ctx, opts.ReleasesURL, version.IsNightly())
 	if err != nil {
 		return err
 	}

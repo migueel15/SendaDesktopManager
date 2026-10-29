@@ -26,7 +26,7 @@ func setupCmd() *cobra.Command {
 				Pacman:          setup.SystemPacman{},
 				Executable:      os.Executable,
 				StartShell:      setup.StartShell,
-				ReleaseAPI:      latestReleaseAPI,
+				ReleasesURL:     releasesURL,
 				ReleaseDownload: releaseDownload,
 			})
 		},

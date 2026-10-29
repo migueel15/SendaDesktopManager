@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -58,6 +60,23 @@ jobs:
             --prerelease \
             --title "Nightly $TAG" \
             --notes "Compilación automática de main en $GITHUB_SHA."
+
+      - name: Publish update manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          # Installed nightlies read latest.json from the fixed "nightly"
+          # pre-release, so checking for updates never uses the GitHub API.
+          manifest="$RUNNER_TEMP/latest.json"
+          core/scripts/release-manifest.sh "$TAG" \
+            "https://github.com/migueel15/SendaDesktopManager/releases/download/nightly/latest.json" "$manifest"
+          if ! gh release view nightly >/dev/null 2>&1; then
+            gh release create nightly --prerelease --target "$GITHUB_SHA" \
+              --title "Nightly (última)" \
+              --notes "Indica la última compilación nightly. No contiene binarios."
+          fi
+          gh release upload nightly "$manifest" --clobber
 
       - name: Prune old nightly pre-releases
         env:
