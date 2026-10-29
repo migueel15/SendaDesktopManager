@@ -14,6 +14,10 @@ Item {
 	property color backgroundColor: Theme.colors.background
 	readonly property int shadowSpace: 20
 	property real cornerRadius: Theme.barBorderRadius
+	// False when nothing is drawn above the shape, as when a fullscreen window
+	// covers the bar: the top corners round inwards instead of joining the bar.
+	property bool attachedToBar: true
+	readonly property real topInset: attachedToBar ? 0 : curveWidth + curveHeight
 	property real contentFadeDistance: 50
 	property real contentHideThreshold: 3
 	property bool autoHideOnPointerExit: true
@@ -129,10 +133,10 @@ Item {
 			strokeColor: "transparent"
 			strokeWidth: -1
 			fillColor: root.backgroundColor
-			startX: 0
+			startX: root.topInset
 			startY: 0
 
-			PathLine { x: root.width; y: 0 }
+			PathLine { x: root.width - root.topInset; y: 0 }
 			PathQuad {
 				x: root.width - root.curveWidth
 				y: root.curveHeight
@@ -158,7 +162,7 @@ Item {
 			}
 			PathLine { x: root.curveWidth; y: root.curveHeight }
 			PathQuad {
-				x: 0
+				x: root.topInset
 				y: 0
 				controlX: root.curveWidth
 				controlY: 0

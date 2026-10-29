@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Hyprland
 import QtQuick
 import qs.common
 import qs.common.components.barextension
@@ -45,7 +46,24 @@ Item {
         if (current) root.activeName = current;
     }
 
-    onOpenChanged: updateActiveName()
+    onOpenChanged: {
+        updateActiveName();
+        // Fullscreen modes are only known from the toplevels' IPC data.
+        if (root.open) Hyprland.refreshToplevels();
+    }
+
+    // A fullscreen window covers the bar, so the panel does not join it.
+    // Maximized windows (mode 1) keep the bar visible; while the mode is
+    // unknown, any fullscreen window counts as covering it.
+    readonly property var hyprWorkspace: Hyprland.monitors.values.find(m => m.name === root.screenName)?.activeWorkspace ?? null
+    readonly property bool barCovered: {
+        const workspace = root.hyprWorkspace;
+        if (!workspace?.hasFullscreen) return false;
+        const modes = workspace.toplevels.values
+            .map(t => t.lastIpcObject?.fullscreen)
+            .filter(mode => mode !== undefined);
+        return modes.length === 0 || modes.some(mode => mode === 2);
+    }
     Connections {
         target: OverlayService
         function onCurrentPanelUpdated() {
@@ -96,6 +114,7 @@ Item {
             x: extension.shadowSpace
             width: root.width
             cornerRadius: root.curveWidth
+            attachedToBar: !root.barCovered
             expanded: root.open
             expandedHeight: (root.targetHeight ?? 0) + 2 * root.padding
             autoHideOnPointerExit: false
