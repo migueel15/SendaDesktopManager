@@ -11,7 +11,8 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 )
 
-// DuckAudio sets the current output to the configured percentage and returns a restoration action.
+// DuckAudio lowers the current output to the configured percentage and returns a restoration action.
+// A muted output, or one already at or below that percentage, is left untouched.
 // Pin the node ID so a default-output change never modifies another device.
 func DuckAudio(run stt.Runner, settings stt.Settings) func(context.Context) (func(context.Context) error, error) {
 	if run == nil {
@@ -45,6 +46,10 @@ func DuckAudio(run stt.Runner, settings stt.Settings) func(context.Context) (fun
 		if err != nil || math.IsNaN(volume) || math.IsInf(volume, 0) || volume < 0 {
 			return nil, errors.New("volumen de salida no válido")
 		}
+		target := float64(settings.AudioVolume) / 100
+		if strings.Contains(string(out), "[MUTED]") || volume <= target {
+			return nil, nil
+		}
 		previous := strconv.FormatFloat(volume, 'f', -1, 64)
 		restore := func(ctx context.Context) error {
 			_, err := run(ctx, nil, "wpctl", "set-volume", id, previous)
@@ -55,7 +60,7 @@ func DuckAudio(run stt.Runner, settings stt.Settings) func(context.Context) (fun
 		}
 		// Return restore even on a failed write: the command may have applied it
 		// before its context expired. The session always runs this cleanup.
-		_, err = run(ctx, nil, "wpctl", "set-volume", id, strconv.FormatFloat(float64(settings.AudioVolume)/100, 'f', 2, 64))
+		_, err = run(ctx, nil, "wpctl", "set-volume", id, strconv.FormatFloat(target, 'f', 2, 64))
 		if err != nil {
 			return restore, fmt.Errorf("no se pudo bajar el volumen del dictado: %w", err)
 		}

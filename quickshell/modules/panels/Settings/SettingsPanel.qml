@@ -26,8 +26,12 @@ Item {
     ]
     property int currentSection: 0
 
-    onVisibleChanged: {
-        if (visible) {
+    // The panel lives in SettingsWindow, so its own visible flag never changes:
+    // reload the CLI state each time the window opens.
+    Connections {
+        target: SendaSettings
+        function onWindowOpenChanged() {
+            if (!SendaSettings.windowOpen) return;
             SendaSettings.refresh();
             SendaSttSettings.refresh();
             SendaHyprlandSettings.refresh();

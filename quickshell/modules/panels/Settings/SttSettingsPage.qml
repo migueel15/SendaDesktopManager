@@ -131,7 +131,7 @@ Flickable {
             SettingsRow {
                 visible: SendaSttSettings.audioDuckingEnabled
                 label: "Volumen durante el dictado"
-                description: "Porcentaje entre 0 y 100."
+                description: "Porcentaje entre 0 y 100. Solo se baja si el volumen actual es mayor y no está silenciado."
                 SettingsField {
                     id: dictationVolumeField
                     Layout.preferredWidth: 90

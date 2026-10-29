@@ -22,7 +22,7 @@ El atajo predeterminado es `Alt + ñ`. Púlsalo para empezar a escuchar y otra v
 
 La cancelación con `Esc` está desactivada por ahora. La sesión puede mostrar el aviso «Esc no está disponible en esta sesión.»; para cancelar, usa `senda stt cancel`. La segunda pulsación del atajo termina el dictado y entrega el texto.
 
-En Ajustes → Dictado puedes activar o desactivar «Atenuar volumen durante el dictado» y ajustar el volumen deseado entre 0 y 100 % (Enter o pérdida de foco). Por defecto está activado al 10 %. Los cambios se aplican al siguiente dictado, también con el modelo precargado. Durante cada dictado con la opción activada, Senda ajusta la salida al porcentaje elegido y restaura el volumen anterior al terminar, cancelar o producirse un error. No cambia el silencio ni el volumen del micrófono. La precarga en reposo no modifica el volumen.
+En Ajustes → Dictado puedes activar o desactivar «Atenuar volumen durante el dictado» y ajustar el volumen deseado entre 0 y 100 % (Enter o pérdida de foco). Por defecto está activado al 10 %. Los cambios se aplican al siguiente dictado, también con el modelo precargado. Durante cada dictado con la opción activada, Senda baja la salida al porcentaje elegido y restaura el volumen anterior al terminar, cancelar o producirse un error. Si la salida está silenciada o su volumen ya es igual o menor que ese porcentaje, no la toca. No cambia el silencio ni el volumen del micrófono. La precarga en reposo no modifica el volumen.
 
 Las barras del dock se animan cuando el nivel capturado por el micrófono supera un umbral y quedan quietas durante el silencio. El ruido ambiental también puede activar el indicador: mide audio, no distingue voces de otros sonidos.
 

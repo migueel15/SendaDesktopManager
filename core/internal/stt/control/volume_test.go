@@ -10,7 +10,7 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 )
 
-func TestDuckAudioRestoresSameSinkAndPreservesMute(t *testing.T) {
+func TestDuckAudioRestoresSameSink(t *testing.T) {
 	var calls [][]string
 	run := stt.Runner(func(_ context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
 		if name != "wpctl" {
@@ -21,7 +21,7 @@ func TestDuckAudioRestoresSameSinkAndPreservesMute(t *testing.T) {
 		case "inspect":
 			return []byte("id 149, type PipeWire:Interface:Node\n"), nil
 		case "get-volume":
-			return []byte("Volume: 0.73 [MUTED]\n"), nil
+			return []byte("Volume: 0.73\n"), nil
 		}
 		return nil, nil
 	})
@@ -35,6 +35,28 @@ func TestDuckAudioRestoresSameSinkAndPreservesMute(t *testing.T) {
 	want := [][]string{{"inspect", "@DEFAULT_AUDIO_SINK@"}, {"get-volume", "149"}, {"set-volume", "149", "0.10"}, {"set-volume", "149", "0.73"}}
 	if !reflect.DeepEqual(calls, want) {
 		t.Fatalf("commands = %v", calls)
+	}
+}
+
+func TestDuckAudioLeavesMutedOrQuieterOutput(t *testing.T) {
+	// The default target is 10 %.
+	for _, volume := range []string{"Volume: 0.73 [MUTED]", "Volume: 0.10", "Volume: 0.05", "Volume: 0.00"} {
+		t.Run(volume, func(t *testing.T) {
+			run := stt.Runner(func(_ context.Context, _ io.Reader, _ string, args ...string) ([]byte, error) {
+				switch args[0] {
+				case "inspect":
+					return []byte("id 149, type node"), nil
+				case "get-volume":
+					return []byte(volume), nil
+				}
+				t.Fatalf("unexpected write: %v", args)
+				return nil, nil
+			})
+			restore, err := DuckAudio(run, stt.LoadSettings(nil))(context.Background())
+			if err != nil || restore != nil {
+				t.Fatalf("restore=%v err=%v", restore != nil, err)
+			}
+		})
 	}
 }
 
