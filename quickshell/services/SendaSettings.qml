@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 
 import qs.common
 import qs.services
@@ -19,6 +20,9 @@ Singleton {
     property bool configLoaded: false
     // Whether the standalone settings window is shown.
     property bool windowOpen: false
+    // Monitor focused when the window last opened. Hyprland places the window
+    // there, and the window takes its size from it.
+    property var windowScreen: null
     // Section label the settings panel shows next; it clears it once applied.
     property string requestedSection: ""
     readonly property bool discordWidgetEnabled: configLoaded && values.SENDA_WIDGET_DISCORD !== "false"
@@ -94,6 +98,9 @@ Singleton {
     // it on the monitor that has the focus now.
     function showWindow() {
         OverlayService.closeCurrentPanel();
+        // Set before mapping, so the window opens with its final size.
+        const focusedName = Hyprland.focusedMonitor?.name ?? "";
+        root.windowScreen = Quickshell.screens.find(screen => screen.name === focusedName) ?? Quickshell.screens[0] ?? null;
         if (root.windowOpen) {
             root.windowOpen = false;
             Qt.callLater(() => { root.windowOpen = true; });
