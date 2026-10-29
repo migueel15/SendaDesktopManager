@@ -34,6 +34,14 @@ Item {
         }
     }
 
+    // The launcher asks for a section through SendaSettings.openSection.
+    function applyRequestedSection() {
+        const index = root.sections.findIndex(section => section.label === SendaSettings.requestedSection);
+        if (index !== -1) root.currentSection = index;
+        SendaSettings.requestedSection = "";
+    }
+    Component.onCompleted: applyRequestedSection()
+
     // The update notice in the bar opens this panel on the update section.
     Connections {
         target: SendaUpdate
@@ -45,6 +53,7 @@ Item {
 
     Connections {
         target: SendaSettings
+        function onRequestedSectionChanged() { if (SendaSettings.requestedSection) root.applyRequestedSection(); }
         function onNoticeChanged() { feedback.show(SendaSettings.notice, SendaSettings.noticeIsError); }
         function onNoticeIsErrorChanged() { feedback.show(SendaSettings.notice, SendaSettings.noticeIsError); }
     }

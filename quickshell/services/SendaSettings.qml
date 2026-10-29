@@ -19,6 +19,8 @@ Singleton {
     property bool configLoaded: false
     // Whether the standalone settings window is shown.
     property bool windowOpen: false
+    // Section label the settings panel shows next; it clears it once applied.
+    property string requestedSection: ""
     readonly property bool discordWidgetEnabled: configLoaded && values.SENDA_WIDGET_DISCORD !== "false"
     // Resolve the dictation singleton after this singleton has finished loading:
     // dictation itself reads SendaSettings during initialization.
@@ -81,6 +83,11 @@ Singleton {
     function openWindow() {
         OverlayService.closeCurrentPanel();
         openProcess.running = true;
+    }
+
+    function openSection(label) {
+        root.requestedSection = label;
+        root.openWindow();
     }
 
     // When the window is already open, it is mapped again so Hyprland places

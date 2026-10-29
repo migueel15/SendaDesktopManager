@@ -92,6 +92,20 @@ Se recuerdan hasta 100 aplicaciones en `$XDG_STATE_HOME/senda/launcher-recent.js
 (por defecto `~/.local/state/senda/launcher-recent.json`). Solo se registran las
 aperturas realizadas desde este lanzador.
 
+Además de aplicaciones, el lanzador sirve para tareas rápidas:
+
+- **Acciones de Senda.** Al escribir aparecen, mezcladas con las aplicaciones por
+  coincidencia, «Ajustes» y sus secciones («Ajustes: Apariencia», «Ajustes:
+  Tiempo»…), que abren la ventana de ajustes en esa sección; «Selector de temas»;
+  «Emojis»; «Captura de pantalla» y «Bloquear pantalla».
+- **Calculadora.** Una expresión con `+ - * / % ^` y paréntesis (por ejemplo,
+  `2*(3+4)` o `3,5/2`) muestra el resultado como primera fila; empieza por `=` para
+  calcular un número suelto. Enter copia el resultado con `wl-copy`.
+- **Comandos.** `>` seguido de un comando lo ejecuta con `sh -c` en segundo plano,
+  sin terminal.
+- **Emojis.** `:` seguido de palabras en español o inglés (`:corazon`, `:fire`)
+  busca emojis; Enter copia el elegido al portapapeles.
+
 También puedes abrirlo o cerrarlo desde una terminal o un atajo del compositor:
 
 ```sh

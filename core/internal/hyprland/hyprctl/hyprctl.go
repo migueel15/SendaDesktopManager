@@ -111,6 +111,7 @@ func (c Client) Reload(ctx context.Context) error {
 type Window struct {
 	Address string `json:"address"`
 	Class   string `json:"class"`
+	Title   string `json:"title"`
 }
 
 // ActiveWindow returns the focused client.
