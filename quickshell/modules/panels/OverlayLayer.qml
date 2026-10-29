@@ -33,8 +33,17 @@ PanelWindow {
     exclusiveZone: 0
     margins.top: -Theme.barSize
 
+    // Map only after currentPanelUpdated, once keyboardFocus below already has
+    // its final value: a layer mapped with OnDemand and switched to Exclusive
+    // afterwards does not get the keyboard until the pointer moves over it.
+    property bool panelRequested: false
+    Connections {
+        target: OverlayService
+        function onCurrentPanelUpdated() { overlayLayer.panelRequested = OverlayService.currentPanel !== ""; }
+    }
+
     // Stay mapped while a panel folds back into the bar.
-    visible: OverlayService.currentPanel !== "" || popupContent.anyPanelVisible
+    visible: panelRequested || popupContent.anyPanelVisible
     color: "transparent"
 
     aboveWindows: true
