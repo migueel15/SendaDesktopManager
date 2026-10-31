@@ -2,8 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
@@ -12,40 +16,119 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// commitDisplays saves rules, regenerates the module so they survive restarts,
-// and applies only what changed: a reload would modeset every monitor and wipe
-// what plugins adjust at runtime. Only a removed rule needs one, since nothing
-// else tells Hyprland to forget it.
-func commitDisplays(ctx context.Context, rules, previous []integration.DisplayRule) error {
+// persistDisplays saves rules and regenerates the module, so they survive
+// restarts. It returns false when the module is not loaded and a full apply has
+// already handled the change.
+func persistDisplays(ctx context.Context, rules, previous []integration.DisplayRule) (bool, error) {
 	if err := integration.StoreDisplays(paths.ConfigFile(), rules, previous); err != nil {
-		return fmt.Errorf("guardar pantallas: %w", err)
+		return false, fmt.Errorf("guardar pantallas: %w", err)
 	}
 	s, err := integration.ReadSettings()
 	if err != nil {
-		return fmt.Errorf("leer ajustes: %w", err)
+		return false, fmt.Errorf("leer ajustes: %w", err)
 	}
-	if !integration.InSession() {
-		_, err = applyHyprland(ctx, s, false)
-		return err
-	}
-	if link, err := integration.Probe(ctx, shortcutRunner); err == nil {
-		integration.Locate(link)
-		if !link.Loaded {
-			_, err = applyHyprland(ctx, s, false)
-			return err
+	loaded := false
+	if integration.InSession() {
+		if link, err := integration.Probe(ctx, shortcutRunner); err == nil {
+			integration.Locate(link)
+			loaded = link.Loaded
 		}
+	}
+	if !loaded {
+		_, err = applyHyprland(ctx, s, false)
+		return false, err
 	}
 	exe, err := hyprlandExecutable()
 	if err != nil {
-		return err
+		return false, err
 	}
 	if s.IdleMode == "" {
 		s.IdleMode = integration.IdleModeUser
 	}
-	if err := integration.WriteFiles(s, exe); err != nil {
+	return true, integration.WriteFiles(s, exe)
+}
+
+// commitDisplays persists rules and applies only what changed: a reload would
+// modeset every monitor and wipe what plugins adjust at runtime.
+func commitDisplays(ctx context.Context, rules, previous []integration.DisplayRule) error {
+	apply, err := persistDisplays(ctx, rules, previous)
+	if err != nil || !apply {
+		return err
+	}
+	s, err := integration.ReadSettings()
+	if err != nil {
 		return err
 	}
 	return integration.ApplyDisplayChanges(ctx, shortcutRunner, previous, s.Displays)
+}
+
+func displayConfirmPath() string { return filepath.Join(paths.StateDir(), "display-confirm") }
+
+// applyDisplays tries changes in the session without saving anything. The
+// timer runs here and not in the interface, and termination signals are
+// ignored, so a shell that dies or a black screen still ends in a revert.
+func applyDisplays(cmd *cobra.Command, changesJSON string, seconds int) error {
+	ctx := context.Background()
+	for _, sig := range []os.Signal{syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP} {
+		signal.Ignore(sig)
+	}
+	var changes []integration.DisplayEdit
+	if err := json.Unmarshal([]byte(changesJSON), &changes); err != nil {
+		return fmt.Errorf("cambios inválidos: %w", err)
+	}
+	rules, _, err := integration.StoredDisplays(paths.ConfigFile())
+	if err != nil {
+		return fmt.Errorf("leer pantallas: %w", err)
+	}
+	next := rules
+	for _, edit := range changes {
+		if next, err = integration.ChangeDisplay(ctx, shortcutRunner, next, edit.Name, edit.DisplayChange); err != nil {
+			return err
+		}
+	}
+	restore, err := integration.ApplyTrial(ctx, shortcutRunner, rules, next)
+	if err != nil {
+		return err
+	}
+	path := displayConfirmPath()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		restore()
+		return err
+	}
+	if err := os.WriteFile(path, []byte("pending"), 0o600); err != nil {
+		restore()
+		return err
+	}
+	defer os.Remove(path)
+	fmt.Fprintln(cmd.OutOrStdout(), "pending")
+	deadline := time.Now().Add(time.Duration(seconds) * time.Second)
+	for time.Now().Before(deadline) {
+		data, _ := os.ReadFile(path)
+		switch string(data) {
+		case "keep":
+			if _, err := persistDisplays(ctx, next, rules); err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), "kept")
+			return nil
+		case "revert":
+			deadline = time.Now()
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if err := restore(); err != nil {
+		return fmt.Errorf("revertir pantallas: %w", err)
+	}
+	fmt.Fprintln(cmd.OutOrStdout(), "reverted")
+	return nil
+}
+
+func answerDisplays(answer string) error {
+	path := displayConfirmPath()
+	if _, err := os.Stat(path); err != nil {
+		return fmt.Errorf("no hay cambios de pantalla pendientes")
+	}
+	return os.WriteFile(path, []byte(answer), 0o600)
 }
 
 func printDisplays(cmd *cobra.Command, asJSON bool) error {
@@ -152,6 +235,19 @@ func displayCmd() *cobra.Command {
 		}
 		return commitDisplays(cmd.Context(), previous, rules)
 	}}
+	var changes string
+	var seconds int
+	apply := &cobra.Command{Use: "apply", Short: "Probar varios cambios y revertirlos si no se confirman", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		return applyDisplays(cmd, changes, seconds)
+	}}
+	apply.Flags().StringVar(&changes, "changes", "", `Cambios en JSON: [{"name":"DP-1","mode":"1920x1080@60","scale":1.5}]`)
+	apply.Flags().IntVar(&seconds, "confirm", 15, "Segundos para confirmar antes de revertir")
+	confirm := &cobra.Command{Use: "confirm", Short: "Mantener los cambios en prueba", Args: cobra.NoArgs, RunE: func(*cobra.Command, []string) error {
+		return answerDisplays("keep")
+	}}
+	cancel := &cobra.Command{Use: "cancel", Short: "Revertir los cambios en prueba", Args: cobra.NoArgs, RunE: func(*cobra.Command, []string) error {
+		return answerDisplays("revert")
+	}}
 	sync := &cobra.Command{Use: "sync", Short: "Regenerar el módulo si tu configuración de monitores ha cambiado", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		return syncDisplays(cmd.Context())
 	}}
@@ -176,7 +272,7 @@ func displayCmd() *cobra.Command {
 		})
 		return nil
 	}}
-	cmd.AddCommand(show, set, reset, adopt, undo, sync, watch)
+	cmd.AddCommand(show, set, reset, adopt, undo, apply, confirm, cancel, sync, watch)
 	return cmd
 }
 

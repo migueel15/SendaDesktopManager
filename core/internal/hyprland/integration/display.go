@@ -155,19 +155,58 @@ func ApplyDisplayChanges(ctx context.Context, run stt.Runner, before, after []Di
 			return client.Reload(ctx)
 		}
 	}
+	return evalChanged(ctx, client, before, after)
+}
+
+// evalChanged sends every changed monitor in one request, so Hyprland handles
+// them together.
+func evalChanged(ctx context.Context, client hyprctl.Client, before, after []DisplayRule) error {
 	old := map[string]DisplayRule{}
 	for _, rule := range before {
 		old[rule.Output()] = rule
 	}
+	var statements []string
+	for _, rule := range after {
+		if prior, ok := old[rule.Output()]; !ok || prior != rule {
+			statements = append(statements, rule.lua())
+		}
+	}
+	if len(statements) == 0 {
+		return nil
+	}
+	return client.Eval(ctx, strings.Join(statements, " "))
+}
+
+// ApplyTrial applies after in the session only, and returns how to put the
+// changed monitors back as they are now. Nothing is saved, so a restart during
+// the trial also returns to the last confirmed state.
+func ApplyTrial(ctx context.Context, run stt.Runner, before, after []DisplayRule) (func() error, error) {
+	client := hyprctl.New(run)
+	monitors, err := client.Monitors(ctx)
+	if err != nil {
+		return nil, err
+	}
+	old := map[string]DisplayRule{}
+	for _, rule := range before {
+		old[rule.Output()] = rule
+	}
+	var live []DisplayRule
 	for _, rule := range after {
 		if prior, ok := old[rule.Output()]; ok && prior == rule {
 			continue
 		}
-		if err := client.Eval(ctx, rule.lua()); err != nil {
-			return err
+		for _, m := range monitors {
+			if monitorOutput(m.Name, m.Description) == rule.Output() {
+				live = append(live, liveRule(m, monitors))
+			}
 		}
 	}
-	return nil
+	restore := func() error { return evalChanged(context.Background(), client, nil, live) }
+	if err := evalChanged(ctx, client, before, after); err != nil {
+		restore()
+		return nil, err
+	}
+	return restore, nil
 }
 
 // LockDisplayWatch takes the session-wide watcher lock. The kernel releases it
@@ -273,12 +312,19 @@ func findRule(rules []DisplayRule, m hyprctl.Monitor) int {
 
 // DisplayChange edits a monitor's rule; unset fields stay as they are.
 type DisplayChange struct {
-	Mode, Position string
-	Scale          *float64
-	Transform      *int
+	Mode      string   `json:"mode,omitempty"`
+	Position  string   `json:"position,omitempty"`
+	Scale     *float64 `json:"scale,omitempty"`
+	Transform *int     `json:"transform,omitempty"`
 	// Mirror is a monitor name; "none" stops mirroring.
-	Mirror  *string
-	Enabled *bool
+	Mirror  *string `json:"mirror,omitempty"`
+	Enabled *bool   `json:"enabled,omitempty"`
+}
+
+// DisplayEdit is a change to the named monitor.
+type DisplayEdit struct {
+	Name string `json:"name"`
+	DisplayChange
 }
 
 // ChangeDisplay returns rules with the change applied. A monitor without a rule
@@ -340,13 +386,7 @@ func AdoptDisplays(ctx context.Context, run stt.Runner, rules []DisplayRule) ([]
 		if findRule(out, m) >= 0 {
 			continue
 		}
-		rule := ruleFromLive(m)
-		for _, target := range monitors {
-			if target.Name == m.MirrorOf {
-				rule.Mirror = monitorOutput(target.Name, target.Description)
-			}
-		}
-		out = append(out, rule)
+		out = append(out, liveRule(m, monitors))
 	}
 	return out, nil
 }
@@ -396,6 +436,17 @@ func ruleFromLive(m hyprctl.Monitor) DisplayRule {
 		scale = 1
 	}
 	return DisplayRule{Name: m.Name, Description: m.Description, Mode: mode, Position: fmt.Sprintf("%dx%d", m.X, m.Y), Scale: scale, Transform: m.Transform, Disabled: m.Disabled}
+}
+
+// liveRule is ruleFromLive with the monitor it mirrors.
+func liveRule(m hyprctl.Monitor, monitors []hyprctl.Monitor) DisplayRule {
+	rule := ruleFromLive(m)
+	for _, target := range monitors {
+		if target.Name == m.MirrorOf {
+			rule.Mirror = monitorOutput(target.Name, target.Description)
+		}
+	}
+	return rule
 }
 
 func mirrorTarget(monitors []hyprctl.Monitor, source hyprctl.Monitor, name string) (string, error) {

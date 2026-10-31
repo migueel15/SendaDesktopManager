@@ -17,6 +17,7 @@ Senda añade páginas de Ajustes sobre opciones que el usuario también puede de
 - Una llamada precedida por la línea `-- senda: runtime` no es una definición. Sirve para plugins que ajustan una opción en tiempo de ejecución. Esos plugins deben reconstruir sus cambios al recargar.
 - Lo reclamado no se genera, la CLI rechaza cambiarlo y la interfaz lo muestra como gestionado por el usuario, con su `archivo:línea`. Esa sección no existe si no hay nada reclamado. Los valores guardados se conservan por si el usuario retira su definición.
 - Como el módulo se carga el último, un módulo obsoleto ganaría al usuario. `senda display watch` lo regenera al recargar la configuración si sus reglas han cambiado. Solo puede haber un vigilante por usuario y hace como mucho una recarga automática por minuto: dos vigilantes con distinta visión de las reglas se recargaban por turnos sin fin.
+- Un cambio de pantalla desde Ajustes es una prueba: `senda display apply` lo aplica sin guardar, y `senda display confirm` lo hace persistente. El temporizador vive en ese proceso, que ignora las señales de terminación, así que revierte aunque la shell muera; si se reinicia, sigue lo último confirmado.
 - Los cambios de pantalla se aplican evaluando `hl.monitor` solo en el monitor afectado. Una recarga cambia el modo de todos los monitores y borra lo ajustado en tiempo de ejecución, así que solo se usa cuando desaparece una regla.
 
 ## Consecuencias

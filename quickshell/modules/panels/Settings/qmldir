@@ -20,3 +20,4 @@ SettingsWindow 1.0 settings-window.qml
 DisplaySettingsPage 1.0 display-settings-page.qml
 InputSettingsPage 1.0 input-settings-page.qml
 SettingsSelect 1.0 settings-select.qml
+DisplayConfirmDialog 1.0 display-confirm-dialog.qml

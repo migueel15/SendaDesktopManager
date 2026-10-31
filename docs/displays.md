@@ -1,9 +1,10 @@
 # Pantallas
 
-La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolución, frecuencia, escala y rotación, además de encenderlos, apagarlos y duplicarlos. Los cambios se aplican en vivo y persisten tras reiniciar y recargar: Senda los guarda en `SENDA_DISPLAYS`, los genera en su módulo de Hyprland y solo actualiza en la sesión la pantalla que cambia, sin recargar.
+La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolución, frecuencia, escala y rotación, además de encenderlos, apagarlos y duplicarlos. Los cambios confirmados persisten tras reiniciar y recargar: Senda los guarda en `SENDA_DISPLAYS`, los genera en su módulo de Hyprland y solo actualiza en la sesión las pantallas que cambian, sin recargar.
 
 - Arrastra una pantalla y al soltarla se pega al lado de otra, sin solaparse.
-- Los cambios de modo, escala, rotación, encendido y duplicado se deshacen solos a los 15 segundos si no pulsas **Mantener**.
+- Los cambios se acumulan sin tocar las pantallas. Abajo aparece un aviso con **Aplicar cambios** y **Cancelar**.
+- Al aplicar, una ventana en cada pantalla ofrece **Mantener** y **Revertir** con 15 segundos de cuenta atrás. Si no respondes, se vuelve al estado anterior, aunque la shell falle. Nada se guarda hasta pulsar **Mantener**.
 - La escala ofrece 100, 125, 150, 167, 175 y 200 %. Con `senda display set PANTALLA --scale` puedes usar otra, de 0.25 a 10, y la página la mostrará también.
 - Las pantallas apagadas o que duplican a otra no aparecen en la colocación.
 
@@ -19,6 +20,8 @@ La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolució
 | `senda display set PANTALLA --mirror DP-1` | Duplica otra pantalla; `--mirror none` deja de hacerlo. |
 | `senda display set PANTALLA --enabled=false` | Apaga la pantalla. |
 | `senda display reset PANTALLA` | Quita los ajustes de Senda de esa pantalla. |
+| `senda display apply --changes JSON --confirm 15` | Prueba varios cambios y los revierte si no se confirman. |
+| `senda display confirm` / `cancel` | Mantiene o revierte los cambios en prueba. |
 | `senda display adopt` | Guarda el estado actual de todas las pantallas, para retirar después tus definiciones sin que cambie nada. |
 | `senda display undo` | Deshace el último cambio. |
 | `senda display sync` | Regenera el módulo si tu configuración de monitores ha cambiado. La shell lo hace sola. |

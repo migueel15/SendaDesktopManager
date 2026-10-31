@@ -4,8 +4,8 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Monitors through `senda display`. Changes that can leave a screen unusable
-// are undone unless confirmed in time.
+// Monitors through `senda display`. Edits gather in a draft and are applied
+// together; the core reverts them unless they are confirmed in time.
 Singleton {
     id: root
 
@@ -17,7 +17,13 @@ Singleton {
     property string notice: ""
     property bool noticeIsError: false
     property int confirmLeft: 0
-    readonly property bool busy: writeProcess.running
+    property bool confirming: false
+    // Pending edits by monitor name, with the same fields as a display.
+    property var draft: ({})
+    readonly property bool dirty: Object.keys(draft).length > 0
+    readonly property bool busy: writeProcess.running || applyProcess.running
+    // Monitors as they will be once the draft is applied.
+    readonly property var view: displays.map(d => Object.assign({}, d, draft[d.name]))
     readonly property bool hasUserManaged: displays.some(d => d.managedBy === "user")
 
     function refresh() {
@@ -33,25 +39,80 @@ Singleton {
         return true;
     }
 
-    function set(name, flag, value) { return root.run(["set", name, flag, String(value)]); }
-
-    // The same as set, but it reverts by itself unless keep() is called.
-    function setGuarded(name, flag, value) {
-        if (root.set(name, flag, value)) root.confirmLeft = root.confirmSeconds;
+    // Edits wait here until applied; nothing reaches Hyprland before that.
+    function stage(name, patch) {
+        const next = Object.assign({}, root.draft);
+        next[name] = Object.assign({}, next[name], patch);
+        root.draft = next;
     }
 
-    function keep() { root.confirmLeft = 0; }
+    function discard() { root.draft = ({}); }
 
-    function undo() {
-        root.confirmLeft = 0;
-        root.run(["undo"]);
+    // The core runs the countdown, so it reverts even if this shell dies.
+    function apply() {
+        if (!root.dirty || root.confirming || applyProcess.running) return;
+        const changes = Object.keys(root.draft).map(name => {
+            const d = root.draft[name];
+            const change = { name: name };
+            if (d.width !== undefined) change.mode = d.width + "x" + d.height + "@" + d.refreshRate;
+            if (d.x !== undefined) change.position = d.x + "x" + d.y;
+            if (d.scale !== undefined) change.scale = d.scale;
+            if (d.transform !== undefined) change.transform = d.transform;
+            if (d.mirrorOf !== undefined) change.mirror = d.mirrorOf;
+            if (d.enabled !== undefined) change.enabled = d.enabled;
+            return change;
+        });
+        root.notice = "";
+        root.noticeIsError = false;
+        applyProcess.command = [root.binaryPath, "display", "apply", "--confirm", String(root.confirmSeconds), "--changes", JSON.stringify(changes)];
+        applyProcess.running = true;
     }
+
+    function keep() { answerProcess.answer("confirm"); }
+    function revert() { answerProcess.answer("cancel"); }
 
     Timer {
-        running: root.confirmLeft > 0 && !root.busy
+        running: root.confirming && root.confirmLeft > 0
         interval: 1000
         repeat: true
-        onTriggered: if (--root.confirmLeft === 0) root.undo()
+        onTriggered: root.confirmLeft--
+    }
+
+    Process {
+        id: answerProcess
+        function answer(action) {
+            answerProcess.command = [root.binaryPath, "display", action];
+            answerProcess.running = true;
+        }
+    }
+
+    Process {
+        id: applyProcess
+        property string outcome: ""
+        stdout: SplitParser {
+            onRead: line => {
+                if (line === "pending") {
+                    root.confirmLeft = root.confirmSeconds;
+                    root.confirming = true;
+                } else {
+                    applyProcess.outcome = line;
+                }
+            }
+        }
+        stderr: StdioCollector { id: applyErrors }
+        onExited: exitCode => {
+            root.confirming = false;
+            root.draft = ({});
+            if (exitCode !== 0) {
+                root.noticeIsError = true;
+                root.notice = "No se pudo aplicar: " + (applyErrors.text.trim() || "error desconocido");
+            } else if (applyProcess.outcome === "reverted") {
+                root.noticeIsError = false;
+                root.notice = "Cambios revertidos";
+            }
+            applyProcess.outcome = "";
+            root.refresh();
+        }
     }
 
     Process {
@@ -81,7 +142,6 @@ Singleton {
         stderr: StdioCollector { id: writeErrors }
         onExited: exitCode => {
             if (exitCode !== 0) {
-                root.confirmLeft = 0;
                 root.noticeIsError = true;
                 root.notice = "No se pudo aplicar: " + (writeErrors.text.trim() || "error desconocido");
             }

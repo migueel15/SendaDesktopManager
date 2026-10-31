@@ -5,13 +5,11 @@ import QtQuick.Layouts
 import qs.common
 import qs.services
 
-Flickable {
+Item {
     id: root
-    contentHeight: column.implicitHeight
-    clip: true
 
     property string selectedName: ""
-    readonly property var displays: SendaDisplaySettings.displays
+    readonly property var displays: SendaDisplaySettings.view
     readonly property var selected: displays.find(d => d.name === selectedName) ?? displays[0] ?? null
     readonly property bool editable: !!selected && selected.managedBy !== "user" && !SendaDisplaySettings.busy
     // Mirrored and disabled monitors take no place in the layout.
@@ -64,6 +62,11 @@ Flickable {
         }
         return best ?? { x: x, y: y };
     }
+
+    Flickable {
+        anchors { left: parent.left; right: parent.right; top: parent.top; bottom: applyBar.top; bottomMargin: applyBar.visible ? Theme.spacing.md : 0 }
+        contentHeight: column.implicitHeight
+        clip: true
 
     ColumnLayout {
         id: column
@@ -137,22 +140,10 @@ Flickable {
                             tile.x = Qt.binding(() => canvas.originX + (tile.modelData.x - canvas.minX) * canvas.ratio);
                             tile.y = Qt.binding(() => canvas.originY + (tile.modelData.y - canvas.minY) * canvas.ratio);
                             if (place.x !== d.x || place.y !== d.y)
-                                SendaDisplaySettings.set(d.name, "--position", place.x + "x" + place.y);
+                                SendaDisplaySettings.stage(d.name, { x: place.x, y: place.y });
                         }
                     }
                 }
-            }
-        }
-
-        // A change that may have left a screen unusable reverts by itself.
-        SettingsGroup {
-            visible: SendaDisplaySettings.confirmLeft > 0
-            SettingsRow {
-                separator: false
-                label: "¿Mantener estos cambios?"
-                description: "Se desharán en " + SendaDisplaySettings.confirmLeft + " s."
-                SettingsButton { label: "Deshacer"; onClicked: SendaDisplaySettings.undo() }
-                SettingsButton { label: "Mantener"; primary: true; onClicked: SendaDisplaySettings.keep() }
             }
         }
 
@@ -174,7 +165,7 @@ Flickable {
                     enabled: root.editable
                     checkedValue: !!root.selected && root.selected.enabled
                     Accessible.name: "Encendida"
-                    onToggledValue: value => SendaDisplaySettings.setGuarded(root.selected.name, "--enabled", value)
+                    onToggledValue: value => SendaDisplaySettings.stage(root.selected.name, { enabled: value })
                 }
             }
             SettingsRow {
@@ -183,7 +174,10 @@ Flickable {
                     enabled: root.editable
                     options: root.sizes
                     value: root.currentSize
-                    onChosen: value => SendaDisplaySettings.setGuarded(root.selected.name, "--mode", value + "@" + root.closestRate(value, root.selected.refreshRate))
+                    onChosen: value => {
+                        const size = value.split("x").map(Number);
+                        SendaDisplaySettings.stage(root.selected.name, { width: size[0], height: size[1], refreshRate: root.closestRate(value, root.selected.refreshRate) });
+                    }
                 }
             }
             SettingsRow {
@@ -192,7 +186,7 @@ Flickable {
                     enabled: root.editable
                     options: root.rates.map(rate => rate + " Hz")
                     value: root.selected ? root.closestRate(root.currentSize, root.selected.refreshRate) + " Hz" : ""
-                    onChosen: value => SendaDisplaySettings.setGuarded(root.selected.name, "--mode", root.currentSize + "@" + value.replace(" Hz", ""))
+                    onChosen: value => SendaDisplaySettings.stage(root.selected.name, { width: root.selected.width, height: root.selected.height, refreshRate: value.replace(" Hz", "") })
                 }
             }
             SettingsRow {
@@ -201,7 +195,7 @@ Flickable {
                     enabled: root.editable
                     options: root.scales.map(v => ({ label: Math.round(Number(v) * 100) + " %", value: v }))
                     value: root.currentScale
-                    onChosen: value => SendaDisplaySettings.setGuarded(root.selected.name, "--scale", value)
+                    onChosen: value => SendaDisplaySettings.stage(root.selected.name, { scale: Number(value) })
                 }
             }
             SettingsRow {
@@ -210,7 +204,7 @@ Flickable {
                     enabled: root.editable
                     options: ["0", "1", "2", "3"].map(v => ({ label: Number(v) * 90 + "°", value: v }))
                     value: root.selected ? String(root.selected.transform) : ""
-                    onChosen: value => SendaDisplaySettings.setGuarded(root.selected.name, "--transform", value)
+                    onChosen: value => SendaDisplaySettings.stage(root.selected.name, { transform: Number(value) })
                 }
             }
             SettingsRow {
@@ -223,7 +217,7 @@ Flickable {
                         .filter(d => root.selected && d.name !== root.selected.name && d.enabled && root.mirrorName(d) === "")
                         .map(d => ({ label: d.name, value: d.name })))
                     value: root.selected ? (root.mirrorName(root.selected) || "none") : ""
-                    onChosen: value => SendaDisplaySettings.setGuarded(root.selected.name, "--mirror", value)
+                    onChosen: value => SendaDisplaySettings.stage(root.selected.name, { mirrorOf: value })
                 }
             }
             SettingsRow {
@@ -236,13 +230,6 @@ Flickable {
                     onClicked: SendaDisplaySettings.run(["reset", root.selected.name])
                 }
             }
-        }
-
-        SettingsButton {
-            visible: SendaDisplaySettings.canUndo && SendaDisplaySettings.confirmLeft === 0
-            enabled: !SendaDisplaySettings.busy
-            label: "Deshacer el último cambio"
-            onClicked: SendaDisplaySettings.undo()
         }
 
         // Only exists for those who define monitors in their own configuration.
@@ -260,6 +247,42 @@ Flickable {
                     label: modelData.name
                     description: modelData.source
                 }
+            }
+        }
+    }    }
+
+    // Its own banner in the warning colour: blue already marks every selected
+    // option on this page, so a blue button alone would go unnoticed.
+    Rectangle {
+        id: applyBar
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+        visible: SendaDisplaySettings.dirty
+        implicitHeight: barRow.implicitHeight + 2 * Theme.spacing.md
+        radius: Theme.rounding.normal
+        color: Theme.colors.warning
+        RowLayout {
+            id: barRow
+            anchors { fill: parent; margins: Theme.spacing.md }
+            spacing: Theme.spacing.sm
+            Text {
+                Layout.fillWidth: true
+                text: "Tienes cambios sin aplicar"
+                color: Theme.colors.base
+                font.family: Theme.textFamily
+                font.pixelSize: Theme.scaled(13)
+                font.weight: Font.Bold
+                wrapMode: Text.WordWrap
+            }
+            SettingsButton {
+                label: "Cancelar"
+                enabled: !SendaDisplaySettings.busy
+                onClicked: SendaDisplaySettings.discard()
+            }
+            SettingsButton {
+                label: "Aplicar cambios"
+                primary: true
+                enabled: !SendaDisplaySettings.busy
+                onClicked: SendaDisplaySettings.apply()
             }
         }
     }

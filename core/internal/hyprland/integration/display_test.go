@@ -219,3 +219,25 @@ func TestLockDisplayWatchAllowsOne(t *testing.T) {
 		t.Fatal("segundo vigilante aceptado")
 	}
 }
+
+func TestApplyTrialRestoresLiveState(t *testing.T) {
+	var evals []string
+	run := func(ctx context.Context, in io.Reader, name string, args ...string) ([]byte, error) {
+		if args[0] == "eval" {
+			evals = append(evals, args[1])
+			return []byte("ok\n"), nil
+		}
+		return monitorsRun(ctx, in, name, args...)
+	}
+	after := []DisplayRule{{Name: "DP-1", Description: "Foo", Mode: "1280x720@60", Position: "0x0", Scale: 2}}
+	restore, err := ApplyTrial(context.Background(), run, nil, after)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := restore(); err != nil {
+		t.Fatal(err)
+	}
+	if len(evals) != 2 || !strings.Contains(evals[0], "1280x720@60") || !strings.Contains(evals[1], "1920x1080@59.95") {
+		t.Fatalf("evals = %v", evals)
+	}
+}
