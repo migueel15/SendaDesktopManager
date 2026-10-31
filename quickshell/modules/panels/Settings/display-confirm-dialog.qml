@@ -19,33 +19,43 @@ Variants {
         WlrLayershell.namespace: "senda-display-confirm"
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
-        implicitWidth: card.implicitWidth
-        implicitHeight: card.implicitHeight
+        anchors { top: true; bottom: true; left: true; right: true }
+
+        // Dark veil over the whole screen, fading in.
+        Rectangle {
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.65)
+            opacity: 0
+            Component.onCompleted: opacity = 1
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+        }
 
         Rectangle {
             id: card
-            anchors.fill: parent
-            implicitWidth: Theme.scaled(340)
-            implicitHeight: content.implicitHeight + 2 * Theme.spacing.lg
+            anchors.centerIn: parent
+            implicitWidth: Theme.scaled(460)
+            implicitHeight: content.implicitHeight + 2 * Theme.spacing.xl
             color: Theme.colors.surface
-            border { width: 1; color: Theme.colors.warning }
             radius: Theme.rounding.normal
 
             ColumnLayout {
                 id: content
-                anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spacing.lg }
-                spacing: Theme.spacing.md
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spacing.xl }
+                spacing: Theme.spacing.lg
                 Text {
                     Layout.fillWidth: true
                     text: "¿Mantener estos cambios?"
                     color: Theme.colors.text
-                    font: Theme.font.body
+                    font.family: Theme.font.title.family
+                    font.pixelSize: Theme.scaled(20)
+                    font.weight: Font.Bold
                 }
                 Text {
                     Layout.fillWidth: true
                     text: "Se revertirán en " + SendaDisplaySettings.confirmLeft + " s."
                     color: Theme.colors.overlay
-                    font: Theme.font.caption
+                    font.family: Theme.textFamily
+                    font.pixelSize: Theme.scaled(15)
                 }
                 RowLayout {
                     Layout.alignment: Qt.AlignRight

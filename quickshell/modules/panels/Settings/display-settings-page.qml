@@ -251,15 +251,15 @@ Item {
         }
     }    }
 
-    // Its own banner in the warning colour: blue already marks every selected
-    // option on this page, so a blue button alone would go unnoticed.
+    // Its own filled banner: selected options on this page are only buttons,
+    // so a button alone would go unnoticed.
     Rectangle {
         id: applyBar
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
         visible: SendaDisplaySettings.dirty
         implicitHeight: barRow.implicitHeight + 2 * Theme.spacing.md
         radius: Theme.rounding.normal
-        color: Theme.colors.warning
+        color: Theme.colors.selection
         RowLayout {
             id: barRow
             anchors { fill: parent; margins: Theme.spacing.md }
@@ -267,7 +267,7 @@ Item {
             Text {
                 Layout.fillWidth: true
                 text: "Tienes cambios sin aplicar"
-                color: Theme.colors.base
+                color: Theme.colors.text
                 font.family: Theme.textFamily
                 font.pixelSize: Theme.scaled(13)
                 font.weight: Font.Bold
