@@ -12,6 +12,7 @@ import (
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/SendaDesktopManager/core/internal/service"
 )
 
 // UserStartup is the opt-in list exposed by the user's running Lua config.
@@ -139,12 +140,21 @@ func (e StartupEntry) command() string {
 	return e.Target
 }
 
+// startupCommand gates the whole command, including compound shell commands.
+// Keep the guard out of Target so settings still show the user's command.
+func (e StartupEntry) startupCommand() string {
+	return "systemctl --user start " + service.Name +
+		" && systemctl --user is-active --quiet " + service.Name +
+		" && /bin/sh -c " + shellQuote(e.command())
+}
+
+func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
+
 func shellPath(path string) string {
-	quoted := func(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
 	if rest, ok := strings.CutPrefix(path, "~/"); ok {
-		return `"$HOME"/` + quoted(rest)
+		return `"$HOME"/` + shellQuote(rest)
 	}
-	return quoted(path)
+	return shellQuote(path)
 }
 
 func renderStartupEntries(entries []StartupEntry) (string, error) {
@@ -154,7 +164,7 @@ func renderStartupEntries(entries []StartupEntry) (string, error) {
 			return "", err
 		}
 		if entry.Enabled {
-			out.WriteString(hyprctl.OnStart(entry.command()) + "\n")
+			out.WriteString(hyprctl.OnStart(entry.startupCommand()) + "\n")
 		}
 	}
 	return out.String(), nil

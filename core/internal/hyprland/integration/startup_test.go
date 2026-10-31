@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -107,8 +109,44 @@ func TestStartupModuleSkipsDisabledEntries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(got, `hl.exec_cmd("firefox")`) || !strings.Contains(got, "input sync") || strings.Contains(got, "discord") {
+	if !strings.Contains(got, "&& /bin/sh -c 'firefox'") || !strings.Contains(got, "input sync") || strings.Contains(got, "discord") {
 		t.Fatal(got)
+	}
+}
+
+func TestStartupWaitsForActiveService(t *testing.T) {
+	for _, tc := range []struct {
+		name, startExit, activeExit, command, wantOutput, wantCalls string
+		wantError                                                   bool
+	}{
+		{"start fails", "1", "0", "printf first; printf second", "", "--user start senda.service\n", true},
+		{"inactive", "0", "3", "false || printf fallback; printf second", "", "--user start senda.service\n--user is-active --quiet senda.service\n", true},
+		{"active", "0", "0", "printf first; printf second", "firstsecond", "--user start senda.service\n--user is-active --quiet senda.service\n", false},
+		{"quoting", "0", "0", `printf '%s' "it's ready" # trailing comment`, "it's ready", "--user start senda.service\n--user is-active --quiet senda.service\n", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			log := filepath.Join(dir, "calls")
+			// PATH contains only the fake, so this cannot reach real systemctl.
+			fake := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$CALL_LOG\"\ncase \"$2\" in start) exit \"$START_EXIT\";; is-active) exit \"$ACTIVE_EXIT\";; *) exit 99;; esac\n"
+			if err := os.WriteFile(filepath.Join(dir, "systemctl"), []byte(fake), 0700); err != nil {
+				t.Fatal(err)
+			}
+			entry := StartupEntry{Kind: StartupApp, Target: tc.command, Enabled: true}
+			cmd := exec.Command("/bin/sh", "-c", entry.startupCommand())
+			cmd.Env = []string{"PATH=" + dir, "CALL_LOG=" + log, "START_EXIT=" + tc.startExit, "ACTIVE_EXIT=" + tc.activeExit}
+			out, err := cmd.CombinedOutput()
+			if (err != nil) != tc.wantError || string(out) != tc.wantOutput {
+				t.Fatalf("output %q, error %v", out, err)
+			}
+			calls, err := os.ReadFile(log)
+			if err != nil || string(calls) != tc.wantCalls {
+				t.Fatalf("calls %q, error %v", calls, err)
+			}
+			if entry.Target != tc.command {
+				t.Fatal("stored command changed")
+			}
+		})
 	}
 }
 

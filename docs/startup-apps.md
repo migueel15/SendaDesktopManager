@@ -6,6 +6,10 @@ Senda guarda la lista en `SENDA_STARTUP_APPS` y la declara en `hypr/senda/startu
 
 Las rutas dentro de la carpeta personal se guardan como `~/` para que la configuración sirva en otro equipo. De una aplicación se guarda su comando, sin más datos de su archivo `.desktop`.
 
+Cada entrada activada espera a que `systemctl --user start senda.service` termine con éxito y comprueba después `systemctl --user is-active --quiet senda.service`. Solo entonces ejecuta el comando completo. Si el servicio falla o no está activo, esa entrada no se ejecuta. Con la unidad `Type=dbus` instalada por Senda, el arranque espera a que esté disponible el vigilante de la bandeja (ADR 0003).
+
+Esta comprobación se añade internamente al módulo generado para aplicaciones, scripts y archivos; el comando guardado y mostrado en Ajustes se conserva. También protege todos los pasos de comandos compuestos con `;`, `&&` o `||`. Se comprueba el servicio antes del lanzamiento; no se vigila la aplicación después. Las entradas externas de solo lectura mantienen el comportamiento definido en su propia configuración.
+
 Desde la terminal:
 
 ```sh
