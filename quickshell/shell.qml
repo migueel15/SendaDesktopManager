@@ -42,6 +42,7 @@ ShellRoot {
 	BottomRightCorner {}
 
 	VolumeOSD {}
+	BrightnessOSD {}
 
 	SttDock {}
 	LockScreen {}

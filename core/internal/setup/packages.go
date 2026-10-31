@@ -21,6 +21,7 @@ var Requirements = []Requirement{
 	{Command: "bluetoothctl", Package: "bluez-utils"},
 	{Package: "bluez"},
 	{Command: "blueberry", Package: "blueberry"},
+	{Command: "brightnessctl", Package: "brightnessctl"},
 	{Command: "ddcutil", Package: "ddcutil"},
 	{Command: "ffplay", Package: "ffmpeg"},
 	{Command: "xdg-open", Package: "xdg-utils"},
