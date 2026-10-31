@@ -22,11 +22,12 @@ senda theme current --json       # incluye fallback y warning
 senda theme apply mi-tema
 senda theme apply mi-tema --json  # devuelve el tema efectivo, con fallback y warning
 senda theme delete mi-tema
+senda theme duplicate zenda-ice mi-tema  # copia editable con nombre nuevo
 senda theme watch mi-tema --notify
 senda theme export               # genera los archivos para otras aplicaciones
 ```
 
-`list`, `validate`, `current` y `apply` admiten `--json`; `validate` y `current` admiten `--notify`. `apply` y `delete` admiten `--no-reload`. `watch` emite una línea JSON tras detectar un cambio estable en `theme.json` o la imagen; admite `--interval` (por defecto `1s`) y `--notify` para los cambios inválidos. Solo los cambios válidos del tema activo se aplican en vivo. Si la shell está abierta, `apply` solicita recarga; un cambio inválido conserva los colores anteriores.
+`list`, `validate`, `current`, `apply` y `duplicate` admiten `--json`; `validate` y `current` admiten `--notify`. `apply` y `delete` admiten `--no-reload`. `watch` emite una línea JSON tras detectar un cambio estable en `theme.json` o la imagen; admite `--interval` (por defecto `1s`) y `--notify` para los cambios inválidos. Solo los cambios válidos del tema activo se aplican en vivo. Si la shell está abierta, `apply` solicita recarga; un cambio inválido conserva los colores anteriores.
 
 `list`, `current`, `apply` y `watch` validan el contrato de `theme.json`, la existencia de la imagen, su formato y sus dimensiones mediante la cabecera, sin decodificar los píxeles. Por tanto, una imagen truncada después de una cabecera válida puede aceptarse en estos comandos. `validate` (por nombre o por ruta) y `save` mantienen la decodificación completa y rechazan imágenes truncadas. Todos rechazan formatos distintos de PNG, JPEG y GIF.
 
@@ -50,6 +51,6 @@ El símbolo de Senda en la barra superior se dibuja con los colores del tema act
 
 ## Selector y editor
 
-El botón de temas está junto al botón de ajustes del panel del tiempo. El selector muestra una tarjeta por tema, con vista previa, colores y errores de validación. Pulsa una tarjeta válida para aplicarla. **Nuevo tema** abre el editor con un tema válido como base; **Editar** permite modificar un tema de usuario o crear una copia del integrado. El editor permite cambiar nombre y 21 colores, y elegir el wallpaper escribiendo su ruta o con **Elegir…**, que abre un explorador de imágenes PNG, JPEG y GIF dentro del propio popup (empieza en la carpeta de la imagen actual o en Imágenes). Pulsar fuera del popup lo cierra. **Borrar** aparece solo para temas de usuario y pide confirmación.
+El botón de temas está junto al botón de ajustes del panel del tiempo. El selector muestra una tarjeta por tema, con vista previa, colores y errores de validación. Pulsa una tarjeta válida para aplicarla. **Nuevo tema** abre el editor con un tema válido como base; **Editar** y **Borrar** aparecen solo en temas de usuario. **Duplicar**, disponible en cualquier tema válido y en el lanzador para el tema activo, abre el editor para crear una copia con nombre nuevo; el original queda intacto. El editor permite cambiar nombre y 21 colores, y elegir el wallpaper escribiendo su ruta o con **Elegir…**, que abre un explorador de imágenes PNG, JPEG y GIF dentro del propio popup (empieza en la carpeta de la imagen actual o en Imágenes). Pulsar fuera del popup lo cierra. **Borrar** pide confirmación. Aplicar de nuevo un tema descarta los fondos manuales y restaura el suyo.
 
 El editor comprueba el nombre, los colores y la carga de una imagen PNG, JPEG o GIF antes de habilitar el guardado; la CLI vuelve a validar el contenido. Al editar el tema activo, se recarga la shell. `SendaTheme` vigila el tema activo y aplica los cambios válidos sin reiniciar Quickshell.

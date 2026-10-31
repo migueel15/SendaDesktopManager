@@ -25,18 +25,29 @@ BarComponents.BarExtension {
         pendingDelete = null;
         content.forceActiveFocus();
     }
-    function editTheme(info, existing) {
+    function editTheme(info, existing, duplicating) {
         pendingDelete = null;
         editor.setSource(Qt.resolvedUrl("ThemeEditor.qml"), {
-            baseTheme: info, editing: existing && info.builtin === false
+            baseTheme: info, editing: existing && info.builtin === false, duplicating: duplicating === true
         });
+    }
+    function openPendingDuplicate() {
+        if (!expanded || !SendaTheme.duplicatePending || !SendaTheme.active)
+            return;
+        SendaTheme.duplicatePending = false;
+        editTheme(SendaTheme.active, false, true);
     }
     onExpandedChanged: {
         if (expanded) {
             showList();
             SendaTheme.refresh();
             Qt.callLater(() => content.forceActiveFocus());
+            openPendingDuplicate();
         }
+    }
+    Connections {
+        target: SendaTheme
+        function onDuplicatePendingChanged() { root.openPendingDuplicate(); }
     }
 
     FocusScope {
@@ -159,6 +170,7 @@ BarComponents.BarExtension {
                     width: grid.cellWidth - Theme.spacing.sm
                     height: grid.cellHeight - Theme.spacing.sm
                     onEditRequested: info => root.editTheme(info, true)
+                    onDuplicateRequested: info => root.editTheme(info, false, true)
                     onDeleteRequested: info => root.pendingDelete = info
                 }
             }

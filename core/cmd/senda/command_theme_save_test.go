@@ -224,3 +224,36 @@ func TestThemeSaveRejectsInvalidImageData(t *testing.T) {
 		})
 	}
 }
+
+func TestThemeDuplicateCopiesBuiltinAndKeepsItIntact(t *testing.T) {
+	input, options := saveFixture(t)
+	dir := filepath.Join(options.dirs.Builtin, "zenda-ice")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	data, _ := json.Marshal(theme.Theme{Name: "zenda-ice", Wallpaper: "wallpaper.png", Colors: input.Colors})
+	file := filepath.Join(dir, "theme.json")
+	if err := os.WriteFile(file, data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	writeThemeImage(t, filepath.Join(dir, "wallpaper.png"), 2)
+
+	info, err := duplicateTheme("zenda-ice", "mi-copia", options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Builtin || filepath.Dir(info.Wallpaper) != filepath.Join(options.dirs.User, "mi-copia") {
+		t.Fatal(info)
+	}
+	if after, _ := os.ReadFile(file); !bytes.Equal(after, data) {
+		t.Fatal("builtin changed")
+	}
+	for _, name := range []string{"zenda-ice", "mi-copia", "Mal Nombre"} {
+		if _, err := duplicateTheme("zenda-ice", name, options); err == nil {
+			t.Fatalf("%s: expected error", name)
+		}
+	}
+	if _, err := duplicateTheme("missing", "otra", options); err == nil {
+		t.Fatal("expected missing source error")
+	}
+}
