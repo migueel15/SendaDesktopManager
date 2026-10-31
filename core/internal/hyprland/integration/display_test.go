@@ -184,6 +184,9 @@ func TestApplyDisplayChangesTouchesOnlyChanges(t *testing.T) {
 	var calls []string
 	run := func(_ context.Context, _ io.Reader, _ string, args ...string) ([]byte, error) {
 		calls = append(calls, args[0])
+		if args[0] == "configerrors" {
+			return nil, nil
+		}
 		return []byte("ok\n"), nil
 	}
 	a := DisplayRule{Name: "DP-1", Mode: "preferred", Position: "0x0", Scale: 1}
