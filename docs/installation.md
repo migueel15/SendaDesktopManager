@@ -45,13 +45,14 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Fondo de pantalla | Integrado en Quickshell; no requiere otro paquete. |
    | Red, audio y batería | `networkmanager`, `wireplumber`, `upower` |
    | Bluetooth | `bluez`, `bluez-utils`, `blueberry` |
+   | Compartir pantalla y selectores de archivos (portales XDG) | `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk` |
    | Brillo de monitores externos | `ddcutil` |
    | Sonidos del sistema | `ffmpeg`, `sound-theme-freedesktop` |
    | Enlaces, dictado y scripts | `xdg-utils`, `jq`, `python`, `wl-clipboard`, `pipewire` |
    | Acceso al keyring de Google Calendar | `libsecret`; requiere además un proveedor Secret Service configurado y desbloqueado, véase [Google Calendar](google-calendar.md) |
    | Fuentes | `inter-font`, `ttf-nerd-fonts-symbols` |
 
-   Las dependencias con comando se buscan en `PATH`; las fuentes, el tema de sonidos y `bluez` se comprueban con `pacman -Q`.
+   Las dependencias con comando se buscan en `PATH`; las fuentes, el tema de sonidos, los portales y `bluez` se comprueban con `pacman -Q`.
 3. Crea `~/.config/senda/config` si no existe.
 4. Descarga, verifica e instala los archivos de Quickshell de la última release.
 5. Ofrece instalar el motor de dictado si falta. Los modelos se instalan por separado con `senda stt models install <id>`.

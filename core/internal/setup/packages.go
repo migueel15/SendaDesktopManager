@@ -29,6 +29,8 @@ var Requirements = []Requirement{
 	{Command: "grim", Package: "grim"},
 	{Command: "wl-copy", Package: "wl-clipboard"},
 	{Command: "pw-record", Package: "pipewire"},
+	{Package: "xdg-desktop-portal-hyprland"},
+	{Package: "xdg-desktop-portal-gtk"},
 	{Package: "sound-theme-freedesktop"},
 	{Package: "inter-font"},
 	{Package: "ttf-nerd-fonts-symbols"},
