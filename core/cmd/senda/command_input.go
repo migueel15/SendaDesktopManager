@@ -33,6 +33,7 @@ var inputOptions = map[string]string{
 }
 
 func readInputStatus(ctx context.Context, s integration.InputSettings) inputStatus {
+	s = s.WithDefaults()
 	user := integration.DetectInput(integration.LoadUserConfig(), integration.SessionEnvFiles())
 	senda := map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme, integration.FieldAccelProfile: s.AccelProfile, integration.FieldFollowMouse: s.FollowMouse, integration.FieldDisableTyping: s.DisableTyping, integration.FieldScrollFactor: s.ScrollFactor}
 	current := map[string]string{}

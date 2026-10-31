@@ -12,7 +12,11 @@ senda input cursor-themes
 senda input sync
 ```
 
-Un valor vacío (`--layout=`) hace que Senda deje de definir ese campo.
+Un valor vacío (`--layout=`) devuelve ese campo a su valor por defecto.
+
+## Valores por defecto
+
+Lo que nadie haya elegido ni definido usa: la distribución del sistema (`00-keyboard.conf` o `/etc/vconsole.conf`; si no se conoce, no se genera), velocidad del 50 %, aceleración plana, foco que sigue al ratón, y tocar para hacer clic y desplazamiento natural activados.
 
 ## Convivencia con tu configuración
 
@@ -21,7 +25,7 @@ Senda solo escribe en `~/.config/senda/config` y en su módulo generado `modules
 - `kb_layout`, `sensitivity`, `accel_profile`, `follow_mouse`, `tap_to_click`, `natural_scroll`, `disable_while_typing` y `scroll_factor` en `input`.
 - `XCURSOR_THEME` o `HYPRCURSOR_THEME` con `hl.env` o `env =`, `hyprctl setcursor`, y esas variables en `uwsm/env*` y `environment.d`.
 
-Lo que definas tú gana: Senda no lo genera, aunque tenga un valor guardado, y lo muestra como gestionado por el usuario, con el control desactivado. `senda input set` rechaza esos campos. Los campos que nadie define no muestran ninguna indicación ni generan nada. Si quitas tu definición, vuelve a aplicarse el valor guardado en Senda.
+Lo que definas tú gana: Senda no lo genera, aunque tenga un valor guardado, y lo muestra como gestionado por el usuario, con el control desactivado. `senda input set` rechaza esos campos. Los campos que nadie define no muestran ninguna indicación y usan los valores por defecto. Si quitas tu definición, vuelve a aplicarse el valor guardado en Senda.
 
 `senda input sync` regenera el módulo si tu configuración cambió. Se ejecuta al iniciar Hyprland y al abrir Ajustes.
 

@@ -116,3 +116,23 @@ func TestPointerFields(t *testing.T) {
 		}
 	}
 }
+
+func TestDefaultsAndSystemLayout(t *testing.T) {
+	dir := t.TempDir()
+	xorg, console := filepath.Join(dir, "x"), filepath.Join(dir, "v")
+	os.WriteFile(console, []byte("KEYMAP=es\n"), 0o644)
+	if got := SystemLayout(xorg, console); got != "es" {
+		t.Fatalf("vconsole: %q", got)
+	}
+	os.WriteFile(xorg, []byte("Section \"InputClass\"\n  Option \"XkbLayout\" \"us,es\"\n"), 0o644)
+	if got := SystemLayout(xorg, console); got != "us,es" {
+		t.Fatalf("xorg: %q", got)
+	}
+	d := InputSettings{TapToClick: "false"}.WithDefaults()
+	if d.Sensitivity != "0" || d.AccelProfile != "flat" || d.FollowMouse != "1" || d.NaturalScroll != "true" || d.TapToClick != "false" {
+		t.Fatalf("got %+v", d)
+	}
+	if got := d.withoutUser(map[string]UserSetting{FieldAccelProfile: {}}); got.AccelProfile != "" {
+		t.Fatal("a default must not override the user")
+	}
+}

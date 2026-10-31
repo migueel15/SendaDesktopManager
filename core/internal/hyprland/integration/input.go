@@ -264,3 +264,39 @@ func SyncInputModule(s Settings) (bool, error) {
 	after, err := os.ReadFile(ModulePath())
 	return string(before) != string(after), err
 }
+
+var (
+	xkbLayout     = regexp.MustCompile(`(?m)^\s*Option\s+"XkbLayout"\s+"([a-z0-9_,-]+)"`)
+	consoleKeymap = regexp.MustCompile(`(?m)^\s*KEYMAP=["']?([a-z]{2})(?:[-_"'\s]|$)`)
+)
+
+// SystemLayout is the layout chosen for the system, or empty when unknown.
+func SystemLayout(xorgFile, vconsoleFile string) string {
+	if data, err := os.ReadFile(xorgFile); err == nil {
+		if m := xkbLayout.FindSubmatch(data); m != nil {
+			return string(m[1])
+		}
+	}
+	if data, err := os.ReadFile(vconsoleFile); err == nil {
+		if m := consoleKeymap.FindSubmatch(data); m != nil {
+			return string(m[1])
+		}
+	}
+	return ""
+}
+
+// WithDefaults fills what nobody chose with Senda's defaults.
+func (s InputSettings) WithDefaults() InputSettings {
+	fill := func(target *string, value string) {
+		if *target == "" {
+			*target = value
+		}
+	}
+	fill(&s.Layout, SystemLayout("/etc/X11/xorg.conf.d/00-keyboard.conf", "/etc/vconsole.conf"))
+	fill(&s.Sensitivity, "0")
+	fill(&s.AccelProfile, "flat")
+	fill(&s.FollowMouse, "1")
+	fill(&s.TapToClick, "true")
+	fill(&s.NaturalScroll, "true")
+	return s
+}
