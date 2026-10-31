@@ -92,10 +92,16 @@ func applyInput(ctx context.Context, s integration.Settings, cursorChanged bool)
 	if _, err := applyHyprland(ctx, s, false); err != nil {
 		return err
 	}
-	if !cursorChanged || !integration.InSession() {
+	if !cursorChanged {
 		return nil
 	}
 	user := integration.DetectInput(integration.LoadUserConfig(), integration.SessionEnvFiles())
+	if err := syncCursorConfig(ctx, s.Input, user); err != nil {
+		return err
+	}
+	if !integration.InSession() {
+		return nil
+	}
 	theme, size := s.Input.CursorTheme, integration.CursorSize()
 	if _, managed := user[integration.FieldCursorTheme]; managed || theme == "" {
 		theme = os.Getenv("XCURSOR_THEME")
@@ -112,6 +118,37 @@ func applyInput(ctx context.Context, s integration.Settings, cursorChanged bool)
 		return nil
 	}
 	return hyprctl.New(shortcutRunner).SetCursor(ctx, theme, size)
+}
+
+// syncCursorConfig carries the cursor Senda owns to the files other toolkits
+// read and to the environment of apps started from now on. Apps already running
+// keep the variables they inherited. The helpers are best effort: they may not
+// be installed, or no X server or session bus may be running.
+func syncCursorConfig(ctx context.Context, s integration.InputSettings, user map[string]integration.UserSetting) error {
+	theme, size := s.CursorTheme, 0
+	if _, managed := user[integration.FieldCursorTheme]; managed {
+		theme = ""
+	}
+	if _, managed := user[integration.FieldCursorSize]; !managed {
+		size, _ = strconv.Atoi(s.CursorSize)
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	changed, err := integration.SyncCursorFiles(home, theme, size)
+	for _, path := range changed {
+		if integration.IsCursorXresources(path) {
+			_, _ = shortcutRunner(ctx, nil, "xrdb", "-merge", path)
+		}
+		if integration.IsCursorXsettings(path) {
+			_, _ = shortcutRunner(ctx, nil, "pkill", "-HUP", "-x", "xsettingsd")
+		}
+	}
+	if env := integration.CursorEnvironment(theme, size); len(env) > 0 && integration.InSession() {
+		_, _ = shortcutRunner(ctx, nil, "dbus-update-activation-environment", append([]string{"--systemd"}, env...)...)
+	}
+	return err
 }
 
 func inputCmd() *cobra.Command {
