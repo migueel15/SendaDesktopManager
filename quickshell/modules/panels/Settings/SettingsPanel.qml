@@ -98,6 +98,8 @@ Item {
 
     // Search works on the rows the pages really have, so no list needs upkeep.
     property string query: ""
+    // Result chosen with the arrow keys; Enter opens it.
+    property int resultIndex: 0
     readonly property bool searching: query.trim() !== ""
     function normalized(text) {
         return String(text).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -166,8 +168,15 @@ Item {
                     Layout.fillWidth: true
                     Layout.bottomMargin: Theme.spacing.sm
                     placeholder: "Buscar ajustes"
-                    onTextChanged: root.query = text
-                    onAccepted: root.openResult(root.results[0])
+                    onTextChanged: {
+                        root.query = text;
+                        root.resultIndex = 0;
+                    }
+                    onAccepted: root.openResult(root.results[root.resultIndex])
+                    onArrowPressed: step => {
+                        if (root.results.length > 0)
+                            root.resultIndex = Math.max(0, Math.min(root.resultIndex + step, root.results.length - 1));
+                    }
                 }
 
                 // While searching, results take the place of the sections.
@@ -182,16 +191,20 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     visible: root.searching
+                    currentIndex: root.resultIndex
+                    highlightMoveDuration: 0
                     clip: true
                     spacing: Theme.spacing.xs
                     model: root.results
                     delegate: Rectangle {
                         id: resultEntry
                         required property var modelData
+                        required property int index
+                        readonly property bool current: root.resultIndex === index
                         width: ListView.view.width
                         height: resultColumn.implicitHeight + 2 * Theme.spacing.sm
                         radius: Theme.rounding.small
-                        color: resultArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+                        color: current ? Theme.colors.selection : resultArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
                         ColumnLayout {
                             id: resultColumn
                             anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }

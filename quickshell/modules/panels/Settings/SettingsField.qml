@@ -11,6 +11,8 @@ Rectangle {
     property bool secret: false
 
     signal accepted()
+    // Up or Down was pressed while typing: -1 or 1.
+    signal arrowPressed(int step)
     signal committed()
     property bool dirty: false
     property string originalText: ""
@@ -33,6 +35,8 @@ Rectangle {
 
     TextInput {
         id: input
+        Keys.onUpPressed: root.arrowPressed(-1)
+        Keys.onDownPressed: root.arrowPressed(1)
         anchors.fill: parent
         anchors.leftMargin: 10
         anchors.rightMargin: 10
