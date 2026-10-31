@@ -16,7 +16,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func init() { registerThemeSubcommand(themeSaveCmd) }
+func init() {
+	registerThemeSubcommand(themeSaveCmd)
+	registerThemeSubcommand(themeDuplicateCmd)
+}
 
 type themeSaveInput struct {
 	Name      string            `json:"name"`
@@ -67,6 +70,36 @@ func themeSaveCmd() *cobra.Command {
 		return nil
 	}
 	return cmd
+}
+
+func themeDuplicateCmd() *cobra.Command {
+	var asJSON bool
+	cmd := &cobra.Command{Use: "duplicate <theme> <new-name>", Short: "Copy a theme into a new user theme", Args: cobra.ExactArgs(2), SilenceUsage: true}
+	cmd.Flags().BoolVar(&asJSON, "json", false, "Output JSON")
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		info, err := duplicateTheme(args[0], args[1], themeSaveOptions{theme.DefaultDirs(), paths.ConfigFile(), activeThemeForSaveWatch(), os.Rename})
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return json.NewEncoder(cmd.OutOrStdout()).Encode(info)
+		}
+		_, err = fmt.Fprintln(cmd.OutOrStdout(), info.Name)
+		return err
+	}
+	return cmd
+}
+
+// duplicateTheme copies colors and image, so the copy never depends on its source.
+func duplicateTheme(source, name string, options themeSaveOptions) (theme.Info, error) {
+	info, ok := theme.Find(options.dirs, source)
+	if !ok {
+		return theme.Info{}, themeFieldError("name", errors.New("theme not found"))
+	}
+	if !info.Valid {
+		return theme.Info{}, errors.New(info.Error)
+	}
+	return saveUserTheme(themeSaveInput{Name: name, Colors: info.Colors, Wallpaper: info.Wallpaper}, options)
 }
 
 func activeThemeForSaveWatch() string {
