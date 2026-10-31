@@ -46,7 +46,8 @@ También puedes hacerlo desde la terminal con `senda calendar login`, `senda cal
 
 | Dato | Dónde | Permisos |
 |---|---|---|
-| ID y secreto de tu cliente (opcional) | `$XDG_CONFIG_HOME/senda/config` | `0600` |
+| ID de tu cliente (opcional) | `$XDG_CONFIG_HOME/senda/config` | Preferencia que se comparte con la configuración |
+| Secreto de tu cliente (opcional) | Keyring; sin keyring, `$XDG_STATE_HOME/senda/secrets` | Proveedor del keyring, o archivo `0600` sin cifrar |
 | Cliente incluido en la release | Dentro del binario, no editable | — |
 | Refresh token | Keyring de Secret Service, entrada «Senda Google Calendar» | Cifrado y acceso gestionados por el proveedor |
 | Access token | Solo en memoria, renovado automáticamente | — |
