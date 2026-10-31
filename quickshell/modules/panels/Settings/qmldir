@@ -16,6 +16,8 @@ UpdateSettingsPage 1.0 UpdateSettingsPage.qml
 WeatherSettingsPage 1.0 WeatherSettingsPage.qml
 WidgetsSettingsPage 1.0 widgets-settings-page.qml
 SystemSettingsPage 1.0 system-settings-page.qml
+PowerSettingsPage 1.0 power-settings-page.qml
+SettingsSavedMark 1.0 settings-saved-mark.qml
 SettingsWindow 1.0 settings-window.qml
 DisplaySettingsPage 1.0 display-settings-page.qml
 InputSettingsPage 1.0 input-settings-page.qml

@@ -350,6 +350,11 @@ Item {
                         Layout.fillHeight: true
                     }
 
+                    PowerSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
                     SystemSettingsPage {
                         Layout.fillWidth: true
                         Layout.fillHeight: true

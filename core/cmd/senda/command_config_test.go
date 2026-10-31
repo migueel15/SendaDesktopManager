@@ -299,3 +299,16 @@ func TestConfigDictationVolume(t *testing.T) {
 		}
 	}
 }
+
+func TestReadChangesValidatesBatteryWarning(t *testing.T) {
+	for _, input := range []string{`{"SENDA_BATTERY_WARNING":"5"}`, `{"SENDA_BATTERY_WARNING":"95"}`, `{"SENDA_BATTERY_WARNING":""}`} {
+		if _, err := readChanges(strings.NewReader(input)); err != nil {
+			t.Fatalf("readChanges(%s) = %v", input, err)
+		}
+	}
+	for _, input := range []string{`{"SENDA_BATTERY_WARNING":"4"}`, `{"SENDA_BATTERY_WARNING":"96"}`, `{"SENDA_BATTERY_WARNING":"alto"}`} {
+		if _, err := readChanges(strings.NewReader(input)); err == nil {
+			t.Fatalf("readChanges(%s) accepted an invalid threshold", input)
+		}
+	}
+}

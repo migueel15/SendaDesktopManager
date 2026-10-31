@@ -28,12 +28,19 @@ const (
 	keyWidgetSpotify      = "SENDA_WIDGET_SPOTIFY"
 	keyScreenshotDir      = "SENDA_SCREENSHOT_DIR"
 	keyWidgetDiscord      = "SENDA_WIDGET_DISCORD"
+	keyBatteryWarning     = "SENDA_BATTERY_WARNING"
 )
 
 // Bounds of the interface font scale, in percent. 100 is the default size.
 const (
 	minUIFontScale = 80
 	maxUIFontScale = 150
+)
+
+// Bounds of the low battery warning, in percent.
+const (
+	minBatteryWarning = 5
+	maxBatteryWarning = 95
 )
 
 // editableSettings is the only set of keys the settings panel may write. Any
@@ -50,6 +57,7 @@ var editableSettings = map[string]bool{
 	keyUIFontScale:        true,
 	keyWidgetSpotify:      true,
 	keyWidgetDiscord:      true,
+	keyBatteryWarning:     true,
 	stt.KeyLanguage:       true,
 	stt.KeyPreload:        true,
 	stt.KeyAudioDucking:   true,
@@ -93,6 +101,7 @@ func configGetCmd() *cobra.Command {
 					keyUIFontScale:      values[keyUIFontScale],
 					keyWidgetSpotify:    values[keyWidgetSpotify],
 					keyWidgetDiscord:    values[keyWidgetDiscord],
+					keyBatteryWarning:   values[keyBatteryWarning],
 					stt.KeyPreload:      strconv.FormatBool(sttSettings.Preload),
 					stt.KeyAudioDucking: strconv.FormatBool(sttSettings.AudioDucking),
 					stt.KeyAudioVolume:  strconv.Itoa(sttSettings.AudioVolume),
@@ -206,6 +215,13 @@ func validateSetting(key, value string) error {
 		return validateCoordinate(key, strings.TrimSpace(value), 180)
 	case keyUIFontScale:
 		return validateFontScale(strings.TrimSpace(value))
+	case keyBatteryWarning:
+		if value != "" {
+			percent, err := strconv.Atoi(value)
+			if err != nil || percent < minBatteryWarning || percent > maxBatteryWarning {
+				return fmt.Errorf("%s must be a whole number between %d and %d", key, minBatteryWarning, maxBatteryWarning)
+			}
+		}
 	case stt.KeyPreload, stt.KeyAudioDucking, keyWidgetSpotify, keyWidgetDiscord:
 		if value != "" && value != "true" && value != "false" {
 			return fmt.Errorf("%s must be true or false", key)

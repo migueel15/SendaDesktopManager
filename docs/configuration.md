@@ -47,6 +47,7 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 | `SENDA_SCREENSHOT_DIR` | Carpeta para Guardar en el editor; vacía usa Imágenes/Capturas. Ver [capturas](screenshots.md). |
 | `SENDA_LOCK_SHORTCUT` | Atajo de bloqueo de Hyprland. Predeterminado: `SUPER + CTRL + l`. |
 | `SENDA_IDLE_SECONDS` | Segundos de inactividad antes del bloqueo; `0` lo desactiva. Predeterminado: `600`. |
+| `SENDA_BATTERY_WARNING` | Porcentaje de batería que dispara el aviso: entero de 5 a 95. Predeterminado: `20`. Ver [energía](power.md). |
 | `SENDA_LOCK_BLUR` | Activa el desenfoque de la pantalla de bloqueo. Predeterminado: `true`. |
 | `SENDA_DISPLAYS` y `SENDA_DISPLAYS_PREVIOUS` | Reglas de pantalla en JSON y las anteriores, para deshacer. Las escribe `senda display`; ver [pantallas](displays.md). |
 | `SENDA_STT_SHORTCUT` | Atajo de Hyprland para iniciar y detener el dictado. Predeterminado: `ALT + ntilde` (Alt + ñ). |
