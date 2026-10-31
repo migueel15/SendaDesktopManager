@@ -32,10 +32,14 @@ Singleton {
         keyboardStatus.running = true;
         keyboardWatch.running = true;
         displayWatch.running = true;
+        usbWatch.running = true;
     }
     Process { id: keyboardWatch; command: [root.binaryPath, "keyboard", "watch"]; onExited: watchRetry.restart() }
     // Keeps generated monitor rules from beating what the user defines.
     Process { id: displayWatch; command: [root.binaryPath, "display", "watch"]; onExited: displayWatchRetry.restart() }
+    // Mounts USB drives as they are connected; see docs/usb.md.
+    Process { id: usbWatch; command: [root.binaryPath, "usb", "watch"]; onExited: usbWatchRetry.restart() }
+    Timer { id: usbWatchRetry; interval: 5000; onTriggered: usbWatch.running = true }
     Timer { id: displayWatchRetry; interval: 5000; onTriggered: displayWatch.running = true }
     Timer { id: watchRetry; interval: 1000; onTriggered: keyboardWatch.running = true }
     Timer { interval: 3000; running: true; repeat: true; onTriggered: if (!keyboardStatus.running) keyboardStatus.running = true }
