@@ -12,9 +12,26 @@ Rectangle {
     property var options: []
     property string value: ""
     property string placeholder: "Sin definir"
+    property bool searchable: false
+    property string searchPlaceholder: "Buscar…"
+    readonly property var filteredOptions: root.searchable ? root.options.filter(option => option.toLocaleLowerCase().includes(search.text.trim().toLocaleLowerCase())) : root.options
+    onFilteredOptionsChanged: if (list) list.currentIndex = root.filteredOptions.length > 0 ? 0 : -1
     // Longer lists scroll inside this height.
     property real maxListHeight: Theme.scaled(260)
     signal chosen(string value)
+
+    function chooseCurrent() {
+        if (list.currentIndex < 0 || list.currentIndex >= root.filteredOptions.length) return;
+        const value = root.filteredOptions[list.currentIndex];
+        popup.close();
+        root.chosen(value);
+    }
+
+    function moveSelection(step) {
+        if (list.count === 0) return;
+        list.currentIndex = Math.max(0, Math.min(list.count - 1, list.currentIndex + step));
+        list.positionViewAtIndex(list.currentIndex, ListView.Contain);
+    }
 
     implicitWidth: Theme.scaled(220)
     implicitHeight: label.implicitHeight + 2 * Theme.spacing.sm
@@ -66,10 +83,13 @@ Rectangle {
         grabFocus: true
         color: "transparent"
         implicitWidth: root.width
-        implicitHeight: Math.min(list.contentHeight, root.maxListHeight) + 2 * Theme.spacing.xs + 2
+        implicitHeight: Math.min(Math.max(list.contentHeight, list.count === 0 && root.searchable ? emptyLabel.implicitHeight + 2 * Theme.spacing.xs : 0), root.maxListHeight) + 2 * Theme.spacing.xs + 2 + (root.searchable ? search.height + Theme.spacing.xs : 0)
         onVisibleChanged: if (visible) {
-            list.forceActiveFocus();
-            list.positionViewAtIndex(Math.max(0, root.options.indexOf(root.value)), ListView.Center);
+            search.text = "";
+            list.currentIndex = root.filteredOptions.length > 0 ? Math.max(0, root.filteredOptions.indexOf(root.value)) : -1;
+            if (root.searchable) search.focusInput();
+            else list.forceActiveFocus();
+            if (list.currentIndex >= 0) list.positionViewAtIndex(list.currentIndex, ListView.Center);
         }
 
         Rectangle {
@@ -77,13 +97,30 @@ Rectangle {
             color: Theme.colors.surface
             border { width: 1; color: Theme.colors.border }
             radius: Theme.rounding.normal
+            SettingsField {
+                id: search
+                visible: root.searchable
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spacing.xs + 1 }
+                placeholder: root.searchPlaceholder
+                onArrowPressed: step => root.moveSelection(step)
+                onAccepted: {
+                    root.chooseCurrent();
+                    if (popup.visible) search.focusInput();
+                }
+                Keys.onEscapePressed: popup.close()
+            }
             ListView {
                 id: list
                 anchors { fill: parent; margins: Theme.spacing.xs + 1 }
+                anchors.topMargin: root.searchable ? search.height + 2 * Theme.spacing.xs + 1 : Theme.spacing.xs + 1
                 clip: true
-                model: root.options
+                model: root.filteredOptions
                 boundsBehavior: Flickable.StopAtBounds
                 Keys.onEscapePressed: popup.close()
+                Keys.onReturnPressed: root.chooseCurrent()
+                Keys.onEnterPressed: root.chooseCurrent()
+                Keys.onUpPressed: root.moveSelection(-1)
+                Keys.onDownPressed: root.moveSelection(1)
                 Controls.ScrollBar.vertical: Controls.ScrollBar {
                     id: scrollBar
                     policy: list.contentHeight > list.height ? Controls.ScrollBar.AlwaysOn : Controls.ScrollBar.AlwaysOff
@@ -96,11 +133,12 @@ Rectangle {
                 delegate: Rectangle {
                     id: option
                     required property string modelData
+                    required property int index
                     readonly property bool current: modelData === root.value
                     width: ListView.view.width - (scrollBar.policy === Controls.ScrollBar.AlwaysOn ? scrollBar.width + Theme.spacing.xs : 0)
                     height: optionText.implicitHeight + 2 * Theme.spacing.xs
                     radius: Theme.rounding.small
-                    color: current ? Theme.colors.primary : optionArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+                    color: current ? Theme.colors.primary : optionArea.containsMouse || (root.searchable && list.currentIndex === index) ? Theme.colors.surfaceVariant : "transparent"
                     Text {
                         id: optionText
                         anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }
@@ -120,6 +158,14 @@ Rectangle {
                         }
                     }
                 }
+            }
+            Text {
+                id: emptyLabel
+                anchors.centerIn: list
+                visible: root.searchable && list.count === 0
+                text: "Sin coincidencias"
+                color: Theme.colors.overlay
+                font: Theme.font.caption
             }
         }
     }

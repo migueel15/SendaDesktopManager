@@ -59,6 +59,8 @@ Flickable {
                     options: root.apps.map(app => app.name)
                     value: root.appName
                     placeholder: "Elegir aplicación"
+                    searchable: true
+                    searchPlaceholder: "Buscar aplicación…"
                     onChosen: value => root.appName = value
                 }
                 SettingsField {

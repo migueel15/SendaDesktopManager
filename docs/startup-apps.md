@@ -2,6 +2,8 @@
 
 La sección **Inicio** de Ajustes elige qué se abre al iniciar Hyprland, sin tocar Lua: aplicaciones instaladas, scripts ejecutables o archivos, que se abren con `xdg-open`. Cada entrada tiene un interruptor y se puede eliminar.
 
+Al elegir una aplicación, el desplegable permite buscar por nombre sin distinguir mayúsculas. Escribe parte del nombre y selecciona una coincidencia con el ratón o con las flechas y Enter; después pulsa **Añadir**. Escape cierra el desplegable y al volver a abrirlo se limpia la búsqueda.
+
 Senda guarda la lista en `SENDA_STARTUP_APPS` y la declara en `hypr/senda/startup.lua`, dentro del evento `hyprland.start`. Los cambios se aplican en el siguiente arranque; recargar Hyprland no ejecuta esas entradas. Senda no modifica las entradas de la configuración del usuario.
 
 Las rutas dentro de la carpeta personal se guardan como `~/` para que la configuración sirva en otro equipo. De una aplicación se guarda su comando, sin más datos de su archivo `.desktop`.
