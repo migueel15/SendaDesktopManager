@@ -13,6 +13,9 @@ Singleton {
 
     property var runtime: ({ installed: false, provider: "" })
     property var models: []
+    property var postprocess: ({ ready: false, supported: true, message: "Consultando disponibilidad", sizeBytes: 1130102020 })
+    property string postprocessPhase: ""
+    property string postprocessError: ""
     property string installingId: ""
     property real progress: 0
     property string notice: ""
@@ -23,11 +26,28 @@ Singleton {
     property bool cancelRequested: false
     property bool runtimeRefreshQueued: false
     property bool modelsRefreshQueued: false
+    property bool postprocessRefreshQueued: false
 
     readonly property bool busy: root.operation !== "" || runtimeProcess.running
-        || modelsProcess.running
+        || modelsProcess.running || postprocessProcess.running
 
     readonly property bool preloadEnabled: SendaStt.preloadEnabled
+    readonly property bool postprocessEnabled: String(SendaSettings.values.SENDA_STT_POSTPROCESS || "false") === "true"
+
+    function setPostprocess(enabled) {
+        if (enabled && !root.postprocess.ready) {
+            root.preparePostprocess();
+            return;
+        }
+        SendaSettings.save({ SENDA_STT_POSTPROCESS: enabled ? "true" : "false" }, "Corrección local guardada");
+    }
+
+    function preparePostprocess() {
+        if (!root.postprocess.supported || !root.startWrite("postprocess", [root.binaryPath, "stt", "postprocess", "install"], "Corrección local preparada")) return;
+        root.progress = 0;
+        root.postprocessError = "";
+        root.postprocessPhase = "Preparando corrección";
+    }
     readonly property string preloadState: SendaStt.preloadState
     readonly property string preloadError: SendaStt.preloadError
 
@@ -64,6 +84,7 @@ Singleton {
     function refresh() {
         root.startRead(runtimeProcess, [root.binaryPath, "stt", "runtime", "status", "--json"], "runtimeRefreshQueued");
         root.startRead(modelsProcess, [root.binaryPath, "stt", "models", "list", "--json"], "modelsRefreshQueued");
+        root.startRead(postprocessProcess, [root.binaryPath, "stt", "postprocess", "status", "--json"], "postprocessRefreshQueued");
     }
 
     function finishRead(process, queuedProperty, command) {
@@ -104,7 +125,7 @@ Singleton {
     }
 
     function cancelInstall() {
-        if (root.operation !== "installModel" || root.cancelRequested) {
+        if ((root.operation !== "installModel" && root.operation !== "postprocess") || root.cancelRequested) {
             return;
         }
         root.cancelRequested = true;
@@ -164,17 +185,40 @@ Singleton {
     }
 
     Process {
+        id: postprocessProcess
+        stdout: StdioCollector { id: postprocessOutput }
+        stderr: StdioCollector { id: postprocessErrors }
+        onExited: exitCode => {
+            if (exitCode !== 0) {
+                root.postprocess = { ready: false, supported: true, message: "No se pudo consultar la corrección", sizeBytes: 1130102020 };
+                root.showError(postprocessErrors.text, "No se pudo consultar la corrección");
+            } else {
+                try {
+                    const data = JSON.parse(postprocessOutput.text);
+                    if (typeof data.ready !== "boolean" || typeof data.supported !== "boolean" || typeof data.message !== "string") throw new Error("invalid postprocess status");
+                    root.postprocess = data;
+                } catch (error) {
+                    root.postprocess = { ready: false, supported: true, message: "Estado de corrección no válido", sizeBytes: 1130102020 };
+                    root.showError("El estado de la corrección no es válido", "");
+                }
+            }
+            root.finishRead(postprocessProcess, "postprocessRefreshQueued", [root.binaryPath, "stt", "postprocess", "status", "--json"]);
+        }
+    }
+
+    Process {
         id: writeProcess
         onStarted: {
             if (root.cancelRequested) writeProcess.signal(15);
         }
         stdout: SplitParser {
             onRead: line => {
-                if (root.operation !== "installModel" || root.cancelRequested) return;
+                if ((root.operation !== "installModel" && root.operation !== "postprocess") || root.cancelRequested) return;
                 try {
                     const event = JSON.parse(line);
                     if (event.event === "progress" && event.total > 0) {
                         root.progress = Math.max(0, Math.min(1, event.done / event.total));
+                        if (root.operation === "postprocess") root.postprocessPhase = event.phase || "Preparando corrección";
                     }
                 } catch (error) {
                     // Other commands print text; their exit code determines success.
@@ -187,20 +231,27 @@ Singleton {
             if (exitCode === 0) {
                 root.notice = root.successMessage;
                 root.noticeIsError = false;
+                if (root.operation === "postprocess") {
+                    SendaSettings.save({ SENDA_STT_POSTPROCESS: "true", SENDA_STT_POSTPROCESS_MODEL: "" }, "Corrección local activada");
+                }
             } else if (wasCancelled) {
                 root.notice = "Instalación cancelada";
                 root.noticeIsError = false;
             } else {
                 root.showError(writeErrors.text, "No se pudo completar la operación de dictado");
             }
+            if (root.operation === "postprocess" && exitCode !== 0) {
+                root.postprocessError = wasCancelled ? "Preparación cancelada. Activa la opción para reintentar" : "No se pudo preparar la corrección. Activa la opción para reintentar";
+            }
             if (exitCode === 0 && (root.operation === "useModel" || root.operation === "removeModel"
-                || root.operation === "runtime")) {
+                || root.operation === "runtime" || root.operation === "postprocess")) {
                 SendaStt.refreshPreload();
                 SendaSettings.refresh();
             }
             root.operation = "";
             root.installingId = "";
             root.progress = 0;
+            root.postprocessPhase = "";
             root.cancelRequested = false;
             root.refresh();
         }

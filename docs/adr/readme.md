@@ -13,3 +13,5 @@
 - [0011: Secretos fuera de la configuración](0011-secretos-fuera-de-la-configuracion.md)
 - [012: Consulta del inicio del usuario mediante REPL](adr-012-consulta-del-inicio-mediante-repl.md)
 - [013: Ciclo de vida lazy de las interfaces](adr-013-lazy-interface-lifecycle.md)
+- [014: Postprocesamiento local conservador del dictado](adr-014-postprocesamiento-local-conservador.md)
+- [015: Preparación de la corrección desde Ajustes](adr-015-preparacion-de-correccion-desde-ajustes.md)

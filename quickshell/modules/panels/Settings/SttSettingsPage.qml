@@ -27,6 +27,60 @@ Flickable {
         spacing: Theme.spacing.md
         SettingsGroup {
             SettingsRow {
+                label: "Corregir transcripción al terminar"
+                modified: SendaSttSettings.postprocessEnabled
+                onResetRequested: SendaSettings.save({ SENDA_STT_POSTPROCESS: "" }, "Corrección restablecida")
+                description: SendaSttSettings.postprocess.ready
+                    ? "Preparada · corrige al terminar, sin enviar el texto a internet. Si falla, conserva el original."
+                    : `${SendaSttSettings.postprocessError || SendaSttSettings.postprocess.message}. Al activar, Senda descarga y prepara lo necesario (${root.formatSize(SendaSttSettings.postprocess.sizeBytes)}).`
+                SettingsSwitch {
+                    checkedValue: SendaSttSettings.postprocessEnabled && SendaSttSettings.postprocess.ready
+                    enabled: !SendaSettings.busy && !SendaSttSettings.busy && SendaSttSettings.postprocess.supported
+                    Accessible.name: "Corregir transcripción al terminar"
+                    onToggledValue: value => SendaSttSettings.setPostprocess(value)
+                }
+            }
+            SettingsRow {
+                visible: SendaSttSettings.operation === "postprocess"
+                label: SendaSttSettings.postprocessPhase
+                description: `${Math.round(SendaSttSettings.progress * 100)} % · el dictado sigue disponible sin corrección`
+                SettingsButton {
+                    label: SendaSttSettings.cancelRequested ? "Cancelando…" : "Cancelar"
+                    enabled: !SendaSttSettings.cancelRequested
+                    onClicked: SendaSttSettings.cancelInstall()
+                }
+            }
+            Rectangle {
+                visible: SendaSttSettings.operation === "postprocess"
+                Layout.fillWidth: true
+                Layout.preferredHeight: 5
+                radius: Theme.rounding.full
+                color: Theme.colors.surfaceVariant
+                Rectangle {
+                    width: parent.width * SendaSttSettings.progress
+                    height: parent.height
+                    radius: parent.radius
+                    color: Theme.colors.primary
+                }
+            }
+            Text {
+                visible: SendaStt.originalTranscript !== ""
+                text: "Última transcripción original"
+                color: Theme.colors.text
+                font: Theme.font.overlay
+            }
+            TextEdit {
+                visible: SendaStt.originalTranscript !== ""
+                Layout.fillWidth: true
+                text: SendaStt.originalTranscript
+                readOnly: true
+                selectByMouse: true
+                wrapMode: TextEdit.Wrap
+                color: Theme.colors.overlay
+                font: Theme.font.overlay
+                Accessible.name: "Última transcripción original"
+            }
+            SettingsRow {
                 separator: false
                 label: "Motor"
                 description: SendaSttSettings.runtime.installed

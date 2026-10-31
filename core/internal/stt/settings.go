@@ -10,17 +10,19 @@ import (
 )
 
 const (
-	KeyAudioDucking = "SENDA_STT_AUDIO_DUCKING"
-	KeyAudioVolume  = "SENDA_STT_AUDIO_VOLUME"
-	KeyPreload      = "SENDA_STT_PRELOAD"
-	KeyModel        = "SENDA_STT_MODEL"
-	KeyLanguage     = "SENDA_STT_LANGUAGE"
-	KeyPasteMode    = "SENDA_STT_PASTE_MODE"
-	KeyShortcut     = "SENDA_STT_SHORTCUT"
-	KeyTerminals    = "SENDA_STT_TERMINALS"
-	DefaultModelID  = "nemotron-3.5-streaming-0.6b-int8"
-	DefaultLanguage = "es"
-	DefaultShortcut = "ALT + ntilde"
+	KeyAudioDucking     = "SENDA_STT_AUDIO_DUCKING"
+	KeyAudioVolume      = "SENDA_STT_AUDIO_VOLUME"
+	KeyPreload          = "SENDA_STT_PRELOAD"
+	KeyPostprocess      = "SENDA_STT_POSTPROCESS"
+	KeyPostprocessModel = "SENDA_STT_POSTPROCESS_MODEL"
+	KeyModel            = "SENDA_STT_MODEL"
+	KeyLanguage         = "SENDA_STT_LANGUAGE"
+	KeyPasteMode        = "SENDA_STT_PASTE_MODE"
+	KeyShortcut         = "SENDA_STT_SHORTCUT"
+	KeyTerminals        = "SENDA_STT_TERMINALS"
+	DefaultModelID      = "nemotron-3.5-streaming-0.6b-int8"
+	DefaultLanguage     = "es"
+	DefaultShortcut     = "ALT + ntilde"
 )
 
 type PasteMode string
@@ -40,6 +42,8 @@ type Settings struct {
 	Preload           bool
 	AudioDucking      bool
 	AudioVolume       int
+	Postprocess       bool
+	PostprocessModel  string
 }
 
 var modelPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
@@ -69,6 +73,8 @@ func LoadSettings(values map[string]string) Settings {
 		s.AudioVolume = v
 	}
 	s.Preload = strings.TrimSpace(values[KeyPreload]) == "true"
+	s.Postprocess = strings.TrimSpace(values[KeyPostprocess]) == "true"
+	s.PostprocessModel = strings.TrimSpace(values[KeyPostprocessModel])
 	var terminals []string
 	for _, v := range strings.Split(values[KeyTerminals], ",") {
 		v = strings.TrimSpace(v)

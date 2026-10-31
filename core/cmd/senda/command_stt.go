@@ -81,7 +81,7 @@ func sttCmd() *cobra.Command {
 				_, err = fmt.Fprintln(cmd.OutOrStdout(), strings.TrimSpace(status))
 				return err
 			}},
-		sttSessionCmd(), sttModelsCmd(), sttShortcutCmd(), sttRuntimeCmd(),
+		sttSessionCmd(), sttModelsCmd(), sttShortcutCmd(), sttRuntimeCmd(), sttPostprocessCmd(),
 	)
 	return cmd
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/deliver"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/engine"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/models"
+	"github.com/migueel15/SendaDesktopManager/core/internal/stt/postprocess"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/session"
 	"github.com/spf13/cobra"
 )
@@ -25,12 +26,17 @@ func sttSessionCmd() *cobra.Command {
 			return session.Deps{}, fmt.Errorf("no se pudo leer la configuración del dictado: %w", err)
 		}
 		settings := stt.LoadSettings(values)
+		bundle := postprocess.ManagedStore()
+		if settings.PostprocessModel == "" {
+			settings.PostprocessModel = bundle.ModelPath()
+		}
 		command, err := os.Executable()
 		if err != nil {
 			command = "senda"
 		}
 		return session.Deps{
-			Engine: engine.New(), Deliverer: deliver.New(stt.ExecRunner),
+			Postprocess: postprocess.Processor{Model: settings.PostprocessModel, Binary: bundle.Binary()}.Process,
+			Engine:      engine.New(), Deliverer: deliver.New(stt.ExecRunner),
 			DuckAudio:   control.DuckAudio(stt.ExecRunner, settings),
 			MuteDiscord: control.MuteDiscord(stt.ExecRunner, command),
 			Submap:      binds.NewSubmap(stt.ExecRunner), Notifier: control.NewNotifier(),
