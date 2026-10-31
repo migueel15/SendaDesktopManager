@@ -32,6 +32,7 @@ func main() {
 	rootCmd.AddCommand(displayCmd())
 	rootCmd.AddCommand(inputCmd())
 	rootCmd.AddCommand(bluetoothCmd())
+	rootCmd.AddCommand(usbCmd())
 	rootCmd.AddCommand(themeCmd())
 	rootCmd.AddCommand(sttCmd())
 	rootCmd.AddCommand(versionCmd())

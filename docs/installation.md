@@ -46,6 +46,7 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Red, audio y batería | `networkmanager`, `wireplumber`, `upower` |
    | Bluetooth | `bluez`, `bluez-utils`, `blueberry` |
    | Compartir pantalla y selectores de archivos (portales XDG) | `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk` |
+   | Montaje automático de USB | `udisks2`; ver [USB](usb.md) |
    | Brillo de monitores externos | `ddcutil` |
    | Sonidos del sistema | `ffmpeg`, `sound-theme-freedesktop` |
    | Enlaces, dictado y scripts | `xdg-utils`, `jq`, `python`, `wl-clipboard`, `pipewire` |
