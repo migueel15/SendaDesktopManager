@@ -391,6 +391,59 @@ func AdoptDisplays(ctx context.Context, run stt.Runner, rules []DisplayRule) ([]
 	return out, nil
 }
 
+// NormalizeLayout moves the arrangement so its top-left corner is 0x0, keeping
+// the monitors' relative places. A user-defined monitor cannot move, so then
+// the arrangement stays where it is.
+func NormalizeLayout(ctx context.Context, run stt.Runner, rules []DisplayRule) ([]DisplayRule, error) {
+	monitors, err := hyprctl.New(run).Monitors(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defs, err := UserDefinitions(MonitorSelector)
+	if err != nil {
+		return nil, fmt.Errorf("leer la configuración de Hyprland: %w", err)
+	}
+	return normalizeLayout(rules, monitors, defs), nil
+}
+
+func normalizeLayout(rules []DisplayRule, monitors []hyprctl.Monitor, defs []Definition) []DisplayRule {
+	out := append([]DisplayRule(nil), rules...)
+	type place struct{ index, x, y int }
+	var places []place
+	minX, minY := 0, 0
+	for _, m := range monitors {
+		i := findRule(out, m)
+		if i < 0 {
+			out = append(out, ruleFromLive(m))
+			i = len(out) - 1
+		}
+		if out[i].Disabled || out[i].Mirror != "" {
+			continue
+		}
+		if claimedBy(defs, m.Name, m.Description) != nil {
+			return rules
+		}
+		var x, y int
+		if _, err := fmt.Sscanf(out[i].Position, "%dx%d", &x, &y); err != nil {
+			return rules
+		}
+		if len(places) == 0 || x < minX {
+			minX = x
+		}
+		if len(places) == 0 || y < minY {
+			minY = y
+		}
+		places = append(places, place{i, x, y})
+	}
+	if minX == 0 && minY == 0 {
+		return rules
+	}
+	for _, p := range places {
+		out[p.index].Position = fmt.Sprintf("%dx%d", p.x-minX, p.y-minY)
+	}
+	return out
+}
+
 // ResetDisplay removes a monitor's rule, handing it back to Hyprland.
 func ResetDisplay(ctx context.Context, run stt.Runner, rules []DisplayRule, name string) ([]DisplayRule, error) {
 	_, target, err := liveDisplay(ctx, run, name)

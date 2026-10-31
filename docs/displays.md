@@ -6,6 +6,7 @@ La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolució
 - Los cambios se acumulan sin tocar las pantallas. Abajo aparece un aviso con **Aplicar cambios** y **Cancelar**.
 - Al aplicar, una ventana a pantalla completa en cada pantalla ofrece **Mantener** y **Revertir** con 15 segundos de cuenta atrás. Si no respondes, se vuelve al estado anterior, aunque la shell falle. Nada se guarda hasta pulsar **Mantener**.
 - La escala ofrece 100, 125, 150, 167, 175 y 200 %. Con `senda display set PANTALLA --scale` puedes usar otra, de 0.25 a 10, y la página la mostrará también.
+- Al aplicar, la colocación se desplaza para empezar en `0x0`, salvo que alguna pantalla la gestione tu configuración.
 - Las pantallas apagadas o que duplican a otra no aparecen en la colocación.
 
 ## Comandos

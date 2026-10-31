@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 )
 
 func hyprDir(t *testing.T, files map[string]string) {
@@ -239,5 +241,20 @@ func TestApplyTrialRestoresLiveState(t *testing.T) {
 	}
 	if len(evals) != 2 || !strings.Contains(evals[0], "1280x720@60") || !strings.Contains(evals[1], "1920x1080@59.95") {
 		t.Fatalf("evals = %v", evals)
+	}
+}
+
+func TestNormalizeLayout(t *testing.T) {
+	monitors := []hyprctl.Monitor{{Name: "DP-1", Description: "A", Width: 100, Height: 100, Scale: 1}, {Name: "DP-2", Description: "B", Width: 100, Height: 100, Scale: 1}}
+	rules := []DisplayRule{
+		{Name: "DP-1", Description: "A", Mode: "preferred", Position: "4608x-29", Scale: 1},
+		{Name: "DP-2", Description: "B", Mode: "preferred", Position: "7168x0", Scale: 1},
+	}
+	out := normalizeLayout(rules, monitors, nil)
+	if out[0].Position != "0x0" || out[1].Position != "2560x29" {
+		t.Fatalf("reglas = %+v", out)
+	}
+	if got := normalizeLayout(rules, monitors, []Definition{{Value: "desc:B"}}); got[0].Position != "4608x-29" {
+		t.Fatalf("no debe mover nada con una pantalla del usuario: %+v", got)
 	}
 }

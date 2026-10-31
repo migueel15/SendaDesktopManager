@@ -86,6 +86,9 @@ func applyDisplays(cmd *cobra.Command, changesJSON string, seconds int) error {
 			return err
 		}
 	}
+	if next, err = integration.NormalizeLayout(ctx, shortcutRunner, next); err != nil {
+		return err
+	}
 	restore, err := integration.ApplyTrial(ctx, shortcutRunner, rules, next)
 	if err != nil {
 		return err
