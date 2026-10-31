@@ -46,6 +46,7 @@ ShellRoot {
 	SttDock {}
 	LockScreen {}
 	ScreenshotLayer {}
+	DisplayConfirmDialog {}
 	SettingsWindow {}
 
 	Variants {
