@@ -18,7 +18,10 @@ import (
 type inputStatus struct {
 	Current map[string]string                  `json:"current"`
 	User    map[string]integration.UserSetting `json:"user"`
-	Themes  []string                           `json:"cursorThemes"`
+	// Saved is what Senda stored; Defaults is what an empty value falls back to.
+	Saved    map[string]string `json:"saved"`
+	Defaults map[string]string `json:"defaults"`
+	Themes   []string          `json:"cursorThemes"`
 }
 
 var inputOptions = map[string]string{
@@ -32,10 +35,17 @@ var inputOptions = map[string]string{
 	integration.FieldScrollFactor:  "input:touchpad:scroll_factor",
 }
 
+func fieldValues(s integration.InputSettings) map[string]string {
+	return map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme, integration.FieldCursorSize: s.CursorSize, integration.FieldAccelProfile: s.AccelProfile, integration.FieldFollowMouse: s.FollowMouse, integration.FieldDisableTyping: s.DisableTyping, integration.FieldScrollFactor: s.ScrollFactor}
+}
+
 func readInputStatus(ctx context.Context, s integration.InputSettings) inputStatus {
+	saved := fieldValues(s)
+	defaults := fieldValues(integration.InputSettings{}.WithDefaults())
+	defaults[integration.FieldScrollFactor] = "1"
 	s = s.WithDefaults()
 	user := integration.DetectInput(integration.LoadUserConfig(), integration.SessionEnvFiles())
-	senda := map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme, integration.FieldCursorSize: s.CursorSize, integration.FieldAccelProfile: s.AccelProfile, integration.FieldFollowMouse: s.FollowMouse, integration.FieldDisableTyping: s.DisableTyping, integration.FieldScrollFactor: s.ScrollFactor}
+	senda := fieldValues(s)
 	current := map[string]string{}
 	for field, value := range senda {
 		if u, ok := user[field]; ok {
@@ -58,7 +68,7 @@ func readInputStatus(ctx context.Context, s integration.InputSettings) inputStat
 		}
 		current[field] = value
 	}
-	return inputStatus{Current: current, User: user, Themes: integration.CursorThemes()}
+	return inputStatus{Current: current, User: user, Saved: saved, Defaults: defaults, Themes: integration.CursorThemes()}
 }
 
 func printInput(cmd *cobra.Command, status inputStatus, asJSON bool) error {

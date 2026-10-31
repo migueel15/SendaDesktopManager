@@ -12,6 +12,8 @@ Singleton {
     property var current: ({})
     // Only fields defined by the user's configuration appear here.
     property var user: ({})
+    property var saved: ({})
+    property var defaults: ({})
     property var cursorThemes: []
     property string error: ""
     property var pending: []
@@ -40,6 +42,8 @@ Singleton {
         const data = JSON.parse(text);
         root.current = data.current;
         root.user = data.user;
+        root.saved = data.saved;
+        root.defaults = data.defaults;
         root.cursorThemes = data.cursorThemes;
     }
 

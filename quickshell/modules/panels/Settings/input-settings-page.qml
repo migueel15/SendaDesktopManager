@@ -13,6 +13,13 @@ Flickable {
     readonly property bool accelFlat: SendaInputSettings.current.accelProfile === "flat"
 
     function managed(field) { return SendaInputSettings.user[field] !== undefined; }
+    // A saved value that differs from the default; the user's own never does.
+    function modified_(field) {
+        const saved = SendaInputSettings.saved[field] || "";
+        if (root.managed(field) || saved === "") return false;
+        const fallback = SendaInputSettings.defaults[field] || "";
+        return isNaN(Number(saved)) ? saved !== fallback : Number(saved) !== Number(fallback === "" ? NaN : fallback);
+    }
     // The notice exists only for fields the user's configuration defines.
     function note(field, text) {
         const user = SendaInputSettings.user[field];
@@ -29,6 +36,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Distribución de teclado"
+                modified: root.modified_("layout")
+                onResetRequested: { SendaInputSettings.set("layout", ""); }
                 description: root.note("layout", "Código XKB; varias separadas por comas, p. ej. us,es")
                 SettingsField {
                     id: layoutField
@@ -44,6 +53,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Velocidad del ratón"
+                modified: root.modified_("sensitivity")
+                onResetRequested: SendaInputSettings.set("sensitivity", "")
                 description: root.note("sensitivity", "50 % es la velocidad normal")
                 SettingsSlider {
                     implicitWidth: Theme.scaled(200)
@@ -56,6 +67,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Aceleración del ratón"
+                modified: root.modified_("accelProfile")
+                onResetRequested: SendaInputSettings.set("accel-profile", "")
                 description: root.note("accelProfile", root.accelFlat ? "Plana: el cursor recorre siempre lo mismo que la mano" : "Adaptativa: si mueves rápido, el cursor llega más lejos")
                 SettingsSegments {
                     implicitWidth: Theme.scaled(200)
@@ -103,6 +116,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Foco con el ratón"
+                modified: root.modified_("followMouse")
+                onResetRequested: SendaInputSettings.set("follow-mouse", "")
                 description: root.note("followMouse", ["El foco no sigue al cursor", "La ventana bajo el cursor recibe el foco", "Cursor y teclado separados; el clic da el foco", "Cursor y teclado totalmente separados"][Number(SendaInputSettings.current.followMouse || 1)] || "")
                 SettingsSegments {
                     implicitWidth: Theme.scaled(260)
@@ -118,6 +133,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Tocar para hacer clic"
+                modified: root.modified_("tapToClick")
+                onResetRequested: SendaInputSettings.set("tap-to-click", "")
                 description: root.note("tapToClick", "En el touchpad")
                 SettingsSwitch {
                     enabled: !root.managed("tapToClick")
@@ -127,6 +144,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Desplazamiento natural"
+                modified: root.modified_("naturalScroll")
+                onResetRequested: SendaInputSettings.set("natural-scroll", "")
                 description: root.note("naturalScroll", "En el touchpad")
                 SettingsSwitch {
                     enabled: !root.managed("naturalScroll")
@@ -140,6 +159,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Desactivar touchpad al escribir"
+                modified: root.modified_("disableWhileTyping")
+                onResetRequested: SendaInputSettings.set("disable-while-typing", "")
                 description: root.note("disableWhileTyping", "Evita toques accidentales con la palma")
                 SettingsSwitch {
                     enabled: !root.managed("disableWhileTyping")
@@ -149,6 +170,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Velocidad de desplazamiento"
+                modified: root.modified_("scrollFactor")
+                onResetRequested: SendaInputSettings.set("scroll-factor", "")
                 description: root.note("scrollFactor", "En el touchpad; 100 % es lo normal")
                 SettingsSlider {
                     implicitWidth: Theme.scaled(200)
@@ -164,6 +187,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Tema de cursor"
+                modified: root.modified_("cursorTheme")
+                onResetRequested: SendaInputSettings.set("cursor-theme", "")
                 description: root.note("cursorTheme", "Se aplica al momento")
                 SettingsSelect {
                     enabled: !root.managed("cursorTheme")
@@ -174,6 +199,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Tamaño del cursor"
+                modified: root.modified_("cursorSize")
+                onResetRequested: SendaInputSettings.set("cursor-size", "")
                 description: root.note("cursorSize", "Se aplica al momento")
                 SettingsSlider {
                     implicitWidth: Theme.scaled(200)

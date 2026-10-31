@@ -89,6 +89,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Carpeta de capturas"
+                modified: (SendaSettings.values.SENDA_SCREENSHOT_DIR || "") !== ""
+                onResetRequested: SendaSettings.save({ SENDA_SCREENSHOT_DIR: "" }, "Carpeta de capturas restablecida")
                 description: "Vacío usa Imágenes/Capturas. Solo se guarda al pulsar Guardar en el editor."
                 SettingsField {
                     Layout.preferredWidth: 230
@@ -100,6 +102,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Tiempo de inactividad"
+                modified: SendaHyprlandSettings.loaded && SendaHyprlandSettings.values.idleSeconds !== 600
+                onResetRequested: SendaHyprlandSettings.save("--idle-seconds", 600)
                 description: "Segundos, de 0 a 86400. 0 desactiva el bloqueo automático."
                 SavedMark { flag: "--idle-seconds" }
                 SettingsField {
@@ -113,6 +117,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Desenfocar pantalla de bloqueo"
+                modified: SendaHyprlandSettings.loaded && !SendaHyprlandSettings.values.blur
+                onResetRequested: SendaHyprlandSettings.save("--blur", true)
                 SavedMark { flag: "--blur" }
                 SettingsSwitch {
                     checkedValue: SendaHyprlandSettings.loaded && SendaHyprlandSettings.values.blur

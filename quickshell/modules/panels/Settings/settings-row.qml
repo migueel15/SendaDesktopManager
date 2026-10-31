@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import qs.common
 
@@ -7,6 +8,9 @@ Item {
     property string label: ""
     property string description: ""
     property bool separator: true
+    // The value differs from its default: shows the reset icon.
+    property bool modified: false
+    signal resetRequested()
     default property alias controls: controlLayout.data
     Layout.fillWidth: true
     implicitHeight: content.implicitHeight + (separator ? Theme.spacing.md + 1 : 0)
@@ -26,8 +30,8 @@ Item {
         ColumnLayout {
             id: textColumn
             anchors.left: parent.left
-            anchors.right: controlLayout.left
-            anchors.rightMargin: controlLayout.width > 0 ? Theme.spacing.md : 0
+            anchors.right: resetButton.left
+            anchors.rightMargin: controlLayout.width > 0 || root.modified ? Theme.spacing.md : 0
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.spacing.xs
             Text {
@@ -44,6 +48,27 @@ Item {
                 color: Theme.colors.overlay
                 font: Theme.font.caption
                 wrapMode: Text.WordWrap
+            }
+        }
+        Controls.AbstractButton {
+            id: resetButton
+            anchors.right: controlLayout.left
+            anchors.rightMargin: root.modified ? Theme.spacing.sm : 0
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.modified
+            width: visible ? Theme.scaled(22) : 0
+            height: Theme.scaled(22)
+            Accessible.name: "Restablecer " + root.label
+            Controls.ToolTip.visible: hovered
+            Controls.ToolTip.text: "Restablecer"
+            onClicked: root.resetRequested()
+            contentItem: Text {
+                text: "\uf0e2"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                color: resetButton.hovered ? Theme.colors.primary : Theme.colors.overlay
+                font.family: Theme.iconFamily
+                font.pixelSize: Theme.scaled(13)
             }
         }
         RowLayout {

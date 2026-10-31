@@ -18,6 +18,8 @@ Un valor vacío (`--layout=`) devuelve ese campo a su valor por defecto.
 
 Lo que nadie haya elegido ni definido usa: la distribución del sistema (`00-keyboard.conf` o `/etc/vconsole.conf`; si no se conoce, no se genera), velocidad del 50 %, aceleración plana, foco que sigue al ratón, y tocar para hacer clic y desplazamiento natural activados.
 
+Cada ajuste cambiado muestra en Ajustes un icono para restablecerlo a su valor por defecto. Al quitar el tema o el tamaño de cursor, el cambio se completa al iniciar sesión de nuevo.
+
 ## Convivencia con tu configuración
 
 Senda solo escribe en `~/.config/senda/config` y en su módulo generado `modules/senda.lua`; fuera de archivos, solo cambia el cursor GTK con `gsettings`. Sigue los `require` y `source` desde `hyprland.lua` o `hyprland.conf`, sin contar comentarios, archivos no cargados ni bloques de dispositivo, y busca:
