@@ -133,16 +133,16 @@ Item {
 
                 Text {
                     width: devicesColumn.width
-                    height: !Bluetooth.available || Bluetooth.enabled && Bluetooth.devices.length === 0 ? 36 : 0
+                    height: !Bluetooth.available || Bluetooth.enabled && Bluetooth.namedDevices.length === 0 ? 36 : 0
                     visible: height > 0
-                    text: !Bluetooth.available ? "Bluetooth no disponible" : "No hay dispositivos guardados"
+                    text: !Bluetooth.available ? "Bluetooth no disponible" : "No hay dispositivos con nombre"
                     color: Theme.colors.overlay
                     font: Theme.font.overlay
                     verticalAlignment: Text.AlignVCenter
                 }
 
                 Repeater {
-                    model: Bluetooth.devices
+                    model: Bluetooth.namedDevices
 
                     delegate: Rectangle {
                         required property var modelData
@@ -168,7 +168,7 @@ Item {
                             }
 
                             Text {
-                                text: modelData.connected ? (Bluetooth.getBatteryLabel(modelData) || "Conectado") : "Desconectado"
+                                text: modelData.connected ? (Bluetooth.getBatteryLabel(modelData) || "Conectado") : (modelData.paired ? "Desconectado" : "Sin emparejar")
                                 color: modelData.connected ? Theme.colors.success : Theme.colors.overlay
                                 font: Theme.font.overlay
                             }

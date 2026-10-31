@@ -14,6 +14,7 @@ Singleton {
     readonly property int activeDeviceCount: Bluetooth.defaultAdapter?.devices.values.filter(device => device.connected).length ?? 0
     readonly property string icon: root.enabled ? (root.connected ? "󰂱" : "󰂯") : "󰂲"
     readonly property list<BluetoothDevice> devices: Bluetooth.defaultAdapter?.devices.values ?? []
+    readonly property list<BluetoothDevice> namedDevices: root.devices.filter(device => root.getDeviceName(device) !== "")
 
     function setEnabled(enabled: bool): void {
         const adapter = Bluetooth.defaultAdapter;
@@ -40,12 +41,22 @@ Singleton {
         device.disconnect();
     }
 
-    function getDisplayName(device: BluetoothDevice): string {
+    function getDeviceName(device: BluetoothDevice): string {
         if (!device) {
-            return "Unknown device";
+            return "";
         }
 
-        return device.alias || device.name || device.address || "Unknown device";
+        for (const candidate of [device.name, device.deviceName]) {
+            const name = (candidate || "").trim();
+            if (name && !/^(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}$/i.test(name)) {
+                return name;
+            }
+        }
+        return "";
+    }
+
+    function getDisplayName(device: BluetoothDevice): string {
+        return root.getDeviceName(device) || "Dispositivo desconocido";
     }
 
     function getBatteryLabel(device: BluetoothDevice): string {
