@@ -41,10 +41,10 @@ func TestDetectFollowsRequiresAndVariables(t *testing.T) {
 
 func TestDetectFindsNothingForCleanUsers(t *testing.T) {
 	got := detected(t, map[string]string{
-		"hyprland.lua":      "-- hl.config({ input = { kb_layout = \"es\" } })\n--require(\"modules.old\")\nhl.device({ name = \"m\", sensitivity = 0.5 })\nhl.config({ input = { tablet = { sensitivity = 1 } } })\nrequire(\"modules.senda\")\n",
-		"modules/old.lua":   "hl.env(\"XCURSOR_THEME\", \"x\")\n",
-		"modules/senda.lua": "hl.config({ input = { kb_layout = \"us\" } })\n",
-		"orphan.lua":        "hl.config({ input = { kb_layout = \"fr\" } })\n",
+		"hyprland.lua":    "-- hl.config({ input = { kb_layout = \"es\" } })\n--require(\"modules.old\")\nhl.device({ name = \"m\", sensitivity = 0.5 })\nhl.config({ input = { tablet = { sensitivity = 1 } } })\nrequire(\"senda.init\")\n",
+		"modules/old.lua": "hl.env(\"XCURSOR_THEME\", \"x\")\n",
+		"senda/init.lua":  "hl.config({ input = { kb_layout = \"us\" } })\n",
+		"orphan.lua":      "hl.config({ input = { kb_layout = \"fr\" } })\n",
 	})
 	if len(got) != 0 {
 		t.Fatalf("clean configuration detected: %+v", got)

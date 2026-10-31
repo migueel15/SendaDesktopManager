@@ -38,7 +38,7 @@ func TestStatusReportsExternalShortcutConflict(t *testing.T) {
 			t.Fatalf("unexpected command %s", name)
 		}
 		if len(args) > 0 && args[0] == "repl" {
-			return []byte("dev\t@/elsewhere/senda.lua\n"), nil
+			return []byte("dev\t@/elsewhere/senda/init.lua\n"), nil
 		}
 		return []byte(`[{"modmask":68,"key":"l","description":"Otra acción"},{"modmask":8,"key":"ntilde","description":"Senda STT toggle"}]`), nil
 	}

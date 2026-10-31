@@ -37,7 +37,7 @@ func ensureLockIntegration(ctx context.Context, executable string, in *bufio.Rea
 		s.IdleMode = chooseIdleMode(in, out)
 		chosen = true
 	}
-	if _, _, err = integration.Render(s, executable); err != nil {
+	if _, err = integration.Render(s, executable); err != nil {
 		return err
 	}
 	if err = integration.CheckTargets(); err != nil {

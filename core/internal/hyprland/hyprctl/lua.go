@@ -63,7 +63,12 @@ func DefineSubmap(name string, binds ...string) string {
 
 // OnStart returns the Lua statement that runs command when Hyprland starts.
 func OnStart(command string) string {
-	return fmt.Sprintf("hl.on(\"hyprland.start\", function() hl.exec_cmd(%s) end)", strconv.Quote(command))
+	return OnStartExpr(strconv.Quote(command))
+}
+
+// OnStartExpr is OnStart for a command that is a Lua expression.
+func OnStartExpr(expr string) string {
+	return fmt.Sprintf("hl.on(\"hyprland.start\", function() hl.exec_cmd(%s) end)", expr)
 }
 
 // EnvLua returns the Lua statement that sets a session variable.

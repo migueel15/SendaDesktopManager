@@ -289,11 +289,11 @@ func SyncInputModule(s Settings) (bool, error) {
 	if exe, err = filepath.EvalSymlinks(exe); err != nil {
 		return false, err
 	}
-	before, _ := os.ReadFile(ModulePath())
+	before, _ := ReadGenerated()
 	if err := WriteFiles(s, exe); err != nil {
 		return false, err
 	}
-	after, err := os.ReadFile(ModulePath())
+	after, err := ReadGenerated()
 	return string(before) != string(after), err
 }
 

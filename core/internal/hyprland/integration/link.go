@@ -25,6 +25,10 @@ type Link struct {
 // probeExpression returns "missing" or "<version>\t<source>".
 var probeExpression = fmt.Sprintf(`type(%[1]s) == "function" and (tostring(%[1]s()) .. "\t" .. debug.getinfo(%[1]s, "S").source) or "missing"`, ProbeFunction)
 
+// Current reports whether the loaded module is the generated folder and not a
+// legacy single-file module.
+func (l Link) Current() bool { return l.Loaded && filepath.Base(l.Source) == initFile }
+
 // InSession reports whether hyprctl can reach a running Hyprland.
 func InSession() bool { return hyprctl.InSession() }
 
@@ -45,18 +49,19 @@ func Probe(ctx context.Context, run stt.Runner) (Link, error) {
 	return Link{Loaded: true, Version: version, Source: strings.TrimPrefix(source, "@")}, nil
 }
 
-// moduleOverride is the module location reported by a loaded module, so that
-// regeneration follows the user if they moved Senda's file.
+// moduleOverride is the init.lua reported by a loaded module, so that
+// regeneration follows the user if they moved Senda's folder.
 var moduleOverride string
 
-// Locate makes ModulePath follow the file a loaded module came from, when it
-// is a regular file carrying Senda's header.
+// Locate makes Dir follow the folder Hyprland loaded. A deleted folder keeps
+// its location, because the import still points there; a file Senda does not
+// own, or a legacy module, leaves the default.
 func Locate(link Link) {
 	moduleOverride = ""
-	if !link.Loaded || !filepath.IsAbs(link.Source) {
+	if !link.Current() || !filepath.IsAbs(link.Source) {
 		return
 	}
-	if ok, _ := owned(link.Source, moduleHeader); ok {
+	if _, err := owned(link.Source, moduleHeader); err == nil {
 		moduleOverride = link.Source
 	}
 }
@@ -76,7 +81,7 @@ func EnsureLinked(ctx context.Context, run stt.Runner) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if link.Loaded {
+		if link.Current() {
 			return "", nil
 		}
 	}
@@ -115,7 +120,7 @@ func EnsureLinked(ctx context.Context, run stt.Runner) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if !link.Loaded {
+	if !link.Current() {
 		return fmt.Sprintf("Hyprland no ha cargado el módulo de Senda; comprueba que %s llega a ejecutar %s.", main, RequireLine), nil
 	}
 	return "", nil

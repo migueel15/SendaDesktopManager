@@ -49,7 +49,7 @@ func applyHyprland(ctx context.Context, s integration.Settings, idleChanged bool
 			integration.Locate(link)
 		}
 	}
-	if _, _, err = integration.Render(s, exe); err != nil {
+	if _, err = integration.Render(s, exe); err != nil {
 		return integration.Status{}, err
 	}
 	if err = integration.CheckTargets(); err != nil {

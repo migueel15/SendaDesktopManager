@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -31,9 +30,9 @@ func (f *fakeHyprland) run(_ context.Context, _ io.Reader, name string, args ...
 }
 
 func TestProbe(t *testing.T) {
-	f := &fakeHyprland{reloaded: true, source: "/cfg/senda.lua"}
+	f := &fakeHyprland{reloaded: true, source: "/cfg/senda/init.lua"}
 	link, err := Probe(context.Background(), f.run)
-	if err != nil || !link.Loaded || link.Version != "1.0" || link.Source != "/cfg/senda.lua" {
+	if err != nil || !link.Loaded || link.Version != "1.0" || link.Source != "/cfg/senda/init.lua" {
 		t.Fatalf("got %+v %v", link, err)
 	}
 	f.reloaded = false
@@ -66,7 +65,7 @@ func TestEnsureLinkedAppendsAndReloads(t *testing.T) {
 func TestEnsureLinkedSkipsLoadedModule(t *testing.T) {
 	tempConfig(t)
 	t.Setenv("HYPRLAND_INSTANCE_SIGNATURE", "fake")
-	f := &fakeHyprland{reloaded: true, source: "/somewhere/else.lua"}
+	f := &fakeHyprland{reloaded: true, source: "/somewhere/else/init.lua"}
 	if warning, err := EnsureLinked(context.Background(), f.run); err != nil || warning != "" {
 		t.Fatalf("warning %q err %v", warning, err)
 	}
@@ -78,7 +77,7 @@ func TestEnsureLinkedSkipsLoadedModule(t *testing.T) {
 func TestLocateFollowsMovedModule(t *testing.T) {
 	dir := tempConfig(t)
 	t.Cleanup(func() { moduleOverride = "" })
-	moved := filepath.Join(dir, "custom", "mine.lua")
+	moved := filepath.Join(dir, "custom", "init.lua")
 	if err := os.MkdirAll(filepath.Dir(moved), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -89,12 +88,15 @@ func TestLocateFollowsMovedModule(t *testing.T) {
 	if ModulePath() != moved {
 		t.Fatalf("got %s", ModulePath())
 	}
-	user := filepath.Join(dir, "custom", "user.lua")
+	user := filepath.Join(dir, "other", "init.lua")
+	if err := os.MkdirAll(filepath.Dir(user), 0755); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(user, []byte("-- mine\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	Locate(Link{Loaded: true, Source: user})
-	if strings.HasSuffix(ModulePath(), "user.lua") {
+	if ModulePath() == user {
 		t.Fatal("followed a file without Senda's header")
 	}
 }
