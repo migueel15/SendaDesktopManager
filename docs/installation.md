@@ -48,7 +48,6 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Brillo de la pantalla y de monitores externos | `brightnessctl`, `ddcutil` |
    | Compartir pantalla y selectores de archivos (portales XDG) | `xdg-desktop-portal-hyprland`, `xdg-desktop-portal-gtk` |
    | Montaje automático de USB | `udisks2`; ver [USB](usb.md) |
-   | Brillo de monitores externos | `ddcutil` |
    | Sonidos del sistema | `ffmpeg`, `sound-theme-freedesktop` |
    | Enlaces, dictado y scripts | `xdg-utils`, `jq`, `python`, `wl-clipboard`, `pipewire` |
    | Acceso al keyring de Google Calendar | `libsecret`; requiere además un proveedor Secret Service configurado y desbloqueado, véase [Google Calendar](google-calendar.md) |

@@ -1,6 +1,6 @@
 # Configuración
 
-Senda guarda las preferencias del usuario en un único archivo `KEY=VALUE`. El archivo no contiene secretos y se puede compartir entre equipos ([ADR 0010](adr/0010-secretos-fuera-de-la-configuracion.md)).
+Senda guarda las preferencias del usuario en un único archivo `KEY=VALUE`. El archivo no contiene secretos y se puede compartir entre equipos ([ADR 0010](adr/0011-secretos-fuera-de-la-configuracion.md)).
 
 ## Ubicación
 

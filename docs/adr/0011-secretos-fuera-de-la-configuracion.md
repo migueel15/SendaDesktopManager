@@ -1,4 +1,4 @@
-# ADR 0010: Secretos fuera de la configuración
+# ADR 0011: Secretos fuera de la configuración
 
 - Estado: aceptada
 - Fecha: 2026-10-31
