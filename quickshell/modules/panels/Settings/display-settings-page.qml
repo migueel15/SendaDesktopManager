@@ -22,6 +22,15 @@ Flickable {
     readonly property string currentSize: selected ? selected.width + "x" + selected.height : ""
     readonly property var rates: modes.filter(m => m.size === currentSize).map(m => m.rate)
 
+    // Hyprland rounds fractional scales (1.67 becomes 1.66667), so compare with
+    // two decimals. A scale from elsewhere is offered too, to show it selected.
+    readonly property string currentScale: selected ? String(Math.round(selected.scale * 100) / 100) : ""
+    readonly property var scales: {
+        const common = ["1", "1.25", "1.5", "1.67", "1.75", "2"];
+        return currentScale === "" || common.includes(currentScale) ? common
+            : common.concat(currentScale).sort((a, b) => Number(a) - Number(b));
+    }
+
     function mirrorName(d) { return d.mirrorOf && d.mirrorOf !== "none" ? d.mirrorOf : ""; }
     function splitMode(mode) {
         const parts = mode.split("@");
@@ -199,8 +208,8 @@ Flickable {
                 label: "Escala"
                 SettingsSegments {
                     enabled: root.editable
-                    options: ["1", "1.25", "1.5", "1.75", "2"].map(v => ({ label: Number(v) * 100 + " %", value: v }))
-                    value: root.selected ? String(root.selected.scale) : ""
+                    options: root.scales.map(v => ({ label: Math.round(Number(v) * 100) + " %", value: v }))
+                    value: root.currentScale
                     onChosen: value => SendaDisplaySettings.setGuarded(root.selected.name, "--scale", value)
                 }
             }

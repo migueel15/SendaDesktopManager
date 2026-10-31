@@ -4,6 +4,7 @@ La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolució
 
 - Arrastra una pantalla y al soltarla se pega al lado de otra, sin solaparse.
 - Los cambios de modo, escala, rotación, encendido y duplicado se deshacen solos a los 15 segundos si no pulsas **Mantener**.
+- La escala ofrece 100, 125, 150, 167, 175 y 200 %. Con `senda display set PANTALLA --scale` puedes usar otra, de 0.25 a 10, y la página la mostrará también.
 - Las pantallas apagadas o que duplican a otra no aparecen en la colocación.
 
 ## Comandos
