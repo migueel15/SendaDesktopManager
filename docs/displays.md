@@ -18,6 +18,7 @@ La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolució
 | `senda display set PANTALLA --mirror DP-1` | Duplica otra pantalla; `--mirror none` deja de hacerlo. |
 | `senda display set PANTALLA --enabled=false` | Apaga la pantalla. |
 | `senda display reset PANTALLA` | Quita los ajustes de Senda de esa pantalla. |
+| `senda display adopt` | Guarda el estado actual de todas las pantallas, para retirar después tus definiciones sin que cambie nada. |
 | `senda display undo` | Deshace el último cambio. |
 | `senda display sync` | Regenera el módulo si tu configuración de monitores ha cambiado. La shell lo hace sola. |
 
@@ -26,3 +27,10 @@ La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolució
 Si tu configuración de Hyprland define un monitor con `hl.monitor` o `monitor =`, tu definición gana: Senda no genera nada para él, rechaza cambiarlo y lo muestra como gestionado por tu configuración, con el archivo y la línea. Si no defines ninguno, esa sección no aparece.
 
 Una regla general (`output = ""`) no cuenta como definición: Senda puede configurar cada pantalla por encima de ella. Un `output` calculado por código podría ser cualquier pantalla, así que todas pasan a estar gestionadas por ti. Solo se leen los archivos que Hyprland carga mediante rutas literales. Ver [ADR 0008](adr/0008-configuracion-del-usuario-gana.md).
+
+## Pasar el control a Senda
+
+1. Ejecuta `senda display adopt` con tus monitores definidos.
+2. Retira sus `hl.monitor` de tu configuración y recarga Hyprland.
+
+Un plugin que llame a `hl.monitor` en tiempo de ejecución debe llevar `-- senda: runtime` en la línea anterior y volver a aplicar sus cambios en el evento `config.reloaded`.

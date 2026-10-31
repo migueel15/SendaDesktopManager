@@ -20,6 +20,10 @@ type Selector struct {
 	ConfKeyword string
 }
 
+// RuntimeMarker on the line before a call says it adjusts a setting at runtime,
+// as a plugin does, and defines nothing.
+const RuntimeMarker = "-- senda: runtime"
+
 // Definition is one place where the user's configuration defines a setting.
 type Definition struct {
 	// Value is the target as written. It is empty for a catch-all.
@@ -85,11 +89,15 @@ func (s *definitionScan) file(path string) error {
 
 func (s *definitionScan) lua(path, text string) error {
 	code := stripLuaComments(text)
+	lines := strings.Split(text, "\n")
 	if s.sel.LuaCall != "" {
 		field := regexp.MustCompile(fmt.Sprintf(luaFieldStart, regexp.QuoteMeta(s.sel.Field)))
 		call := regexp.MustCompile(`(^|[^\w.])` + regexp.QuoteMeta(s.sel.LuaCall) + `\s*\(`)
 		for _, match := range call.FindAllStringIndex(code, -1) {
 			d := Definition{File: path, Line: strings.Count(code[:match[1]], "\n") + 1, Dynamic: true}
+			if d.Line >= 2 && strings.TrimSpace(lines[d.Line-2]) == RuntimeMarker {
+				continue
+			}
 			if m := field.FindStringSubmatch(callBody(code[match[1]:])); m != nil {
 				d.Value, d.Dynamic = m[1]+m[2], false
 			}

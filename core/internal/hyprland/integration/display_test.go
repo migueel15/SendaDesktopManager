@@ -164,3 +164,18 @@ func mustParse(t *testing.T, value string) []DisplayRule {
 	}
 	return rules
 }
+
+func TestRuntimeMarkerIsNotADefinition(t *testing.T) {
+	hyprDir(t, map[string]string{"hyprland.lua": "-- senda: runtime\nhl.monitor({ output = m.name })\n"})
+	if defs, err := UserDefinitions(MonitorSelector); err != nil || len(defs) != 0 {
+		t.Fatalf("definiciones = %+v, %v", defs, err)
+	}
+}
+
+func TestAdoptDisplaysKeepsExistingRules(t *testing.T) {
+	existing := []DisplayRule{{Name: "DP-1", Description: "Foo", Mode: "preferred", Position: "5x5", Scale: 2}}
+	rules, err := AdoptDisplays(context.Background(), monitorsRun, existing)
+	if err != nil || len(rules) != 2 || rules[0].Position != "5x5" || rules[1].Mode != "2560x1440@144.00" {
+		t.Fatalf("reglas = %+v, %v", rules, err)
+	}
+}

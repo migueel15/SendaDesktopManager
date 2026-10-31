@@ -281,6 +281,30 @@ func ChangeDisplay(ctx context.Context, run stt.Runner, rules []DisplayRule, nam
 	return out, nil
 }
 
+// AdoptDisplays stores the live state of every monitor without a rule, so that
+// removing the user's definitions changes nothing. Rules of monitors the user
+// still defines stay inactive until then.
+func AdoptDisplays(ctx context.Context, run stt.Runner, rules []DisplayRule) ([]DisplayRule, error) {
+	monitors, err := hyprctl.New(run).Monitors(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := append([]DisplayRule(nil), rules...)
+	for _, m := range monitors {
+		if findRule(out, m) >= 0 {
+			continue
+		}
+		rule := ruleFromLive(m)
+		for _, target := range monitors {
+			if target.Name == m.MirrorOf {
+				rule.Mirror = monitorOutput(target.Name, target.Description)
+			}
+		}
+		out = append(out, rule)
+	}
+	return out, nil
+}
+
 // ResetDisplay removes a monitor's rule, handing it back to Hyprland.
 func ResetDisplay(ctx context.Context, run stt.Runner, rules []DisplayRule, name string) ([]DisplayRule, error) {
 	_, target, err := liveDisplay(ctx, run, name)

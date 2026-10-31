@@ -108,6 +108,17 @@ func displayCmd() *cobra.Command {
 		}
 		return commitDisplays(cmd.Context(), next, rules)
 	}}
+	adopt := &cobra.Command{Use: "adopt", Short: "Guardar el estado actual de las pantallas en Senda", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		rules, _, err := integration.StoredDisplays(paths.ConfigFile())
+		if err != nil {
+			return fmt.Errorf("leer pantallas: %w", err)
+		}
+		next, err := integration.AdoptDisplays(cmd.Context(), shortcutRunner, rules)
+		if err != nil {
+			return err
+		}
+		return commitDisplays(cmd.Context(), next, rules)
+	}}
 	undo := &cobra.Command{Use: "undo", Short: "Deshacer el último cambio de pantallas", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		rules, previous, err := integration.StoredDisplays(paths.ConfigFile())
 		if err != nil {
@@ -135,7 +146,7 @@ func displayCmd() *cobra.Command {
 		})
 		return nil
 	}}
-	cmd.AddCommand(show, set, reset, undo, sync, watch)
+	cmd.AddCommand(show, set, reset, adopt, undo, sync, watch)
 	return cmd
 }
 
