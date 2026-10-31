@@ -93,6 +93,7 @@ Item {
 
     // Search works on the rows the pages really have, so no list needs upkeep.
     property string query: ""
+    readonly property bool searching: query.trim() !== ""
     function normalized(text) {
         return String(text).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     }
@@ -130,63 +131,6 @@ Item {
         if (result.row) Qt.callLater(result.row.reveal);
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        spacing: Theme.spacing.md
-
-        SettingsField {
-            id: searchField
-            Layout.fillWidth: true
-            placeholder: "Buscar ajustes"
-            onTextChanged: root.query = text
-            onAccepted: root.openResult(root.results[0])
-        }
-
-    Item {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-
-    SettingsCard {
-        anchors.fill: parent
-        z: 1
-        visible: root.query.trim() !== ""
-        Text {
-            anchors.centerIn: parent
-            visible: root.results.length === 0
-            text: "Sin resultados"
-            color: Theme.colors.overlay
-            font: Theme.font.body
-        }
-        ListView {
-            anchors { fill: parent; margins: Theme.spacing.md }
-            clip: true
-            spacing: Theme.spacing.xs
-            model: root.results
-            delegate: Rectangle {
-                id: resultEntry
-                required property var modelData
-                width: ListView.view.width
-                height: resultColumn.implicitHeight + 2 * Theme.spacing.sm
-                radius: Theme.rounding.small
-                color: resultArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-                ColumnLayout {
-                    id: resultColumn
-                    anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }
-                    spacing: Theme.spacing.xxs
-                    Text { text: resultEntry.modelData.title; color: Theme.colors.text; font: Theme.font.body }
-                    Text { text: resultEntry.modelData.section; color: Theme.colors.overlay; font: Theme.font.caption }
-                }
-                MouseArea {
-                    id: resultArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.openResult(resultEntry.modelData)
-                }
-            }
-        }
-    }
-
     RowLayout {
         anchors.fill: parent
         spacing: Theme.spacing.md
@@ -212,6 +156,66 @@ Item {
                     font.weight: Font.Bold
                 }
 
+                SettingsField {
+                    id: searchField
+                    Layout.fillWidth: true
+                    Layout.bottomMargin: Theme.spacing.sm
+                    placeholder: "Buscar ajustes"
+                    onTextChanged: root.query = text
+                    onAccepted: root.openResult(root.results[0])
+                }
+
+                // While searching, results take the place of the sections.
+                Text {
+                    Layout.fillWidth: true
+                    visible: root.searching && root.results.length === 0
+                    text: "Sin resultados"
+                    color: Theme.colors.overlay
+                    font: Theme.font.body
+                }
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: root.searching
+                    clip: true
+                    spacing: Theme.spacing.xs
+                    model: root.results
+                    delegate: Rectangle {
+                        id: resultEntry
+                        required property var modelData
+                        width: ListView.view.width
+                        height: resultColumn.implicitHeight + 2 * Theme.spacing.sm
+                        radius: Theme.rounding.small
+                        color: resultArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+                        ColumnLayout {
+                            id: resultColumn
+                            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }
+                            spacing: Theme.spacing.xxs
+                            Text {
+                                Layout.fillWidth: true
+                                text: resultEntry.modelData.title
+                                color: Theme.colors.text
+                                font: Theme.font.body
+                                wrapMode: Text.WordWrap
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: resultEntry.modelData.section
+                                color: Theme.colors.overlay
+                                font: Theme.font.caption
+                                elide: Text.ElideRight
+                            }
+                        }
+                        MouseArea {
+                            id: resultArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.openResult(resultEntry.modelData)
+                        }
+                    }
+                }
+
                 Repeater {
                     model: root.sections
 
@@ -221,6 +225,7 @@ Item {
                         required property int index
 
                         readonly property bool selected: root.currentSection === index
+                        visible: !root.searching
 
                         Layout.fillWidth: true
                         implicitHeight: Theme.scaled(24) + Theme.spacing.md
@@ -260,6 +265,7 @@ Item {
 
                 Item {
                     Layout.fillHeight: true
+                    visible: !root.searching
                 }
 
                 SettingsButton {
@@ -354,7 +360,5 @@ Item {
                 }
             }
         }
-    }
-    }
     }
 }
