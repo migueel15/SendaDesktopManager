@@ -22,7 +22,7 @@ Cada ajuste cambiado muestra en Ajustes un icono para restablecerlo a su valor p
 
 ## Convivencia con tu configuración
 
-Senda solo escribe en `~/.config/senda/config` y en su módulo generado `modules/senda.lua`; fuera de archivos, solo cambia el cursor GTK con `gsettings`. Sigue los `require` y `source` desde `hyprland.lua` o `hyprland.conf`, sin contar comentarios, archivos no cargados ni bloques de dispositivo, y busca:
+Senda solo escribe en `~/.config/senda/config` y en su módulo generado `senda/`; fuera de archivos, solo cambia el cursor GTK con `gsettings`. Sigue los `require` y `source` desde `hyprland.lua` o `hyprland.conf`, sin contar comentarios, archivos no cargados ni bloques de dispositivo, y busca:
 
 - `kb_layout`, `sensitivity`, `accel_profile`, `follow_mouse`, `tap_to_click`, `natural_scroll`, `disable_while_typing` y `scroll_factor` en `input`.
 - `XCURSOR_THEME`, `HYPRCURSOR_THEME`, `XCURSOR_SIZE` o `HYPRCURSOR_SIZE` con `hl.env` o `env =`, `hyprctl setcursor`, `gsettings set org.gnome.desktop.interface cursor…`, y esas variables en `uwsm/env*` y `environment.d`.

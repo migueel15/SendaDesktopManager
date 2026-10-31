@@ -65,10 +65,10 @@ Las clases de ventana de terminal se configuran en `SENDA_STT_TERMINALS`. Los va
 
 ## Activar el atajo de Hyprland
 
-`senda setup` genera el módulo común `~/.config/hypr/modules/senda.lua`. Si no se ha migrado una referencia antigua, añade esta línea a tu configuración de Hyprland:
+`senda setup` genera la carpeta común `~/.config/hypr/senda/`. Si no se ha migrado una referencia antigua, añade esta línea a tu configuración de Hyprland:
 
 ```lua
-require("modules.senda")
+require("senda.init")
 ```
 
 Revisa los conflictos que informa Ajustes o `senda stt shortcut show`. Si otra acción usa la misma combinación, elige otra en Ajustes o con `senda stt shortcut set <combo>`. Hyprland no carga el atajo hasta que se requiere el módulo. Si editas manualmente `hyprland.lua`, recarga Hyprland o usa `senda stt shortcut apply` para regenerar y recargar el módulo.

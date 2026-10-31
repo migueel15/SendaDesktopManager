@@ -35,7 +35,7 @@ que bloqueo y dictado, y elegir la carpeta de destino. Se comprueban los
 conflictos con los otros atajos de Senda y con los binds activos de Hyprland.
 
 `SENDA_SCREENSHOT_SHORTCUT` usa `Print` por defecto. Para regenerar el módulo
-`modules/senda.lua` desde la CLI:
+`senda/` desde la CLI:
 
 ```sh
 senda hyprland set --screenshot-shortcut 'Print'

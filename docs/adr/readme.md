@@ -9,3 +9,4 @@
 - [0007: Comunicación centralizada con Hyprland](0007-comunicacion-centralizada-con-hyprland.md)
 - [0008: La configuración del usuario gana](0008-configuracion-del-usuario-gana.md)
 - [009: Agente de emparejamiento Bluetooth](adr-009-bluetooth-pairing-agent.md)
+- [0010: Carpeta generada en Hyprland](0010-carpeta-generada-en-hyprland.md)
