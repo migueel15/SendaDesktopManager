@@ -108,6 +108,7 @@ func CheckTargets() error {
 }
 
 func WriteFiles(s Settings, executable string) error {
+	s.Input = s.Input.WithDefaults().withoutUser(DetectInput(LoadUserConfig(), SessionEnvFiles()))
 	lua, idle, err := Render(s, executable)
 	if err != nil {
 		return err

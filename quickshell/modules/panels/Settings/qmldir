@@ -18,3 +18,5 @@ WidgetsSettingsPage 1.0 widgets-settings-page.qml
 SystemSettingsPage 1.0 system-settings-page.qml
 SettingsWindow 1.0 settings-window.qml
 DisplaySettingsPage 1.0 display-settings-page.qml
+InputSettingsPage 1.0 input-settings-page.qml
+SettingsSelect 1.0 settings-select.qml

@@ -42,6 +42,8 @@ type Settings struct {
 	IdleMode string
 	// Displays are the monitor rules to generate, without those the user owns.
 	Displays []DisplayRule
+	// Input is what Senda generates, without the fields the user defines.
+	Input InputSettings
 }
 
 func DefaultSettings() Settings {
@@ -100,6 +102,12 @@ function %s() return %s end
 		}
 		lua = append(lua, rule.lua()+"\n"...)
 	}
+	if err := settings.Input.Validate(); err != nil {
+		return nil, nil, err
+	}
+	lua = append(lua, renderInput(settings.Input, CursorSize())...)
+	// Reconcile at login with what the user may have added since the last write.
+	lua = append(lua, hyprctl.OnStart(command+" input sync")+"\n"...)
 	if settings.IdleMode == IdleModeSenda {
 		idleCommand := "hypridle -c '" + strings.ReplaceAll(IdlePath(), "'", "'\\''") + "'"
 		lua = append(lua, hyprctl.OnStart(idleCommand)+"\n"...)

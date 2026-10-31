@@ -120,6 +120,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Atenuar volumen durante el dictado"
+                modified: !SendaSttSettings.audioDuckingEnabled
+                onResetRequested: SendaSettings.save({ SENDA_STT_AUDIO_DUCKING: "" }, "Atenuación restablecida")
                 description: "Al terminar o cancelar se recupera el volumen anterior. Se aplica al siguiente dictado."
                 SettingsSwitch {
                     checkedValue: SendaSttSettings.audioDuckingEnabled
@@ -131,6 +133,8 @@ Flickable {
             SettingsRow {
                 visible: SendaSttSettings.audioDuckingEnabled
                 label: "Volumen durante el dictado"
+                modified: SendaSttSettings.audioVolume !== 10
+                onResetRequested: { dictationVolumeField.text = "10"; SendaSettings.save({ SENDA_STT_AUDIO_VOLUME: "" }, "Volumen restablecido"); }
                 description: "Porcentaje entre 0 y 100. Solo se baja si el volumen actual es mayor y no está silenciado."
                 SettingsField {
                     id: dictationVolumeField
@@ -151,6 +155,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Precargar modelo"
+                modified: SendaSttSettings.preloadEnabled
+                onResetRequested: SendaSettings.save({ SENDA_STT_PRELOAD: "" }, "Precarga restablecida")
                 description: SendaSttSettings.preloadState === "preparing" ? "Preparando el modelo…"
                     : SendaSttSettings.preloadState === "ready" ? "Listo"
                     : SendaSttSettings.preloadState === "error" ? `Error: ${SendaSttSettings.preloadError}` : "Inactivo"
@@ -166,6 +172,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Idioma"
+                modified: (SendaSettings.values.SENDA_STT_LANGUAGE || "es") !== "es"
+                onResetRequested: { languageField.text = "es"; SendaSettings.save({ SENDA_STT_LANGUAGE: "" }, "Idioma restablecido"); }
                 description: "Español o detección automática. También puedes introducir un código."
                 SettingsSegments {
                     value: SendaSettings.values.SENDA_STT_LANGUAGE || "es"
@@ -189,6 +197,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Al dictar"
+                modified: (SendaSettings.values.SENDA_STT_PASTE_MODE || "paste") !== "paste"
+                onResetRequested: SendaSettings.save({ SENDA_STT_PASTE_MODE: "" }, "Modo de pegado restablecido")
                 SettingsSegments {
                     value: SendaSettings.values.SENDA_STT_PASTE_MODE || "paste"
                     options: [{ label: "Pegar directamente", value: "paste" }, { label: "Solo portapapeles", value: "clipboard" }]
@@ -198,6 +208,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Terminales"
+                modified: (SendaSettings.values.SENDA_STT_TERMINALS || "") !== ""
+                onResetRequested: { terminalsField.text = "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty"; SendaSettings.save({ SENDA_STT_TERMINALS: "" }, "Terminales restablecidas"); }
                 description: "Clases de ventana separadas por comas."
                 SettingsField {
                     id: terminalsField

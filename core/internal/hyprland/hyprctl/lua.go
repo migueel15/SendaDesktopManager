@@ -3,6 +3,7 @@ package hyprctl
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // These helpers build the Lua expressions of Hyprland's configuration API.
@@ -63,6 +64,16 @@ func DefineSubmap(name string, binds ...string) string {
 // OnStart returns the Lua statement that runs command when Hyprland starts.
 func OnStart(command string) string {
 	return fmt.Sprintf("hl.on(\"hyprland.start\", function() hl.exec_cmd(%s) end)", strconv.Quote(command))
+}
+
+// EnvLua returns the Lua statement that sets a session variable.
+func EnvLua(name, value string) string {
+	return fmt.Sprintf("hl.env(%s, %s)", strconv.Quote(name), strconv.Quote(value))
+}
+
+// SetCursorCommand returns the shell command that applies a cursor theme.
+func SetCursorCommand(theme string, size int) string {
+	return fmt.Sprintf("hyprctl setcursor '%s' %d", strings.ReplaceAll(theme, "'", "'\\''"), size)
 }
 
 // SessionLockConfig returns the Lua statement with the session lock options.

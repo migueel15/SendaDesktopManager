@@ -1,229 +1,232 @@
 package integration
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 )
 
-// Selector says what a user definition looks like in Hyprland's configuration.
-// Settings pages share this detection: see ADR 0008.
-type Selector struct {
-	// LuaCall is the function that defines the setting, such as hl.monitor.
-	LuaCall string
-	// Field is the table field that names the target, such as output.
-	Field string
-	// ConfKeyword is the equivalent keyword in hyprland.conf; empty to skip it.
-	ConfKeyword string
-}
-
-// RuntimeMarker on the line before a call says it adjusts a setting at runtime,
-// as a plugin does, and defines nothing.
-const RuntimeMarker = "-- senda: runtime"
-
-// Definition is one place where the user's configuration defines a setting.
-type Definition struct {
-	// Value is the target as written. It is empty for a catch-all.
+// UserSetting says that the user's own configuration defines a value. Value is
+// empty when it is not a literal, such as a Lua variable.
+type UserSetting struct {
 	Value string `json:"value"`
-	// Dynamic means the target is computed, so it can match anything.
-	Dynamic bool   `json:"dynamic"`
-	File    string `json:"file"`
-	Line    int    `json:"line"`
+	File  string `json:"file"`
 }
 
-// Source returns the file:line shown to the user.
-func (d Definition) Source() string { return fmt.Sprintf("%s:%d", d.File, d.Line) }
-
-// UserDefinitions scans the files Hyprland actually loads, starting at its main
-// file and following literal require, dofile and source references. Files that
-// nothing loads are ignored, and so are the files Senda generates.
-func UserDefinitions(sel Selector) ([]Definition, error) {
-	main := hyprConfigFile()
-	if _, err := os.Stat(main); errors.Is(err, os.ErrNotExist) {
-		main = strings.TrimSuffix(main, ".lua") + ".conf"
-	}
-	scan := definitionScan{sel: sel, root: filepath.Dir(main), seen: map[string]bool{}}
-	if err := scan.file(main); err != nil {
-		return nil, err
-	}
-	return scan.found, nil
-}
-
-type definitionScan struct {
-	sel   Selector
-	root  string
-	seen  map[string]bool
-	found []Definition
-}
+// UserConfig holds the text of the files Hyprland really loads from the user's
+// configuration: comments are removed and files that nothing requires, or
+// whose require is commented out, are not included. Senda's module is skipped.
+type UserConfig map[string]string
 
 var (
-	luaIncludeRe  = regexp.MustCompile(`\b(require|dofile)\s*[,(]?\s*["']([^"']+)["']`)
-	confSourceRe  = regexp.MustCompile(`^\s*source\s*=\s*(.+?)\s*$`)
-	luaFieldStart = `\b%s\s*=\s*(?:"([^"]*)"|'([^']*)')`
+	luaRequire  = regexp.MustCompile(`require\s*\(?\s*["']([\w./-]+)["']`)
+	confSource  = regexp.MustCompile(`(?m)^\s*source\s*=\s*(\S+)`)
+	literalText = `(?:"([^"\n]*)"|'([^'\n]*)'|(true|false|yes|no|on|off|-?[\d.]+)\b|([^\s,{}#"']+))`
 )
 
-func (s *definitionScan) file(path string) error {
-	if s.seen[path] {
-		return nil
-	}
-	s.seen[path] = true
-	data, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	text := string(data)
-	if strings.HasPrefix(text, moduleHeader) {
-		return nil
-	}
-	if strings.HasSuffix(path, ".conf") {
-		return s.conf(path, text)
-	}
-	return s.lua(path, text)
-}
-
-func (s *definitionScan) lua(path, text string) error {
-	code := stripLuaComments(text)
-	lines := strings.Split(text, "\n")
-	if s.sel.LuaCall != "" {
-		field := regexp.MustCompile(fmt.Sprintf(luaFieldStart, regexp.QuoteMeta(s.sel.Field)))
-		call := regexp.MustCompile(`(^|[^\w.])` + regexp.QuoteMeta(s.sel.LuaCall) + `\s*\(`)
-		for _, match := range call.FindAllStringIndex(code, -1) {
-			d := Definition{File: path, Line: strings.Count(code[:match[1]], "\n") + 1, Dynamic: true}
-			if d.Line >= 2 && strings.TrimSpace(lines[d.Line-2]) == RuntimeMarker {
-				continue
-			}
-			if m := field.FindStringSubmatch(callBody(code[match[1]:])); m != nil {
-				d.Value, d.Dynamic = m[1]+m[2], false
-			}
-			s.found = append(s.found, d)
+// LoadUserConfig follows require and source from Hyprland's entry file.
+func LoadUserConfig() UserConfig {
+	hypr := filepath.Dir(hyprConfigFile())
+	files := UserConfig{}
+	skip, _ := filepath.Abs(ModulePath())
+	var visit func(string)
+	visit = func(path string) {
+		if real, err := filepath.EvalSymlinks(path); err == nil {
+			path = real
 		}
-	}
-	for _, m := range luaIncludeRe.FindAllStringSubmatch(code, -1) {
-		target := m[2]
-		if m[1] == "dofile" {
-			if !filepath.IsAbs(target) {
-				target = filepath.Join(s.root, target)
-			}
-		} else {
-			base := filepath.Join(s.root, filepath.FromSlash(strings.ReplaceAll(target, ".", "/")))
-			target = base + ".lua"
-			if _, err := os.Stat(target); err != nil {
-				target = filepath.Join(base, "init.lua")
-			}
+		if _, seen := files[path]; seen || path == skip {
+			return
 		}
-		if err := s.file(target); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *definitionScan) conf(path, text string) error {
-	var keyword *regexp.Regexp
-	if s.sel.ConfKeyword != "" {
-		keyword = regexp.MustCompile(`^\s*` + regexp.QuoteMeta(s.sel.ConfKeyword) + `\s*=\s*([^,]*)`)
-	}
-	for i, line := range strings.Split(text, "\n") {
-		line, _, _ = strings.Cut(line, "#")
-		if keyword != nil {
-			if m := keyword.FindStringSubmatch(line); m != nil {
-				s.found = append(s.found, Definition{Value: strings.TrimSpace(m[1]), File: path, Line: i + 1})
-			}
-		}
-		m := confSourceRe.FindStringSubmatch(line)
-		if m == nil {
-			continue
-		}
-		target := m[1]
-		if rest, ok := strings.CutPrefix(target, "~/"); ok {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return err
-			}
-			target = filepath.Join(home, rest)
-		} else if !filepath.IsAbs(target) {
-			target = filepath.Join(filepath.Dir(path), target)
-		}
-		matches, err := filepath.Glob(target)
+		data, err := os.ReadFile(path)
 		if err != nil {
-			return err
+			return
 		}
-		for _, match := range matches {
-			if err := s.file(match); err != nil {
-				return err
+		text := stripComments(string(data), filepath.Ext(path) == ".lua")
+		files[path] = text
+		if filepath.Ext(path) == ".lua" {
+			for _, m := range luaRequire.FindAllStringSubmatch(text, -1) {
+				rel := filepath.FromSlash(strings.ReplaceAll(m[1], ".", "/"))
+				visit(filepath.Join(hypr, rel+".lua"))
+				visit(filepath.Join(hypr, rel, "init.lua"))
 			}
+			return
+		}
+		for _, m := range confSource.FindAllStringSubmatch(text, -1) {
+			target := strings.Replace(m[1], "~", filepath.Dir(filepath.Dir(hypr)), 1)
+			if !filepath.IsAbs(target) {
+				target = filepath.Join(filepath.Dir(path), target)
+			}
+			visit(target)
 		}
 	}
-	return nil
+	// A symlinked configuration folder must still match Senda's module.
+	if real, err := filepath.EvalSymlinks(skip); err == nil {
+		skip = real
+	}
+	visit(filepath.Join(hypr, "hyprland.lua"))
+	visit(filepath.Join(hypr, "hyprland.conf"))
+	return files
 }
 
-// stripLuaComments blanks comments and keeps strings and line numbers.
-func stripLuaComments(text string) string {
+// stripComments removes Lua or hyprlang comments, leaving quoted text intact.
+func stripComments(text string, lua bool) string {
 	var out strings.Builder
-	for i := 0; i < len(text); {
+	var quote byte
+	for i := 0; i < len(text); i++ {
 		c := text[i]
 		switch {
-		case c == '"' || c == '\'':
-			end := stringEnd(text, i)
-			out.WriteString(text[i:end])
-			i = end
-		case strings.HasPrefix(text[i:], "--[["):
-			end := strings.Index(text[i:], "]]")
-			if end < 0 {
-				end = len(text) - i
-			} else {
-				end += 2
+		case quote != 0:
+			if c == '\\' && i+1 < len(text) {
+				out.WriteByte(c)
+				i++
+				c = text[i]
+			} else if c == quote || c == '\n' {
+				quote = 0
 			}
-			out.WriteString(strings.Repeat("\n", strings.Count(text[i:i+end], "\n")))
-			i += end
-		case strings.HasPrefix(text[i:], "--"):
-			end := strings.IndexByte(text[i:], '\n')
+		case lua && strings.HasPrefix(text[i:], "--[["):
+			end := strings.Index(text[i:], "]]")
 			if end < 0 {
 				return out.String()
 			}
-			i += end
-		default:
-			out.WriteByte(c)
-			i++
+			out.WriteString(strings.Repeat("\n", strings.Count(text[i:i+end], "\n")))
+			i += end + 1
+			continue
+		case lua && strings.HasPrefix(text[i:], "--"), !lua && c == '#':
+			for i < len(text) && text[i] != '\n' {
+				i++
+			}
+			if i < len(text) {
+				out.WriteByte('\n')
+			}
+			continue
+		case lua && (c == '"' || c == '\''):
+			quote = c
+		}
+		out.WriteByte(c)
+	}
+	return out.String()
+}
+
+// block returns the bodies of the brace blocks that open after each match.
+func block(text string, open *regexp.Regexp) []string {
+	var bodies []string
+	for _, loc := range open.FindAllStringIndex(text, -1) {
+		depth := 1
+		for i := loc[1]; i < len(text); i++ {
+			switch text[i] {
+			case '{':
+				depth++
+			case '}':
+				depth--
+			}
+			if depth == 0 {
+				bodies = append(bodies, text[loc[1]:i])
+				break
+			}
+		}
+	}
+	return bodies
+}
+
+// topLevel removes nested blocks, whose keys belong to another section.
+func topLevel(body string) string {
+	var out strings.Builder
+	depth := 0
+	for _, c := range body {
+		if c == '{' {
+			depth++
+		} else if c == '}' {
+			depth--
+		} else if depth == 0 {
+			out.WriteRune(c)
 		}
 	}
 	return out.String()
 }
 
-// stringEnd returns the index after the string that starts at i.
-func stringEnd(text string, i int) int {
-	quote := text[i]
-	for j := i + 1; j < len(text); j++ {
-		switch text[j] {
-		case '\\':
-			j++
-		case quote, '\n':
-			return j + 1
+// literal returns the captured value. A bare word is a variable in Lua, so it
+// only counts as a value in hyprlang files.
+func literal(m []string, file string) string {
+	if filepath.Ext(file) != ".lua" && m[4] != "" {
+		return m[4]
+	}
+	for _, v := range m[1:4] {
+		if v != "" {
+			return v
 		}
 	}
-	return len(text)
+	return ""
 }
 
-// callBody returns the text up to the parenthesis that closes a call.
-func callBody(code string) string {
-	depth := 1
-	for i := 0; i < len(code); i++ {
-		switch code[i] {
-		case '"', '\'':
-			i = stringEnd(code, i) - 1
-		case '(':
-			depth++
-		case ')':
-			if depth--; depth == 0 {
-				return code[:i]
+// ConfigKey finds key in a section such as ["input"] or ["input", "touchpad"].
+// Per-device blocks are never matched because only the named path is entered.
+func (c UserConfig) ConfigKey(section []string, key string) (UserSetting, bool) {
+	flat := regexp.MustCompile(`(?m)^\s*` + regexp.QuoteMeta(strings.Join(section, ":")+":"+key) + `\s*=\s*` + literalText)
+	assign := regexp.MustCompile(`(?:^|[\s,{])` + regexp.QuoteMeta(key) + `\s*=\s*` + literalText)
+	for file, text := range c {
+		if m := flat.FindStringSubmatch(text); m != nil {
+			return UserSetting{Value: literal(m, file), File: file}, true
+		}
+		bodies := []string{text}
+		for _, name := range section {
+			open := regexp.MustCompile(`(?:^|[\s,{])` + regexp.QuoteMeta(name) + `\s*=?\s*\{`)
+			var next []string
+			for _, body := range bodies {
+				next = append(next, block(body, open)...)
+			}
+			bodies = next
+		}
+		for _, body := range bodies {
+			if m := assign.FindStringSubmatch(topLevel(body)); m != nil {
+				return UserSetting{Value: literal(m, file), File: file}, true
 			}
 		}
 	}
-	return code
+	return UserSetting{}, false
+}
+
+// EnvVar finds an environment variable set by hl.env or env =.
+func (c UserConfig) EnvVar(name string) (UserSetting, bool) {
+	q := regexp.QuoteMeta(name)
+	lua := regexp.MustCompile(`hl\.env\s*\(\s*["']` + q + `["']\s*,\s*` + literalText)
+	conf := regexp.MustCompile(`(?m)^\s*env\s*=\s*` + q + `\s*,\s*(\S+)`)
+	for file, text := range c {
+		if m := lua.FindStringSubmatch(text); m != nil {
+			return UserSetting{Value: literal(m, file), File: file}, true
+		}
+		if m := conf.FindStringSubmatch(text); m != nil {
+			return UserSetting{Value: m[1], File: file}, true
+		}
+	}
+	return UserSetting{}, false
+}
+
+// Contains finds a command in the configuration, such as hyprctl setcursor.
+func (c UserConfig) Contains(pattern *regexp.Regexp) (UserSetting, bool) {
+	for file, text := range c {
+		if pattern.MatchString(text) {
+			return UserSetting{File: file}, true
+		}
+	}
+	return UserSetting{}, false
+}
+
+// SessionEnvFiles are the other places where a session variable is commonly
+// set outside Hyprland. They are returned as path to text, in KEY=VALUE form.
+func SessionEnvFiles() map[string]string {
+	config := filepath.Dir(paths.ConfigDir())
+	found := map[string]string{}
+	globs := []string{filepath.Join(config, "uwsm", "env*"), filepath.Join(config, "environment.d", "*.conf")}
+	for _, glob := range globs {
+		matches, _ := filepath.Glob(glob)
+		for _, path := range matches {
+			if data, err := os.ReadFile(path); err == nil {
+				found[path] = stripComments(string(data), false)
+			}
+		}
+	}
+	return found
 }

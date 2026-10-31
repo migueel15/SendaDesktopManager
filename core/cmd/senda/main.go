@@ -30,6 +30,7 @@ func main() {
 	rootCmd.AddCommand(screenshotCmd())
 	rootCmd.AddCommand(hyprlandCmd())
 	rootCmd.AddCommand(displayCmd())
+	rootCmd.AddCommand(inputCmd())
 	rootCmd.AddCommand(themeCmd())
 	rootCmd.AddCommand(sttCmd())
 	rootCmd.AddCommand(versionCmd())

@@ -22,6 +22,7 @@ Item {
         { label: "Tiempo", icon: "󰖐" },
         { label: "Dictado", icon: "󰍬" },
         { label: "Pantallas", icon: "󰍹" },
+        { label: "Teclado y ratón", icon: "󰌌" },
         { label: "Sistema", icon: "󰒓" },
         { label: "Actualización", icon: "󰚰" }
     ]
@@ -37,6 +38,7 @@ Item {
             SendaSttSettings.refresh();
             SendaHyprlandSettings.refresh();
             SendaDisplaySettings.refresh();
+            SendaInputSettings.refresh();
         }
     }
 
@@ -229,6 +231,11 @@ Item {
                     }
 
                     DisplaySettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    InputSettingsPage {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }

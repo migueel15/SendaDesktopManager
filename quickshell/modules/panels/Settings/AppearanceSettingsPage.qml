@@ -34,6 +34,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Tema"
+                modified: Theme.currentTheme !== "zenda-ice"
+                onResetRequested: SendaTheme.apply("zenda-ice")
                 description: SendaTheme.lastError !== "" ? SendaTheme.lastError : "Colores y fondo de todo el escritorio."
             }
             Repeater {
@@ -52,6 +54,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Tamaño de la letra"
+                modified: root.currentPercent !== 100
+                onResetRequested: root.changeTo(100)
                 description: "Escala toda la interfaz entre 80 y 150 %."
                 SettingsSlider {
                     value: root.currentPercent

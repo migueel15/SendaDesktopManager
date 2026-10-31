@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import qs.common
 import qs.services
@@ -64,11 +63,6 @@ Flickable {
             }
         }
         return best ?? { x: x, y: y };
-    }
-
-    component DisplayCombo: Controls.ComboBox {
-        Layout.preferredWidth: Theme.scaled(150)
-        font: Theme.font.body
     }
 
     ColumnLayout {
@@ -185,23 +179,20 @@ Flickable {
             }
             SettingsRow {
                 label: "Resolución"
-                DisplayCombo {
+                SettingsSelect {
                     enabled: root.editable
-                    model: root.sizes
-                    currentIndex: root.sizes.indexOf(root.currentSize)
-                    onActivated: index => {
-                        const size = root.sizes[index];
-                        SendaDisplaySettings.setGuarded(root.selected.name, "--mode", size + "@" + root.closestRate(size, root.selected.refreshRate));
-                    }
+                    options: root.sizes
+                    value: root.currentSize
+                    onChosen: value => SendaDisplaySettings.setGuarded(root.selected.name, "--mode", value + "@" + root.closestRate(value, root.selected.refreshRate))
                 }
             }
             SettingsRow {
                 label: "Frecuencia"
-                DisplayCombo {
+                SettingsSelect {
                     enabled: root.editable
-                    model: root.rates.map(rate => rate + " Hz")
-                    currentIndex: root.selected ? root.rates.indexOf(root.closestRate(root.currentSize, root.selected.refreshRate)) : -1
-                    onActivated: index => SendaDisplaySettings.setGuarded(root.selected.name, "--mode", root.currentSize + "@" + root.rates[index])
+                    options: root.rates.map(rate => rate + " Hz")
+                    value: root.selected ? root.closestRate(root.currentSize, root.selected.refreshRate) + " Hz" : ""
+                    onChosen: value => SendaDisplaySettings.setGuarded(root.selected.name, "--mode", root.currentSize + "@" + value.replace(" Hz", ""))
                 }
             }
             SettingsRow {

@@ -14,6 +14,8 @@ Flickable {
         SettingsGroup {
             SettingsRow {
                 label: "Spotify"
+                modified: SendaSettings.values.SENDA_WIDGET_SPOTIFY === "false"
+                onResetRequested: SendaSettings.save({ SENDA_WIDGET_SPOTIFY: "" }, "Widget de Spotify restablecido")
                 description: "Muestra los controles de música en la barra."
                 SettingsSwitch {
                     Accessible.name: "Habilitar widget de Spotify"
@@ -24,6 +26,8 @@ Flickable {
             }
             SettingsRow {
                 label: "Discord"
+                modified: SendaSettings.values.SENDA_WIDGET_DISCORD === "false"
+                onResetRequested: SendaSettings.save({ SENDA_WIDGET_DISCORD: "" }, "Widget de Discord restablecido")
                 description: "Muestra los controles de voz en la barra."
                 SettingsSwitch {
                     Accessible.name: "Habilitar widget de Discord"
