@@ -45,7 +45,7 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Fondo de pantalla | Integrado en Quickshell; no requiere otro paquete. |
    | Red, audio y batería | `networkmanager`, `wireplumber`, `upower` |
    | Bluetooth | `bluez`, `bluez-utils`, `blueberry` |
-   | Brillo de monitores externos | `ddcutil` |
+   | Brillo de la pantalla y de monitores externos | `brightnessctl`, `ddcutil` |
    | Sonidos del sistema | `ffmpeg`, `sound-theme-freedesktop` |
    | Enlaces, dictado y scripts | `xdg-utils`, `jq`, `python`, `wl-clipboard`, `pipewire` |
    | Acceso al keyring de Google Calendar | `libsecret`; requiere además un proveedor Secret Service configurado y desbloqueado, véase [Google Calendar](google-calendar.md) |
