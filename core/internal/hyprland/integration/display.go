@@ -212,12 +212,17 @@ func ApplyTrial(ctx context.Context, run stt.Runner, before, after []DisplayRule
 // LockDisplayWatch takes the session-wide watcher lock. The kernel releases it
 // when the process dies, however that happens.
 func LockDisplayWatch() (func(), error) {
-	path := filepath.Join(os.TempDir(), fmt.Sprintf("senda-display-watch-%d.lock", os.Getuid()))
+	return lockFile("display-watch", syscall.LOCK_EX|syscall.LOCK_NB)
+}
+
+// lockFile takes the named per-user lock.
+func lockFile(name string, how int) (func(), error) {
+	path := filepath.Join(os.TempDir(), fmt.Sprintf("senda-%s-%d.lock", name, os.Getuid()))
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
 		return nil, err
 	}
-	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+	if err := syscall.Flock(int(file.Fd()), how); err != nil {
 		file.Close()
 		return nil, err
 	}

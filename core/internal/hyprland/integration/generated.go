@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
@@ -255,13 +256,51 @@ func WriteFiles(s Settings, executable string) error {
 	if err := CheckTargets(); err != nil {
 		return err
 	}
+	unlock, err := lockFile("generate", syscall.LOCK_EX)
+	if err != nil {
+		return fmt.Errorf("bloquear el módulo: %w", err)
+	}
+	defer unlock()
 	dir := Dir()
 	for _, f := range files {
 		if err := binds.Write(filepath.Join(dir, f.Name), f.Content); err != nil {
 			return fmt.Errorf("escribir %s: %w", f.Name, err)
 		}
 	}
+	if built, err := executableBuilt(); err == nil {
+		if err := os.WriteFile(filepath.Join(dir, generatorFile), []byte(strconv.FormatInt(built, 10)), 0o644); err != nil {
+			return fmt.Errorf("escribir %s: %w", generatorFile, err)
+		}
+	}
 	return removeStaleModules(dir)
+}
+
+// generatorFile records the build time of the binary that last wrote the module.
+const generatorFile = ".generator"
+
+func executableBuilt() (int64, error) {
+	// Unlike the path, this survives the binary being replaced on disk.
+	stat, err := os.Stat("/proc/self/exe")
+	if err != nil {
+		return 0, err
+	}
+	return stat.ModTime().UnixNano(), nil
+}
+
+// SupersededGenerator reports whether a newer binary wrote the module. It only
+// restrains automatic writes: an explicit command may still downgrade it.
+func SupersededGenerator() bool {
+	built, err := executableBuilt()
+	return err == nil && newerGenerator(Dir(), built)
+}
+
+func newerGenerator(dir string, built int64) bool {
+	data, err := os.ReadFile(filepath.Join(dir, generatorFile))
+	if err != nil {
+		return false
+	}
+	writer, err := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
+	return err == nil && writer > built
 }
 
 // removeStaleModules deletes generated modules a previous version wrote.

@@ -51,6 +51,7 @@ func keyboardCmd() *cobra.Command {
 		}})
 	}
 	root.AddCommand(&cobra.Command{Use: "watch", Hidden: true, Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		exitWithParent()
 		watchKeyboardReload(cmd.Context())
 		return nil
 	}})

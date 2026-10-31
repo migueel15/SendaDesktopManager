@@ -265,6 +265,9 @@ func RemoveManaged() ([]string, error) {
 			}
 		}
 	}
+	if err := os.Remove(filepath.Join(dir, generatorFile)); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return warnings, err
+	}
 	// Only an empty folder goes: anything else in it is the user's.
 	if err := os.Remove(dir); err != nil && !errors.Is(err, os.ErrNotExist) {
 		warnings = append(warnings, "Carpeta conservada porque no está vacía: "+dir)

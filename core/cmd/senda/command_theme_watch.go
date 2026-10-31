@@ -26,6 +26,7 @@ func themeWatchCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&notify, "notify", false, "Notify about invalid themes")
 	cmd.Flags().DurationVar(&interval, "interval", time.Second, "Polling interval")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		exitWithParent()
 		if !safeThemeName(args[0]) {
 			return themeFieldError("name", errors.New("invalid theme name"))
 		}

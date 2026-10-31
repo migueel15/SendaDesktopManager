@@ -255,6 +255,7 @@ func displayCmd() *cobra.Command {
 		return syncDisplays(cmd.Context())
 	}}
 	watch := &cobra.Command{Use: "watch", Hidden: true, Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		exitWithParent()
 		report := func() {
 			if err := syncDisplays(cmd.Context()); err != nil {
 				fmt.Fprintln(os.Stderr, "display sync:", err)
@@ -291,6 +292,10 @@ func syncDisplays(ctx context.Context) error {
 		if link, err := integration.Probe(ctx, shortcutRunner); err == nil {
 			integration.Locate(link)
 		}
+	}
+	// A leftover watcher must not undo what a newer binary generated.
+	if integration.SupersededGenerator() {
+		return nil
 	}
 	current, err := integration.ReadGenerated()
 	if os.IsNotExist(err) {
