@@ -9,6 +9,7 @@ RowLayout {
     property real from: 80
     property real to: 150
     property real stepSize: 10
+    property string suffix: " %"
     signal committed(real value)
     // Reconcile with persisted state after a save, including a failed write.
     onValueChanged: slider.value = root.value
@@ -46,5 +47,5 @@ RowLayout {
             color: slider.visualFocus ? Theme.colors.secondary : Theme.colors.primary
         }
     }
-    Text { text: `${Math.round(slider.value)} %`; color: Theme.colors.text; font: Theme.font.body }
+    Text { text: `${Math.round(slider.value)}${root.suffix}`; color: Theme.colors.text; font: Theme.font.body }
 }

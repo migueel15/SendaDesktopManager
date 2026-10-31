@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import qs.common
 import qs.services
@@ -166,13 +165,23 @@ Flickable {
                 separator: false
                 label: "Tema de cursor"
                 description: root.note("cursorTheme", "Se aplica al momento")
-                Controls.ComboBox {
-                    implicitWidth: Theme.scaled(220)
+                SettingsSelect {
                     enabled: !root.managed("cursorTheme")
-                    model: SendaInputSettings.cursorThemes
-                    currentIndex: SendaInputSettings.cursorThemes.indexOf(SendaInputSettings.current.cursorTheme)
-                    displayText: currentIndex >= 0 ? currentText : (SendaInputSettings.current.cursorTheme || "Sin definir")
-                    onActivated: index => SendaInputSettings.set("cursor-theme", SendaInputSettings.cursorThemes[index])
+                    options: SendaInputSettings.cursorThemes
+                    value: SendaInputSettings.current.cursorTheme || ""
+                    onChosen: value => SendaInputSettings.set("cursor-theme", value)
+                }
+            }
+            SettingsRow {
+                label: "Tamaño del cursor"
+                description: root.note("cursorSize", "Se aplica al momento")
+                SettingsSlider {
+                    implicitWidth: Theme.scaled(200)
+                    enabled: !root.managed("cursorSize")
+                    from: 16; to: 64; stepSize: 2
+                    suffix: " px"
+                    value: Number(SendaInputSettings.current.cursorSize || 24)
+                    onCommitted: value => SendaInputSettings.set("cursor-size", Math.round(value))
                 }
             }
         }

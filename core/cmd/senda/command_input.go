@@ -35,7 +35,7 @@ var inputOptions = map[string]string{
 func readInputStatus(ctx context.Context, s integration.InputSettings) inputStatus {
 	s = s.WithDefaults()
 	user := integration.DetectInput(integration.LoadUserConfig(), integration.SessionEnvFiles())
-	senda := map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme, integration.FieldAccelProfile: s.AccelProfile, integration.FieldFollowMouse: s.FollowMouse, integration.FieldDisableTyping: s.DisableTyping, integration.FieldScrollFactor: s.ScrollFactor}
+	senda := map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme, integration.FieldCursorSize: s.CursorSize, integration.FieldAccelProfile: s.AccelProfile, integration.FieldFollowMouse: s.FollowMouse, integration.FieldDisableTyping: s.DisableTyping, integration.FieldScrollFactor: s.ScrollFactor}
 	current := map[string]string{}
 	for field, value := range senda {
 		if u, ok := user[field]; ok {
@@ -53,6 +53,9 @@ func readInputStatus(ctx context.Context, s integration.InputSettings) inputStat
 		if field == integration.FieldCursorTheme && value == "" {
 			value = os.Getenv("XCURSOR_THEME")
 		}
+		if field == integration.FieldCursorSize && value == "" {
+			value = strconv.Itoa(integration.CursorSize())
+		}
 		current[field] = value
 	}
 	return inputStatus{Current: current, User: user, Themes: integration.CursorThemes()}
@@ -62,7 +65,7 @@ func printInput(cmd *cobra.Command, status inputStatus, asJSON bool) error {
 	if asJSON {
 		return writeJSON(cmd, status)
 	}
-	labels := []struct{ field, label string }{{integration.FieldLayout, "Distribución"}, {integration.FieldSensitivity, "Velocidad del ratón"}, {integration.FieldTapToClick, "Tocar para hacer clic"}, {integration.FieldNaturalScroll, "Desplazamiento natural"}, {integration.FieldCursorTheme, "Tema de cursor"}, {integration.FieldAccelProfile, "Aceleración"}, {integration.FieldFollowMouse, "Foco con el ratón"}, {integration.FieldDisableTyping, "Desactivar touchpad al escribir"}, {integration.FieldScrollFactor, "Velocidad de desplazamiento"}}
+	labels := []struct{ field, label string }{{integration.FieldLayout, "Distribución"}, {integration.FieldSensitivity, "Velocidad del ratón"}, {integration.FieldTapToClick, "Tocar para hacer clic"}, {integration.FieldNaturalScroll, "Desplazamiento natural"}, {integration.FieldCursorTheme, "Tema de cursor"}, {integration.FieldCursorSize, "Tamaño del cursor"}, {integration.FieldAccelProfile, "Aceleración"}, {integration.FieldFollowMouse, "Foco con el ratón"}, {integration.FieldDisableTyping, "Desactivar touchpad al escribir"}, {integration.FieldScrollFactor, "Velocidad de desplazamiento"}}
 	for _, l := range labels {
 		line := fmt.Sprintf("%s: %s", l.label, status.Current[l.field])
 		if u, ok := status.User[l.field]; ok {
@@ -79,13 +82,26 @@ func applyInput(ctx context.Context, s integration.Settings, cursorChanged bool)
 	if _, err := applyHyprland(ctx, s, false); err != nil {
 		return err
 	}
-	user := integration.DetectInput(integration.LoadUserConfig(), integration.SessionEnvFiles())
-	if _, managed := user[integration.FieldCursorTheme]; cursorChanged && !managed && s.Input.CursorTheme != "" && integration.InSession() {
-		// GTK is best effort: gsettings may not be installed.
-		_, _ = shortcutRunner(ctx, nil, "gsettings", "set", integration.GTKCursorSchema, integration.GTKCursorKey, s.Input.CursorTheme)
-		return hyprctl.New(shortcutRunner).SetCursor(ctx, s.Input.CursorTheme, integration.CursorSize())
+	if !cursorChanged || !integration.InSession() {
+		return nil
 	}
-	return nil
+	user := integration.DetectInput(integration.LoadUserConfig(), integration.SessionEnvFiles())
+	theme, size := s.Input.CursorTheme, integration.CursorSize()
+	if _, managed := user[integration.FieldCursorTheme]; managed || theme == "" {
+		theme = os.Getenv("XCURSOR_THEME")
+	}
+	if _, managed := user[integration.FieldCursorSize]; !managed && s.Input.CursorSize != "" {
+		size, _ = strconv.Atoi(s.Input.CursorSize)
+		// GTK is best effort: gsettings may not be installed.
+		_, _ = shortcutRunner(ctx, nil, "gsettings", "set", integration.GTKCursorSchema, "cursor-size", s.Input.CursorSize)
+	}
+	if _, managed := user[integration.FieldCursorTheme]; !managed && theme != "" {
+		_, _ = shortcutRunner(ctx, nil, "gsettings", "set", integration.GTKCursorSchema, integration.GTKCursorKey, theme)
+	}
+	if theme == "" {
+		return nil
+	}
+	return hyprctl.New(shortcutRunner).SetCursor(ctx, theme, size)
 }
 
 func inputCmd() *cobra.Command {
@@ -126,7 +142,7 @@ func inputCmd() *cobra.Command {
 		}
 		return printInput(cmd, readInputStatus(cmd.Context(), s.Input), asJSON)
 	}}
-	var layout, sensitivity, tap, natural, cursor, accel, follow, typing, scroll string
+	var layout, sensitivity, tap, natural, cursor, cursorSize, accel, follow, typing, scroll string
 	set := &cobra.Command{Use: "set", Short: "Cambiar ajustes (valor vacío: Senda deja de definirlo)", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		s, err := integration.ReadSettings()
 		if err != nil {
@@ -137,7 +153,7 @@ func inputCmd() *cobra.Command {
 			flag, field string
 			value       string
 			target      *string
-		}{{"layout", integration.FieldLayout, layout, &s.Input.Layout}, {"sensitivity", integration.FieldSensitivity, sensitivity, &s.Input.Sensitivity}, {"tap-to-click", integration.FieldTapToClick, tap, &s.Input.TapToClick}, {"natural-scroll", integration.FieldNaturalScroll, natural, &s.Input.NaturalScroll}, {"cursor-theme", integration.FieldCursorTheme, cursor, &s.Input.CursorTheme}, {"accel-profile", integration.FieldAccelProfile, accel, &s.Input.AccelProfile}, {"follow-mouse", integration.FieldFollowMouse, follow, &s.Input.FollowMouse}, {"disable-while-typing", integration.FieldDisableTyping, typing, &s.Input.DisableTyping}, {"scroll-factor", integration.FieldScrollFactor, scroll, &s.Input.ScrollFactor}}
+		}{{"layout", integration.FieldLayout, layout, &s.Input.Layout}, {"sensitivity", integration.FieldSensitivity, sensitivity, &s.Input.Sensitivity}, {"tap-to-click", integration.FieldTapToClick, tap, &s.Input.TapToClick}, {"natural-scroll", integration.FieldNaturalScroll, natural, &s.Input.NaturalScroll}, {"cursor-theme", integration.FieldCursorTheme, cursor, &s.Input.CursorTheme}, {"cursor-size", integration.FieldCursorSize, cursorSize, &s.Input.CursorSize}, {"accel-profile", integration.FieldAccelProfile, accel, &s.Input.AccelProfile}, {"follow-mouse", integration.FieldFollowMouse, follow, &s.Input.FollowMouse}, {"disable-while-typing", integration.FieldDisableTyping, typing, &s.Input.DisableTyping}, {"scroll-factor", integration.FieldScrollFactor, scroll, &s.Input.ScrollFactor}}
 		for _, c := range changes {
 			if !cmd.Flags().Changed(c.flag) {
 				continue
@@ -147,8 +163,8 @@ func inputCmd() *cobra.Command {
 			}
 			*c.target = c.value
 		}
-		cursorChanged := cmd.Flags().Changed("cursor-theme")
-		if cursorChanged && cursor != "" {
+		cursorChanged := cmd.Flags().Changed("cursor-theme") || cmd.Flags().Changed("cursor-size")
+		if cmd.Flags().Changed("cursor-theme") && cursor != "" {
 			found := false
 			for _, theme := range integration.CursorThemes() {
 				found = found || theme == cursor
@@ -170,6 +186,7 @@ func inputCmd() *cobra.Command {
 	set.Flags().StringVar(&tap, "tap-to-click", "", "true o false")
 	set.Flags().StringVar(&natural, "natural-scroll", "", "true o false")
 	set.Flags().StringVar(&cursor, "cursor-theme", "", "Tema de cursor instalado")
+	set.Flags().StringVar(&cursorSize, "cursor-size", "", "Tamaño del cursor, de 8 a 128")
 	set.Flags().StringVar(&accel, "accel-profile", "", "adaptive o flat")
 	set.Flags().StringVar(&follow, "follow-mouse", "", "Foco con el ratón, de 0 a 3")
 	set.Flags().StringVar(&typing, "disable-while-typing", "", "true o false")

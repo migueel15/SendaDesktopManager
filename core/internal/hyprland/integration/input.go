@@ -19,6 +19,7 @@ const (
 	KeyInputTapToClick    = "SENDA_INPUT_TAP_TO_CLICK"
 	KeyInputNaturalScrol  = "SENDA_INPUT_NATURAL_SCROLL"
 	KeyCursorTheme        = "SENDA_CURSOR_THEME"
+	KeyCursorSize         = "SENDA_CURSOR_SIZE"
 	KeyInputAccel         = "SENDA_INPUT_ACCEL_PROFILE"
 	KeyInputFollowMouse   = "SENDA_INPUT_FOLLOW_MOUSE"
 	KeyInputDisableTyping = "SENDA_INPUT_DISABLE_WHILE_TYPING"
@@ -32,6 +33,7 @@ const (
 	FieldTapToClick    = "tapToClick"
 	FieldNaturalScroll = "naturalScroll"
 	FieldCursorTheme   = "cursorTheme"
+	FieldCursorSize    = "cursorSize"
 	FieldAccelProfile  = "accelProfile"
 	FieldFollowMouse   = "followMouse"
 	FieldDisableTyping = "disableWhileTyping"
@@ -46,6 +48,7 @@ type InputSettings struct {
 	TapToClick    string
 	NaturalScroll string
 	CursorTheme   string
+	CursorSize    string
 	AccelProfile  string
 	FollowMouse   string
 	DisableTyping string
@@ -53,11 +56,11 @@ type InputSettings struct {
 }
 
 func LoadInputSettings(values map[string]string) InputSettings {
-	return InputSettings{Layout: values[KeyInputLayout], Sensitivity: values[KeyInputSensitivity], TapToClick: values[KeyInputTapToClick], NaturalScroll: values[KeyInputNaturalScrol], CursorTheme: values[KeyCursorTheme], AccelProfile: values[KeyInputAccel], FollowMouse: values[KeyInputFollowMouse], DisableTyping: values[KeyInputDisableTyping], ScrollFactor: values[KeyInputScrollFactor]}
+	return InputSettings{Layout: values[KeyInputLayout], Sensitivity: values[KeyInputSensitivity], TapToClick: values[KeyInputTapToClick], NaturalScroll: values[KeyInputNaturalScrol], CursorTheme: values[KeyCursorTheme], CursorSize: values[KeyCursorSize], AccelProfile: values[KeyInputAccel], FollowMouse: values[KeyInputFollowMouse], DisableTyping: values[KeyInputDisableTyping], ScrollFactor: values[KeyInputScrollFactor]}
 }
 
 func (s InputSettings) values() map[string]string {
-	return map[string]string{KeyInputLayout: s.Layout, KeyInputSensitivity: s.Sensitivity, KeyInputTapToClick: s.TapToClick, KeyInputNaturalScrol: s.NaturalScroll, KeyCursorTheme: s.CursorTheme, KeyInputAccel: s.AccelProfile, KeyInputFollowMouse: s.FollowMouse, KeyInputDisableTyping: s.DisableTyping, KeyInputScrollFactor: s.ScrollFactor}
+	return map[string]string{KeyInputLayout: s.Layout, KeyInputSensitivity: s.Sensitivity, KeyInputTapToClick: s.TapToClick, KeyInputNaturalScrol: s.NaturalScroll, KeyCursorTheme: s.CursorTheme, KeyCursorSize: s.CursorSize, KeyInputAccel: s.AccelProfile, KeyInputFollowMouse: s.FollowMouse, KeyInputDisableTyping: s.DisableTyping, KeyInputScrollFactor: s.ScrollFactor}
 }
 
 // SaveInputSettings stores the fields after validating them.
@@ -84,6 +87,11 @@ func (s InputSettings) Validate() error {
 	for _, v := range []string{s.TapToClick, s.NaturalScroll, s.DisableTyping} {
 		if v != "" && v != "true" && v != "false" {
 			return fmt.Errorf("el valor debe ser true o false")
+		}
+	}
+	if s.CursorSize != "" {
+		if v, err := strconv.Atoi(s.CursorSize); err != nil || v < 8 || v > 128 {
+			return fmt.Errorf("el tamaño del cursor debe estar entre 8 y 128")
 		}
 	}
 	if s.AccelProfile != "" && s.AccelProfile != "adaptive" && s.AccelProfile != "flat" {
@@ -126,6 +134,12 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 	add(FieldTapToClick, s, ok)
 	s, ok = c.ConfigKey(touchpad, "natural_scroll")
 	add(FieldNaturalScroll, s, ok)
+	for _, name := range []string{"XCURSOR_SIZE", "HYPRCURSOR_SIZE"} {
+		s, ok = c.EnvVar(name)
+		add(FieldCursorSize, s, ok)
+	}
+	s, ok = c.Contains(regexp.MustCompile(`hyprctl\s+setcursor|gsettings\s+set\s+org\.gnome\.desktop\.interface\s+cursor.size`))
+	add(FieldCursorSize, s, ok)
 	s, ok = c.ConfigKey([]string{"input"}, "accel_profile")
 	add(FieldAccelProfile, s, ok)
 	s, ok = c.ConfigKey([]string{"input"}, "follow_mouse")
@@ -140,12 +154,14 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 	}
 	s, ok = c.Contains(regexp.MustCompile(`hyprctl\s+setcursor`))
 	add(FieldCursorTheme, s, ok)
-	s, ok = c.Contains(regexp.MustCompile(`gsettings\s+set\s+org\.gnome\.desktop\.interface\s+cursor`))
+	s, ok = c.Contains(regexp.MustCompile(`gsettings\s+set\s+org\.gnome\.desktop\.interface\s+cursor.theme`))
 	add(FieldCursorTheme, s, ok)
-	sessionVar := regexp.MustCompile(`(?m)^\s*(?:export\s+)?(?:XCURSOR_THEME|HYPRCURSOR_THEME)=["']?([^"'\s]*)`)
-	for file, text := range sessionEnv {
-		if m := sessionVar.FindStringSubmatch(text); m != nil {
-			add(FieldCursorTheme, UserSetting{Value: m[1], File: file}, true)
+	for field, names := range map[string]string{FieldCursorTheme: "THEME", FieldCursorSize: "SIZE"} {
+		sessionVar := regexp.MustCompile(`(?m)^\s*(?:export\s+)?(?:XCURSOR|HYPRCURSOR)_` + names + `=["']?([^"'\s]*)`)
+		for file, text := range sessionEnv {
+			if m := sessionVar.FindStringSubmatch(text); m != nil {
+				add(field, UserSetting{Value: m[1], File: file}, true)
+			}
 		}
 	}
 	return found
@@ -154,7 +170,7 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 // withoutUser drops the fields the user defines: the user always wins, and
 // Senda's module loads last, so generating them would override the user.
 func (s InputSettings) withoutUser(user map[string]UserSetting) InputSettings {
-	for field, target := range map[string]*string{FieldLayout: &s.Layout, FieldSensitivity: &s.Sensitivity, FieldTapToClick: &s.TapToClick, FieldNaturalScroll: &s.NaturalScroll, FieldCursorTheme: &s.CursorTheme, FieldAccelProfile: &s.AccelProfile, FieldFollowMouse: &s.FollowMouse, FieldDisableTyping: &s.DisableTyping, FieldScrollFactor: &s.ScrollFactor} {
+	for field, target := range map[string]*string{FieldLayout: &s.Layout, FieldSensitivity: &s.Sensitivity, FieldTapToClick: &s.TapToClick, FieldNaturalScroll: &s.NaturalScroll, FieldCursorTheme: &s.CursorTheme, FieldCursorSize: &s.CursorSize, FieldAccelProfile: &s.AccelProfile, FieldFollowMouse: &s.FollowMouse, FieldDisableTyping: &s.DisableTyping, FieldScrollFactor: &s.ScrollFactor} {
 		if _, ok := user[field]; ok {
 			*target = ""
 		}
@@ -195,6 +211,13 @@ func renderInput(s InputSettings, size int) string {
 	var out strings.Builder
 	if len(input) > 0 {
 		out.WriteString("hl.config({ input = { " + strings.Join(input, ", ") + " } })\n")
+	}
+	if s.CursorSize != "" {
+		if n, err := strconv.Atoi(s.CursorSize); err == nil {
+			size = n
+		}
+		out.WriteString(hyprctl.EnvLua("XCURSOR_SIZE", s.CursorSize) + "\n" + hyprctl.EnvLua("HYPRCURSOR_SIZE", s.CursorSize) + "\n")
+		out.WriteString(hyprctl.OnStart("gsettings set "+GTKCursorSchema+" cursor-size "+s.CursorSize) + "\n")
 	}
 	if s.CursorTheme != "" {
 		out.WriteString(hyprctl.EnvLua("XCURSOR_THEME", s.CursorTheme) + "\n" + hyprctl.EnvLua("HYPRCURSOR_THEME", s.CursorTheme) + "\n")

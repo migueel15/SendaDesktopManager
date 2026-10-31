@@ -143,3 +143,22 @@ func TestDetectGsettingsCursor(t *testing.T) {
 		t.Fatal("gsettings not detected")
 	}
 }
+
+func TestCursorSize(t *testing.T) {
+	got := detected(t, map[string]string{"hyprland.lua": "hl.env(\"XCURSOR_SIZE\", \"26\")\n"})
+	if got[FieldCursorSize].Value != "26" {
+		t.Fatalf("got %+v", got)
+	}
+	if _, ok := got[FieldCursorTheme]; ok {
+		t.Fatal("size must not manage the theme")
+	}
+	out := renderInput(InputSettings{CursorTheme: "B", CursorSize: "32"}, 24)
+	for _, want := range []string{`hl.env("XCURSOR_SIZE", "32")`, "setcursor 'B' 32", "cursor-size 32"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("%q missing in %q", want, out)
+		}
+	}
+	if (InputSettings{CursorSize: "4"}).Validate() == nil {
+		t.Fatal("accepted a small size")
+	}
+}
