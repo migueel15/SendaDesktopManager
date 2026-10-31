@@ -2,14 +2,18 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls as Controls
+import Quickshell
 import qs.common
 
-// Dropdown in the Senda style for lists too long for SettingsSegments.
+// Reusable dropdown for lists too long for SettingsSegments. Give it options
+// (strings) and value, and handle chosen(value). It works in any settings page.
 Rectangle {
     id: root
     property var options: []
     property string value: ""
     property string placeholder: "Sin definir"
+    // Longer lists scroll inside this height.
+    property real maxListHeight: Theme.scaled(260)
     signal chosen(string value)
 
     implicitWidth: Theme.scaled(220)
@@ -49,48 +53,71 @@ Rectangle {
         onClicked: popup.visible ? popup.close() : popup.open()
     }
 
-    Controls.Popup {
+    // A real window, so the list can extend past the settings window.
+    PopupWindow {
         id: popup
-        y: root.height + Theme.spacing.xs
-        width: root.width
-        height: Math.min(list.contentHeight, Theme.scaled(240)) + 2 * padding
-        padding: Theme.spacing.xs
-        focus: true
-        onOpened: list.positionViewAtIndex(Math.max(0, root.options.indexOf(root.value)), ListView.Center)
-        background: Rectangle {
+        function open() { popup.visible = true; }
+        function close() { popup.visible = false; }
+        anchor.item: root
+        anchor.rect.y: root.height + Theme.spacing.xs
+        anchor.rect.width: root.width
+        anchor.edges: Edges.Top | Edges.Left
+        anchor.gravity: Edges.Bottom | Edges.Right
+        grabFocus: true
+        color: "transparent"
+        implicitWidth: root.width
+        implicitHeight: Math.min(list.contentHeight, root.maxListHeight) + 2 * Theme.spacing.xs + 2
+        onVisibleChanged: if (visible) {
+            list.forceActiveFocus();
+            list.positionViewAtIndex(Math.max(0, root.options.indexOf(root.value)), ListView.Center);
+        }
+
+        Rectangle {
+            anchors.fill: parent
             color: Theme.colors.surface
             border { width: 1; color: Theme.colors.border }
             radius: Theme.rounding.normal
-        }
-        contentItem: ListView {
-            id: list
-            clip: true
-            model: root.options
-            boundsBehavior: Flickable.StopAtBounds
-            delegate: Rectangle {
-                id: option
-                required property string modelData
-                readonly property bool current: modelData === root.value
-                width: ListView.view.width
-                height: optionText.implicitHeight + 2 * Theme.spacing.xs
-                radius: Theme.rounding.small
-                color: current ? Theme.colors.primary : optionArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-                Text {
-                    id: optionText
-                    anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }
-                    text: option.modelData
-                    color: option.current ? Theme.colors.base : Theme.colors.text
-                    font: Theme.font.body
-                    elide: Text.ElideRight
+            ListView {
+                id: list
+                anchors { fill: parent; margins: Theme.spacing.xs + 1 }
+                clip: true
+                model: root.options
+                boundsBehavior: Flickable.StopAtBounds
+                Keys.onEscapePressed: popup.close()
+                Controls.ScrollBar.vertical: Controls.ScrollBar {
+                    id: scrollBar
+                    policy: list.contentHeight > list.height ? Controls.ScrollBar.AlwaysOn : Controls.ScrollBar.AlwaysOff
+                    contentItem: Rectangle {
+                        implicitWidth: Theme.spacing.xs
+                        radius: Theme.rounding.full
+                        color: Theme.colors.overlay
+                    }
                 }
-                MouseArea {
-                    id: optionArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        popup.close();
-                        root.chosen(option.modelData);
+                delegate: Rectangle {
+                    id: option
+                    required property string modelData
+                    readonly property bool current: modelData === root.value
+                    width: ListView.view.width - (scrollBar.policy === Controls.ScrollBar.AlwaysOn ? scrollBar.width + Theme.spacing.xs : 0)
+                    height: optionText.implicitHeight + 2 * Theme.spacing.xs
+                    radius: Theme.rounding.small
+                    color: current ? Theme.colors.primary : optionArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+                    Text {
+                        id: optionText
+                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }
+                        text: option.modelData
+                        color: option.current ? Theme.colors.base : Theme.colors.text
+                        font: Theme.font.body
+                        elide: Text.ElideRight
+                    }
+                    MouseArea {
+                        id: optionArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            popup.close();
+                            root.chosen(option.modelData);
+                        }
                     }
                 }
             }

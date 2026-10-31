@@ -132,4 +132,4 @@ Los componentes locales se registran en `Settings/qmldir`; sus archivos usan nom
 Los campos de texto confirman con Enter o al perder el foco solo si se han editado. Las credenciales de Google se confirman juntas desde el segundo campo o mediante su acción específica. Las acciones de búsqueda, instalación, comprobación y actualización siguen siendo botones.
 
 `SettingsRow` admite `modified` y `resetRequested`: muestra un icono para restablecer el ajuste solo cuando su valor difiere del valor por defecto.
-`SettingsSelect` es el desplegable para listas largas.
+`SettingsSelect` es el desplegable reutilizable para listas largas: recibe `options` y `value`, y emite `chosen(value)`. Su lista es una ventana propia, así que puede salir de la ventana de Ajustes; tiene altura máxima (`maxListHeight`) y barra de desplazamiento si no cabe.
