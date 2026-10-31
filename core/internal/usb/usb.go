@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
+	"github.com/migueel15/SendaDesktopManager/core/internal/instance"
 	"github.com/migueel15/SendaDesktopManager/core/internal/notify"
 )
 
@@ -166,54 +167,11 @@ func addedFilesystem(signal *dbus.Signal) (dbus.ObjectPath, bool) {
 	return path, found
 }
 
-// claimInstance owns the watcher name and returns a channel closed when a newer
-// watcher replaces this one, so an orphan from an earlier shell steps aside.
-func claimInstance(ctx context.Context) (<-chan struct{}, error) {
-	session, err := dbus.ConnectSessionBus()
-	if err != nil {
-		return nil, err
-	}
-	lost := make(chan *dbus.Signal, 4)
-	session.Signal(lost)
-	if err := session.AddMatchSignal(dbus.WithMatchInterface("org.freedesktop.DBus"), dbus.WithMatchMember("NameLost")); err != nil {
-		session.Close()
-		return nil, err
-	}
-	reply, err := session.RequestName(instanceName, dbus.NameFlagAllowReplacement|dbus.NameFlagReplaceExisting|dbus.NameFlagDoNotQueue)
-	if err != nil {
-		session.Close()
-		return nil, err
-	}
-	if reply != dbus.RequestNameReplyPrimaryOwner {
-		session.Close()
-		return nil, errors.New("otro vigilante USB tiene el nombre")
-	}
-	replaced := make(chan struct{})
-	go func() {
-		defer session.Close()
-		defer close(replaced)
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case signal, open := <-lost:
-				if !open {
-					return
-				}
-				if signal.Name == "org.freedesktop.DBus.NameLost" && len(signal.Body) == 1 && signal.Body[0] == instanceName {
-					return
-				}
-			}
-		}
-	}()
-	return replaced, nil
-}
-
 // Watch mounts USB filesystems as they appear until ctx ends, this watcher is
 // replaced, or the system bus closes. Devices already connected are left as
 // they are, because the user may have unmounted them on purpose.
 func Watch(ctx context.Context) error {
-	replaced, err := claimInstance(ctx)
+	replaced, err := instance.Claim(ctx, instanceName)
 	if err != nil {
 		return err
 	}
