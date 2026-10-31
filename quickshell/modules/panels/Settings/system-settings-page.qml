@@ -90,9 +90,10 @@ Flickable {
             SettingsRow {
                 label: "Carpeta de capturas"
                 modified: (SendaSettings.values.SENDA_SCREENSHOT_DIR || "") !== ""
-                onResetRequested: SendaSettings.save({ SENDA_SCREENSHOT_DIR: "" }, "Carpeta de capturas restablecida")
+                onResetRequested: { screenshotDirField.text = ""; SendaSettings.save({ SENDA_SCREENSHOT_DIR: "" }, "Carpeta de capturas restablecida"); }
                 description: "Vacío usa Imágenes/Capturas. Solo se guarda al pulsar Guardar en el editor."
                 SettingsField {
+                    id: screenshotDirField
                     Layout.preferredWidth: 230
                     enabled: SendaSettings.configLoaded
                     text: SendaSettings.values.SENDA_SCREENSHOT_DIR || ""
@@ -103,7 +104,7 @@ Flickable {
             SettingsRow {
                 label: "Tiempo de inactividad"
                 modified: SendaHyprlandSettings.loaded && SendaHyprlandSettings.values.idleSeconds !== 600
-                onResetRequested: SendaHyprlandSettings.save("--idle-seconds", 600)
+                onResetRequested: { idleField.text = "600"; SendaHyprlandSettings.save("--idle-seconds", 600); }
                 description: "Segundos, de 0 a 86400. 0 desactiva el bloqueo automático."
                 SavedMark { flag: "--idle-seconds" }
                 SettingsField {

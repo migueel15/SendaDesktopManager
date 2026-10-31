@@ -37,7 +37,7 @@ Flickable {
                 separator: false
                 label: "Distribución de teclado"
                 modified: root.modified_("layout")
-                onResetRequested: { SendaInputSettings.set("layout", ""); }
+                onResetRequested: { layoutField.text = SendaInputSettings.defaults.layout || ""; SendaInputSettings.set("layout", ""); }
                 description: root.note("layout", "Código XKB; varias separadas por comas, p. ej. us,es")
                 SettingsField {
                     id: layoutField

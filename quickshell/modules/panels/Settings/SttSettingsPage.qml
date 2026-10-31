@@ -173,7 +173,7 @@ Flickable {
                 separator: false
                 label: "Idioma"
                 modified: (SendaSettings.values.SENDA_STT_LANGUAGE || "es") !== "es"
-                onResetRequested: SendaSettings.save({ SENDA_STT_LANGUAGE: "" }, "Idioma restablecido")
+                onResetRequested: { languageField.text = "es"; SendaSettings.save({ SENDA_STT_LANGUAGE: "" }, "Idioma restablecido"); }
                 description: "Español o detección automática. También puedes introducir un código."
                 SettingsSegments {
                     value: SendaSettings.values.SENDA_STT_LANGUAGE || "es"
