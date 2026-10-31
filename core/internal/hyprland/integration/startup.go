@@ -1,6 +1,8 @@
 package integration
 
 import (
+	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,6 +13,63 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 )
+
+// UserStartup is the opt-in list exposed by the user's running Lua config.
+// Available distinguishes an empty list from a config that exposes no list.
+type UserStartup struct {
+	Available bool           `json:"available"`
+	Entries   []StartupEntry `json:"entries"`
+}
+
+// This expression only reads data. Never invoke startup callbacks to discover
+// commands: they may launch applications or have other side effects.
+const userStartupExpression = `(function()
+    local entries = senda_user_startup
+    if entries == nil then return "missing" end
+    if type(entries) ~= "table" then return "invalid" end
+    local function hex(value)
+        return (value:gsub(".", function(c) return string.format("%02x", string.byte(c)) end))
+    end
+    local lines = {"ready"}
+    for _, entry in ipairs(entries) do
+        if type(entry) ~= "table" or type(entry.name) ~= "string" or type(entry.command) ~= "string" then
+            return "invalid"
+        end
+        lines[#lines + 1] = hex(entry.name) .. ":" .. hex(entry.command)
+    end
+    return table.concat(lines, "\n")
+end)()`
+
+// ReadUserStartup queries an explicitly exposed table without changing config.
+func ReadUserStartup(ctx context.Context, run hyprctl.Runner) (UserStartup, error) {
+	result := UserStartup{Entries: []StartupEntry{}}
+	text, err := hyprctl.New(run).Repl(ctx, userStartupExpression)
+	if err != nil {
+		return result, err
+	}
+	if text == "missing" {
+		return result, nil
+	}
+	lines := strings.Split(text, "\n")
+	if lines[0] != "ready" {
+		return result, fmt.Errorf("la tabla senda_user_startup no tiene un formato válido")
+	}
+	for _, line := range lines[1:] {
+		nameHex, commandHex, ok := strings.Cut(line, ":")
+		name, nameErr := hex.DecodeString(nameHex)
+		command, commandErr := hex.DecodeString(commandHex)
+		if !ok || nameErr != nil || commandErr != nil {
+			return result, fmt.Errorf("respuesta de aplicaciones de Hyprland inválida")
+		}
+		entry, err := NewStartupEntry(StartupApp, string(name), string(command))
+		if err != nil {
+			return result, err
+		}
+		result.Entries = append(result.Entries, entry)
+	}
+	result.Available = true
+	return result, nil
+}
 
 // KeyStartup holds the startup entries as JSON.
 const KeyStartup = "SENDA_STARTUP_APPS"

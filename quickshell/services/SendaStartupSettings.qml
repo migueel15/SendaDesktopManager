@@ -10,6 +10,8 @@ Singleton {
 
     readonly property string binaryPath: Quickshell.env("SENDA_BIN") || "senda"
     property var entries: []
+    property var externalEntries: []
+    property string externalNotice: ""
     property string notice: ""
     property bool noticeIsError: false
     property var pending: []
@@ -18,7 +20,10 @@ Singleton {
         root.pending = root.pending.concat([args]);
         root.next();
     }
-    function refresh() { root.run(["show"]); }
+    function refresh() {
+        root.run(["show"]);
+        if (!externalProcess.running) externalProcess.running = true;
+    }
     function add(kind, name, target) { root.run(["add", "--kind", kind, "--name", name, "--", target]); }
     function remove(target) { root.run(["remove", "--", target]); }
     function setEnabled(target, enabled) { root.run([enabled ? "enable" : "disable", "--", target]); }
@@ -29,6 +34,24 @@ Singleton {
         root.pending = root.pending.slice(1);
         process.command = [root.binaryPath, "startup", "--json"].concat(args);
         process.running = true;
+    }
+
+    Process {
+        id: externalProcess
+        command: [root.binaryPath, "startup", "external", "--json"]
+        stdout: StdioCollector { id: externalOutput }
+        stderr: StdioCollector { id: externalErrors }
+        onExited: exitCode => {
+            try {
+                if (exitCode !== 0) throw new Error(externalErrors.text.trim());
+                const result = JSON.parse(externalOutput.text);
+                root.externalEntries = result.entries;
+                root.externalNotice = result.available ? (result.entries.length === 0 ? "No hay aplicaciones declaradas en Hyprland." : "") : "Tu configuración de Hyprland no expone su lista de inicio.";
+            } catch (e) {
+                root.externalEntries = [];
+                root.externalNotice = "No se pudo consultar Hyprland: " + e.message;
+            }
+        }
     }
 
     Process {

@@ -1,6 +1,10 @@
 package integration
 
 import (
+	"context"
+	"encoding/hex"
+	"errors"
+	"io"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -8,6 +12,51 @@ import (
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 )
+
+func TestReadUserStartup(t *testing.T) {
+	command := `notify-send "¡Hola!"; printf 'a:b'`
+	for _, tc := range []struct {
+		name, reply string
+		available   bool
+		count       int
+		wantError   bool
+	}{
+		{"not exposed", "missing", false, 0, false},
+		{"empty", "ready", true, 0, false},
+		{"quoted command", "ready\n" + hex.EncodeToString([]byte("Aviso")) + ":" + hex.EncodeToString([]byte(command)), true, 1, false},
+		{"invalid table", "invalid", false, 0, true},
+		{"invalid encoding", "ready\nzz:aa", false, 0, true},
+		{"empty command", "ready\n41:", false, 0, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			runner := func(_ context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
+				calls++
+				if name != "hyprctl" || len(args) != 2 || args[0] != "repl" {
+					t.Fatalf("unexpected command: %s %q", name, args)
+				}
+				return []byte(tc.reply), nil
+			}
+			got, err := ReadUserStartup(context.Background(), runner)
+			if (err != nil) != tc.wantError || got.Available != tc.available || len(got.Entries) != tc.count || calls != 1 {
+				t.Fatalf("got %#v, error %v, calls %d", got, err, calls)
+			}
+			if tc.count == 1 && (got.Entries[0].Name != "Aviso" || got.Entries[0].Target != command) {
+				t.Fatalf("command was changed: %#v", got.Entries[0])
+			}
+		})
+	}
+}
+
+func TestReadUserStartupUnavailableSession(t *testing.T) {
+	want := errors.New("no session")
+	_, err := ReadUserStartup(context.Background(), func(context.Context, io.Reader, string, ...string) ([]byte, error) {
+		return nil, want
+	})
+	if !errors.Is(err, want) {
+		t.Fatalf("got %v, want %v", err, want)
+	}
+}
 
 func TestStartupCommands(t *testing.T) {
 	cases := []struct {

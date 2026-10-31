@@ -102,7 +102,39 @@ Flickable {
         Text {
             Layout.fillWidth: true
             visible: SendaStartupSettings.entries.length === 0
-            text: "Aún no hay nada. Lo que tengas en tu propia configuración de Hyprland sigue igual."
+            text: "Aún no hay aplicaciones de inicio gestionadas por Senda."
+            color: Theme.colors.overlay
+            font: Theme.font.caption
+            wrapMode: Text.WordWrap
+        }
+
+        Text {
+            Layout.fillWidth: true
+            text: "Configuradas en Hyprland · Solo lectura"
+            color: Theme.colors.overlay
+            font: Theme.font.caption
+            wrapMode: Text.WordWrap
+        }
+
+        SettingsGroup {
+            visible: SendaStartupSettings.externalEntries.length > 0
+            Repeater {
+                model: SendaStartupSettings.externalEntries
+                delegate: SettingsRow {
+                    required property var modelData
+                    required property int index
+                    searchable: false
+                    separator: index < SendaStartupSettings.externalEntries.length - 1
+                    label: modelData.name
+                    description: modelData.target
+                }
+            }
+        }
+
+        Text {
+            Layout.fillWidth: true
+            visible: SendaStartupSettings.externalNotice !== ""
+            text: SendaStartupSettings.externalNotice
             color: Theme.colors.overlay
             font: Theme.font.caption
             wrapMode: Text.WordWrap

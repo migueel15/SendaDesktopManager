@@ -61,6 +61,20 @@ func startupCmd() *cobra.Command {
 		}
 		return printStartup(cmd, s.Startup, asJSON)
 	}}
+	external := &cobra.Command{Use: "external", Short: "Consultar el inicio definido en Hyprland (solo lectura)", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		list, err := integration.ReadUserStartup(cmd.Context(), nil)
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return writeJSON(cmd, list)
+		}
+		if !list.Available {
+			fmt.Fprintln(cmd.OutOrStdout(), "La configuración de Hyprland no expone la tabla senda_user_startup.")
+			return nil
+		}
+		return printStartup(cmd, list.Entries, false)
+	}}
 	var kind, name string
 	add := &cobra.Command{Use: "add <comando o ruta>", Short: "Añadir una entrada activada", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		entry, err := integration.NewStartupEntry(kind, name, args[0])
@@ -98,6 +112,6 @@ func startupCmd() *cobra.Command {
 		}}
 	}
 	cmd.PersistentFlags().BoolVar(&asJSON, "json", false, "Mostrar JSON")
-	cmd.AddCommand(show, add, remove, toggle("enable", "Activar una entrada", true), toggle("disable", "Desactivar una entrada", false))
+	cmd.AddCommand(show, external, add, remove, toggle("enable", "Activar una entrada", true), toggle("disable", "Desactivar una entrada", false))
 	return cmd
 }
