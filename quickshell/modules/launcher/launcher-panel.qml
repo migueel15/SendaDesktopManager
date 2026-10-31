@@ -6,8 +6,8 @@ import qs.services
 import "search.js" as Search
 import "emojis.js" as Emojis
 
-// Launcher for applications, Senda actions, arithmetic, shell commands (">")
-// and emoji (":"). It unfolds from the bar like the other overlay panels;
+// Launcher for applications, Senda actions, arithmetic, shell commands (">"),
+// emoji (":") and the clipboard history ("#"). It unfolds from the bar like the other overlay panels;
 // history, launching and IPC live in LauncherService.
 SendaPanel {
     id: root
@@ -51,6 +51,13 @@ SendaPanel {
         if (text.startsWith(":")) {
             results = Emojis.search(text.slice(1)).map(([emoji, keywords]) =>
                 ({ kind: "emoji", name: keywords.split(" ").slice(0, 3).join(" "), detail: "Copiar al portapapeles", glyph: emoji, run: () => root.copy(emoji) }));
+        } else if (text.startsWith("#")) {
+            const query = text.slice(1).trim().toLocaleLowerCase();
+            results = SendaClipboard.entries.filter(entry => entry.text.toLocaleLowerCase().includes(query)).map(entry =>
+                ({ kind: "clipboard", name: entry.text.trim().replace(/\s+/g, " ").slice(0, 200), detail: "Restaurar al portapapeles", glyph: "󰅌", run: () => {
+                    LauncherService.close();
+                    SendaClipboard.restore(entry.id);
+                } }));
         } else if (text.startsWith(">")) {
             const command = text.slice(1).trim();
             results = command ? [{ kind: "command", name: command, detail: "Ejecutar comando", glyph: "󰆍", run: () => {
@@ -77,12 +84,17 @@ SendaPanel {
     onOpenChanged: {
         if (!root.open) return;
         search.text = "";
+        SendaClipboard.refresh();
         root.refresh();
         Qt.callLater(() => { if (root.open) search.forceActiveFocus(); });
     }
     Connections {
         target: DesktopEntries.applications
         function onValuesChanged() { root.refresh(); }
+    }
+    Connections {
+        target: SendaClipboard
+        function onEntriesChanged() { if (search.text.trim().startsWith("#")) root.refresh(); }
     }
     Connections {
         target: LauncherService
@@ -107,7 +119,7 @@ SendaPanel {
             Keys.onUpPressed: { if (list.count) list.currentIndex = Math.max(list.currentIndex - 1, 0); }
             Keys.onReturnPressed: root.launch(list.currentIndex)
             Keys.onEnterPressed: root.launch(list.currentIndex)
-            Text { anchors.fill: parent; verticalAlignment: Text.AlignVCenter; visible: !search.text; text: "Buscar aplicaciones y acciones · = calcular · > comando · : emoji"; color: Theme.colors.overlay; font: search.font }
+            Text { anchors.fill: parent; verticalAlignment: Text.AlignVCenter; visible: !search.text; text: "Buscar aplicaciones y acciones · = calcular · > comando · : emoji · # portapapeles"; color: Theme.colors.overlay; font: search.font }
         }
     }
     ListView {

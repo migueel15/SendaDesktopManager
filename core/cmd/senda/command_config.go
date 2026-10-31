@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/clipboard"
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 	"github.com/migueel15/SendaDesktopManager/core/internal/googlecalendar"
 	"github.com/migueel15/SendaDesktopManager/core/internal/location"
@@ -64,6 +65,8 @@ var editableSettings = map[string]bool{
 	stt.KeyAudioVolume:    true,
 	stt.KeyPasteMode:      true,
 	stt.KeyTerminals:      true,
+	clipboard.KeyEnabled:  true,
+	clipboard.KeyMax:      true,
 }
 
 func configCmd() *cobra.Command {
@@ -92,24 +95,26 @@ func configGetCmd() *cobra.Command {
 			sttSettings := stt.LoadSettings(values)
 			result := map[string]any{
 				"values": map[string]string{
-					keyScreenshotDir:    values[keyScreenshotDir],
-					keyGoogleClientID:   values[keyGoogleClientID],
-					keyGoogleCalendars:  values[keyGoogleCalendars],
-					keyWeatherLocation:  values[keyWeatherLocation],
-					keyWeatherLat:       values[keyWeatherLat],
-					keyWeatherLon:       values[keyWeatherLon],
-					keyUIFontScale:      values[keyUIFontScale],
-					keyWidgetSpotify:    values[keyWidgetSpotify],
-					keyWidgetDiscord:    values[keyWidgetDiscord],
-					keyBatteryWarning:   values[keyBatteryWarning],
-					stt.KeyPreload:      strconv.FormatBool(sttSettings.Preload),
-					stt.KeyAudioDucking: strconv.FormatBool(sttSettings.AudioDucking),
-					stt.KeyAudioVolume:  strconv.Itoa(sttSettings.AudioVolume),
-					stt.KeyModel:        sttSettings.ModelID,
-					stt.KeyLanguage:     sttSettings.Language,
-					stt.KeyPasteMode:    string(sttSettings.PasteMode),
-					stt.KeyShortcut:     sttSettings.Shortcut,
-					stt.KeyTerminals:    strings.Join(sttSettings.Terminals, ","),
+					keyScreenshotDir:     values[keyScreenshotDir],
+					keyGoogleClientID:    values[keyGoogleClientID],
+					keyGoogleCalendars:   values[keyGoogleCalendars],
+					keyWeatherLocation:   values[keyWeatherLocation],
+					keyWeatherLat:        values[keyWeatherLat],
+					keyWeatherLon:        values[keyWeatherLon],
+					keyUIFontScale:       values[keyUIFontScale],
+					keyWidgetSpotify:     values[keyWidgetSpotify],
+					keyWidgetDiscord:     values[keyWidgetDiscord],
+					keyBatteryWarning:    values[keyBatteryWarning],
+					clipboard.KeyEnabled: values[clipboard.KeyEnabled],
+					clipboard.KeyMax:     values[clipboard.KeyMax],
+					stt.KeyPreload:       strconv.FormatBool(sttSettings.Preload),
+					stt.KeyAudioDucking:  strconv.FormatBool(sttSettings.AudioDucking),
+					stt.KeyAudioVolume:   strconv.Itoa(sttSettings.AudioVolume),
+					stt.KeyModel:         sttSettings.ModelID,
+					stt.KeyLanguage:      sttSettings.Language,
+					stt.KeyPasteMode:     string(sttSettings.PasteMode),
+					stt.KeyShortcut:      sttSettings.Shortcut,
+					stt.KeyTerminals:     strings.Join(sttSettings.Terminals, ","),
 				},
 				"googleClientSecretConfigured": secretConfigured,
 				"embeddedGoogleClient":         googlecalendar.HasEmbeddedCredentials(),
@@ -222,9 +227,13 @@ func validateSetting(key, value string) error {
 				return fmt.Errorf("%s must be a whole number between %d and %d", key, minBatteryWarning, maxBatteryWarning)
 			}
 		}
-	case stt.KeyPreload, stt.KeyAudioDucking, keyWidgetSpotify, keyWidgetDiscord:
+	case stt.KeyPreload, stt.KeyAudioDucking, keyWidgetSpotify, keyWidgetDiscord, clipboard.KeyEnabled:
 		if value != "" && value != "true" && value != "false" {
 			return fmt.Errorf("%s must be true or false", key)
+		}
+	case clipboard.KeyMax:
+		if value != "" && !clipboard.ValidMax(value) {
+			return fmt.Errorf("%s must be a whole number between 1 and %d", key, clipboard.LimitMax)
 		}
 	case stt.KeyAudioVolume:
 		if value != "" {

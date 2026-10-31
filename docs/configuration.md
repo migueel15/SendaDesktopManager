@@ -157,3 +157,7 @@ Otras variables de entorno que usa Senda:
 ## Integración de Hyprland
 
 Los ajustes de bloqueo, dictado y capturas se leen del archivo de Senda y se cambian juntos con `senda hyprland set`; usa `senda hyprland show --json` para consultar rutas, estado y avisos. Los modificadores y teclas se validan antes de escribir. Un ejecutable temporal generado por `go run` no se acepta: utiliza un binario persistente, tanto en desarrollo como en una release. Consulta [Bloqueo de pantalla](lock-screen.md).
+
+## Portapapeles
+
+`SENDA_CLIPBOARD_ENABLED` (`true` o `false`, activo por defecto) y `SENDA_CLIPBOARD_MAX` (de 1 a 1000, 100 por defecto) controlan el [historial del portapapeles](clipboard.md).

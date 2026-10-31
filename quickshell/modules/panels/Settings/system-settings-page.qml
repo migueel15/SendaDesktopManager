@@ -43,6 +43,42 @@ Flickable {
         SettingsGroup {
             SettingsRow {
                 separator: false
+                label: "Historial del portapapeles"
+                description: "Guarda en este equipo el texto copiado. No guarda imágenes ni lo que los gestores de contraseñas marcan como sensible."
+                modified: SendaSettings.values.SENDA_CLIPBOARD_ENABLED === "false"
+                onResetRequested: SendaSettings.save({ SENDA_CLIPBOARD_ENABLED: "" }, "Historial del portapapeles restablecido")
+                SettingsSwitch {
+                    checkedValue: SendaSettings.values.SENDA_CLIPBOARD_ENABLED !== "false"
+                    enabled: !SendaSettings.busy
+                    Accessible.name: "Historial del portapapeles"
+                    onToggledValue: value => SendaSettings.save({ SENDA_CLIPBOARD_ENABLED: String(value) }, "Historial del portapapeles guardado")
+                }
+            }
+            SettingsRow {
+                label: "Máximo de entradas"
+                description: "De 1 a 1000. Se eliminan las más antiguas."
+                modified: (SendaSettings.values.SENDA_CLIPBOARD_MAX || "") !== ""
+                onResetRequested: { clipboardMaxField.text = ""; SendaSettings.save({ SENDA_CLIPBOARD_MAX: "" }, "Máximo de entradas restablecido"); }
+                SettingsField {
+                    id: clipboardMaxField
+                    Layout.preferredWidth: 100
+                    enabled: SendaSettings.configLoaded
+                    text: SendaSettings.values.SENDA_CLIPBOARD_MAX || ""
+                    placeholder: "100"
+                    onCommitted: SendaSettings.save({ SENDA_CLIPBOARD_MAX: text.trim() }, "Máximo de entradas guardado")
+                }
+            }
+            SettingsRow {
+                label: "Vaciar el historial"
+                SettingsButton {
+                    label: "Vaciar"
+                    onClicked: SendaClipboard.clear()
+                }
+            }
+        }
+        SettingsGroup {
+            SettingsRow {
+                separator: false
                 label: "Atajo de bloqueo"
                 SettingsShortcut {
                     target: "lock"
