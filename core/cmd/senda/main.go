@@ -29,6 +29,7 @@ func main() {
 	rootCmd.AddCommand(lockCmd())
 	rootCmd.AddCommand(screenshotCmd())
 	rootCmd.AddCommand(hyprlandCmd())
+	rootCmd.AddCommand(inputCmd())
 	rootCmd.AddCommand(themeCmd())
 	rootCmd.AddCommand(sttCmd())
 	rootCmd.AddCommand(versionCmd())

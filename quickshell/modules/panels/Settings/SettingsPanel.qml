@@ -21,6 +21,7 @@ Item {
         { label: "Calendario", icon: "󰃭" },
         { label: "Tiempo", icon: "󰖐" },
         { label: "Dictado", icon: "󰍬" },
+        { label: "Teclado y ratón", icon: "󰌌" },
         { label: "Sistema", icon: "󰒓" },
         { label: "Actualización", icon: "󰚰" }
     ]
@@ -35,6 +36,7 @@ Item {
             SendaSettings.refresh();
             SendaSttSettings.refresh();
             SendaHyprlandSettings.refresh();
+            SendaInputSettings.refresh();
         }
     }
 
@@ -218,6 +220,11 @@ Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         onOpenSystemRequested: root.currentSection = root.sections.findIndex(section => section.label === "Sistema")
+                    }
+
+                    InputSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                     }
 
                     SystemSettingsPage {

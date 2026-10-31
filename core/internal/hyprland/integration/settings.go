@@ -26,6 +26,7 @@ const (
 // LoadSettings uses the existing dictation key so upgrades retain the shortcut.
 func LoadSettings(values map[string]string) (Settings, error) {
 	s := DefaultSettings()
+	s.Input = LoadInputSettings(values)
 	if v := values[KeyLockShortcut]; v != "" {
 		s.LockShortcut = v
 	}

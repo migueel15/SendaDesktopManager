@@ -193,5 +193,27 @@ func (c Client) AddWindowRule(ctx context.Context, rule WindowRule) error {
 	return c.Eval(ctx, WindowRuleLua(rule))
 }
 
+// SetCursor applies a cursor theme to the running session.
+func (c Client) SetCursor(ctx context.Context, theme string, size int) error {
+	return c.expectOK(ctx, "setcursor", theme, strconv.Itoa(size))
+}
+
+// Option returns the current value of a configuration option as text.
+func (c Client) Option(ctx context.Context, name string) (string, error) {
+	var raw map[string]any
+	if err := c.query(ctx, &raw, "getoption", name); err != nil {
+		return "", err
+	}
+	for _, key := range []string{"str", "float", "int"} {
+		switch v := raw[key].(type) {
+		case string:
+			return v, nil
+		case float64:
+			return strconv.FormatFloat(v, 'f', -1, 64), nil
+		}
+	}
+	return "", fmt.Errorf("opción sin valor: %s", name)
+}
+
 // Exit ends the Hyprland session.
 func (c Client) Exit(ctx context.Context) error { return c.Dispatch(ctx, DspExit()) }
