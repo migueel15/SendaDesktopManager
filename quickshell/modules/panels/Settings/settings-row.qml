@@ -28,7 +28,8 @@ Item {
     implicitHeight: content.implicitHeight + (separator ? Theme.spacing.md + 1 : 0)
     Rectangle {
         id: highlight
-        anchors { fill: parent; margins: -Theme.spacing.xs }
+        // Follows the content, not the row, whose top holds the separator.
+        anchors { fill: content; margins: -Theme.spacing.xs }
         radius: Theme.rounding.small
         color: Theme.colors.selection
         opacity: 0
