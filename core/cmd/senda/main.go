@@ -17,6 +17,7 @@ func main() {
 	rootCmd.AddCommand(streamAudioCmd)
 	rootCmd.AddCommand(userCmd)
 	rootCmd.AddCommand(brightnessCmd)
+	rootCmd.AddCommand(mediaCmd)
 	rootCmd.AddCommand(discordCmd())
 	rootCmd.AddCommand(calendarCmd())
 	rootCmd.AddCommand(configCmd())

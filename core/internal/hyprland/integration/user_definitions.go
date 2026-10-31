@@ -14,10 +14,14 @@ import (
 type Selector struct {
 	// LuaCall is the function that defines the setting, such as hl.monitor.
 	LuaCall string
-	// Field is the table field that names the target, such as output.
+	// Field is the table field that names the target, such as output. Empty
+	// means the target is the call's first argument.
 	Field string
 	// ConfKeyword is the equivalent keyword in hyprland.conf; empty to skip it.
 	ConfKeyword string
+	// ConfPattern replaces ConfKeyword when one keyword is not enough. Its first
+	// group is the target.
+	ConfPattern string
 }
 
 // RuntimeMarker on the line before a call says it adjusts a setting at runtime,
@@ -62,6 +66,7 @@ type definitionScan struct {
 var (
 	luaIncludeRe  = regexp.MustCompile(`\b(require|dofile)\s*[,(]?\s*["']([^"']+)["']`)
 	confSourceRe  = regexp.MustCompile(`^\s*source\s*=\s*(.+?)\s*$`)
+	luaFirstArg   = regexp.MustCompile(`^\s*(?:"([^"]*)"|'([^']*)')\s*,`)
 	luaFieldStart = `\b%s\s*=\s*(?:"([^"]*)"|'([^']*)')`
 )
 
@@ -91,7 +96,10 @@ func (s *definitionScan) lua(path, text string) error {
 	code := stripLuaComments(text)
 	lines := strings.Split(text, "\n")
 	if s.sel.LuaCall != "" {
-		field := regexp.MustCompile(fmt.Sprintf(luaFieldStart, regexp.QuoteMeta(s.sel.Field)))
+		field := luaFirstArg
+		if s.sel.Field != "" {
+			field = regexp.MustCompile(fmt.Sprintf(luaFieldStart, regexp.QuoteMeta(s.sel.Field)))
+		}
 		call := regexp.MustCompile(`(^|[^\w.])` + regexp.QuoteMeta(s.sel.LuaCall) + `\s*\(`)
 		for _, match := range call.FindAllStringIndex(code, -1) {
 			d := Definition{File: path, Line: strings.Count(code[:match[1]], "\n") + 1, Dynamic: true}
@@ -126,7 +134,9 @@ func (s *definitionScan) lua(path, text string) error {
 
 func (s *definitionScan) conf(path, text string) error {
 	var keyword *regexp.Regexp
-	if s.sel.ConfKeyword != "" {
+	if s.sel.ConfPattern != "" {
+		keyword = regexp.MustCompile(s.sel.ConfPattern)
+	} else if s.sel.ConfKeyword != "" {
 		keyword = regexp.MustCompile(`^\s*` + regexp.QuoteMeta(s.sel.ConfKeyword) + `\s*=\s*([^,]*)`)
 	}
 	for i, line := range strings.Split(text, "\n") {

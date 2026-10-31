@@ -37,6 +37,7 @@ type moduleInput struct {
 var generatedModules = []generatedModule{
 	{"lock", renderLockModule},
 	{"binds", renderBindsModule},
+	{"media", renderMediaModule},
 	{"rules", renderRulesModule},
 	{"displays", renderDisplaysModule},
 	{"input", renderInputModule},

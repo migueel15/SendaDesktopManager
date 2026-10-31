@@ -19,9 +19,17 @@ Scope {
         target: Pipewire.defaultAudioSink?.audio
 
         function onVolumeChanged() {
-            root.shouldShowOsd = true;
-            hideTimer.restart();
+            root.show();
         }
+
+        function onMutedChanged() {
+            root.show();
+        }
+    }
+
+    function show() {
+        shouldShowOsd = true;
+        hideTimer.restart();
     }
 
     property bool shouldShowOsd: false
@@ -88,7 +96,7 @@ Scope {
 
                         color: Theme.colors.primary
 
-                        implicitWidth: parent.width * (Pipewire.defaultAudioSink?.audio.volume ?? 0)
+                        implicitWidth: parent.width * (Pipewire.defaultAudioSink?.audio.muted ? 0 : Pipewire.defaultAudioSink?.audio.volume ?? 0)
                         radius: parent.radius
                     }
                 }

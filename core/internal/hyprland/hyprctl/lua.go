@@ -40,6 +40,10 @@ type BindOptions struct {
 	Description string
 	// Universal keeps the bind active in every submap.
 	Universal bool
+	// Locked keeps the bind active on the lock screen.
+	Locked bool
+	// Repeating fires the bind again while the key is held.
+	Repeating bool
 }
 
 // BindLua returns the Lua statement that binds combo to dispatcher.
@@ -47,6 +51,12 @@ func BindLua(combo, dispatcher string, opts BindOptions) string {
 	options := ""
 	if opts.Universal {
 		options += "submap_universal = true, "
+	}
+	if opts.Locked {
+		options += "locked = true, "
+	}
+	if opts.Repeating {
+		options += "repeating = true, "
 	}
 	options += "description = " + strconv.Quote(opts.Description)
 	return fmt.Sprintf("hl.bind(%s, %s, { %s })", strconv.Quote(combo), dispatcher, options)

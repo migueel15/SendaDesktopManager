@@ -43,6 +43,7 @@ ShellRoot {
 
 	VolumeOSD {}
 	BrightnessOSD {}
+	MediaKeys {}
 
 	SttDock {}
 	LockScreen {}
