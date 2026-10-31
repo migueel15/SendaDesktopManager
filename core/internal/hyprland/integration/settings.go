@@ -55,7 +55,9 @@ func LoadSettings(values map[string]string) (Settings, error) {
 	default:
 		return s, fmt.Errorf("modo de hypridle inválido: %q", v)
 	}
-	return s, nil
+	var err error
+	s.Displays, err = ParseDisplays(values[KeyDisplays])
+	return s, err
 }
 
 func SaveSettings(path string, s Settings) error {

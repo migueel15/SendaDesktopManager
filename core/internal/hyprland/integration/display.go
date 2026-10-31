@@ -1,0 +1,354 @@
+package integration
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/config"
+	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+)
+
+const (
+	KeyDisplays         = "SENDA_DISPLAYS"
+	KeyDisplaysPrevious = "SENDA_DISPLAYS_PREVIOUS"
+)
+
+// MonitorSelector finds the monitors the user defines.
+var MonitorSelector = Selector{LuaCall: "hl.monitor", Field: "output", ConfKeyword: "monitor"}
+
+// DisplayRule is a monitor configured from Senda.
+type DisplayRule struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description,omitempty"`
+	Mode        string  `json:"mode"`
+	Position    string  `json:"position"`
+	Scale       float64 `json:"scale"`
+	Transform   int     `json:"transform"`
+	// Mirror is the selector of the monitor this one duplicates.
+	Mirror   string `json:"mirror,omitempty"`
+	Disabled bool   `json:"disabled,omitempty"`
+}
+
+// Output is how the rule names its monitor. The description follows the
+// monitor when it changes port.
+func (r DisplayRule) Output() string { return monitorOutput(r.Name, r.Description) }
+
+func monitorOutput(name, description string) string {
+	if description != "" {
+		return "desc:" + description
+	}
+	return name
+}
+
+var (
+	modeRe     = regexp.MustCompile(`^\d+x\d+(@\d+(\.\d+)?)?$`)
+	positionRe = regexp.MustCompile(`^-?\d+x-?\d+$`)
+)
+
+// Validate rejects a rule Hyprland could not apply.
+func (r DisplayRule) Validate() error {
+	switch {
+	case r.Name == "":
+		return fmt.Errorf("pantalla sin nombre")
+	case !modeRe.MatchString(r.Mode) && r.Mode != "preferred":
+		return fmt.Errorf("modo inválido: %q (usa 1920x1080@60)", r.Mode)
+	case !positionRe.MatchString(r.Position):
+		return fmt.Errorf("posición inválida: %q (usa 1920x0)", r.Position)
+	case r.Scale < 0.25 || r.Scale > 10:
+		return fmt.Errorf("escala inválida: %v (de 0.25 a 10)", r.Scale)
+	case r.Transform < 0 || r.Transform > 7:
+		return fmt.Errorf("rotación inválida: %d (de 0 a 7)", r.Transform)
+	}
+	return nil
+}
+
+func (r DisplayRule) lua() string {
+	return hyprctl.MonitorLua(hyprctl.MonitorRule{Output: r.Output(), Mode: r.Mode, Position: r.Position, Scale: strconv.FormatFloat(r.Scale, 'f', -1, 64), Transform: r.Transform, Mirror: r.Mirror, Disabled: r.Disabled})
+}
+
+// DisplayLines returns the monitor statements of a generated module, so a stale
+// module can be noticed whatever else differs in it.
+func DisplayLines(module []byte) string {
+	var lines []string
+	for _, line := range strings.Split(string(module), "\n") {
+		if strings.HasPrefix(line, "hl.monitor(") {
+			lines = append(lines, line)
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
+// ParseDisplays reads a stored value; empty means no rules.
+func ParseDisplays(value string) ([]DisplayRule, error) {
+	if value == "" {
+		return nil, nil
+	}
+	var rules []DisplayRule
+	if err := json.Unmarshal([]byte(value), &rules); err != nil {
+		return nil, fmt.Errorf("pantallas guardadas inválidas: %w", err)
+	}
+	for _, rule := range rules {
+		if err := rule.Validate(); err != nil {
+			return nil, err
+		}
+	}
+	return rules, nil
+}
+
+func encodeDisplays(rules []DisplayRule) (string, error) {
+	if len(rules) == 0 {
+		return "", nil
+	}
+	data, err := json.Marshal(rules)
+	return string(data), err
+}
+
+// StoredDisplays returns every saved rule, including those the user overrides,
+// which are kept in case the user removes their definition.
+func StoredDisplays(path string) (rules, previous []DisplayRule, err error) {
+	values, err := config.Load(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	if rules, err = ParseDisplays(values[KeyDisplays]); err != nil {
+		return nil, nil, err
+	}
+	previous, err = ParseDisplays(values[KeyDisplaysPrevious])
+	return rules, previous, err
+}
+
+// StoreDisplays saves rules and what they replaced, which undo restores. A nil
+// previous from StoredDisplays means there is nothing to undo.
+func StoreDisplays(path string, rules, previous []DisplayRule) error {
+	current, err := encodeDisplays(rules)
+	if err != nil {
+		return err
+	}
+	// "[]" records that undo would clear every rule; empty means no undo.
+	old := "[]"
+	if len(previous) > 0 {
+		if old, err = encodeDisplays(previous); err != nil {
+			return err
+		}
+	}
+	return config.Set(path, map[string]string{KeyDisplays: current, KeyDisplaysPrevious: old})
+}
+
+// claimedBy returns the user definition that controls a monitor. A catch-all
+// only supplies defaults, so it claims nothing; a computed target could be any
+// monitor, so it claims all of them.
+func claimedBy(defs []Definition, name, description string) *Definition {
+	for i := range defs {
+		d := &defs[i]
+		if d.Dynamic || (d.Value != "" && (d.Value == name || (description != "" && d.Value == "desc:"+description))) {
+			return d
+		}
+	}
+	return nil
+}
+
+// withoutClaimed drops the rules the user's own configuration overrides.
+func withoutClaimed(rules []DisplayRule, defs []Definition) []DisplayRule {
+	kept := make([]DisplayRule, 0, len(rules))
+	for _, rule := range rules {
+		if claimedBy(defs, rule.Name, rule.Description) == nil {
+			kept = append(kept, rule)
+		}
+	}
+	return kept
+}
+
+// Display is a connected monitor and who controls it.
+type Display struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	X           int      `json:"x"`
+	Y           int      `json:"y"`
+	Width       int      `json:"width"`
+	Height      int      `json:"height"`
+	RefreshRate float64  `json:"refreshRate"`
+	Scale       float64  `json:"scale"`
+	Transform   int      `json:"transform"`
+	Enabled     bool     `json:"enabled"`
+	MirrorOf    string   `json:"mirrorOf"`
+	Modes       []string `json:"modes"`
+	// ManagedBy is user, senda, or empty when nobody configured the monitor.
+	ManagedBy string `json:"managedBy"`
+	// Source is where the user defines it, when ManagedBy is user.
+	Source string `json:"source,omitempty"`
+}
+
+// DisplayState is what `senda display show` reports.
+type DisplayState struct {
+	Displays []Display `json:"displays"`
+	CanUndo  bool      `json:"canUndo"`
+}
+
+// InspectDisplays joins the live monitors with their owners.
+func InspectDisplays(ctx context.Context, run stt.Runner, rules []DisplayRule, canUndo bool) (DisplayState, error) {
+	monitors, err := hyprctl.New(run).Monitors(ctx)
+	if err != nil {
+		return DisplayState{}, err
+	}
+	defs, err := UserDefinitions(MonitorSelector)
+	if err != nil {
+		return DisplayState{}, fmt.Errorf("leer la configuración de Hyprland: %w", err)
+	}
+	state := DisplayState{Displays: make([]Display, 0, len(monitors)), CanUndo: canUndo}
+	for _, m := range monitors {
+		d := Display{Name: m.Name, Description: m.Description, X: m.X, Y: m.Y, Width: m.Width, Height: m.Height, RefreshRate: m.RefreshRate, Scale: m.Scale, Transform: m.Transform, Enabled: !m.Disabled, MirrorOf: m.MirrorOf, Modes: []string{}}
+		for _, mode := range m.AvailableModes {
+			d.Modes = append(d.Modes, strings.TrimSuffix(mode, "Hz"))
+		}
+		if claim := claimedBy(defs, m.Name, m.Description); claim != nil {
+			d.ManagedBy, d.Source = "user", claim.Source()
+		} else if findRule(rules, m) >= 0 {
+			d.ManagedBy = "senda"
+		}
+		state.Displays = append(state.Displays, d)
+	}
+	return state, nil
+}
+
+func findRule(rules []DisplayRule, m hyprctl.Monitor) int {
+	output := monitorOutput(m.Name, m.Description)
+	for i, rule := range rules {
+		if rule.Output() == output {
+			return i
+		}
+	}
+	return -1
+}
+
+// DisplayChange edits a monitor's rule; unset fields stay as they are.
+type DisplayChange struct {
+	Mode, Position string
+	Scale          *float64
+	Transform      *int
+	// Mirror is a monitor name; "none" stops mirroring.
+	Mirror  *string
+	Enabled *bool
+}
+
+// ChangeDisplay returns rules with the change applied. A monitor without a rule
+// starts from its live state, so the rest of its configuration holds.
+func ChangeDisplay(ctx context.Context, run stt.Runner, rules []DisplayRule, name string, change DisplayChange) ([]DisplayRule, error) {
+	monitors, target, err := liveDisplay(ctx, run, name)
+	if err != nil {
+		return nil, err
+	}
+	out := append([]DisplayRule(nil), rules...)
+	i := findRule(out, target)
+	if i < 0 {
+		out = append(out, ruleFromLive(target))
+		i = len(out) - 1
+	}
+	rule := &out[i]
+	if change.Mode != "" {
+		rule.Mode = change.Mode
+	}
+	if change.Position != "" {
+		rule.Position = change.Position
+	}
+	if change.Scale != nil {
+		rule.Scale = *change.Scale
+	}
+	if change.Transform != nil {
+		rule.Transform = *change.Transform
+	}
+	if change.Mirror != nil {
+		rule.Mirror = ""
+		if *change.Mirror != "none" {
+			if rule.Mirror, err = mirrorTarget(monitors, target, *change.Mirror); err != nil {
+				return nil, err
+			}
+		}
+	}
+	if change.Enabled != nil {
+		rule.Disabled = !*change.Enabled
+		if rule.Disabled && !anotherEnabled(monitors, name) {
+			return nil, fmt.Errorf("no se puede apagar la única pantalla activa")
+		}
+	}
+	if err := rule.Validate(); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ResetDisplay removes a monitor's rule, handing it back to Hyprland.
+func ResetDisplay(ctx context.Context, run stt.Runner, rules []DisplayRule, name string) ([]DisplayRule, error) {
+	_, target, err := liveDisplay(ctx, run, name)
+	if err != nil {
+		return nil, err
+	}
+	i := findRule(rules, target)
+	if i < 0 {
+		return nil, fmt.Errorf("Senda no gestiona %s", name)
+	}
+	return append(append([]DisplayRule(nil), rules[:i]...), rules[i+1:]...), nil
+}
+
+// liveDisplay finds a monitor Senda may change: the user always wins.
+func liveDisplay(ctx context.Context, run stt.Runner, name string) ([]hyprctl.Monitor, hyprctl.Monitor, error) {
+	monitors, err := hyprctl.New(run).Monitors(ctx)
+	if err != nil {
+		return nil, hyprctl.Monitor{}, err
+	}
+	for _, m := range monitors {
+		if m.Name != name {
+			continue
+		}
+		defs, err := UserDefinitions(MonitorSelector)
+		if err != nil {
+			return nil, m, fmt.Errorf("leer la configuración de Hyprland: %w", err)
+		}
+		if claim := claimedBy(defs, m.Name, m.Description); claim != nil {
+			return nil, m, fmt.Errorf("%s lo gestiona tu configuración (%s)", name, claim.Source())
+		}
+		return monitors, m, nil
+	}
+	return nil, hyprctl.Monitor{}, fmt.Errorf("no hay ninguna pantalla llamada %q", name)
+}
+
+func ruleFromLive(m hyprctl.Monitor) DisplayRule {
+	mode := "preferred"
+	if m.Width > 0 && m.Height > 0 {
+		mode = fmt.Sprintf("%dx%d@%.2f", m.Width, m.Height, m.RefreshRate)
+	}
+	scale := m.Scale
+	if scale <= 0 {
+		scale = 1
+	}
+	return DisplayRule{Name: m.Name, Description: m.Description, Mode: mode, Position: fmt.Sprintf("%dx%d", m.X, m.Y), Scale: scale, Transform: m.Transform, Disabled: m.Disabled}
+}
+
+func mirrorTarget(monitors []hyprctl.Monitor, source hyprctl.Monitor, name string) (string, error) {
+	if name == source.Name {
+		return "", fmt.Errorf("una pantalla no puede duplicarse a sí misma")
+	}
+	for _, m := range monitors {
+		if m.Name != name {
+			continue
+		}
+		if m.Disabled || (m.MirrorOf != "" && m.MirrorOf != "none") {
+			return "", fmt.Errorf("%s debe estar activa y no duplicar otra pantalla", name)
+		}
+		return monitorOutput(m.Name, m.Description), nil
+	}
+	return "", fmt.Errorf("no hay ninguna pantalla llamada %q", name)
+}
+
+func anotherEnabled(monitors []hyprctl.Monitor, name string) bool {
+	for _, m := range monitors {
+		if m.Name != name && !m.Disabled {
+			return true
+		}
+	}
+	return false
+}

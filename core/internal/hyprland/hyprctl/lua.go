@@ -92,3 +92,24 @@ func WindowRuleLua(rule WindowRule) string {
 	}
 	return fmt.Sprintf("hl.window_rule({ name = %s, match = { title = %s }%s })", strconv.Quote(rule.Name), strconv.Quote(rule.MatchTitle), effects)
 }
+
+// MonitorRule is the configuration of one monitor.
+type MonitorRule struct {
+	Output, Mode, Position, Scale string
+	Transform                     int
+	// Mirror is the output this monitor duplicates.
+	Mirror   string
+	Disabled bool
+}
+
+// MonitorLua returns the Lua statement that configures a monitor.
+func MonitorLua(rule MonitorRule) string {
+	if rule.Disabled {
+		return fmt.Sprintf("hl.monitor({ output = %s, disabled = true })", strconv.Quote(rule.Output))
+	}
+	mirror := ""
+	if rule.Mirror != "" {
+		mirror = ", mirror = " + strconv.Quote(rule.Mirror)
+	}
+	return fmt.Sprintf("hl.monitor({ output = %s, mode = %s, position = %s, scale = %s, transform = %d%s })", strconv.Quote(rule.Output), strconv.Quote(rule.Mode), strconv.Quote(rule.Position), strconv.Quote(rule.Scale), rule.Transform, mirror)
+}

@@ -126,6 +126,28 @@ func (c Client) Windows(ctx context.Context) ([]Window, error) {
 	return ws, c.query(ctx, &ws, "clients")
 }
 
+// Monitor is a monitor known to Hyprland, enabled or not.
+type Monitor struct {
+	Name           string   `json:"name"`
+	Description    string   `json:"description"`
+	Width          int      `json:"width"`
+	Height         int      `json:"height"`
+	RefreshRate    float64  `json:"refreshRate"`
+	X              int      `json:"x"`
+	Y              int      `json:"y"`
+	Scale          float64  `json:"scale"`
+	Transform      int      `json:"transform"`
+	Disabled       bool     `json:"disabled"`
+	MirrorOf       string   `json:"mirrorOf"`
+	AvailableModes []string `json:"availableModes"`
+}
+
+// Monitors lists every connected monitor, including disabled ones.
+func (c Client) Monitors(ctx context.Context) ([]Monitor, error) {
+	var ms []Monitor
+	return ms, c.query(ctx, &ms, "monitors", "all")
+}
+
 // Keyboards returns the names of the keyboards Hyprland knows.
 func (c Client) Keyboards(ctx context.Context) ([]string, error) {
 	var devices struct {

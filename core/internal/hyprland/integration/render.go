@@ -40,6 +40,8 @@ type Settings struct {
 	Blur               bool
 	// IdleMode is IdleModeSenda, IdleModeUser or empty when undecided.
 	IdleMode string
+	// Displays are the monitor rules to generate, without those the user owns.
+	Displays []DisplayRule
 }
 
 func DefaultSettings() Settings {
@@ -92,6 +94,12 @@ function %s() return %s end
 		hyprctl.BindLua(screenshot, hyprctl.DspExec(command+" screenshot"), hyprctl.BindOptions{Description: "Senda screenshot"}),
 		hyprctl.WindowRuleLua(SettingsWindowRule()),
 		ProbeFunction, strconv.Quote(version.Version)))
+	for _, rule := range settings.Displays {
+		if err := rule.Validate(); err != nil {
+			return nil, nil, err
+		}
+		lua = append(lua, rule.lua()+"\n"...)
+	}
 	if settings.IdleMode == IdleModeSenda {
 		idleCommand := "hypridle -c '" + strings.ReplaceAll(IdlePath(), "'", "'\\''") + "'"
 		lua = append(lua, hyprctl.OnStart(idleCommand)+"\n"...)
