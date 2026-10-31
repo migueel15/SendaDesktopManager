@@ -91,6 +91,11 @@ Item {
         border.color: Theme.colors.border
     }
 
+    Shortcut {
+        sequence: "Ctrl+F"
+        onActivated: searchField.focusInput()
+    }
+
     // Search works on the rows the pages really have, so no list needs upkeep.
     property string query: ""
     readonly property bool searching: query.trim() !== ""

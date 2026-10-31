@@ -118,7 +118,7 @@ Escala `Theme.motion`: `fast` 120 ms para hover y cambios de color · `normal` 1
 
 Las seis páginas mantienen su navegación lateral con icono Nerd Font y texto. La selección usa `selection`, texto `white` e icono `primary`. El contenido conserva el título de sección y se desplaza independientemente del pie de estado.
 
-En la columna lateral, encima de las secciones, hay un buscador; sus resultados sustituyen a las secciones mientras haya texto. Encuentra secciones y filas `SettingsRow` por etiqueta o descripción, sin distinguir tildes, leyendo las páginas reales; las filas generadas desde datos usan `searchable: false`. Elegir un resultado abre su sección, desplaza hasta la fila y la resalta.
+En la columna lateral, encima de las secciones, hay un buscador; sus resultados sustituyen a las secciones mientras haya texto. Encuentra secciones y filas `SettingsRow` por etiqueta o descripción, sin distinguir tildes, leyendo las páginas reales; las filas generadas desde datos usan `searchable: false`. `Ctrl+F` enfoca el buscador y Enter elige el primer resultado. Elegir un resultado abre su sección, desplaza hasta la fila y la resalta.
 
 Los componentes locales se registran en `Settings/qmldir`; sus archivos usan nombres en minúsculas:
 
