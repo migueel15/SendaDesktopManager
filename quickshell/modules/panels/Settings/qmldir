@@ -17,3 +17,4 @@ WeatherSettingsPage 1.0 WeatherSettingsPage.qml
 WidgetsSettingsPage 1.0 widgets-settings-page.qml
 SystemSettingsPage 1.0 system-settings-page.qml
 SettingsWindow 1.0 settings-window.qml
+DisplaySettingsPage 1.0 display-settings-page.qml

@@ -1,0 +1,28 @@
+# Pantallas
+
+La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolución, frecuencia, escala y rotación, además de encenderlos, apagarlos y duplicarlos. Los cambios se aplican en vivo y persisten tras reiniciar y recargar: Senda los guarda en `SENDA_DISPLAYS` y los genera en su módulo de Hyprland.
+
+- Arrastra una pantalla y al soltarla se pega al lado de otra, sin solaparse.
+- Los cambios de modo, escala, rotación, encendido y duplicado se deshacen solos a los 15 segundos si no pulsas **Mantener**.
+- Las pantallas apagadas o que duplican a otra no aparecen en la colocación.
+
+## Comandos
+
+| Comando | Uso |
+|---|---|
+| `senda display show [--json]` | Muestra las pantallas y quién las gestiona. |
+| `senda display set PANTALLA --mode 1920x1080@60` | Resolución y frecuencia. |
+| `senda display set PANTALLA --position 1920x0` | Posición. |
+| `senda display set PANTALLA --scale 1.5` | Escala. |
+| `senda display set PANTALLA --transform 1` | Rotación: `0` normal, `1` 90°, `2` 180°, `3` 270°. |
+| `senda display set PANTALLA --mirror DP-1` | Duplica otra pantalla; `--mirror none` deja de hacerlo. |
+| `senda display set PANTALLA --enabled=false` | Apaga la pantalla. |
+| `senda display reset PANTALLA` | Quita los ajustes de Senda de esa pantalla. |
+| `senda display undo` | Deshace el último cambio. |
+| `senda display sync` | Regenera el módulo si tu configuración de monitores ha cambiado. La shell lo hace sola. |
+
+## Pantallas definidas por ti
+
+Si tu configuración de Hyprland define un monitor con `hl.monitor` o `monitor =`, tu definición gana: Senda no genera nada para él, rechaza cambiarlo y lo muestra como gestionado por tu configuración, con el archivo y la línea. Si no defines ninguno, esa sección no aparece.
+
+Una regla general (`output = ""`) no cuenta como definición: Senda puede configurar cada pantalla por encima de ella. Un `output` calculado por código podría ser cualquier pantalla, así que todas pasan a estar gestionadas por ti. Solo se leen los archivos que Hyprland carga mediante rutas literales. Ver [ADR 0008](adr/0008-configuracion-del-usuario-gana.md).

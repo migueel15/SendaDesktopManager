@@ -21,6 +21,7 @@ Item {
         { label: "Calendario", icon: "󰃭" },
         { label: "Tiempo", icon: "󰖐" },
         { label: "Dictado", icon: "󰍬" },
+        { label: "Pantallas", icon: "󰍹" },
         { label: "Sistema", icon: "󰒓" },
         { label: "Actualización", icon: "󰚰" }
     ]
@@ -35,6 +36,7 @@ Item {
             SendaSettings.refresh();
             SendaSttSettings.refresh();
             SendaHyprlandSettings.refresh();
+            SendaDisplaySettings.refresh();
         }
     }
 
@@ -71,6 +73,12 @@ Item {
         target: SendaHyprlandSettings
         function onNoticeChanged() { feedback.show(SendaHyprlandSettings.notice, SendaHyprlandSettings.noticeIsError); }
         function onNoticeIsErrorChanged() { feedback.show(SendaHyprlandSettings.notice, SendaHyprlandSettings.noticeIsError); }
+    }
+
+    Connections {
+        target: SendaDisplaySettings
+        function onNoticeChanged() { feedback.show(SendaDisplaySettings.notice, SendaDisplaySettings.noticeIsError); }
+        function onNoticeIsErrorChanged() { feedback.show(SendaDisplaySettings.notice, SendaDisplaySettings.noticeIsError); }
     }
 
     // Same card style as the dashboard and the control center.
@@ -218,6 +226,11 @@ Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         onOpenSystemRequested: root.currentSection = root.sections.findIndex(section => section.label === "Sistema")
+                    }
+
+                    DisplaySettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
                     }
 
                     SystemSettingsPage {

@@ -31,8 +31,12 @@ Singleton {
     Component.onCompleted: {
         keyboardStatus.running = true;
         keyboardWatch.running = true;
+        displayWatch.running = true;
     }
     Process { id: keyboardWatch; command: [root.binaryPath, "keyboard", "watch"]; onExited: watchRetry.restart() }
+    // Keeps generated monitor rules from beating what the user defines.
+    Process { id: displayWatch; command: [root.binaryPath, "display", "watch"]; onExited: displayWatchRetry.restart() }
+    Timer { id: displayWatchRetry; interval: 5000; onTriggered: displayWatch.running = true }
     Timer { id: watchRetry; interval: 1000; onTriggered: keyboardWatch.running = true }
     Timer { interval: 3000; running: true; repeat: true; onTriggered: if (!keyboardStatus.running) keyboardStatus.running = true }
     Process {
