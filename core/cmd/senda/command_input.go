@@ -26,11 +26,15 @@ var inputOptions = map[string]string{
 	integration.FieldSensitivity:   "input:sensitivity",
 	integration.FieldTapToClick:    "input:touchpad:tap-to-click",
 	integration.FieldNaturalScroll: "input:touchpad:natural_scroll",
+	integration.FieldAccelProfile:  "input:accel_profile",
+	integration.FieldFollowMouse:   "input:follow_mouse",
+	integration.FieldDisableTyping: "input:touchpad:disable_while_typing",
+	integration.FieldScrollFactor:  "input:touchpad:scroll_factor",
 }
 
 func readInputStatus(ctx context.Context, s integration.InputSettings) inputStatus {
 	user := integration.DetectInput(integration.LoadUserConfig(), integration.SessionEnvFiles())
-	senda := map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme}
+	senda := map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme, integration.FieldAccelProfile: s.AccelProfile, integration.FieldFollowMouse: s.FollowMouse, integration.FieldDisableTyping: s.DisableTyping, integration.FieldScrollFactor: s.ScrollFactor}
 	current := map[string]string{}
 	for field, value := range senda {
 		if u, ok := user[field]; ok {
@@ -39,7 +43,7 @@ func readInputStatus(ctx context.Context, s integration.InputSettings) inputStat
 		option := inputOptions[field]
 		if option != "" && integration.InSession() {
 			if live, err := hyprctl.New(shortcutRunner).Option(ctx, option); err == nil {
-				if field == integration.FieldTapToClick || field == integration.FieldNaturalScroll {
+				if field == integration.FieldTapToClick || field == integration.FieldNaturalScroll || field == integration.FieldDisableTyping {
 					live = strconv.FormatBool(live == "1")
 				}
 				value = live
@@ -57,7 +61,7 @@ func printInput(cmd *cobra.Command, status inputStatus, asJSON bool) error {
 	if asJSON {
 		return writeJSON(cmd, status)
 	}
-	labels := []struct{ field, label string }{{integration.FieldLayout, "Distribución"}, {integration.FieldSensitivity, "Velocidad del ratón"}, {integration.FieldTapToClick, "Tocar para hacer clic"}, {integration.FieldNaturalScroll, "Desplazamiento natural"}, {integration.FieldCursorTheme, "Tema de cursor"}}
+	labels := []struct{ field, label string }{{integration.FieldLayout, "Distribución"}, {integration.FieldSensitivity, "Velocidad del ratón"}, {integration.FieldTapToClick, "Tocar para hacer clic"}, {integration.FieldNaturalScroll, "Desplazamiento natural"}, {integration.FieldCursorTheme, "Tema de cursor"}, {integration.FieldAccelProfile, "Aceleración"}, {integration.FieldFollowMouse, "Foco con el ratón"}, {integration.FieldDisableTyping, "Desactivar touchpad al escribir"}, {integration.FieldScrollFactor, "Velocidad de desplazamiento"}}
 	for _, l := range labels {
 		line := fmt.Sprintf("%s: %s", l.label, status.Current[l.field])
 		if u, ok := status.User[l.field]; ok {
@@ -119,7 +123,7 @@ func inputCmd() *cobra.Command {
 		}
 		return printInput(cmd, readInputStatus(cmd.Context(), s.Input), asJSON)
 	}}
-	var layout, sensitivity, tap, natural, cursor string
+	var layout, sensitivity, tap, natural, cursor, accel, follow, typing, scroll string
 	set := &cobra.Command{Use: "set", Short: "Cambiar ajustes (valor vacío: Senda deja de definirlo)", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		s, err := integration.ReadSettings()
 		if err != nil {
@@ -130,7 +134,7 @@ func inputCmd() *cobra.Command {
 			flag, field string
 			value       string
 			target      *string
-		}{{"layout", integration.FieldLayout, layout, &s.Input.Layout}, {"sensitivity", integration.FieldSensitivity, sensitivity, &s.Input.Sensitivity}, {"tap-to-click", integration.FieldTapToClick, tap, &s.Input.TapToClick}, {"natural-scroll", integration.FieldNaturalScroll, natural, &s.Input.NaturalScroll}, {"cursor-theme", integration.FieldCursorTheme, cursor, &s.Input.CursorTheme}}
+		}{{"layout", integration.FieldLayout, layout, &s.Input.Layout}, {"sensitivity", integration.FieldSensitivity, sensitivity, &s.Input.Sensitivity}, {"tap-to-click", integration.FieldTapToClick, tap, &s.Input.TapToClick}, {"natural-scroll", integration.FieldNaturalScroll, natural, &s.Input.NaturalScroll}, {"cursor-theme", integration.FieldCursorTheme, cursor, &s.Input.CursorTheme}, {"accel-profile", integration.FieldAccelProfile, accel, &s.Input.AccelProfile}, {"follow-mouse", integration.FieldFollowMouse, follow, &s.Input.FollowMouse}, {"disable-while-typing", integration.FieldDisableTyping, typing, &s.Input.DisableTyping}, {"scroll-factor", integration.FieldScrollFactor, scroll, &s.Input.ScrollFactor}}
 		for _, c := range changes {
 			if !cmd.Flags().Changed(c.flag) {
 				continue
@@ -163,6 +167,10 @@ func inputCmd() *cobra.Command {
 	set.Flags().StringVar(&tap, "tap-to-click", "", "true o false")
 	set.Flags().StringVar(&natural, "natural-scroll", "", "true o false")
 	set.Flags().StringVar(&cursor, "cursor-theme", "", "Tema de cursor instalado")
+	set.Flags().StringVar(&accel, "accel-profile", "", "adaptive o flat")
+	set.Flags().StringVar(&follow, "follow-mouse", "", "Foco con el ratón, de 0 a 3")
+	set.Flags().StringVar(&typing, "disable-while-typing", "", "true o false")
+	set.Flags().StringVar(&scroll, "scroll-factor", "", "De 0.1 a 3")
 	cmd.PersistentFlags().BoolVar(&asJSON, "json", false, "Mostrar JSON")
 	cmd.AddCommand(show, set, themes, sync)
 	return cmd

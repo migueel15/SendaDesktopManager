@@ -94,3 +94,25 @@ func TestValidateAndThemes(t *testing.T) {
 		t.Fatalf("got %v", got)
 	}
 }
+
+func TestPointerFields(t *testing.T) {
+	got := detected(t, map[string]string{"hyprland.lua": "hl.config({ input = { accel_profile = \"flat\", follow_mouse = 1, touchpad = { scroll_factor = 0.4, disable_while_typing = true } } })\nhl.device({ name = \"m\", accel_profile = \"flat\" })\n"})
+	if got[FieldAccelProfile].Value != "flat" || got[FieldFollowMouse].Value != "1" || got[FieldScrollFactor].Value != "0.4" || got[FieldDisableTyping].Value != "true" {
+		t.Fatalf("got %+v", got)
+	}
+	device := detected(t, map[string]string{"hyprland.lua": "hl.device({ name = \"m\", accel_profile = \"flat\" })\n"})
+	if len(device) != 0 {
+		t.Fatalf("device block counted as global: %+v", device)
+	}
+	out := renderInput(InputSettings{AccelProfile: "flat", FollowMouse: "2", ScrollFactor: "0.5"}, 24)
+	for _, want := range []string{`accel_profile = "flat"`, "follow_mouse = 2", "scroll_factor = 0.5"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("%q missing in %q", want, out)
+		}
+	}
+	for _, bad := range []InputSettings{{AccelProfile: "x"}, {FollowMouse: "9"}, {ScrollFactor: "0"}} {
+		if bad.Validate() == nil {
+			t.Fatalf("accepted %+v", bad)
+		}
+	}
+}

@@ -207,7 +207,7 @@ func (c Client) Option(ctx context.Context, name string) (string, error) {
 	for _, key := range []string{"str", "float", "int"} {
 		switch v := raw[key].(type) {
 		case string:
-			return v, nil
+			return strings.ReplaceAll(v, "[[EMPTY]]", ""), nil
 		case float64:
 			return strconv.FormatFloat(v, 'f', -1, 64), nil
 		}

@@ -14,11 +14,15 @@ import (
 )
 
 const (
-	KeyInputLayout       = "SENDA_INPUT_LAYOUT"
-	KeyInputSensitivity  = "SENDA_INPUT_SENSITIVITY"
-	KeyInputTapToClick   = "SENDA_INPUT_TAP_TO_CLICK"
-	KeyInputNaturalScrol = "SENDA_INPUT_NATURAL_SCROLL"
-	KeyCursorTheme       = "SENDA_CURSOR_THEME"
+	KeyInputLayout        = "SENDA_INPUT_LAYOUT"
+	KeyInputSensitivity   = "SENDA_INPUT_SENSITIVITY"
+	KeyInputTapToClick    = "SENDA_INPUT_TAP_TO_CLICK"
+	KeyInputNaturalScrol  = "SENDA_INPUT_NATURAL_SCROLL"
+	KeyCursorTheme        = "SENDA_CURSOR_THEME"
+	KeyInputAccel         = "SENDA_INPUT_ACCEL_PROFILE"
+	KeyInputFollowMouse   = "SENDA_INPUT_FOLLOW_MOUSE"
+	KeyInputDisableTyping = "SENDA_INPUT_DISABLE_WHILE_TYPING"
+	KeyInputScrollFactor  = "SENDA_INPUT_SCROLL_FACTOR"
 )
 
 // Field names shared by the CLI, the JSON status and the interface.
@@ -28,6 +32,10 @@ const (
 	FieldTapToClick    = "tapToClick"
 	FieldNaturalScroll = "naturalScroll"
 	FieldCursorTheme   = "cursorTheme"
+	FieldAccelProfile  = "accelProfile"
+	FieldFollowMouse   = "followMouse"
+	FieldDisableTyping = "disableWhileTyping"
+	FieldScrollFactor  = "scrollFactor"
 )
 
 // InputSettings holds what the user chose in Senda. An empty value means that
@@ -38,14 +46,18 @@ type InputSettings struct {
 	TapToClick    string
 	NaturalScroll string
 	CursorTheme   string
+	AccelProfile  string
+	FollowMouse   string
+	DisableTyping string
+	ScrollFactor  string
 }
 
 func LoadInputSettings(values map[string]string) InputSettings {
-	return InputSettings{Layout: values[KeyInputLayout], Sensitivity: values[KeyInputSensitivity], TapToClick: values[KeyInputTapToClick], NaturalScroll: values[KeyInputNaturalScrol], CursorTheme: values[KeyCursorTheme]}
+	return InputSettings{Layout: values[KeyInputLayout], Sensitivity: values[KeyInputSensitivity], TapToClick: values[KeyInputTapToClick], NaturalScroll: values[KeyInputNaturalScrol], CursorTheme: values[KeyCursorTheme], AccelProfile: values[KeyInputAccel], FollowMouse: values[KeyInputFollowMouse], DisableTyping: values[KeyInputDisableTyping], ScrollFactor: values[KeyInputScrollFactor]}
 }
 
 func (s InputSettings) values() map[string]string {
-	return map[string]string{KeyInputLayout: s.Layout, KeyInputSensitivity: s.Sensitivity, KeyInputTapToClick: s.TapToClick, KeyInputNaturalScrol: s.NaturalScroll, KeyCursorTheme: s.CursorTheme}
+	return map[string]string{KeyInputLayout: s.Layout, KeyInputSensitivity: s.Sensitivity, KeyInputTapToClick: s.TapToClick, KeyInputNaturalScrol: s.NaturalScroll, KeyCursorTheme: s.CursorTheme, KeyInputAccel: s.AccelProfile, KeyInputFollowMouse: s.FollowMouse, KeyInputDisableTyping: s.DisableTyping, KeyInputScrollFactor: s.ScrollFactor}
 }
 
 // SaveInputSettings stores the fields after validating them.
@@ -69,9 +81,21 @@ func (s InputSettings) Validate() error {
 			return fmt.Errorf("la velocidad del ratón debe estar entre -1 y 1")
 		}
 	}
-	for _, v := range []string{s.TapToClick, s.NaturalScroll} {
+	for _, v := range []string{s.TapToClick, s.NaturalScroll, s.DisableTyping} {
 		if v != "" && v != "true" && v != "false" {
 			return fmt.Errorf("el valor debe ser true o false")
+		}
+	}
+	if s.AccelProfile != "" && s.AccelProfile != "adaptive" && s.AccelProfile != "flat" {
+		return fmt.Errorf("la aceleración debe ser adaptive o flat")
+	}
+	if s.FollowMouse != "" && (len(s.FollowMouse) != 1 || s.FollowMouse < "0" || s.FollowMouse > "3") {
+		return fmt.Errorf("el foco del ratón debe estar entre 0 y 3")
+	}
+	if s.ScrollFactor != "" {
+		v, err := strconv.ParseFloat(s.ScrollFactor, 64)
+		if err != nil || v < 0.1 || v > 3 {
+			return fmt.Errorf("la velocidad de desplazamiento debe estar entre 0.1 y 3")
 		}
 	}
 	if strings.ContainsAny(s.CursorTheme, "\x00\n\r/") {
@@ -102,6 +126,14 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 	add(FieldTapToClick, s, ok)
 	s, ok = c.ConfigKey(touchpad, "natural_scroll")
 	add(FieldNaturalScroll, s, ok)
+	s, ok = c.ConfigKey([]string{"input"}, "accel_profile")
+	add(FieldAccelProfile, s, ok)
+	s, ok = c.ConfigKey([]string{"input"}, "follow_mouse")
+	add(FieldFollowMouse, s, ok)
+	s, ok = c.ConfigKey(touchpad, "disable_while_typing")
+	add(FieldDisableTyping, s, ok)
+	s, ok = c.ConfigKey(touchpad, "scroll_factor")
+	add(FieldScrollFactor, s, ok)
 	for _, name := range []string{"XCURSOR_THEME", "HYPRCURSOR_THEME"} {
 		s, ok = c.EnvVar(name)
 		add(FieldCursorTheme, s, ok)
@@ -120,7 +152,7 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 // withoutUser drops the fields the user defines: the user always wins, and
 // Senda's module loads last, so generating them would override the user.
 func (s InputSettings) withoutUser(user map[string]UserSetting) InputSettings {
-	for field, target := range map[string]*string{FieldLayout: &s.Layout, FieldSensitivity: &s.Sensitivity, FieldTapToClick: &s.TapToClick, FieldNaturalScroll: &s.NaturalScroll, FieldCursorTheme: &s.CursorTheme} {
+	for field, target := range map[string]*string{FieldLayout: &s.Layout, FieldSensitivity: &s.Sensitivity, FieldTapToClick: &s.TapToClick, FieldNaturalScroll: &s.NaturalScroll, FieldCursorTheme: &s.CursorTheme, FieldAccelProfile: &s.AccelProfile, FieldFollowMouse: &s.FollowMouse, FieldDisableTyping: &s.DisableTyping, FieldScrollFactor: &s.ScrollFactor} {
 		if _, ok := user[field]; ok {
 			*target = ""
 		}
@@ -136,6 +168,18 @@ func renderInput(s InputSettings, size int) string {
 	}
 	if s.Sensitivity != "" {
 		input = append(input, "sensitivity = "+s.Sensitivity)
+	}
+	if s.AccelProfile != "" {
+		input = append(input, "accel_profile = "+strconv.Quote(s.AccelProfile))
+	}
+	if s.FollowMouse != "" {
+		input = append(input, "follow_mouse = "+s.FollowMouse)
+	}
+	if s.DisableTyping != "" {
+		touchpad = append(touchpad, "disable_while_typing = "+s.DisableTyping)
+	}
+	if s.ScrollFactor != "" {
+		touchpad = append(touchpad, "scroll_factor = "+s.ScrollFactor)
 	}
 	if s.TapToClick != "" {
 		touchpad = append(touchpad, "tap_to_click = "+s.TapToClick)
