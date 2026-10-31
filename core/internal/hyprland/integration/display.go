@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
@@ -137,6 +140,49 @@ func StoreDisplays(path string, rules, previous []DisplayRule) error {
 		}
 	}
 	return config.Set(path, map[string]string{KeyDisplays: current, KeyDisplaysPrevious: old})
+}
+
+// ApplyDisplayChanges updates the running session from one set of rules to
+// another, touching only the monitors that differ.
+func ApplyDisplayChanges(ctx context.Context, run stt.Runner, before, after []DisplayRule) error {
+	client := hyprctl.New(run)
+	current := map[string]DisplayRule{}
+	for _, rule := range after {
+		current[rule.Output()] = rule
+	}
+	for _, rule := range before {
+		if _, kept := current[rule.Output()]; !kept {
+			return client.Reload(ctx)
+		}
+	}
+	old := map[string]DisplayRule{}
+	for _, rule := range before {
+		old[rule.Output()] = rule
+	}
+	for _, rule := range after {
+		if prior, ok := old[rule.Output()]; ok && prior == rule {
+			continue
+		}
+		if err := client.Eval(ctx, rule.lua()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// LockDisplayWatch takes the session-wide watcher lock. The kernel releases it
+// when the process dies, however that happens.
+func LockDisplayWatch() (func(), error) {
+	path := filepath.Join(os.TempDir(), fmt.Sprintf("senda-display-watch-%d.lock", os.Getuid()))
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		return nil, err
+	}
+	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+		file.Close()
+		return nil, err
+	}
+	return func() { file.Close() }, nil
 }
 
 // claimedBy returns the user definition that controls a monitor. A catch-all

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
@@ -11,8 +12,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// commitDisplays saves rules and regenerates the module; the reload applies
-// them live and the module keeps them across restarts.
+// commitDisplays saves rules, regenerates the module so they survive restarts,
+// and applies only what changed: a reload would modeset every monitor and wipe
+// what plugins adjust at runtime. Only a removed rule needs one, since nothing
+// else tells Hyprland to forget it.
 func commitDisplays(ctx context.Context, rules, previous []integration.DisplayRule) error {
 	if err := integration.StoreDisplays(paths.ConfigFile(), rules, previous); err != nil {
 		return fmt.Errorf("guardar pantallas: %w", err)
@@ -21,8 +24,28 @@ func commitDisplays(ctx context.Context, rules, previous []integration.DisplayRu
 	if err != nil {
 		return fmt.Errorf("leer ajustes: %w", err)
 	}
-	_, err = applyHyprland(ctx, s, false)
-	return err
+	if !integration.InSession() {
+		_, err = applyHyprland(ctx, s, false)
+		return err
+	}
+	if link, err := integration.Probe(ctx, shortcutRunner); err == nil {
+		integration.Locate(link)
+		if !link.Loaded {
+			_, err = applyHyprland(ctx, s, false)
+			return err
+		}
+	}
+	exe, err := hyprlandExecutable()
+	if err != nil {
+		return err
+	}
+	if s.IdleMode == "" {
+		s.IdleMode = integration.IdleModeUser
+	}
+	if err := integration.WriteFiles(s, exe); err != nil {
+		return err
+	}
+	return integration.ApplyDisplayChanges(ctx, shortcutRunner, previous, s.Displays)
 }
 
 func printDisplays(cmd *cobra.Command, asJSON bool) error {
@@ -138,6 +161,13 @@ func displayCmd() *cobra.Command {
 				fmt.Fprintln(os.Stderr, "display sync:", err)
 			}
 		}
+		// Two watchers with different views of the rules would rewrite the
+		// module and reload in turns forever, so only one may run.
+		unlock, err := integration.LockDisplayWatch()
+		if err != nil {
+			return nil
+		}
+		defer unlock()
 		report()
 		hyprctl.WatchEvents(cmd.Context(), func(name, _ string) {
 			if name == hyprctl.EventConfigReloaded {
@@ -149,6 +179,10 @@ func displayCmd() *cobra.Command {
 	cmd.AddCommand(show, set, reset, adopt, undo, sync, watch)
 	return cmd
 }
+
+const displaySyncInterval = time.Minute
+
+var lastDisplaySync time.Time
 
 // syncDisplays stops a generated rule from beating a monitor the user has just
 // defined: the module loads last, so it must never keep a stale rule. A module
@@ -181,6 +215,11 @@ func syncDisplays(ctx context.Context) error {
 	if integration.DisplayLines(current) == integration.DisplayLines(wanted) {
 		return nil
 	}
+	// At most one automatic reload per window, whatever else rewrites the module.
+	if time.Since(lastDisplaySync) < displaySyncInterval {
+		return nil
+	}
+	lastDisplaySync = time.Now()
 	_, err = applyHyprland(ctx, s, false)
 	return err
 }

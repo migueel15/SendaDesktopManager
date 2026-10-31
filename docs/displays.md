@@ -1,6 +1,6 @@
 # Pantallas
 
-La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolución, frecuencia, escala y rotación, además de encenderlos, apagarlos y duplicarlos. Los cambios se aplican en vivo y persisten tras reiniciar y recargar: Senda los guarda en `SENDA_DISPLAYS` y los genera en su módulo de Hyprland.
+La sección **Pantallas** de Ajustes coloca los monitores y cambia su resolución, frecuencia, escala y rotación, además de encenderlos, apagarlos y duplicarlos. Los cambios se aplican en vivo y persisten tras reiniciar y recargar: Senda los guarda en `SENDA_DISPLAYS`, los genera en su módulo de Hyprland y solo actualiza en la sesión la pantalla que cambia, sin recargar.
 
 - Arrastra una pantalla y al soltarla se pega al lado de otra, sin solaparse.
 - Los cambios de modo, escala, rotación, encendido y duplicado se deshacen solos a los 15 segundos si no pulsas **Mantener**.

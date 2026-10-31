@@ -179,3 +179,40 @@ func TestAdoptDisplaysKeepsExistingRules(t *testing.T) {
 		t.Fatalf("reglas = %+v, %v", rules, err)
 	}
 }
+
+func TestApplyDisplayChangesTouchesOnlyChanges(t *testing.T) {
+	var calls []string
+	run := func(_ context.Context, _ io.Reader, _ string, args ...string) ([]byte, error) {
+		calls = append(calls, args[0])
+		return []byte("ok\n"), nil
+	}
+	a := DisplayRule{Name: "DP-1", Mode: "preferred", Position: "0x0", Scale: 1}
+	b := DisplayRule{Name: "DP-2", Mode: "preferred", Position: "0x0", Scale: 1}
+	changed := b
+	changed.Scale = 2
+	if err := ApplyDisplayChanges(context.Background(), run, []DisplayRule{a, b}, []DisplayRule{a, changed}); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(calls, " ") != "eval" {
+		t.Fatalf("llamadas = %v", calls)
+	}
+	calls = nil
+	if err := ApplyDisplayChanges(context.Background(), run, []DisplayRule{a, b}, []DisplayRule{a}); err != nil {
+		t.Fatal(err)
+	}
+	if calls[0] != "reload" {
+		t.Fatalf("llamadas = %v", calls)
+	}
+}
+
+func TestLockDisplayWatchAllowsOne(t *testing.T) {
+	t.Setenv("TMPDIR", t.TempDir())
+	unlock, err := LockDisplayWatch()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer unlock()
+	if _, err := LockDisplayWatch(); err == nil {
+		t.Fatal("segundo vigilante aceptado")
+	}
+}
