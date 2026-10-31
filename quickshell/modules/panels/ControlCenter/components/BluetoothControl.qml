@@ -11,6 +11,11 @@ Item {
     implicitWidth: 220
     implicitHeight: column.implicitHeight
     property bool devicesExpanded: false
+    property bool panelOpen: false
+    readonly property bool discoveryRequested: root.panelOpen && root.devicesExpanded
+
+    onDiscoveryRequestedChanged: Bluetooth.requestDiscovery(root, root.discoveryRequested)
+    Component.onDestruction: Bluetooth.requestDiscovery(root, false)
 
     Column {
         id: column
@@ -133,6 +138,16 @@ Item {
 
                 Text {
                     width: devicesColumn.width
+                    visible: Bluetooth.enabled
+                    height: visible ? 24 : 0
+                    text: Bluetooth.discovering ? "Buscando dispositivos…" : "Dispositivos disponibles"
+                    color: Theme.colors.overlay
+                    font: Theme.font.overlay
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Text {
+                    width: devicesColumn.width
                     height: !Bluetooth.available || Bluetooth.enabled && Bluetooth.namedDevices.length === 0 ? 36 : 0
                     visible: height > 0
                     text: !Bluetooth.available ? "Bluetooth no disponible" : "No hay dispositivos con nombre"
@@ -168,7 +183,7 @@ Item {
                             }
 
                             Text {
-                                text: modelData.connected ? (Bluetooth.getBatteryLabel(modelData) || "Conectado") : (modelData.paired ? "Desconectado" : "Sin emparejar")
+                                text: modelData.pairing || Bluetooth.pairing && Bluetooth.pairingDevice === modelData ? "Emparejando…" : modelData.connected ? (Bluetooth.getBatteryLabel(modelData) || "Conectado") : (modelData.paired ? "Desconectado" : "Sin emparejar")
                                 color: modelData.connected ? Theme.colors.success : Theme.colors.overlay
                                 font: Theme.font.overlay
                             }
@@ -179,13 +194,26 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
+                            enabled: !Bluetooth.pairing
                             onClicked: {
+                                const wasPaired = modelData.paired;
                                 if (modelData.connected) Bluetooth.disconnectDevice(modelData);
                                 else Bluetooth.connectDevice(modelData);
-                                root.devicesExpanded = false;
+                                if (wasPaired) root.devicesExpanded = false;
                             }
                         }
                     }
+                }
+
+                Text {
+                    width: devicesColumn.width
+                    visible: Bluetooth.pairingError !== ""
+                    height: visible ? implicitHeight : 0
+                    text: Bluetooth.pairingError
+                    textFormat: Text.PlainText
+                    color: Theme.colors.error
+                    font: Theme.font.overlay
+                    wrapMode: Text.Wrap
                 }
             }
         }

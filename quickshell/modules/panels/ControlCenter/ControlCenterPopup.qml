@@ -58,6 +58,7 @@ SendaPanel {
                 }
 
                 BluetoothControl {
+                    panelOpen: root.open
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
                 }

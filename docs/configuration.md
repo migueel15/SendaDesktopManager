@@ -66,6 +66,10 @@ El refresh token de Google no está en este archivo. Se guarda en `$XDG_STATE_HO
 
 El archivo `.env` ya no se lee.
 
+## Bluetooth
+
+El desplegable del centro de control busca dispositivos al abrirse y ofrece el emparejamiento con confirmación de PIN dentro de Senda. El flujo y la validación en sesión están descritos en [Bluetooth](bluetooth.md).
+
 ## Bloqueo de teclado desde la barra
 
 El widget de teclado comparte su estado entre todas las barras. Al pulsarlo,

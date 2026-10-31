@@ -47,6 +47,7 @@ ShellRoot {
 	LockScreen {}
 	ScreenshotLayer {}
 	DisplayConfirmDialog {}
+	BluetoothPairDialog {}
 	SettingsWindow {}
 
 	Variants {
