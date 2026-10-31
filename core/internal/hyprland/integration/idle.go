@@ -196,6 +196,43 @@ func StopIdle() string {
 	return ""
 }
 
+// stopIdleUsing stops same-user hypridle instances running one exact generated
+// configuration, such as the one in the legacy location.
+func stopIdleUsing(path string) string {
+	entries, err := os.ReadDir("/proc")
+	if err != nil {
+		return "No se pudo inspeccionar hypridle: " + err.Error()
+	}
+	for _, entry := range entries {
+		pid, err := strconv.Atoi(entry.Name())
+		if err != nil || !processUsesIdle(pid, path) {
+			continue
+		}
+		info, err := os.Stat(filepath.Join("/proc", entry.Name()))
+		if err != nil {
+			continue
+		}
+		if owner, ok := info.Sys().(*syscall.Stat_t); !ok || int(owner.Uid) != os.Getuid() {
+			continue
+		}
+		fd, err := unix.PidfdOpen(pid, 0)
+		if err != nil {
+			continue
+		}
+		err = unix.PidfdSendSignal(fd, unix.SIGTERM, nil, 0)
+		if err == nil {
+			if n, e := unix.Poll([]unix.PollFd{{Fd: int32(fd), Events: unix.POLLIN}}, 3000); e != nil || n == 0 {
+				err = fmt.Errorf("no terminó")
+			}
+		}
+		unix.Close(fd)
+		if err != nil {
+			return fmt.Sprintf("No se pudo detener hypridle antiguo (PID %d): %v", pid, err)
+		}
+	}
+	return ""
+}
+
 // StopExternalIdle stops same-user hypridle instances that do not use Senda's
 // configuration. Call it only after the user chose Senda's configuration.
 func StopExternalIdle() string {

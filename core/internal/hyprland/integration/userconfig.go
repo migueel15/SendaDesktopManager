@@ -18,7 +18,7 @@ type UserSetting struct {
 
 // UserConfig holds the text of the files Hyprland really loads from the user's
 // configuration: comments are removed and files that nothing requires, or
-// whose require is commented out, are not included. Senda's module is skipped.
+// whose require is commented out, are not included. Senda's folder is skipped.
 type UserConfig map[string]string
 
 var (
@@ -31,13 +31,13 @@ var (
 func LoadUserConfig() UserConfig {
 	hypr := filepath.Dir(hyprConfigFile())
 	files := UserConfig{}
-	skip, _ := filepath.Abs(ModulePath())
+	skip, _ := filepath.Abs(Dir())
 	var visit func(string)
 	visit = func(path string) {
 		if real, err := filepath.EvalSymlinks(path); err == nil {
 			path = real
 		}
-		if _, seen := files[path]; seen || path == skip {
+		if _, seen := files[path]; seen || path == skip || strings.HasPrefix(path, skip+string(filepath.Separator)) {
 			return
 		}
 		data, err := os.ReadFile(path)

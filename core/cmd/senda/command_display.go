@@ -31,7 +31,7 @@ func persistDisplays(ctx context.Context, rules, previous []integration.DisplayR
 	if integration.InSession() {
 		if link, err := integration.Probe(ctx, shortcutRunner); err == nil {
 			integration.Locate(link)
-			loaded = link.Loaded
+			loaded = link.Current()
 		}
 	}
 	if !loaded {
@@ -292,7 +292,7 @@ func syncDisplays(ctx context.Context) error {
 			integration.Locate(link)
 		}
 	}
-	current, err := os.ReadFile(integration.ModulePath())
+	current, err := integration.ReadGenerated()
 	if os.IsNotExist(err) {
 		return nil
 	}
@@ -307,11 +307,11 @@ func syncDisplays(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	wanted, _, err := integration.Render(s, exe)
+	wanted, err := integration.Render(s, exe)
 	if err != nil {
 		return err
 	}
-	if integration.DisplayLines(current) == integration.DisplayLines(wanted) {
+	if integration.DisplayLines(current) == integration.DisplayLines(wanted.Text()) {
 		return nil
 	}
 	// At most one automatic reload per window, whatever else rewrites the module.

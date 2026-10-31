@@ -55,12 +55,12 @@ Según `core/internal/setup/setup.go`, `senda setup`:
 3. Crea `~/.config/senda/config` si no existe.
 4. Descarga, verifica e instala los archivos de Quickshell de la última release.
 5. Ofrece instalar el motor de dictado si falta. Los modelos se instalan por separado con `senda stt models install <id>`.
-6. Genera `~/.config/hypr/modules/senda.lua` y `~/.config/senda/hypridle.conf` a partir de los ajustes de Senda. Conserva archivos sin cabecera propia y avisa de conflictos. Importa el atajo antiguo de dictado y migra referencias inequívocas de módulos anteriores cuando es seguro. Consulta [Bloqueo de pantalla](lock-screen.md).
+6. Genera `~/.config/hypr/senda/` (con `init.lua`, un módulo por área, `hypridle.conf` y un `.gitignore` que lo ignora todo) a partir de los ajustes de Senda. Conserva archivos sin cabecera propia y avisa de conflictos. Importa el atajo antiguo de dictado y migra referencias inequívocas de módulos anteriores cuando es seguro. Consulta [Bloqueo de pantalla](lock-screen.md).
 7. Detiene cualquier instancia de Quickshell lanzada a mano y crea la unidad de usuario `~/.config/systemd/user/senda.service`, la habilita y la arranca.
 
 7. Comprueba si Senda ya está vinculado a Hyprland preguntando a la sesión con `hyprctl` por la función `senda_module_version`, que solo define el módulo de Senda. Da igual dónde esté el módulo o cómo esté organizada la configuración: si la función existe, Senda ya está vinculado y regenera el módulo en el archivo desde el que se cargó. Si no existe, añade `require("modules.senda")` al final de `~/.config/hypr/hyprland.lua` (salvo que ya esté), recarga Hyprland y vuelve a comprobarlo. Fuera de una sesión de Hyprland la comprobación es la línea `require` de `hyprland.lua`. Después puedes mover esa línea donde prefieras.
 8. Configura hypridle una sola vez:
-   - Si no tienes `~/.config/hypr/hypridle.conf` ni un hypridle en ejecución, usa la configuración de Senda: el módulo inicia `hypridle -c ~/.config/senda/hypridle.conf` al arrancar Hyprland y, en sesión, se inicia en el momento.
+   - Si no tienes `~/.config/hypr/hypridle.conf` ni un hypridle en ejecución, usa la configuración de Senda: el módulo inicia `hypridle -c ~/.config/hypr/senda/hypridle.conf` al arrancar Hyprland y, en sesión, se inicia en el momento.
    - Si ya tienes configuración o un hypridle en ejecución, pregunta si quieres conservar la tuya o usar la de Senda (por defecto, la tuya). Si eliges la de Senda, detiene tu hypridle e inicia el de Senda; quita después su arranque de tu configuración para no ejecutar dos instancias al iniciar sesión. Tu archivo no se modifica.
    - La elección se guarda en `SENDA_IDLE_MODE` y no se vuelve a preguntar. Para cambiarla: `senda hyprland set --idle-mode senda` o `--idle-mode user`. Con `user`, el tiempo de inactividad de Senda no se aplica.
 

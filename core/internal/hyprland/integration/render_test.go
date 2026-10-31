@@ -9,7 +9,7 @@ func TestRender(t *testing.T) {
 	s := DefaultSettings()
 	s.IdleSeconds = 120
 	s.Blur = false
-	lua, idle, err := Render(s, "/home/user/bin space/senda")
+	lua, idle, err := renderParts(s, "/home/user/bin space/senda")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,13 +28,13 @@ func TestInvalidSettings(t *testing.T) {
 	for _, edit := range []func(*Settings){func(s *Settings) { s.ScreenshotShortcut = s.LockShortcut }, func(s *Settings) { s.ScreenshotShortcut = "" }, func(s *Settings) { s.LockShortcut = "INVALID+!" }, func(s *Settings) { s.IdleSeconds = -1 }, func(s *Settings) { s.DictationShortcut = s.LockShortcut }} {
 		s := DefaultSettings()
 		edit(&s)
-		if _, _, err := Render(s, "/bin/senda"); err == nil {
+		if _, _, err := renderParts(s, "/bin/senda"); err == nil {
 			t.Fatalf("accepted %+v", s)
 		}
 	}
 	s := DefaultSettings()
 	s.IdleSeconds = 0
-	_, idle, err := Render(s, "/bin/senda")
+	_, idle, err := renderParts(s, "/bin/senda")
 	if err != nil || strings.Contains(string(idle), "listener {") {
 		t.Fatalf("disabled timeout: %s %v", idle, err)
 	}
@@ -44,13 +44,13 @@ func TestEquivalentShortcutsAreRejected(t *testing.T) {
 	s := DefaultSettings()
 	s.LockShortcut = "SUPER + CTRL + l"
 	s.DictationShortcut = "CTRL + SUPER + L"
-	if _, _, err := Render(s, "/bin/senda"); err == nil {
+	if _, _, err := renderParts(s, "/bin/senda"); err == nil {
 		t.Fatal("accepted equivalent shortcuts")
 	}
 }
 
 func TestExecutableQuotes(t *testing.T) {
-	lua, idle, err := Render(DefaultSettings(), "/home/user/o'brien/senda")
+	lua, idle, err := renderParts(DefaultSettings(), "/home/user/o'brien/senda")
 	if err != nil {
 		t.Fatal(err)
 	}

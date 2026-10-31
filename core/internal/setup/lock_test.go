@@ -51,8 +51,8 @@ func TestEnsureLockIntegrationCreatesAndPreservesFiles(t *testing.T) {
 	if _, err := runIntegration(t, executable, ""); err != nil {
 		t.Fatal(err)
 	}
-	idlePath := filepath.Join(home, "senda", "hypridle.conf")
-	lua, err := os.ReadFile(filepath.Join(home, "hypr", "modules", "senda.lua"))
+	idlePath := filepath.Join(home, "hypr", "senda", "hypridle.conf")
+	lua, err := integration.ReadGenerated()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestEnsureLockIntegrationCreatesAndPreservesFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"allow_session_lock_restore = true", "session_lock_blur = true", "SUPER + CTRL + l", "function " + integration.ProbeFunction + "()", "hypridle -c '" + idlePath + "'"} {
+	for _, want := range []string{"allow_session_lock_restore = true", "session_lock_blur = true", "SUPER + CTRL + l", "function " + integration.ProbeFunction + "()", "hypridle -c '", "/hypridle.conf'"} {
 		if !strings.Contains(string(lua), want) {
 			t.Fatalf("module missing %q:\n%s", want, lua)
 		}
@@ -118,7 +118,7 @@ func TestEnsureLockIntegrationAsksWhenUserHasHypridle(t *testing.T) {
 		if err != nil || s.IdleMode != tc.mode {
 			t.Fatalf("answer %q: mode %q, want %q (%v)", tc.answer, s.IdleMode, tc.mode, err)
 		}
-		lua, _ := os.ReadFile(filepath.Join(home, "hypr", "modules", "senda.lua"))
+		lua, _ := integration.ReadGenerated()
 		if starts := strings.Contains(string(lua), "hypridle -c"); starts != (tc.mode == integration.IdleModeSenda) {
 			t.Fatalf("mode %q: module starts hypridle = %t", tc.mode, starts)
 		}

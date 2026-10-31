@@ -6,7 +6,7 @@ El campo de contraseña recupera el foco con cualquier pulsación: si lo perdió
 
 La pantalla deja ver el escritorio oscurecido a través de la superficie translúcida. En Hyprland, `misc.session_lock_xray` y `misc.session_lock_blur` deben estar activos y `decoration.blur` debe estar habilitado para que el compositor desenfoque lo que hay detrás; su intensidad depende de `decoration.blur.size` y `passes`. Comprueba visualmente que el texto no sea legible en cada monitor antes de confiar en el efecto. Hyprland debe tener `misc.allow_session_lock_restore = true` para permitir recuperar una sesión bloqueada si Quickshell termina. Senda guarda un marcador volátil mientras está bloqueada y vuelve a solicitar el bloqueo al arrancar. Si Quickshell muere con la sesión bloqueada, pasa a un TTY y vuelve a lanzar la instancia de Senda con su entorno gráfico y de Hyprland. `loginctl unlock-session` por sí solo no garantiza desbloquear el protocolo Wayland; no sustituye la autenticación PAM.
 
-`senda setup` genera `~/.config/hypr/modules/senda.lua` y el archivo privado `~/.config/senda/hypridle.conf`. Si Hyprland no ha cargado el módulo (lo detecta con la función `senda_module_version`), añade `require("modules.senda")` al final de `hyprland.lua`; consulta [Instalación](installation.md). El módulo contiene los atajos de bloqueo, dictado y capturas y habilita la recuperación del bloqueo. Senda no sobrescribe archivos sin cabecera propia.
+`senda setup` genera la carpeta `~/.config/hypr/senda/`, con `hypridle.conf`. Si Hyprland no ha cargado el módulo (lo detecta con la función `senda_module_version`), añade `require("modules.senda")` al final de `hyprland.lua`; consulta [Instalación](installation.md). El módulo contiene los atajos de bloqueo, dictado y capturas y habilita la recuperación del bloqueo. Senda no sobrescribe archivos sin cabecera propia.
 
 ```sh
 senda hyprland show --json
@@ -25,7 +25,7 @@ Antes de guardar, Senda comprueba con `senda hyprland check --for lock|dictation
 
 ## Atajo de capturas
 
-El módulo `modules/senda.lua` también genera `Print` → `senda screenshot`.
+El módulo `senda/` también genera `Print` → `senda screenshot`.
 `SENDA_SCREENSHOT_SHORTCUT` se configura con
 `senda hyprland set --screenshot-shortcut 'Print'` o con el grabador de
 **Ajustes → Sistema**. Los tres atajos de bloqueo, dictado y capturas deben ser

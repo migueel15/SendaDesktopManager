@@ -62,7 +62,7 @@ func LoadSettings(values map[string]string) (Settings, error) {
 }
 
 func SaveSettings(path string, s Settings) error {
-	if _, _, err := Render(s, "/usr/bin/senda"); err != nil {
+	if _, err := Render(s, "/usr/bin/senda"); err != nil {
 		return err
 	}
 	return config.Set(path, map[string]string{KeyScreenshotShortcut: s.ScreenshotShortcut, KeyLockShortcut: s.LockShortcut, stt.KeyShortcut: s.DictationShortcut, KeyIdleSeconds: strconv.Itoa(s.IdleSeconds), KeyBlur: strconv.FormatBool(s.Blur), KeyIdleMode: s.IdleMode})

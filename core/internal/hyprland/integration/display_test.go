@@ -29,7 +29,7 @@ func hyprDir(t *testing.T, files map[string]string) {
 
 func TestUserDefinitionsFollowsLoadedFiles(t *testing.T) {
 	hyprDir(t, map[string]string{
-		"hyprland.lua": "require(\"modules.monitors\")\nrequire(\"modules.senda\")\n-- require(\"modules.commented\")\n",
+		"hyprland.lua": "require(\"modules.monitors\")\nrequire(\"senda.init\")\n-- require(\"modules.commented\")\n",
 		"modules/monitors.lua": `local c = require("modules.config")
 hl.monitor({
 	-- output = "HDMI-A-9",
@@ -43,7 +43,7 @@ hl.monitor({ output = c.name })
 		"modules/config.lua":    "return {}\n",
 		"modules/commented.lua": `hl.monitor({ output = "DP-8" })`,
 		"modules/unused.lua":    `hl.monitor({ output = "DP-7" })`,
-		"modules/senda.lua":     "-- Generado por Senda.\nhl.monitor({ output = \"DP-6\" })\n",
+		"senda/init.lua":        "-- Generado por Senda.\nhl.monitor({ output = \"DP-6\" })\n",
 	})
 	defs, err := UserDefinitions(MonitorSelector)
 	if err != nil {
@@ -90,7 +90,7 @@ func TestClaims(t *testing.T) {
 func TestRenderSkipsNothingButValidates(t *testing.T) {
 	s := DefaultSettings()
 	s.Displays = []DisplayRule{{Name: "DP-1", Description: "Foo", Mode: "1920x1080@60", Position: "-1920x0", Scale: 1.25}}
-	lua, _, err := Render(s, "/usr/bin/senda")
+	lua, _, err := renderParts(s, "/usr/bin/senda")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func TestRenderSkipsNothingButValidates(t *testing.T) {
 		t.Fatalf("módulo: %s", DisplayLines(lua))
 	}
 	s.Displays[0].Mode = `x"})`
-	if _, _, err := Render(s, "/usr/bin/senda"); err == nil {
+	if _, _, err := renderParts(s, "/usr/bin/senda"); err == nil {
 		t.Fatal("modo inválido aceptado")
 	}
 }
