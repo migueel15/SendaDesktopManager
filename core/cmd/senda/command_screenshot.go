@@ -23,6 +23,24 @@ func screenshotCmd() *cobra.Command {
 		}
 		return nil
 	}}
+	var defaultDir bool
+	dir := &cobra.Command{Use: "dir", Short: "Mostrar la carpeta donde se guardan las capturas", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		configured := ""
+		if !defaultDir {
+			values, err := config.Load(paths.ConfigFile())
+			if err != nil {
+				return err
+			}
+			configured = values[screenshot.KeyDirectory]
+		}
+		path, err := screenshot.DefaultDirectory(cmd.Context(), configured)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(cmd.OutOrStdout(), path)
+		return nil
+	}}
+	dir.Flags().BoolVar(&defaultDir, "default", false, "Ignorar la carpeta configurada y mostrar la predeterminada")
 	freeze := &cobra.Command{Use: "freeze <salida>...", Hidden: true, Args: cobra.MinimumNArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		files, err := screenshot.Freeze(cmd.Context(), args)
 		if err != nil {
@@ -97,6 +115,6 @@ func screenshotCmd() *cobra.Command {
 	crop.Flags().BoolVar(&cache, "cache", true, "Conservar el recorte en caché")
 	crop.Flags().BoolVar(&copyImage, "copy", false, "Copiar al portapapeles")
 	crop.Flags().BoolVar(&save, "save", false, "Guardar en la carpeta configurada")
-	cmd.AddCommand(freeze, cleanup, info, crop)
+	cmd.AddCommand(dir, freeze, cleanup, info, crop)
 	return cmd
 }

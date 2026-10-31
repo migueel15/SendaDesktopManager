@@ -44,7 +44,7 @@ senda hyprland show --json
 
 `SENDA_SCREENSHOT_DIR` admite una ruta absoluta o que empiece por `~/`. Vacío usa
 `$(xdg-user-dir PICTURES)/Capturas`, con `~/Pictures/Capturas` como respaldo.
-El directorio se crea al guardar. El nombre es `captura-AAAA-MM-DD-HHMMSS.png`;
+`senda screenshot dir` muestra la carpeta en uso y `--default` la predeterminada. En Ajustes, el campo vacío la muestra como texto de ayuda. El directorio se crea al guardar. El nombre es `captura-AAAA-MM-DD-HHMMSS.png`;
 si ya existe, se busca el siguiente segundo libre para conservar ambos archivos.
 Las variables de entorno tienen prioridad sobre la carpeta del archivo de configuración.
 

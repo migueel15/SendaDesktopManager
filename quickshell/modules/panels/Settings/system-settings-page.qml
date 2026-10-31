@@ -2,10 +2,22 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Io
 import qs.common
 import qs.services
 
 Flickable {
+    // Where captures go when no folder is set, as the core resolves it.
+    Process {
+        id: screenshotDefaultDir
+        property string path: "Ruta predeterminada"
+        command: [SendaSettings.binaryPath, "screenshot", "dir", "--default"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: if (text.trim() !== "") screenshotDefaultDir.path = text.trim()
+        }
+    }
+
     id: root
     contentHeight: column.implicitHeight
     clip: true
@@ -91,13 +103,12 @@ Flickable {
                 label: "Carpeta de capturas"
                 modified: (SendaSettings.values.SENDA_SCREENSHOT_DIR || "") !== ""
                 onResetRequested: { screenshotDirField.text = ""; SendaSettings.save({ SENDA_SCREENSHOT_DIR: "" }, "Carpeta de capturas restablecida"); }
-                description: "Vacío usa Imágenes/Capturas. Solo se guarda al pulsar Guardar en el editor."
                 SettingsField {
                     id: screenshotDirField
                     Layout.preferredWidth: 230
                     enabled: SendaSettings.configLoaded
                     text: SendaSettings.values.SENDA_SCREENSHOT_DIR || ""
-                    placeholder: "Ruta predeterminada"
+                    placeholder: screenshotDefaultDir.path
                     onCommitted: SendaSettings.save({ SENDA_SCREENSHOT_DIR: text.trim() }, "Carpeta de capturas guardada")
                 }
             }
