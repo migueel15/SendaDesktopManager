@@ -42,6 +42,8 @@ type Settings struct {
 	Displays []DisplayRule
 	// Input is what Senda generates, without the fields the user defines.
 	Input InputSettings
+	// Startup is what runs when Hyprland starts.
+	Startup []StartupEntry
 }
 
 func DefaultSettings() Settings {

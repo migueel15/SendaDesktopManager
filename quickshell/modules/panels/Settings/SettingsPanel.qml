@@ -28,6 +28,7 @@ Item {
             SendaHyprlandSettings.refresh();
             SendaDisplaySettings.refresh();
             SendaInputSettings.refresh();
+            SendaStartupSettings.refresh();
         }
     }
 
@@ -70,6 +71,11 @@ Item {
         target: SendaDisplaySettings
         function onNoticeChanged() { feedback.show(SendaDisplaySettings.notice, SendaDisplaySettings.noticeIsError); }
         function onNoticeIsErrorChanged() { feedback.show(SendaDisplaySettings.notice, SendaDisplaySettings.noticeIsError); }
+    }
+
+    Connections {
+        target: SendaStartupSettings
+        function onNoticeChanged() { feedback.show(SendaStartupSettings.notice, SendaStartupSettings.noticeIsError); }
     }
 
     // Same card style as the dashboard and the control center.
@@ -346,6 +352,11 @@ Item {
                     }
 
                     InputSettingsPage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    StartupSettingsPage {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                     }

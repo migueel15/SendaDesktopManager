@@ -34,6 +34,7 @@ Singleton {
         { label: "Dictado", icon: "󰍬", keywords: "stt voz voice" },
         { label: "Pantallas", icon: "󰍹", keywords: "displays monitores resolucion" },
         { label: "Teclado y ratón", icon: "󰌌", keywords: "keyboard mouse raton input" },
+        { label: "Inicio", icon: "󰐥", keywords: "aplicaciones arranque startup autostart" },
         { label: "Energía", icon: "󰂏", keywords: "power batería bateria inactividad" },
         { label: "Sistema", icon: "󰒓", keywords: "system atajos portapapeles clipboard" },
         { label: "Actualización", icon: "󰚰", keywords: "update actualizar" }

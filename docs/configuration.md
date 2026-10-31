@@ -50,6 +50,7 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 | `SENDA_BATTERY_WARNING` | Porcentaje de batería que dispara el aviso: entero de 5 a 95. Predeterminado: `20`. Ver [energía](power.md). |
 | `SENDA_LOCK_BLUR` | Activa el desenfoque de la pantalla de bloqueo. Predeterminado: `true`. |
 | `SENDA_DISPLAYS` y `SENDA_DISPLAYS_PREVIOUS` | Reglas de pantalla en JSON y las anteriores, para deshacer. Las escribe `senda display`; ver [pantallas](displays.md). |
+| `SENDA_STARTUP_APPS` | Lo que se abre al iniciar Hyprland, en JSON. Lo escribe `senda startup`; ver [aplicaciones de inicio](startup-apps.md). |
 | `SENDA_STT_SHORTCUT` | Atajo de Hyprland para iniciar y detener el dictado. Predeterminado: `ALT + ntilde` (Alt + ñ). |
 | `SENDA_STT_TERMINALS` | Clases de ventanas de terminal separadas por comas; determinan dónde se usa Ctrl+Shift+V. |
 | `SENDA_THEME` | Nombre del tema activo. Predeterminado: `zenda-ice`. La variable de entorno tiene prioridad; ver [temas](themes.md). |

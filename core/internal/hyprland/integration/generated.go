@@ -78,9 +78,13 @@ func renderInputModule(in moduleInput) (string, error) {
 }
 
 // renderStartupModule reconciles at login with what the user may have added
-// since the last write.
+// since the last write, then runs the entries chosen in Settings.
 func renderStartupModule(in moduleInput) (string, error) {
-	return hyprctl.OnStart(in.Command+" input sync") + "\n", nil
+	entries, err := renderStartupEntries(in.Settings.Startup)
+	if err != nil {
+		return "", err
+	}
+	return hyprctl.OnStart(in.Command+" input sync") + "\n" + entries, nil
 }
 
 // renderIdleModule derives the path from the folder that was loaded, so moving

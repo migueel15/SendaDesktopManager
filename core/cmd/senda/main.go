@@ -32,6 +32,7 @@ func main() {
 	rootCmd.AddCommand(hyprlandCmd())
 	rootCmd.AddCommand(displayCmd())
 	rootCmd.AddCommand(inputCmd())
+	rootCmd.AddCommand(startupCmd())
 	rootCmd.AddCommand(bluetoothCmd())
 	rootCmd.AddCommand(usbCmd())
 	rootCmd.AddCommand(clipboardCmd())
