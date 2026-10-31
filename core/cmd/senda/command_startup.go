@@ -27,7 +27,7 @@ func printStartup(cmd *cobra.Command, entries []integration.StartupEntry, asJSON
 }
 
 func startupCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "startup", Short: "Aplicaciones, scripts y archivos que se abren al iniciar Hyprland", SilenceUsage: true}
+	cmd := &cobra.Command{Use: "startup", Short: "Aplicaciones, comandos, scripts y archivos que se abren al iniciar Hyprland", SilenceUsage: true}
 	var asJSON bool
 	// change saves the new list and regenerates the module. A reload does not
 	// run anything: the entries only run when Hyprland starts.
@@ -88,8 +88,8 @@ func startupCmd() *cobra.Command {
 			return append(entries, entry), nil
 		})
 	}}
-	add.Flags().StringVar(&kind, "kind", integration.StartupApp, "app, script o file")
-	add.Flags().StringVar(&name, "name", "", "Nombre visible; por defecto, el final de la ruta")
+	add.Flags().StringVar(&kind, "kind", integration.StartupApp, "app, command, script o file")
+	add.Flags().StringVar(&name, "name", "", "Nombre visible; por defecto, el comando o el final de la ruta")
 	remove := &cobra.Command{Use: "remove <comando o ruta>", Short: "Eliminar una entrada", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		return change(cmd, func(entries []integration.StartupEntry) ([]integration.StartupEntry, error) {
 			i, err := find(entries, args[0])

@@ -66,6 +66,7 @@ func TestStartupCommands(t *testing.T) {
 		want  string
 	}{
 		{StartupEntry{Kind: StartupApp, Target: "firefox --new-window"}, "firefox --new-window"},
+		{StartupEntry{Kind: StartupCommand, Target: "openrgb --startminimized -p purple"}, "openrgb --startminimized -p purple"},
 		{StartupEntry{Kind: StartupScript, Target: "~/it's.sh"}, `"$HOME"/'it'\''s.sh'`},
 		{StartupEntry{Kind: StartupFile, Target: "/tmp/a b.pdf"}, "xdg-open '/tmp/a b.pdf'"},
 	}
@@ -91,9 +92,11 @@ func TestNewStartupEntryStoresPortablePath(t *testing.T) {
 func TestStartupValidation(t *testing.T) {
 	for _, e := range []StartupEntry{
 		{Kind: StartupApp},
+		{Kind: StartupCommand},
 		{Kind: "other", Target: "x"},
 		{Kind: StartupFile, Target: "relative.txt"},
 		{Kind: StartupApp, Target: "a\nb"},
+		{Kind: StartupCommand, Target: "openrgb\nother"},
 	} {
 		if e.Validate() == nil {
 			t.Errorf("%#v should be invalid", e)
@@ -151,8 +154,18 @@ func TestStartupWaitsForActiveService(t *testing.T) {
 }
 
 func TestStartupRoundTripAndEmptying(t *testing.T) {
+	t.Setenv("HOME", "/home/test")
 	path := filepath.Join(t.TempDir(), "config")
 	want := []StartupEntry{{Kind: StartupApp, Name: "A", Target: `sh -c "x y"`, Enabled: true}}
+	target := `/home/test/bin/openrgb --startminimized -p '/home/test/profiles/purple.orp'`
+	command, err := NewStartupEntry(StartupCommand, "", target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if command.Target != target || command.Name != target || !command.Enabled {
+		t.Fatalf("command changed: %#v", command)
+	}
+	want = append(want, command)
 	if err := SaveStartup(path, want); err != nil {
 		t.Fatal(err)
 	}

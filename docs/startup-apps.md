@@ -1,6 +1,6 @@
 # Aplicaciones de inicio
 
-La sección **Inicio** de Ajustes elige qué se abre al iniciar Hyprland, sin tocar Lua: aplicaciones instaladas, scripts ejecutables o archivos, que se abren con `xdg-open`. Cada entrada tiene un interruptor y se puede eliminar.
+La sección **Inicio** de Ajustes elige qué se abre al iniciar Hyprland, sin tocar Lua. Los tipos aparecen en este orden: **Aplicación**, **Comando**, **Script** y **Archivo**. Aplicación permite elegir una aplicación instalada; Comando permite escribir la orden completa con argumentos, como `openrgb --startminimized -p purple`; Script ejecuta una ruta y Archivo la abre mediante `xdg-open`. Cada entrada tiene un interruptor y se puede eliminar.
 
 Al elegir una aplicación, el desplegable permite buscar por nombre sin distinguir mayúsculas. Escribe parte del nombre y selecciona una coincidencia con el ratón o con las flechas y Enter; después pulsa **Añadir**. Escape cierra el desplegable y al volver a abrirlo se limpia la búsqueda.
 
@@ -10,7 +10,7 @@ Las rutas dentro de la carpeta personal se guardan como `~/` para que la configu
 
 Cada entrada activada espera a que `systemctl --user start senda.service` termine con éxito y comprueba después `systemctl --user is-active --quiet senda.service`. Solo entonces ejecuta el comando completo. Si el servicio falla o no está activo, esa entrada no se ejecuta. Con la unidad `Type=dbus` instalada por Senda, el arranque espera a que esté disponible el vigilante de la bandeja (ADR 0003).
 
-Esta comprobación se añade internamente al módulo generado para aplicaciones, scripts y archivos; el comando guardado y mostrado en Ajustes se conserva. También protege todos los pasos de comandos compuestos con `;`, `&&` o `||`. Se comprueba el servicio antes del lanzamiento; no se vigila la aplicación después. Las entradas externas de solo lectura mantienen el comportamiento definido en su propia configuración.
+Esta comprobación se añade internamente al módulo generado para aplicaciones, comandos, scripts y archivos; el comando guardado y mostrado en Ajustes se conserva. También protege todos los pasos de comandos compuestos con `;`, `&&` o `||`. Se comprueba el servicio antes del lanzamiento; no se vigila la aplicación después. Las entradas externas de solo lectura mantienen el comportamiento definido en su propia configuración.
 
 Desde la terminal:
 
@@ -18,6 +18,7 @@ Desde la terminal:
 senda startup show
 senda startup external --json
 senda startup add --kind app --name Firefox firefox
+senda startup add --kind command 'openrgb --startminimized -p purple'
 senda startup add --kind script ~/scripts/inicio.sh
 senda startup add --kind file ~/notas.md
 senda startup disable firefox

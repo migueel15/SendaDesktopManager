@@ -77,13 +77,14 @@ const KeyStartup = "SENDA_STARTUP_APPS"
 
 // Startup entry kinds.
 const (
-	StartupApp    = "app"
-	StartupScript = "script"
-	StartupFile   = "file"
+	StartupApp     = "app"
+	StartupCommand = "command"
+	StartupScript  = "script"
+	StartupFile    = "file"
 )
 
 // StartupEntry is something Senda runs when Hyprland starts. Target identifies
-// it: a shell command for an app, a path for a script or a file.
+// it: a shell command for an app or command, a path for a script or a file.
 type StartupEntry struct {
 	Kind    string `json:"kind"`
 	Name    string `json:"name"`
@@ -95,13 +96,17 @@ type StartupEntry struct {
 // stored as ~/ so that the configuration works on another computer.
 func NewStartupEntry(kind, name, target string) (StartupEntry, error) {
 	target = strings.TrimSpace(target)
-	if kind != StartupApp {
+	if kind == StartupScript || kind == StartupFile {
 		if home, err := os.UserHomeDir(); err == nil && strings.HasPrefix(target, home+"/") {
 			target = "~" + strings.TrimPrefix(target, home)
 		}
 	}
 	if name = strings.TrimSpace(name); name == "" {
-		name = filepath.Base(target)
+		if kind == StartupCommand {
+			name = target
+		} else {
+			name = filepath.Base(target)
+		}
 	}
 	entry := StartupEntry{Kind: kind, Name: name, Target: target, Enabled: true}
 	return entry, entry.Validate()
@@ -118,7 +123,7 @@ func (e StartupEntry) Validate() error {
 		}
 	}
 	switch e.Kind {
-	case StartupApp:
+	case StartupApp, StartupCommand:
 	case StartupScript, StartupFile:
 		if !strings.HasPrefix(e.Target, "/") && !strings.HasPrefix(e.Target, "~/") {
 			return fmt.Errorf("%q debe ser una ruta absoluta o empezar por ~/", e.Target)

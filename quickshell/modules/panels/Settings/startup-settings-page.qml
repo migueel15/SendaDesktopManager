@@ -28,6 +28,12 @@ Flickable {
             root.appName = "";
             return;
         }
+        if (root.kind === "command") {
+            if (commandField.text.trim() === "") return;
+            SendaStartupSettings.add("command", "", commandField.text.trim());
+            commandField.text = "";
+            return;
+        }
         if (pathField.text.trim() === "") return;
         SendaStartupSettings.add(root.kind, "", pathField.text.trim());
         pathField.text = "";
@@ -43,17 +49,17 @@ Flickable {
                 label: "Tipo"
                 description: "Qué quieres abrir al iniciar Hyprland"
                 SettingsSegments {
-                    implicitWidth: Theme.scaled(260)
+                    implicitWidth: Theme.scaled(350)
                     Layout.fillWidth: false
                     value: root.kind
-                    options: [{ label: "Aplicación", value: "app" }, { label: "Script", value: "script" }, { label: "Archivo", value: "file" }]
+                    options: [{ label: "Aplicación", value: "app" }, { label: "Comando", value: "command" }, { label: "Script", value: "script" }, { label: "Archivo", value: "file" }]
                     onChosen: value => root.kind = value
                 }
             }
             SettingsRow {
                 separator: false
                 label: "Añadir"
-                description: root.kind === "app" ? "Aplicaciones instaladas" : "Ruta absoluta o que empiece por ~/"
+                description: root.kind === "app" ? "Aplicaciones instaladas" : root.kind === "command" ? "Comando completo con sus argumentos" : "Ruta absoluta o que empiece por ~/"
                 SettingsSelect {
                     visible: root.kind === "app"
                     options: root.apps.map(app => app.name)
@@ -64,8 +70,15 @@ Flickable {
                     onChosen: value => root.appName = value
                 }
                 SettingsField {
+                    id: commandField
+                    visible: root.kind === "command"
+                    implicitWidth: Theme.scaled(300)
+                    placeholder: "openrgb --startminimized -p purple"
+                    onAccepted: root.add()
+                }
+                SettingsField {
                     id: pathField
-                    visible: root.kind !== "app"
+                    visible: root.kind === "script" || root.kind === "file"
                     implicitWidth: Theme.scaled(220)
                     placeholder: "~/scripts/inicio.sh"
                 }
