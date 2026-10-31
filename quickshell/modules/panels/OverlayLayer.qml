@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.common
+import qs.common.components.lazy
 import qs.common.components
 import qs.services
 import qs.modules.panels.ControlCenter
@@ -90,35 +91,87 @@ PanelWindow {
 
         Keys.onEscapePressed: OverlayService.closeOrGoBack()
 
-        ControlCenterPopup {
+        PanelLoader {
+            panelNames: ["controlCenter"]
             screenName: overlayLayer.screenName
-            targetX: parent.width - width - 5
-        }
-
-        SendaPanel {
-            names: ["dashboard"]
-            screenName: overlayLayer.screenName
-
-            targetWidth: dashboard.contentWidth + 2 * padding
-            targetHeight: dashboard.contentHeight
-            targetX: parent.width / 2 - width / 2
-
-            DashboardPanel {
-                id: dashboard
-                // Fixed size, so it is not squashed while the panel morphs.
-                width: contentWidth
-                height: contentHeight
+            sourceComponent: Component {
+                Item {
+                    readonly property bool shown: panelContent.shown
+                    ControlCenterPopup {
+                        id: panelContent
+                        screenName: overlayLayer.screenName
+                        targetX: parent.width - width - 5
+                    }
+                }
             }
         }
 
-        TasksPanel {
+        PanelLoader {
+            panelNames: ["dashboard"]
             screenName: overlayLayer.screenName
+            sourceComponent: Component {
+                Item {
+                    readonly property bool shown: panelContent.shown
+                    SendaPanel {
+                        id: panelContent
+                        names: ["dashboard"]
+                        screenName: overlayLayer.screenName
+
+                        targetWidth: dashboard.contentWidth + 2 * padding
+                        targetHeight: dashboard.contentHeight
+                        targetX: parent.width / 2 - width / 2
+
+                        DashboardPanel {
+                            id: dashboard
+                            // Fixed size, so it is not squashed while the panel morphs.
+                            width: contentWidth
+                            height: contentHeight
+                        }
+                    }
+                }
+            }
         }
-        NotificationsPanel {
+
+        PanelLoader {
+            panelNames: ["tasks"]
             screenName: overlayLayer.screenName
+            sourceComponent: Component {
+                Item {
+                    readonly property bool shown: panelContent.shown
+                    TasksPanel {
+                        id: panelContent
+                        screenName: overlayLayer.screenName
+                    }
+                }
+            }
         }
-        LauncherPanel {
+
+        PanelLoader {
+            panelNames: ["notifications"]
             screenName: overlayLayer.screenName
+            sourceComponent: Component {
+                Item {
+                    readonly property bool shown: panelContent.shown
+                    NotificationsPanel {
+                        id: panelContent
+                        screenName: overlayLayer.screenName
+                    }
+                }
+            }
+        }
+
+        PanelLoader {
+            panelNames: ["launcher"]
+            screenName: overlayLayer.screenName
+            sourceComponent: Component {
+                Item {
+                    readonly property bool shown: panelContent.shown
+                    LauncherPanel {
+                        id: panelContent
+                        screenName: overlayLayer.screenName
+                    }
+                }
+            }
         }
     }
 

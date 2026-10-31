@@ -46,5 +46,8 @@ Scope {
             }
         }
     }
-    ScreenshotEditor {}
+    LazyLoader {
+        active: ScreenshotService.editorPath !== ""
+        ScreenshotEditor {}
+    }
 }

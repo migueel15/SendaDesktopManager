@@ -14,17 +14,17 @@ Rectangle {
 
     property bool expanded: false
     property var voiceState: ({
-        connected: false,
-        authenticated: false,
-        auth_required: false,
-        channel: null,
-        mute: false,
-        deaf: false,
-        self_speaking: false,
-        speaking: [],
-        participants: [],
-        error: ""
-    })
+            connected: false,
+            authenticated: false,
+            auth_required: false,
+            channel: null,
+            mute: false,
+            deaf: false,
+            self_speaking: false,
+            speaking: [],
+            participants: [],
+            error: ""
+        })
     property string hint: "Discord desconectado"
 
     height: parent.height * 0.8
@@ -245,6 +245,9 @@ Rectangle {
 
                                 Image {
                                     id: avatarImage
+                                    sourceSize: Qt.size(Math.ceil(width * (root.QsWindow.window?.screen?.devicePixelRatio ?? 1)),
+                                        Math.ceil(height * (root.QsWindow.window?.screen?.devicePixelRatio ?? 1)))
+                                    cache: false
                                     anchors.fill: parent
                                     anchors.margins: participantAvatar.isSpeaking ? 2 : 1
                                     source: participantAvatar.modelData.avatar || ""
@@ -388,354 +391,360 @@ Rectangle {
         }
     }
 
-    PopupWindow {
-        id: participantsExtension
+    LazyLoader {
+        active: root.expanded || (item?.visible ?? false)
+        PopupWindow {
+            id: participantsExtension
 
-        anchor.window: root.QsWindow.window
-        anchor.rect.x: {
-            const window = root.QsWindow.window;
-            if (!window) return 0;
-            return root.itemXInWindow(participantAvatars, window.contentItem)
-                + participantAvatars.width / 2 - participantsExtension.width / 2;
-        }
-        anchor.rect.y: root.QsWindow.window
-            ? root.QsWindow.window.contentItem.height
-            : 0
-        anchor.rect.width: 1
-        anchor.rect.height: 1
+            anchor.window: root.QsWindow.window
+            anchor.rect.x: {
+                const window = root.QsWindow.window;
+                if (!window) return 0;
+                return root.itemXInWindow(participantAvatars, window.contentItem)
+                    + participantAvatars.width / 2 - participantsExtension.width / 2;
+            }
+            anchor.rect.y: root.QsWindow.window
+                ? root.QsWindow.window.contentItem.height
+                : 0
+            anchor.rect.width: 1
+            anchor.rect.height: 1
 
-        width: 360
-        implicitWidth: 360
-        // Size the window for the open extension, so the unfold animates inside it
-        // instead of resizing the Wayland surface on every frame. Growing the
-        // window while shrinking keeps a resize animation from being cut off.
-        implicitHeight: Math.max(1, participantsExtensionContent.expandedHeight, participantsExtensionContent.height) + participantsExtensionContent.shadowSpace
-        // Let clicks below the visible shape reach the windows underneath.
-        mask: Region {
-            item: participantsExtensionContent
-        }
-        visible: root.expanded || participantsExtensionContent.height > 0.01
-        color: "transparent"
+            width: 360
+            implicitWidth: 360
+            // Size the window for the open extension, so the unfold animates inside it
+            // instead of resizing the Wayland surface on every frame. Growing the
+            // window while shrinking keeps a resize animation from being cut off.
+            implicitHeight: Math.max(1, participantsExtensionContent.expandedHeight, participantsExtensionContent.height) + participantsExtensionContent.shadowSpace
+            // Let clicks below the visible shape reach the windows underneath.
+            mask: Region {
+                item: participantsExtensionContent
+            }
+            visible: root.expanded || participantsExtensionContent.height > 0.01
+            color: "transparent"
 
-        BarComponents.BarExtension {
-            id: participantsExtensionContent
-            // Hide the last pixels under the bar, without moving the window.
-            y: -collapseLift
-            width: participantsExtension.width
-            expanded: root.expanded
-            expandedHeight: Math.min(380, Math.max(82, participantCount * 64 + 18))
-            conflictGroup: "tray-popups"
-            autoHideStartsOnExpand: true
-            autoHideDelay: 500
-            autoHidePaused: participantAvatarsHover.hovered
-            onCloseRequested: root.expanded = false
+            BarComponents.BarExtension {
+                id: participantsExtensionContent
+                // Hide the last pixels under the bar, without moving the window.
+                y: -collapseLift
+                width: participantsExtension.width
+                expanded: root.expanded
+                expandedHeight: Math.min(380, Math.max(82, participantCount * 64 + 18))
+                conflictGroup: "tray-popups"
+                autoHideStartsOnExpand: true
+                autoHideDelay: 500
+                autoHidePaused: participantAvatarsHover.hovered
+                onCloseRequested: root.expanded = false
 
-            readonly property int participantCount: (root.voiceState.participants || []).length
+                readonly property int participantCount: (root.voiceState.participants || []).length
 
-            Flickable {
-                id: participantListViewport
-                anchors.fill: parent
-                anchors.leftMargin: 14
-                anchors.rightMargin: 14
-                anchors.topMargin: 12
-                anchors.bottomMargin: 12
-                contentWidth: width
-                contentHeight: participantList.implicitHeight
-                clip: true
+                Flickable {
+                    id: participantListViewport
+                    anchors.fill: parent
+                    anchors.leftMargin: 14
+                    anchors.rightMargin: 14
+                    anchors.topMargin: 12
+                    anchors.bottomMargin: 12
+                    contentWidth: width
+                    contentHeight: participantList.implicitHeight
+                    clip: true
 
-                Column {
-                    id: participantList
-                    width: participantListViewport.width
-                    spacing: 3
+                    Column {
+                        id: participantList
+                        width: participantListViewport.width
+                        spacing: 3
 
-                    Repeater {
-                        model: root.voiceState.participants || []
+                        Repeater {
+                            model: root.voiceState.participants || []
 
-                        delegate: Item {
-                            id: participantRow
-                            required property var modelData
-                            required property int index
+                            delegate: Item {
+                                id: participantRow
+                                required property var modelData
+                                required property int index
 
-                            readonly property real rpcVolume: Math.max(0, Math.min(200, Number(modelData.volume ?? 100)))
-                            readonly property real currentVolume: rpcVolume <= 100
-                                ? 100 * Math.pow(rpcVolume / 100, 1 / 2.8)
-                                : rpcVolume
-                            readonly property bool isMuted: !!modelData.mute
-                            readonly property bool isSelfMuted: !!modelData.self_mute
-                            readonly property bool isServerMuted: !!modelData.server_mute
-                            readonly property bool isSelfDeaf: !!modelData.self_deaf
-                            readonly property bool isServerDeaf: !!modelData.server_deaf
-                            readonly property bool isSpeaking: (root.voiceState.speaking || []).indexOf(modelData.id) !== -1
-                            readonly property string bridgeError: root.voiceState.error || ""
-                            property bool readyForVolumeUpdates: false
-                            property real previewVolume: currentVolume
+                                readonly property real rpcVolume: Math.max(0, Math.min(200, Number(modelData.volume ?? 100)))
+                                readonly property real currentVolume: rpcVolume <= 100
+                                    ? 100 * Math.pow(rpcVolume / 100, 1 / 2.8)
+                                    : rpcVolume
+                                readonly property bool isMuted: !!modelData.mute
+                                readonly property bool isSelfMuted: !!modelData.self_mute
+                                readonly property bool isServerMuted: !!modelData.server_mute
+                                readonly property bool isSelfDeaf: !!modelData.self_deaf
+                                readonly property bool isServerDeaf: !!modelData.server_deaf
+                                readonly property bool isSpeaking: (root.voiceState.speaking || []).indexOf(modelData.id) !== -1
+                                readonly property string bridgeError: root.voiceState.error || ""
+                                property bool readyForVolumeUpdates: false
+                                property real previewVolume: currentVolume
 
-                            function toRpcVolume(sliderVolume) {
-                                const clampedVolume = Math.max(0, Math.min(200, sliderVolume));
-                                if (clampedVolume <= 100)
-                                    return 100 * Math.pow(clampedVolume / 100, 2.8);
-                                return clampedVolume;
-                            }
+                                function toRpcVolume(sliderVolume) {
+                                    const clampedVolume = Math.max(0, Math.min(200, sliderVolume));
+                                    if (clampedVolume <= 100)
+                                        return 100 * Math.pow(clampedVolume / 100, 2.8);
+                                    return clampedVolume;
+                                }
 
-                            width: participantList.width
-                            height: 58
+                                width: participantList.width
+                                height: 58
 
-                            onCurrentVolumeChanged: {
-                                if (readyForVolumeUpdates && !volumeMouse.pressed)
+                                onCurrentVolumeChanged: {
+                                    if (readyForVolumeUpdates && !volumeMouse.pressed)
+                                        previewVolume = currentVolume;
+                                }
+                                onBridgeErrorChanged: {
+                                    if (bridgeError && !volumeMouse.pressed)
+                                        previewVolume = currentVolume;
+                                }
+
+                                Component.onCompleted: {
+                                    readyForVolumeUpdates = true;
                                     previewVolume = currentVolume;
-                            }
-                            onBridgeErrorChanged: {
-                                if (bridgeError && !volumeMouse.pressed)
-                                    previewVolume = currentVolume;
-                            }
-
-                            Component.onCompleted: {
-                                readyForVolumeUpdates = true;
-                                previewVolume = currentVolume;
-                            }
-
-                            Rectangle {
-                                id: participantAvatarFrame
-                                width: 38
-                                height: 38
-                                anchors.left: parent.left
-                                anchors.verticalCenter: parent.verticalCenter
-                                radius: width / 2
-                                color: participantRow.isSpeaking ? Theme.colors.success : Theme.colors.surfaceVariant
-                                clip: true
-
-                                Image {
-                                    id: participantAvatarImage
-                                    anchors.fill: parent
-                                    anchors.margins: participantRow.isSpeaking ? 2 : 1
-                                    source: participantRow.modelData.avatar || ""
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                    visible: false
                                 }
 
-                                OpacityMask {
-                                    anchors.fill: participantAvatarImage
-                                    source: participantAvatarImage
-                                    maskSource: Rectangle {
-                                        width: participantAvatarImage.width
-                                        height: participantAvatarImage.height
-                                        radius: width / 2
-                                        color: "white"
-                                    }
-                                    visible: participantAvatarImage.status === Image.Ready
-                                }
+                                Rectangle {
+                                    id: participantAvatarFrame
+                                    width: 38
+                                    height: 38
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    radius: width / 2
+                                    color: participantRow.isSpeaking ? Theme.colors.success : Theme.colors.surfaceVariant
+                                    clip: true
 
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: (participantRow.modelData.name || "?").slice(0, 1).toUpperCase()
-                                    color: Theme.colors.text
-                                    font.family: Theme.font.overlay.family
-                                    font.pixelSize: Theme.scaled(12)
-                                    visible: participantAvatarImage.status !== Image.Ready
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    preventStealing: true
-                                    acceptedButtons: Qt.LeftButton
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: root.openParticipantProfile(participantRow.modelData.id)
-                                }
-                            }
-
-                            ColumnLayout {
-                                anchors.left: participantAvatarFrame.right
-                                anchors.leftMargin: 10
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 2
-
-                                RowLayout {
-                                    id: participantHeader
-                                    Layout.fillWidth: true
-                                    spacing: 0
-
-                                    Row {
-                                        id: participantIdentity
-                                        Layout.fillWidth: false
-                                        Layout.preferredWidth: implicitWidth
-                                        spacing: 0
-
-                                        Text {
-                                            property string fullName: participantRow.modelData.name || "Usuario"
-                                            text: fullName.length > 20 ? fullName.slice(0, 17) + "..." : fullName
-                                            color: Theme.colors.text
-                                            font: Theme.font.overlay
-                                            wrapMode: Text.NoWrap
-                                        }
-
-                                        Item {
-                                            id: resetUserButton
-                                            width: 16
-                                            height: 16
-
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: "󰑐"
-                                                color: Theme.colors.overlay
-                                                font: Theme.font.icon
-                                            }
-
-                                            MouseArea {
-                                                anchors.fill: parent
-                                                enabled: !participantSettingProc.running
-                                                acceptedButtons: Qt.LeftButton
-                                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                                onClicked: {
-                                                    participantSettingProc.command = [
-                                                        SendaManager.binaryPath,
-                                                        "discord",
-                                                        "reset-user",
-                                                        String(participantRow.modelData.id)
-                                                    ];
-                                                    participantSettingProc.running = true;
-                                                }
-                                            }
-                                        }
+                                    Image {
+                                        id: participantAvatarImage
+                                        sourceSize: Qt.size(Math.ceil(width * (root.QsWindow.window?.screen?.devicePixelRatio ?? 1)),
+                                            Math.ceil(height * (root.QsWindow.window?.screen?.devicePixelRatio ?? 1)))
+                                        cache: false
+                                        anchors.fill: parent
+                                        anchors.margins: participantRow.isSpeaking ? 2 : 1
+                                        source: participantRow.modelData.avatar || ""
+                                        fillMode: Image.PreserveAspectCrop
+                                        asynchronous: true
+                                        visible: false
                                     }
 
-                                    Item { Layout.fillWidth: true }
-
-                                    RowLayout {
-                                        id: participantActions
-                                        spacing: 4
-
-                                        Text {
-                                            visible: participantRow.isSelfMuted || participantRow.isServerMuted
-                                            text: "󰍭"
-                                            color: participantRow.isServerMuted ? Theme.colors.error : Theme.colors.overlay
-                                            font: Theme.font.base
-                                        }
-
-                                        Text {
-                                            visible: participantRow.isSelfDeaf || participantRow.isServerDeaf
-                                            text: "󰋋"
-                                            color: participantRow.isServerDeaf ? Theme.colors.error : Theme.colors.overlay
-                                            font: Theme.font.base
-                                        }
-
-                                        Rectangle {
-                                            Layout.preferredWidth: 24
-                                            Layout.preferredHeight: 22
-                                            color: "transparent"
-
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: participantRow.isMuted ? "󰖁" : "󰕾"
-                                                color: participantRow.isMuted ? Theme.colors.error : Theme.colors.text
-                                                font: Theme.font.base
-                                            }
-
-                                            MouseArea {
-                                                anchors.fill: parent
-                                                enabled: !participantSettingProc.running
-                                                acceptedButtons: Qt.LeftButton
-                                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                                onClicked: {
-                                                    participantSettingProc.command = [
-                                                        SendaManager.binaryPath,
-                                                        "discord",
-                                                        "set-user-mute",
-                                                        String(participantRow.modelData.id),
-                                                        participantRow.isMuted ? "false" : "true"
-                                                    ];
-                                                    participantSettingProc.running = true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 7
-
-                                    Item {
-                                        id: volumeTrack
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: 16
-
-                                        Rectangle {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            width: parent.width
-                                            height: 4
-                                            radius: 2
-                                            color: Theme.colors.surfaceVariant
-
-                                            Rectangle {
-                                                width: parent.width * (participantRow.previewVolume / 200)
-                                                height: parent.height
-                                                radius: parent.radius
-                                                color: Theme.colors.primary
-                                            }
-                                        }
-
-                                        Rectangle {
-                                            width: 8
-                                            height: 8
+                                    OpacityMask {
+                                        anchors.fill: participantAvatarImage
+                                        source: participantAvatarImage
+                                        maskSource: Rectangle {
+                                            width: participantAvatarImage.width
+                                            height: participantAvatarImage.height
                                             radius: width / 2
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            x: Math.max(0, Math.min(parent.width - width,
-                                                parent.width * (participantRow.previewVolume / 200) - width / 2))
-                                            color: Theme.colors.primary
+                                            color: "white"
                                         }
-
-                                        MouseArea {
-                                            id: volumeMouse
-                                            anchors.fill: parent
-                                            enabled: !participantSettingProc.running
-                                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-
-                                            function updatePreview(mouseX) {
-                                                const ratio = Math.max(0, Math.min(1, mouseX / width));
-                                                participantRow.previewVolume = Math.round(ratio * 200);
-                                            }
-
-                                            onPressed: mouse => updatePreview(mouse.x)
-                                            onPositionChanged: mouse => {
-                                                if (pressed) updatePreview(mouse.x);
-                                            }
-                                            onReleased: mouse => {
-                                                updatePreview(mouse.x);
-                                                participantSettingProc.command = [
-                                                    SendaManager.binaryPath,
-                                                    "discord",
-                                                    "set-user-volume",
-                                                    String(participantRow.modelData.id),
-                                                    participantRow.toRpcVolume(participantRow.previewVolume).toFixed(2)
-                                                ];
-                                                participantSettingProc.running = true;
-                                            }
-                                            onCanceled: participantRow.previewVolume = participantRow.currentVolume
-                                        }
+                                        visible: participantAvatarImage.status === Image.Ready
                                     }
 
                                     Text {
-                                        Layout.preferredWidth: 44
-                                        text: `${Math.round(participantRow.previewVolume)}%`
-                                        color: Theme.colors.overlay
-                                        font: Theme.font.overlay
-                                        horizontalAlignment: Text.AlignRight
-                                        ToolTip.text: "Volumen RPC de Discord (100 = valor predeterminado)"
+                                        anchors.centerIn: parent
+                                        text: (participantRow.modelData.name || "?").slice(0, 1).toUpperCase()
+                                        color: Theme.colors.text
+                                        font.family: Theme.font.overlay.family
+                                        font.pixelSize: Theme.scaled(12)
+                                        visible: participantAvatarImage.status !== Image.Ready
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        preventStealing: true
+                                        acceptedButtons: Qt.LeftButton
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.openParticipantProfile(participantRow.modelData.id)
                                     }
                                 }
-                            }
 
-                            Process {
-                                id: participantSettingProc
-                                running: false
-                                command: []
-                                stderr: StdioCollector {
-                                    onStreamFinished: {
-                                        if (text.trim()) {
-                                            root.hint = text.trim();
-                                            participantRow.previewVolume = participantRow.currentVolume;
+                                ColumnLayout {
+                                    anchors.left: participantAvatarFrame.right
+                                    anchors.leftMargin: 10
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 2
+
+                                    RowLayout {
+                                        id: participantHeader
+                                        Layout.fillWidth: true
+                                        spacing: 0
+
+                                        Row {
+                                            id: participantIdentity
+                                            Layout.fillWidth: false
+                                            Layout.preferredWidth: implicitWidth
+                                            spacing: 0
+
+                                            Text {
+                                                property string fullName: participantRow.modelData.name || "Usuario"
+                                                text: fullName.length > 20 ? fullName.slice(0, 17) + "..." : fullName
+                                                color: Theme.colors.text
+                                                font: Theme.font.overlay
+                                                wrapMode: Text.NoWrap
+                                            }
+
+                                            Item {
+                                                id: resetUserButton
+                                                width: 16
+                                                height: 16
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "󰑐"
+                                                    color: Theme.colors.overlay
+                                                    font: Theme.font.icon
+                                                }
+
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    enabled: !participantSettingProc.running
+                                                    acceptedButtons: Qt.LeftButton
+                                                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                    onClicked: {
+                                                        participantSettingProc.command = [
+                                                            SendaManager.binaryPath,
+                                                            "discord",
+                                                            "reset-user",
+                                                            String(participantRow.modelData.id)
+                                                        ];
+                                                        participantSettingProc.running = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Item { Layout.fillWidth: true }
+
+                                        RowLayout {
+                                            id: participantActions
+                                            spacing: 4
+
+                                            Text {
+                                                visible: participantRow.isSelfMuted || participantRow.isServerMuted
+                                                text: "󰍭"
+                                                color: participantRow.isServerMuted ? Theme.colors.error : Theme.colors.overlay
+                                                font: Theme.font.base
+                                            }
+
+                                            Text {
+                                                visible: participantRow.isSelfDeaf || participantRow.isServerDeaf
+                                                text: "󰋋"
+                                                color: participantRow.isServerDeaf ? Theme.colors.error : Theme.colors.overlay
+                                                font: Theme.font.base
+                                            }
+
+                                            Rectangle {
+                                                Layout.preferredWidth: 24
+                                                Layout.preferredHeight: 22
+                                                color: "transparent"
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: participantRow.isMuted ? "󰖁" : "󰕾"
+                                                    color: participantRow.isMuted ? Theme.colors.error : Theme.colors.text
+                                                    font: Theme.font.base
+                                                }
+
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    enabled: !participantSettingProc.running
+                                                    acceptedButtons: Qt.LeftButton
+                                                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                    onClicked: {
+                                                        participantSettingProc.command = [
+                                                            SendaManager.binaryPath,
+                                                            "discord",
+                                                            "set-user-mute",
+                                                            String(participantRow.modelData.id),
+                                                            participantRow.isMuted ? "false" : "true"
+                                                        ];
+                                                        participantSettingProc.running = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 7
+
+                                        Item {
+                                            id: volumeTrack
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 16
+
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width
+                                                height: 4
+                                                radius: 2
+                                                color: Theme.colors.surfaceVariant
+
+                                                Rectangle {
+                                                    width: parent.width * (participantRow.previewVolume / 200)
+                                                    height: parent.height
+                                                    radius: parent.radius
+                                                    color: Theme.colors.primary
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                width: 8
+                                                height: 8
+                                                radius: width / 2
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                x: Math.max(0, Math.min(parent.width - width,
+                                                    parent.width * (participantRow.previewVolume / 200) - width / 2))
+                                                color: Theme.colors.primary
+                                            }
+
+                                            MouseArea {
+                                                id: volumeMouse
+                                                anchors.fill: parent
+                                                enabled: !participantSettingProc.running
+                                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+
+                                                function updatePreview(mouseX) {
+                                                    const ratio = Math.max(0, Math.min(1, mouseX / width));
+                                                    participantRow.previewVolume = Math.round(ratio * 200);
+                                                }
+
+                                                onPressed: mouse => updatePreview(mouse.x)
+                                                onPositionChanged: mouse => {
+                                                    if (pressed) updatePreview(mouse.x);
+                                                }
+                                                onReleased: mouse => {
+                                                    updatePreview(mouse.x);
+                                                    participantSettingProc.command = [
+                                                        SendaManager.binaryPath,
+                                                        "discord",
+                                                        "set-user-volume",
+                                                        String(participantRow.modelData.id),
+                                                        participantRow.toRpcVolume(participantRow.previewVolume).toFixed(2)
+                                                    ];
+                                                    participantSettingProc.running = true;
+                                                }
+                                                onCanceled: participantRow.previewVolume = participantRow.currentVolume
+                                            }
+                                        }
+
+                                        Text {
+                                            Layout.preferredWidth: 44
+                                            text: `${Math.round(participantRow.previewVolume)}%`
+                                            color: Theme.colors.overlay
+                                            font: Theme.font.overlay
+                                            horizontalAlignment: Text.AlignRight
+                                            ToolTip.text: "Volumen RPC de Discord (100 = valor predeterminado)"
+                                        }
+                                    }
+                                }
+
+                                Process {
+                                    id: participantSettingProc
+                                    running: false
+                                    command: []
+                                    stderr: StdioCollector {
+                                        onStreamFinished: {
+                                            if (text.trim()) {
+                                                root.hint = text.trim();
+                                                participantRow.previewVolume = participantRow.currentVolume;
+                                            }
                                         }
                                     }
                                 }

@@ -12,7 +12,7 @@ import qs.common.components.barextension as BarComponents
 Rectangle {
     id: root
 
-    readonly property Repeater items: itemsRepeater
+    readonly property Repeater items: trayLoader.item?.items ?? null
     property bool expanded: false
     property TrayItem pinDragSource: null
     property bool pinDragOverTarget: false
@@ -83,8 +83,8 @@ Rectangle {
         return count;
     }
     readonly property bool trayMenuOpen: {
-        for (let i = 0; i < itemsRepeater.count; i++) {
-            const item = itemsRepeater.itemAt(i) as TrayItem;
+        for (let i = 0; i < (root.items?.count ?? 0); i++) {
+            const item = root.items.itemAt(i) as TrayItem;
             if (item && !item.pinned && item.menuOpen) return true;
         }
         return false;
@@ -170,79 +170,84 @@ Rectangle {
         }
     }
 
-    PopupWindow {
-        id: trayExtension
+    LazyLoader {
+        id: trayLoader
+        active: root.expanded || root.pinDragging || (item?.visible ?? false)
+        PopupWindow {
+            id: trayExtension
+            readonly property Repeater items: itemsRepeater
 
-        anchor.window: root.QsWindow.window
-        anchor.rect.x: {
-            const window = root.QsWindow.window;
-            if (!window) return 0;
-            const point = expandButton.mapToItem(window.contentItem, 0, 0);
-            return point.x + expandButton.width - implicitWidth + 20;
-        }
-        anchor.rect.y: root.QsWindow.window
-                ? root.QsWindow.window.contentItem.height
-                : 0
-        anchor.rect.width: 1
-        anchor.rect.height: 1
+            anchor.window: root.QsWindow.window
+            anchor.rect.x: {
+                const window = root.QsWindow.window;
+                if (!window) return 0;
+                const point = expandButton.mapToItem(window.contentItem, 0, 0);
+                return point.x + expandButton.width - implicitWidth + 20;
+            }
+            anchor.rect.y: root.QsWindow.window
+                    ? root.QsWindow.window.contentItem.height
+                    : 0
+            anchor.rect.width: 1
+            anchor.rect.height: 1
 
-        implicitWidth: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
-        // Size the window for the open extension, so the unfold animates inside it
-        // instead of resizing the Wayland surface on every frame. Growing the
-        // window while shrinking keeps a resize animation from being cut off.
-        implicitHeight: Math.max(1, trayExtensionContent.expandedHeight, trayExtensionContent.height) + trayExtensionContent.shadowSpace
-        // Let clicks below the visible shape reach the windows underneath.
-        mask: Region {
-            item: trayExtensionContent
-        }
-        visible: root.expanded || trayExtensionContent.height > 0.01
-        color: "transparent"
-        onVisibleChanged: {
-            if (!visible)
-                root.finishPinDrag(false);
-        }
+            implicitWidth: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
+            // Size the window for the open extension, so the unfold animates inside it
+            // instead of resizing the Wayland surface on every frame. Growing the
+            // window while shrinking keeps a resize animation from being cut off.
+            implicitHeight: Math.max(1, trayExtensionContent.expandedHeight, trayExtensionContent.height) + trayExtensionContent.shadowSpace
+            // Let clicks below the visible shape reach the windows underneath.
+            mask: Region {
+                item: trayExtensionContent
+            }
+            visible: root.expanded || trayExtensionContent.height > 0.01
+            color: "transparent"
+            onVisibleChanged: {
+                if (!visible)
+                    root.finishPinDrag(false);
+            }
 
-        BarComponents.BarExtension {
-            id: trayExtensionContent
-            // Hide the last pixels under the bar, without moving the window.
-            y: -collapseLift
-            width: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
-            expanded: root.expanded
-            conflictGroup: "tray-popups"
-            autoHideStartsOnExpand: true
-            autoHideDelay: 500
-            autoHidePaused: root.pinDragging || root.trayMenuOpen || expandButtonHover.hovered
-            onCloseRequested: root.expanded = false
+            BarComponents.BarExtension {
+                id: trayExtensionContent
+                // Hide the last pixels under the bar, without moving the window.
+                y: -collapseLift
+                width: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
+                expanded: root.expanded
+                conflictGroup: "tray-popups"
+                autoHideStartsOnExpand: true
+                autoHideDelay: 500
+                autoHidePaused: root.pinDragging || root.trayMenuOpen || expandButtonHover.hovered
+                onCloseRequested: root.expanded = false
 
-            Row {
-                id: layout
-                anchors.centerIn: parent
-                spacing: 2 // TrayItem includes 3px of clickable padding on each side.
+                Row {
+                    id: layout
+                    anchors.centerIn: parent
+                    spacing: 2 // TrayItem includes 3px of clickable padding on each side.
 
-                // Keep tray items at scale 1 while they register or change layout.
-                Repeater {
-                    id: itemsRepeater
-                    model: SystemTray.items
-                    delegate: TrayItem {
-                        id: popupItem
-                        pinned: !!modelData && root.isPinned(modelData.id)
-                        visible: !pinned
-                        pinDragEnabled: true
-                        onPinDragMoved: (globalX, globalY) => root.updatePinDrag(popupItem, globalX, globalY)
-                        onPinDragReleased: (globalX, globalY) => {
-                            root.updatePinDrag(popupItem, globalX, globalY);
-                            root.finishPinDrag(true);
+                    // Keep tray items at scale 1 while they register or change layout.
+                    Repeater {
+                        id: itemsRepeater
+                        model: SystemTray.items
+                        delegate: TrayItem {
+                            id: popupItem
+                            pinned: !!modelData && root.isPinned(modelData.id)
+                            visible: !pinned
+                            pinDragEnabled: true
+                            onPinDragMoved: (globalX, globalY) => root.updatePinDrag(popupItem, globalX, globalY)
+                            onPinDragReleased: (globalX, globalY) => {
+                                root.updatePinDrag(popupItem, globalX, globalY);
+                                root.finishPinDrag(true);
+                            }
+                            onPinDragCanceled: root.finishPinDrag(false)
                         }
-                        onPinDragCanceled: root.finishPinDrag(false)
                     }
-                }
 
-                Text {
-                    visible: root.hasTrayItems && root.unpinnedCount === 0
-                    text: "Todos los iconos están anclados"
-                    font: root.emptyStateFont
-                    color: root.emptyStateColor
-                    anchors.verticalCenter: parent.verticalCenter
+                    Text {
+                        visible: root.hasTrayItems && root.unpinnedCount === 0
+                        text: "Todos los iconos están anclados"
+                        font: root.emptyStateFont
+                        color: root.emptyStateColor
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
             }
         }

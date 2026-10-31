@@ -8,6 +8,7 @@ import qs.services
 
 Flickable {
     id: root
+    readonly property bool retainWhenHidden: appName !== "" || commandField.text !== "" || pathField.text !== ""
     contentHeight: column.implicitHeight
     clip: true
 

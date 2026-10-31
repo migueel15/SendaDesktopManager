@@ -7,6 +7,7 @@ import qs.common.components.barextension as BarComponents
 
 BarComponents.BarExtension {
     id: root
+    property bool viewReady: false
     required property bool onPickerScreen
     property real maximumHeight: 800
     property var pendingDelete: null
@@ -37,13 +38,19 @@ BarComponents.BarExtension {
         SendaTheme.duplicatePending = false;
         editTheme(SendaTheme.active, false, true);
     }
-    onExpandedChanged: {
+    function prepareOpen() {
+        if (!root.viewReady) return;
         if (expanded) {
-            showList();
+            if (!editing) showList();
             SendaTheme.refresh();
             Qt.callLater(() => content.forceActiveFocus());
             openPendingDuplicate();
         }
+    }
+    onExpandedChanged: prepareOpen()
+    Component.onCompleted: {
+        root.viewReady = true;
+        prepareOpen();
     }
     Connections {
         target: SendaTheme

@@ -3,6 +3,7 @@ import Quickshell
 
 import qs.common
 import qs.services
+import "../../../common/components/lazy/lifetime.js" as Lifetime
 
 // Standalone settings window. Its title matches the Hyprland rule in Senda's
 // module, which opens it floating and centred on the focused monitor.
@@ -30,8 +31,10 @@ FloatingWindow {
         onActivated: SendaSettings.closeWindow()
     }
 
-    SettingsPanel {
+    Loader {
         anchors.fill: parent
         anchors.margins: Theme.spacing.md
+        active: SendaSettings.windowOpen || Lifetime.hasDraft(item)
+        sourceComponent: Component { SettingsPanel {} }
+        }
     }
-}

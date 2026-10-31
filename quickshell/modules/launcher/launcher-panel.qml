@@ -11,6 +11,7 @@ import "emojis.js" as Emojis
 // history, launching and IPC live in LauncherService.
 SendaPanel {
     id: root
+    property bool viewReady: false
 
     name: "launcher"
     padding: 16
@@ -55,14 +56,14 @@ SendaPanel {
             const query = text.slice(1).trim().toLocaleLowerCase();
             results = SendaClipboard.entries.filter(entry => entry.text.toLocaleLowerCase().includes(query)).map(entry =>
                 ({ kind: "clipboard", name: entry.text.trim().replace(/\s+/g, " ").slice(0, 200), detail: "Restaurar al portapapeles", glyph: "󰅌", run: () => {
-                    LauncherService.close();
-                    SendaClipboard.restore(entry.id);
+                            LauncherService.close();
+                            SendaClipboard.restore(entry.id);
                 } }));
         } else if (text.startsWith(">")) {
             const command = text.slice(1).trim();
             results = command ? [{ kind: "command", name: command, detail: "Ejecutar comando", glyph: "󰆍", run: () => {
-                LauncherService.close();
-                Quickshell.execDetached(["sh", "-c", command]);
+                        LauncherService.close();
+                        Quickshell.execDetached(["sh", "-c", command]);
             } }] : [];
         } else {
             const query = text.toLocaleLowerCase();
@@ -81,12 +82,18 @@ SendaPanel {
     }
 
     // Each opening starts with an empty search and the keyboard in it.
-    onOpenChanged: {
+    function prepareOpen() {
+        if (!root.viewReady) return;
         if (!root.open) return;
         search.text = "";
         SendaClipboard.refresh();
         root.refresh();
         Qt.callLater(() => { if (root.open) search.forceActiveFocus(); });
+    }
+    onOpenChanged: prepareOpen()
+    Component.onCompleted: {
+        root.viewReady = true;
+        prepareOpen();
     }
     Connections {
         target: DesktopEntries.applications
@@ -178,5 +185,5 @@ SendaPanel {
             MouseArea { id: rowMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.launch(row.index) }
         }
         Text { anchors.centerIn: parent; visible: list.count === 0; text: "Sin resultados"; color: Theme.colors.overlay; font.pixelSize: Theme.scaled(14) }
-    }
-}
+            }
+        }

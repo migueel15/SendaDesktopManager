@@ -231,110 +231,94 @@ Rectangle {
         }
     }
 
-    PopupWindow {
-        id: trackExtension
+    LazyLoader {
+        active: root.expanded || (item?.visible ?? false)
+        PopupWindow {
+            id: trackExtension
 
-        anchor.window: root.QsWindow.window
-        anchor.rect.x: {
-            const window = root.QsWindow.window;
-            if (!window) return 0;
-            // Read ancestor x properties directly so QML re-evaluates this when the layout moves the widget.
-            return root.itemXInWindow(root, window.contentItem)
-                + root.width / 2 - trackExtension.width / 2;
-        }
-        anchor.rect.y: root.QsWindow.window
-                ? root.QsWindow.window.contentItem.height
-                : 0
-        anchor.rect.width: 1
-        anchor.rect.height: 1
+            anchor.window: root.QsWindow.window
+            anchor.rect.x: {
+                const window = root.QsWindow.window;
+                if (!window) return 0;
+                // Read ancestor x properties directly so QML re-evaluates this when the layout moves the widget.
+                return root.itemXInWindow(root, window.contentItem)
+                    + root.width / 2 - trackExtension.width / 2;
+            }
+            anchor.rect.y: root.QsWindow.window
+                    ? root.QsWindow.window.contentItem.height
+                    : 0
+            anchor.rect.width: 1
+            anchor.rect.height: 1
 
-        width: 280
-        implicitWidth: 280
-        // Size the window for the open extension, so the unfold animates inside it
-        // instead of resizing the Wayland surface on every frame. Growing the
-        // window while shrinking keeps a resize animation from being cut off.
-        implicitHeight: Math.max(1, trackExtensionContent.expandedHeight, trackExtensionContent.height) + trackExtensionContent.shadowSpace
-        // Let clicks below the visible shape reach the windows underneath.
-        mask: Region {
-            item: trackExtensionContent
-        }
-        visible: root.expanded || trackExtensionContent.height > 0.01
-        color: "transparent"
+            width: 280
+            implicitWidth: 280
+            // Size the window for the open extension, so the unfold animates inside it
+            // instead of resizing the Wayland surface on every frame. Growing the
+            // window while shrinking keeps a resize animation from being cut off.
+            implicitHeight: Math.max(1, trackExtensionContent.expandedHeight, trackExtensionContent.height) + trackExtensionContent.shadowSpace
+            // Let clicks below the visible shape reach the windows underneath.
+            mask: Region {
+                item: trackExtensionContent
+            }
+            visible: root.expanded || trackExtensionContent.height > 0.01
+            color: "transparent"
 
-        BarComponents.BarExtension {
-            id: trackExtensionContent
-            // Hide the last pixels under the bar, without moving the window.
-            y: -collapseLift
-            width: trackExtension.width
-            expanded: root.expanded
-            expandedHeight: 92
-            conflictGroup: "tray-popups"
-            autoHideStartsOnExpand: true
-            autoHideDelay: 500
-            autoHidePaused: widgetHover.hovered
-            onCloseRequested: root.expanded = false
+            BarComponents.BarExtension {
+                id: trackExtensionContent
+                // Hide the last pixels under the bar, without moving the window.
+                y: -collapseLift
+                width: trackExtension.width
+                expanded: root.expanded
+                expandedHeight: 92
+                conflictGroup: "tray-popups"
+                autoHideStartsOnExpand: true
+                autoHideDelay: 500
+                autoHidePaused: widgetHover.hovered
+                onCloseRequested: root.expanded = false
 
-            Column {
-                anchors.fill: parent
-                anchors.leftMargin: 16
-                anchors.rightMargin: 16
-                anchors.topMargin: 10
-                anchors.bottomMargin: 10
-                spacing: 6
+                Column {
+                    anchors.fill: parent
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 16
+                    anchors.topMargin: 10
+                    anchors.bottomMargin: 10
+                    spacing: 6
 
-                RowLayout {
-                    width: parent.width
-                    spacing: 8
+                    RowLayout {
+                        width: parent.width
+                        spacing: 8
 
-                    Rectangle {
-                        Layout.preferredWidth: 40
-                        Layout.preferredHeight: 40
-                        radius: 6
-                        color: Theme.colors.surfaceVariant
-                        clip: true
+                        Rectangle {
+                            Layout.preferredWidth: 40
+                            Layout.preferredHeight: 40
+                            radius: 6
+                            color: Theme.colors.surfaceVariant
+                            clip: true
 
-                        Image {
-                            id: trackArt
-                            width: parent.width
-                            height: parent.height
-                            source: root.activePlayer?.trackArtUrl ?? ""
-                            fillMode: Image.PreserveAspectCrop
-                            asynchronous: true
-                            visible: false
-                        }
-
-                        OpacityMask {
-                            anchors.fill: parent
-                            source: trackArt
-                            maskSource: Rectangle {
-                                width: 40
-                                height: 40
-                                radius: 6
-                                color: "white"
+                            Image {
+                                id: trackArt
+                                sourceSize: Qt.size(Math.ceil(width * (root.QsWindow.window?.screen?.devicePixelRatio ?? 1)),
+                                    Math.ceil(height * (root.QsWindow.window?.screen?.devicePixelRatio ?? 1)))
+                                cache: false
+                                width: parent.width
+                                height: parent.height
+                                source: root.activePlayer?.trackArtUrl ?? ""
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                visible: false
                             }
-                            visible: trackArt.status === Image.Ready
-                        }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.openSpotifyTrack()
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 1
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: root.activePlayer?.trackTitle || "Sin título"
-                            color: Theme.colors.text
-                            font.family: Theme.font.overlay.family
-                            font.pixelSize: Theme.scaled(14)
-                            font.weight: Font.Bold
-                            elide: Text.ElideRight
+                            OpacityMask {
+                                anchors.fill: parent
+                                source: trackArt
+                                maskSource: Rectangle {
+                                    width: 40
+                                    height: 40
+                                    radius: 6
+                                    color: "white"
+                                }
+                                visible: trackArt.status === Image.Ready
+                            }
 
                             MouseArea {
                                 anchors.fill: parent
@@ -344,86 +328,108 @@ Rectangle {
                             }
                         }
 
-                        Text {
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            text: root.activePlayer?.trackArtist || "Artista desconocido"
-                            color: Theme.colors.overlay
-                            font: Theme.font.overlay
-                            elide: Text.ElideRight
+                            spacing: 1
 
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.openSpotifyArtist()
+                            Text {
+                                Layout.fillWidth: true
+                                text: root.activePlayer?.trackTitle || "Sin título"
+                                color: Theme.colors.text
+                                font.family: Theme.font.overlay.family
+                                font.pixelSize: Theme.scaled(14)
+                                font.weight: Font.Bold
+                                elide: Text.ElideRight
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.openSpotifyTrack()
+                                }
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: root.activePlayer?.trackArtist || "Artista desconocido"
+                                color: Theme.colors.overlay
+                                font: Theme.font.overlay
+                                elide: Text.ElideRight
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.LeftButton
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.openSpotifyArtist()
+                                }
                             }
                         }
                     }
-                }
 
-                Column {
-                    width: parent.width
-                    spacing: 4
-                    // Stays visible while a track is shown, at 0 until the duration is known.
-                    visible: root.hasTrack
-
-                    RowLayout {
+                    Column {
                         width: parent.width
+                        spacing: 4
+                        // Stays visible while a track is shown, at 0 until the duration is known.
+                        visible: root.hasTrack
 
-                        Text {
-                            text: root.formatTrackTime(timelineSeek.pressed
-                                ? timelineSeek.previewPosition
-                                : (root.activePlayer?.position ?? 0))
-                            color: Theme.colors.overlay
-                            font: Theme.font.overlay
+                        RowLayout {
+                            width: parent.width
+
+                            Text {
+                                text: root.formatTrackTime(timelineSeek.pressed
+                                    ? timelineSeek.previewPosition
+                                    : (root.activePlayer?.position ?? 0))
+                                color: Theme.colors.overlay
+                                font: Theme.font.overlay
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            Text {
+                                text: root.formatTrackTime(root.activePlayer?.length ?? 0)
+                                color: Theme.colors.overlay
+                                font: Theme.font.overlay
+                            }
                         }
-
-                        Item { Layout.fillWidth: true }
-
-                        Text {
-                            text: root.formatTrackTime(root.activePlayer?.length ?? 0)
-                            color: Theme.colors.overlay
-                            font: Theme.font.overlay
-                        }
-                    }
-
-                    Rectangle {
-                        width: parent.width
-                        height: 4
-                        radius: 2
-                        color: Theme.colors.surfaceVariant
 
                         Rectangle {
-                            width: parent.width * (root.activePlayer?.length > 0
-                                ? Math.max(0, Math.min(1, (timelineSeek.pressed
-                                    ? timelineSeek.previewPosition
-                                    : root.activePlayer.position) / root.activePlayer.length)) : 0)
-                            height: parent.height
-                            radius: parent.radius
-                            color: Theme.colors.primary
-                        }
-
-                        MouseArea {
-                            id: timelineSeek
-                            anchors.centerIn: parent
                             width: parent.width
-                            height: 18
-                            enabled: root.activePlayer?.canSeek && root.hasTimeline
-                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            property real previewPosition: 0
+                            height: 4
+                            radius: 2
+                            color: Theme.colors.surfaceVariant
 
-                            function updatePreview(mouseX) {
-                                const ratio = Math.max(0, Math.min(1, mouseX / width));
-                                previewPosition = ratio * root.activePlayer.length;
+                            Rectangle {
+                                width: parent.width * (root.activePlayer?.length > 0
+                                    ? Math.max(0, Math.min(1, (timelineSeek.pressed
+                                        ? timelineSeek.previewPosition
+                                        : root.activePlayer.position) / root.activePlayer.length)) : 0)
+                                height: parent.height
+                                radius: parent.radius
+                                color: Theme.colors.primary
                             }
 
-                            onPressed: mouse => updatePreview(mouse.x)
-                            onPositionChanged: mouse => {
-                                if (pressed) updatePreview(mouse.x);
-                            }
-                            onReleased: mouse => {
-                                updatePreview(mouse.x);
-                                root.activePlayer.position = previewPosition;
+                            MouseArea {
+                                id: timelineSeek
+                                anchors.centerIn: parent
+                                width: parent.width
+                                height: 18
+                                enabled: root.activePlayer?.canSeek && root.hasTimeline
+                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                property real previewPosition: 0
+
+                                function updatePreview(mouseX) {
+                                    const ratio = Math.max(0, Math.min(1, mouseX / width));
+                                    previewPosition = ratio * root.activePlayer.length;
+                                }
+
+                                onPressed: mouse => updatePreview(mouse.x)
+                                onPositionChanged: mouse => {
+                                    if (pressed) updatePreview(mouse.x);
+                                }
+                                onReleased: mouse => {
+                                    updatePreview(mouse.x);
+                                    root.activePlayer.position = previewPosition;
+                                }
                             }
                         }
                     }

@@ -31,10 +31,22 @@ Item {
 	property int resizeDuration: 310
 	// True from an open or close until its height animation ends.
 	property bool toggling: false
+	property bool initialized: false
 
 	signal closeRequested()
 
-	Component.onCompleted: BarExtensionManager.registerExtension(root)
+	function initialize() {
+		if (expanded) {
+			toggling = true;
+			BarExtensionManager.activate(root);
+		}
+		initialized = true;
+	}
+
+	Component.onCompleted: {
+		BarExtensionManager.registerExtension(root);
+		Qt.callLater(root.initialize);
+	}
 	Component.onDestruction: BarExtensionManager.unregisterExtension(root)
 
 	readonly property real collapseLift: expanded ? 0 : Math.max(0, contentHideThreshold - height)
@@ -50,7 +62,7 @@ Item {
 		return Math.min(curveWidth, halfHeight) - blendRange * blend * blend / 4;
 	}
 
-	height: expanded ? expandedHeight : 0
+	height: initialized && expanded ? expandedHeight : 0
 	visible: expanded || height > 0.01
 	clip: false
 
@@ -113,15 +125,21 @@ Item {
 		}
 	}
 
-	MultiEffect {
+	Loader {
 		anchors.fill: backgroundShape
-		source: backgroundShape
-		visible: root.height > root.contentHideThreshold
-		shadowEnabled: true
-		shadowColor: "#b0000000"
-		blurMax: 16
-		shadowBlur: 0.8
-		shadowVerticalOffset: 2
+		active: root.height > root.contentHideThreshold
+		sourceComponent: Component {
+			MultiEffect {
+				anchors.fill: parent
+				source: backgroundShape
+				visible: true
+				shadowEnabled: true
+				shadowColor: "#b0000000"
+				blurMax: 16
+				shadowBlur: 0.8
+				shadowVerticalOffset: 2
+			}
+		}
 	}
 
 	Shape {

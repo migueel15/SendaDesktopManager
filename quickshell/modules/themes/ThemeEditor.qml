@@ -233,9 +233,9 @@ Item {
                             color: root.previewColor("surface")
                             border.color: root.previewColor("border")
                             Text { anchors.centerIn: parent; text: "Texto de una tarjeta"; font: Theme.font.body; color: root.previewColor("text") }
+                            }
                         }
                     }
-                }
                 Text { text: "Colores · #RRGGBB"; font: Theme.font.heading; color: Theme.colors.text }
                 Repeater {
                     model: root.colorKeys
@@ -265,17 +265,23 @@ Item {
                     }
                     Action { text: "Elegir…"; onClicked: root.browsing = !root.browsing }
                 }
-                WallpaperBrowser {
+                Loader {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: implicitHeight
-                    visible: root.browsing
-                    startPath: root.draftWallpaper
-                    onVisibleChanged: if (visible) open()
-                    onPicked: path => { root.draftWallpaper = path; root.browsing = false; }
-                    onCancelled: root.browsing = false
+                    Layout.preferredHeight: item?.implicitHeight ?? 0
+                    active: root.browsing
+                    visible: active
+                    sourceComponent: Component {
+                        WallpaperBrowser {
+                            startPath: root.draftWallpaper
+                            onPicked: path => { root.draftWallpaper = path; root.browsing = false; }
+                            onCancelled: root.browsing = false
+                        }
+                    }
                 }
                 Image {
                     id: thumbnail
+                    sourceSize: Qt.size(320, 240)
+                    cache: false
                     Layout.fillWidth: true
                     Layout.preferredHeight: 120
                     source: root.imageUrl(root.draftWallpaper)

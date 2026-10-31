@@ -12,3 +12,4 @@
 - [0010: Carpeta generada en Hyprland](0010-carpeta-generada-en-hyprland.md)
 - [0011: Secretos fuera de la configuración](0011-secretos-fuera-de-la-configuracion.md)
 - [012: Consulta del inicio del usuario mediante REPL](adr-012-consulta-del-inicio-mediante-repl.md)
+- [013: Ciclo de vida lazy de las interfaces](adr-013-lazy-interface-lifecycle.md)

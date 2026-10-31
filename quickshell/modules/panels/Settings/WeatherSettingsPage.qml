@@ -8,6 +8,7 @@ import qs.services
 // Weather settings: the location used by "EL TIEMPO", chosen by searching.
 Flickable {
     id: root
+    readonly property bool retainWhenHidden: searchField.text !== ""
 
     contentHeight: column.implicitHeight
     clip: true

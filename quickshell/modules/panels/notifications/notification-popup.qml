@@ -10,77 +10,86 @@ import qs.services
 Variants {
     id: popupLayers
 
-    model: Quickshell.screens
+    model: Notifications.activePopups.count > 0 ? Quickshell.screens : []
 
     delegate: PanelWindow {
-    id: root
+        id: root
 
-    required property var modelData
-    screen: modelData
+        required property var modelData
+        screen: modelData
 
-    WlrLayershell.namespace: "Senda:NotificationPopup:" + modelData.name
-    anchors {
-        top: true
-        right: true
-    }
-    margins.top: 55
-    margins.right: 0
-    exclusionMode: ExclusionMode.Ignore
-    aboveWindows: true
-    focusable: false
-    color: "transparent"
-    implicitWidth: 430
-    implicitHeight: Math.max(120, screen.height - margins.top - 16)
-    visible: Notifications.activePopups.count > 0
+        WlrLayershell.namespace: "Senda:NotificationPopup:" + modelData.name
+        anchors {
+            top: true
+            right: true
+        }
+        margins.top: 55
+        margins.right: 0
+        exclusionMode: ExclusionMode.Ignore
+        aboveWindows: true
+        focusable: false
+        color: "transparent"
+        implicitWidth: 430
+        implicitHeight: Math.max(120, screen.height - margins.top - 16)
+        visible: Notifications.activePopups.count > 0
     mask: Region { item: popupList }
 
-    ListView {
-        id: popupList
-        anchors {
-            top: parent.top
-            right: parent.right
-            rightMargin: 20
-        }
-        width: 390
-        height: Math.min(contentHeight, root.implicitHeight)
-        spacing: 0
-        clip: false
-        model: Notifications.activePopups
-
-        add: Transition {
-            NumberAnimation {
-                property: "x"
-                from: root.width - popupList.x
-                to: 0
-                duration: 220
-                easing.type: Easing.OutCubic
+        ListView {
+            id: popupList
+            anchors {
+                top: parent.top
+                right: parent.right
+                rightMargin: 20
             }
-        }
+            width: 390
+            height: Math.min(contentHeight, root.implicitHeight)
+            spacing: 0
+            clip: false
+            model: Notifications.activePopups
 
-        displaced: Transition {
-            NumberAnimation {
-                properties: "y"
-                duration: 220
-                easing.type: Easing.OutCubic
+            populate: Transition {
+                NumberAnimation {
+                    property: "x"
+                    from: root.width - popupList.x
+                    to: 0
+                    duration: 220
+                    easing.type: Easing.OutCubic
+                }
             }
-        }
+            add: Transition {
+                NumberAnimation {
+                    property: "x"
+                    from: root.width - popupList.x
+                    to: 0
+                    duration: 220
+                    easing.type: Easing.OutCubic
+                }
+            }
 
-        delegate: Item {
-            id: popupEntry
+            displaced: Transition {
+                NumberAnimation {
+                    properties: "y"
+                    duration: 220
+                    easing.type: Easing.OutCubic
+                }
+            }
 
-            property bool belongsToScreen: String(model.screenName) === String(root.screen.name)
+            delegate: Item {
+                id: popupEntry
 
-            width: popupList.width
-            height: belongsToScreen ? notificationCard.implicitHeight + 10 : 0
+                property bool belongsToScreen: String(model.screenName) === String(root.screen.name)
 
-            NotificationPopupCard {
-                id: notificationCard
-                visible: popupEntry.belongsToScreen
-                notificationId: model.notificationId
-                expiresAt: model.expiresAt
-                expiring: model.isFading
                 width: popupList.width
-                onDismissRequested: id => Notifications.dismiss(id)
+                height: belongsToScreen ? notificationCard.implicitHeight + 10 : 0
+
+                NotificationPopupCard {
+                    id: notificationCard
+                    visible: popupEntry.belongsToScreen
+                    notificationId: model.notificationId
+                    expiresAt: model.expiresAt
+                    expiring: model.isFading
+                    width: popupList.width
+                    onDismissRequested: id => Notifications.dismiss(id)
             }
         }
     }
@@ -346,5 +355,5 @@ Variants {
             return isNaN(date.getTime()) ? "" : Theme.locale.toString(date, "HH:mm");
         }
     }
-    }
+}
 }

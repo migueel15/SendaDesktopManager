@@ -5,6 +5,7 @@ import QtQuick.Layouts
 
 import qs.common
 import qs.services
+import "../../../common/components/lazy/lifetime.js" as Lifetime
 
 // Settings content with a sidebar of sections. Configuration goes through the
 // senda CLI; tray pins use TrayPins. SettingsWindow hosts it; it opens with
@@ -15,20 +16,37 @@ Item {
     // Sidebar entries, shared with the launcher. Each one needs a page in the
     // StackLayout below, in the same position.
     readonly property var sections: SendaSettings.sections
-    property int currentSection: 0
+    property int currentSection: SendaSettings.currentSection
+    onCurrentSectionChanged: SendaSettings.currentSection = currentSection
+    readonly property var pageLoaders: [page0, page1, page2, page3, page4, page5, page6, page7, page8, page9, page10, page11]
+    readonly property bool retainWhenHidden: pageLoaders.some(loader => loader.retained)
 
-    // The panel lives in SettingsWindow, so its own visible flag never changes:
-    // reload the CLI state each time the window opens.
+    component SettingsPageLoader: Loader {
+        required property int sectionIndex
+        readonly property bool retained: Lifetime.hasDraft(item)
+        active: (SendaSettings.windowOpen && (root.searching || root.currentSection === sectionIndex)) || retained
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        onLoaded: root.refreshSection(sectionIndex)
+    }
+
+    Connections {
+        target: page5.item
+        function onOpenSystemRequested() { root.currentSection = root.sections.findIndex(section => section.label === "Sistema"); }
+    }
+
+    function refreshSection(index) {
+        if (index === 5) SendaSttSettings.refresh();
+        if (index === 5 || index === 9 || index === 10) SendaHyprlandSettings.refresh();
+        if (index === 6) SendaDisplaySettings.refresh();
+        if (index === 7) SendaInputSettings.refresh();
+        if (index === 8) SendaStartupSettings.refresh();
+    }
+
     Connections {
         target: SendaSettings
         function onWindowOpenChanged() {
-            if (!SendaSettings.windowOpen) return;
-            SendaSettings.refresh();
-            SendaSttSettings.refresh();
-            SendaHyprlandSettings.refresh();
-            SendaDisplaySettings.refresh();
-            SendaInputSettings.refresh();
-            SendaStartupSettings.refresh();
+            if (SendaSettings.windowOpen) root.refreshSection(root.currentSection);
         }
     }
 
@@ -113,7 +131,7 @@ Item {
         root.sections.forEach((section, index) => {
             if (root.normalized(section.label).includes(words))
                 found.push({ title: section.label, section: section.label, index: index, row: null });
-            const page = pages.children[index];
+            const page = root.pageLoaders[index]?.item;
             if (!page) return;
             const seen = new Set();
             for (const row of root.collectRows(page, [])) {
@@ -130,8 +148,10 @@ Item {
         if (!result) return;
         root.currentSection = result.index;
         searchField.text = "";
-        if (result.row) Qt.callLater(result.row.reveal);
+        if (result.row) Qt.callLater(root.revealResult, result.row);
     }
+
+    function revealResult(row) { if (row) row.reveal(); }
 
     RowLayout {
         anchors.fill: parent
@@ -315,65 +335,76 @@ Item {
                     Layout.fillHeight: true
                     currentIndex: root.currentSection
 
-                    AppearanceSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page0
+                        sectionIndex: 0
+                        source: Qt.resolvedUrl("AppearanceSettingsPage.qml")
                     }
 
-                    BarSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page1
+                        sectionIndex: 1
+                        source: Qt.resolvedUrl("BarSettingsPage.qml")
                     }
 
-                    WidgetsSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page2
+                        sectionIndex: 2
+                        source: Qt.resolvedUrl("widgets-settings-page.qml")
                     }
 
-                    CalendarSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page3
+                        sectionIndex: 3
+                        source: Qt.resolvedUrl("CalendarSettingsPage.qml")
                     }
 
-                    WeatherSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page4
+                        sectionIndex: 4
+                        source: Qt.resolvedUrl("WeatherSettingsPage.qml")
                     }
 
-                    SttSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        onOpenSystemRequested: root.currentSection = root.sections.findIndex(section => section.label === "Sistema")
+                    SettingsPageLoader {
+                        id: page5
+                        sectionIndex: 5
+                        source: Qt.resolvedUrl("SttSettingsPage.qml")
                     }
 
-                    DisplaySettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page6
+                        sectionIndex: 6
+                        source: Qt.resolvedUrl("display-settings-page.qml")
                     }
 
-                    InputSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page7
+                        sectionIndex: 7
+                        source: Qt.resolvedUrl("input-settings-page.qml")
                     }
 
-                    StartupSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page8
+                        sectionIndex: 8
+                        source: Qt.resolvedUrl("startup-settings-page.qml")
                     }
 
-                    PowerSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page9
+                        sectionIndex: 9
+                        source: Qt.resolvedUrl("power-settings-page.qml")
                     }
 
-                    SystemSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page10
+                        sectionIndex: 10
+                        source: Qt.resolvedUrl("system-settings-page.qml")
                     }
 
-                    UpdateSettingsPage {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    SettingsPageLoader {
+                        id: page11
+                        sectionIndex: 11
+                        source: Qt.resolvedUrl("UpdateSettingsPage.qml")
                     }
                 }
                 SettingsStatus {

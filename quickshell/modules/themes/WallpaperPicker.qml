@@ -13,6 +13,7 @@ import qs.common.components.barextension as BarComponents
 
 PanelWindow {
     id: root
+    property bool viewReady: false
 
     required property var modelData
     readonly property bool onPickerScreen: WallpaperService.pickerScreen === modelData.name
@@ -21,6 +22,7 @@ PanelWindow {
     readonly property bool builtinTheme: SendaTheme.active?.builtin !== false
     readonly property string selectedPath: list.currentItem?.filePath ?? ""
     readonly property real panelHeight: Math.min(Theme.scaled(340), height - extension.shadowSpace)
+    readonly property bool retainWhenHidden: naming || importProcess.running || pendingCopy !== ""
     property bool browsing: false
     property bool naming: false
     property string message: ""
@@ -69,14 +71,21 @@ PanelWindow {
     visible: open || extension.height > 0.01
     mask: Region { item: root.open ? backdrop : panel }
 
-    onOpenChanged: {
+    function prepareOpen() {
+        if (!root.viewReady) return;
         if (!open)
             return;
-        browsing = naming = false;
+        browsing = false;
         message = "";
         folderProcess.running = true;
         SendaTheme.refresh();
         Qt.callLater(() => content.forceActiveFocus());
+    }
+
+    onOpenChanged: prepareOpen()
+    Component.onCompleted: {
+        root.viewReady = true;
+        prepareOpen();
     }
 
     // The folder must exist before the model can watch it.
@@ -186,16 +195,21 @@ PanelWindow {
                 anchors.fill: parent
                 spacing: Theme.spacing.sm
 
-                WallpaperBrowser {
+                Loader {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    visible: root.browsing
-                    onCancelled: root.browsing = false
-                    onPicked: path => {
-                        root.browsing = false;
-                        root.message = "";
-                        importProcess.command = [SendaManager.binaryPath, "wallpaper", "import", path];
-                        importProcess.running = true;
+                    active: root.browsing
+                    visible: active
+                    sourceComponent: Component {
+                        WallpaperBrowser {
+                            onCancelled: root.browsing = false
+                            onPicked: path => {
+                                root.browsing = false;
+                                root.message = "";
+                                importProcess.command = [SendaManager.binaryPath, "wallpaper", "import", path];
+                                importProcess.running = true;
+                            }
+                        }
                     }
                 }
 
@@ -233,6 +247,7 @@ PanelWindow {
                             anchors.fill: parent
                             anchors.margins: 3
                             source: card.fileUrl
+                            cache: false
                             asynchronous: true
                             fillMode: Image.PreserveAspectCrop
                             sourceSize.width: Theme.scaled(600)

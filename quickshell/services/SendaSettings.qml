@@ -20,6 +20,7 @@ Singleton {
     property bool configLoaded: false
     // Whether the standalone settings window is shown.
     property bool windowOpen: false
+    property int currentSection: 0
     // Monitor focused when the window last opened. Hyprland places the window
     // there, and the window takes its size from it.
     property var windowScreen: null

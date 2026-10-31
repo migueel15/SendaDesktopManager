@@ -52,8 +52,8 @@ PopupWindow {
     }
 
     color: "transparent"
-    implicitWidth: Math.max(200, column.implicitWidth + 12)
-    implicitHeight: column.implicitHeight + 12
+    implicitWidth: Math.max(200, menuContent.item?.implicitWidth ?? 0)
+    implicitHeight: menuContent.item?.implicitHeight ?? 1
     visible: false
 
     // The grab only takes once the surface is mapped, so it is activated a
@@ -77,112 +77,121 @@ PopupWindow {
 
     QsMenuOpener {
         id: opener
-        menu: root.currentMenu
+        menu: root.visible ? root.currentMenu : null
     }
 
-    Rectangle {
-        id: menuBackground
+    Loader {
+        id: menuContent
         anchors.fill: parent
-        focus: true
-        Keys.onEscapePressed: {
-            if (root.menuStack.length > 0)
-                root.menuStack = root.menuStack.slice(0, -1);
-            else
-                root.close();
-        }
-        radius: Theme.rounding.normal
-        color: Theme.colors.background
-        border.width: 1
-        border.color: Theme.colors.border
+        active: root.visible
+        sourceComponent: Component {
+            Rectangle {
+                id: menuBackground
+                implicitWidth: column.implicitWidth + 12
+                implicitHeight: column.implicitHeight + 12
+                anchors.fill: parent
+                focus: true
+                Keys.onEscapePressed: {
+                    if (root.menuStack.length > 0)
+                        root.menuStack = root.menuStack.slice(0, -1);
+                    else
+                        root.close();
+                }
+                radius: Theme.rounding.normal
+                color: Theme.colors.background
+                border.width: 1
+                border.color: Theme.colors.border
 
-        ColumnLayout {
-            id: column
-            anchors.fill: parent
-            anchors.margins: 6
-            spacing: 2
+                ColumnLayout {
+                    id: column
+                    anchors.fill: parent
+                    anchors.margins: 6
+                    spacing: 2
 
-            // Back to the parent menu.
-            MenuRow {
-                visible: root.menuStack.length > 0
-                label: "Atrás"
-                leadingIcon: "󰁍"
-                onActivated: root.menuStack = root.menuStack.slice(0, -1)
-            }
-
-            Repeater {
-                id: appEntries
-                model: opener.children
-
-                delegate: Loader {
-                    id: entryLoader
-                    required property var modelData
-                    Layout.fillWidth: true
-                    sourceComponent: modelData.isSeparator ? separator : row
-
-                    Component {
-                        id: separator
-                        Rectangle {
-                            implicitHeight: 9
-                            color: "transparent"
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: parent.width - 8
-                                height: 1
-                                color: Theme.colors.border
-                            }
-                        }
+                    // Back to the parent menu.
+                    MenuRow {
+                        visible: root.menuStack.length > 0
+                        label: "Atrás"
+                        leadingIcon: "󰁍"
+                        onActivated: root.menuStack = root.menuStack.slice(0, -1)
                     }
 
-                    Component {
-                        id: row
-                        MenuRow {
-                            entry: entryLoader.modelData
-                            label: entryLoader.modelData.text
-                            onActivated: {
-                                const entry = entryLoader.modelData;
-                                if (entry.hasChildren) {
-                                    root.menuStack = root.menuStack.concat([entry]);
-                                } else {
-                                    entry.triggered();
-                                    root.close();
+                    Repeater {
+                        id: appEntries
+                        model: opener.children
+
+                        delegate: Loader {
+                            id: entryLoader
+                            required property var modelData
+                            Layout.fillWidth: true
+                            sourceComponent: modelData.isSeparator ? separator : row
+
+                            Component {
+                                id: separator
+                                Rectangle {
+                                    implicitHeight: 9
+                                    color: "transparent"
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        width: parent.width - 8
+                                        height: 1
+                                        color: Theme.colors.border
+                                    }
+                                }
+                            }
+
+                            Component {
+                                id: row
+                                MenuRow {
+                                    entry: entryLoader.modelData
+                                    label: entryLoader.modelData.text
+                                    onActivated: {
+                                        const entry = entryLoader.modelData;
+                                        if (entry.hasChildren) {
+                                            root.menuStack = root.menuStack.concat([entry]);
+                                        } else {
+                                            entry.triggered();
+                                            root.close();
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }
 
-            Rectangle {
-                visible: (root.showUnpin || root.showPin) && root.menuStack.length === 0 && appEntries.count > 0
-                Layout.fillWidth: true
-                implicitHeight: 9
-                color: "transparent"
+                    Rectangle {
+                        visible: (root.showUnpin || root.showPin) && root.menuStack.length === 0 && appEntries.count > 0
+                        Layout.fillWidth: true
+                        implicitHeight: 9
+                        color: "transparent"
 
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: parent.width - 8
-                    height: 1
-                    color: menuBackground.border.color
-                }
-            }
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width - 8
+                            height: 1
+                            color: menuBackground.border.color
+                        }
+                    }
 
-            MenuRow {
-                visible: root.showPin && root.menuStack.length === 0
-                label: "Anclar a la barra"
-                leadingIcon: "󰐃"
-                onActivated: {
-                    root.close();
-                    root.pinRequested();
-                }
-            }
+                    MenuRow {
+                        visible: root.showPin && root.menuStack.length === 0
+                        label: "Anclar a la barra"
+                        leadingIcon: "󰐃"
+                        onActivated: {
+                            root.close();
+                            root.pinRequested();
+                        }
+                    }
 
-            MenuRow {
-                visible: root.showUnpin && root.menuStack.length === 0
-                label: "Desanclar de la barra"
-                leadingIcon: "󰐃"
-                onActivated: {
-                    root.close();
-                    root.unpinRequested();
+                    MenuRow {
+                        visible: root.showUnpin && root.menuStack.length === 0
+                        label: "Desanclar de la barra"
+                        leadingIcon: "󰐃"
+                        onActivated: {
+                            root.close();
+                            root.unpinRequested();
+                        }
+                    }
                 }
             }
         }

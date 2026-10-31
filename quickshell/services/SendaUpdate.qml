@@ -37,7 +37,7 @@ Singleton {
 
     function openSettings() {
         root.openRequested();
-        SendaSettings.openWindow();
+        SendaSettings.openSection("Actualización");
     }
 
     function dismiss() {

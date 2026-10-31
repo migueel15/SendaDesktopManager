@@ -24,6 +24,8 @@ import qs.common
 ShellRoot {
 	id: root
 
+	// IPC endpoints must exist even before their first view is constructed.
+	readonly property var launcherService: LauncherService
 	Component.onCompleted: SendaTheme.start()
 
 	Material.theme: Material.Dark
@@ -50,7 +52,10 @@ ShellRoot {
 	LockScreen {}
 	ScreenshotLayer {}
 	DisplayConfirmDialog {}
-	BluetoothPairDialog {}
+	LazyLoader {
+		active: Bluetooth.pairingPrompt !== null
+		BluetoothPairDialog {}
+	}
 	SettingsWindow {}
 
 	Variants {
@@ -65,7 +70,15 @@ ShellRoot {
 	Variants {
 		model: Quickshell.screens
 
-		WallpaperPicker {}
+		LazyLoader {
+			id: wallpaperPickerLoader
+			required property var modelData
+			active: ((WallpaperService.pickerScreen === modelData.name
+				|| (WallpaperService.pickerScreen === "" && modelData === Quickshell.screens[0]))
+				&& WallpaperService.pickerOpen) || (item?.visible ?? false)
+				|| (item?.retainWhenHidden ?? false)
+			WallpaperPicker { modelData: wallpaperPickerLoader.modelData }
+		}
 	}
 
 	Loader {
@@ -80,4 +93,4 @@ ShellRoot {
 	}
 
 	LazyLoader { active: Debug.enabled; DebugLayer {} }
-}
+	}

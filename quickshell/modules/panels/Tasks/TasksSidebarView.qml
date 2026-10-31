@@ -9,6 +9,7 @@ Item {
 
     property string searchText: ""
     property bool showSearch: false
+    readonly property bool retainWhenHidden: showCreateTeamForm || activeCreateTaskTeamId !== -1
     property bool showCreateTeamForm: false
     property bool showHiddenTeams: false
     property int activeCreateTaskTeamId: -1

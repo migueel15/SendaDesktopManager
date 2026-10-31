@@ -20,6 +20,7 @@ SendaPanel {
     // Each opening starts at the newest notification; while open, the
     // position is kept.
     onOpenChanged: if (open) notificationList.positionViewAtBeginning()
+    Component.onCompleted: if (open) notificationList.positionViewAtBeginning()
 
     ColumnLayout {
         anchors.fill: parent

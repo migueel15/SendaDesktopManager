@@ -7,6 +7,7 @@ import qs.services
 
 Flickable {
     id: root
+    readonly property bool retainWhenHidden: clientIdField.text !== "" || clientSecretField.text !== ""
     // Selection follows confirmed configuration, including after a failed save.
     readonly property var selectedCalendars: {
         const configured = (SendaSettings.values.SENDA_GOOGLE_CALENDARS ?? "")

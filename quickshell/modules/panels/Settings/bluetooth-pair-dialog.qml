@@ -9,6 +9,7 @@ import qs.services
 
 PanelWindow {
     id: dialog
+    property bool viewReady: false
     readonly property var request: Bluetooth.pairingPrompt
     readonly property string kind: dialog.request?.kind ?? ""
     readonly property bool needsInput: kind === "pin" || kind === "passkey"
@@ -22,9 +23,16 @@ PanelWindow {
     color: "transparent"
     anchors { top: true; bottom: true; left: true; right: true }
 
-    onRequestChanged: {
+    function prepareRequest() {
+        if (!dialog.viewReady) return;
         codeInput.text = "";
         if (dialog.needsInput) Qt.callLater(() => codeInput.focusInput());
+    }
+
+    onRequestChanged: prepareRequest()
+    Component.onCompleted: {
+        dialog.viewReady = true;
+        prepareRequest();
     }
 
     Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.65) }
