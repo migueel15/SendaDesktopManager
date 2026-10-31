@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 
 Singleton {
     id: root
@@ -10,7 +11,23 @@ Singleton {
     readonly property string stateDirectory: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/senda"
     readonly property string filePath: stateDirectory + "/wallpapers.json"
 
+    readonly property string wallpapersDirectory: (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/senda/wallpapers"
+    property bool pickerOpen: false
+    property string pickerScreen: ""
+
     signal changed(string screenName)
+
+    function openPicker(screenName) {
+        pickerScreen = screenName || "";
+        pickerOpen = true;
+    }
+
+    function closePicker() { pickerOpen = false; }
+
+    // Until the theme is reloaded; the manual selection stays across restarts.
+    function setForSession(path) {
+        return set({path: path, monitor: "", resize: "crop", transition: transition("fade", 800)});
+    }
 
     QtObject {
         id: state
@@ -213,6 +230,9 @@ Singleton {
 
     IpcHandler {
         target: "wallpaper"
+
+        // Opens on the focused monitor, where the user is looking.
+        function openPicker(): void { root.openPicker(Hyprland.focusedMonitor?.name ?? ""); }
 
         function set(request: string): string {
             try {

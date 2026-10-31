@@ -16,6 +16,8 @@ Singleton {
             screenName => SendaTheme.openPicker(screenName)),
         root.action("Duplicar tema activo", "Crear una copia editable del tema actual", "󰆏", "theme tema copia copiar duplicar duplicate",
             screenName => SendaTheme.openDuplicate(screenName)),
+        root.action("Selector de fondos", "Cambiar el fondo de pantalla", "󰸉", "wallpaper fondo imagen picker",
+            screenName => WallpaperService.openPicker(screenName)),
         Object.assign(root.action("Emojis", "Buscar y copiar un emoji", "󰞅", "emoji emoticono :", null), { query: ":" }),
         root.action("Captura de pantalla", "Seleccionar una zona y capturarla", "󰹑", "screenshot captura",
             () => captureTimer.start()),

@@ -118,6 +118,7 @@ Además de aplicaciones, el lanzador sirve para tareas rápidas:
 - **Acciones de Senda.** Al escribir aparecen, mezcladas con las aplicaciones por
   coincidencia, «Ajustes» y sus secciones («Ajustes: Apariencia», «Ajustes:
   Tiempo»…), que abren la ventana de ajustes en esa sección; «Selector de temas»;
+  «Selector de fondos»;
   «Emojis»; «Captura de pantalla» y «Bloquear pantalla». Todas se declaran en un
   único registro, `quickshell/services/LauncherActions.qml`, y las secciones de
   ajustes salen de la lista de `SendaSettings`, de modo que cada sección nueva

@@ -126,3 +126,49 @@ func TestWallpaperSetReportsShellUnavailable(t *testing.T) {
 		t.Fatalf("shell error: %v", err)
 	}
 }
+
+func TestImportWallpaperKeepsAnIndependentCopy(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "wallpapers")
+	writePNG := func(path string, width int) {
+		t.Helper()
+		var data bytes.Buffer
+		if err := png.Encode(&data, image.NewRGBA(image.Rect(0, 0, width, 1))); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, data.Bytes(), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	source := filepath.Join(root, "foto.dat")
+	writePNG(source, 1)
+	first, err := importWallpaper(source, dir)
+	if err != nil || first != filepath.Join(dir, "foto.png") {
+		t.Fatalf("first = %q, %v", first, err)
+	}
+	if again, err := importWallpaper(source, dir); err != nil || again != first {
+		t.Fatalf("again = %q, %v", again, err)
+	}
+	writePNG(source, 2)
+	second, err := importWallpaper(source, dir)
+	if err != nil || second != filepath.Join(dir, "foto-2.png") {
+		t.Fatalf("second = %q, %v", second, err)
+	}
+	if err := os.Remove(source); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(first); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) != 2 {
+		t.Fatalf("entries = %v, %v", entries, err)
+	}
+	invalid := filepath.Join(root, "nota.txt")
+	if err := os.WriteFile(invalid, []byte("texto"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := importWallpaper(invalid, dir); err == nil {
+		t.Fatal("accepted a file that is not an image")
+	}
+}

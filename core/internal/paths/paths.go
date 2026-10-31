@@ -58,6 +58,12 @@ func ConfigFile() string {
 	return filepath.Join(ConfigDir(), "config")
 }
 
+// WallpapersDir holds the wallpapers offered by the picker. It lives in the
+// config directory so copying that directory keeps them.
+func WallpapersDir() string {
+	return filepath.Join(ConfigDir(), "wallpapers")
+}
+
 // Setting returns the value of name. An environment variable takes precedence
 // over the config file, and both are empty when the setting is not defined.
 func Setting(name string) string {

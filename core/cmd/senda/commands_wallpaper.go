@@ -1,13 +1,18 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"image"
 	"math"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
 	"github.com/migueel15/SendaDesktopManager/core/internal/theme"
 	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper"
 	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper/adapter/quickshell"
@@ -16,7 +21,7 @@ import (
 
 func NewWallpaperCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "wallpaper"}
-	cmd.AddCommand(newWallpaperSetCmd())
+	cmd.AddCommand(newWallpaperSetCmd(), newWallpaperImportCmd(), newWallpaperPickCmd())
 	return cmd
 }
 
@@ -74,6 +79,85 @@ func newWallpaperSetCmd() *cobra.Command {
 	cmd.Flags().StringVar(&monitor, "monitor", "", "Set target monitor (empty: all screens)")
 	cmd.Flags().StringVar(&resize, "resize", "crop", "Set resize mode: crop|fit|stretch|none")
 	return cmd
+}
+
+func newWallpaperPickCmd() *cobra.Command {
+	return &cobra.Command{
+		Use: "pick", Short: "Open the wallpaper picker", Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			_, err := callShellIPC(cmd, "wallpaper", "openPicker")
+			return err
+		},
+	}
+}
+
+func newWallpaperImportCmd() *cobra.Command {
+	return &cobra.Command{
+		Use: "import <path>", Short: "Copy an image to the wallpapers folder and print the copy", Args: cobra.ExactArgs(1), SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path, err := importWallpaper(args[0], paths.WallpapersDir())
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), path)
+			return err
+		},
+	}
+}
+
+// importWallpaper copies source into dir, so nothing depends on the original.
+// Importing the same content again returns the existing copy.
+func importWallpaper(source, dir string) (string, error) {
+	if err := theme.CheckImage(source); err != nil {
+		return "", fmt.Errorf("invalid wallpaper: %w", err)
+	}
+	data, err := os.ReadFile(source)
+	if err != nil {
+		return "", err
+	}
+	_, format, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return "", fmt.Errorf("invalid wallpaper: %w", err)
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	// The extension follows the content, because the picker filters by extension.
+	extension := "." + strings.Replace(format, "jpeg", "jpg", 1)
+	stem := strings.TrimSuffix(filepath.Base(source), filepath.Ext(source))
+	if strings.HasPrefix(stem, ".") || stem == "" {
+		stem = "wallpaper" + stem
+	}
+	target := ""
+	for i := 1; ; i++ {
+		target = filepath.Join(dir, stem+extension)
+		if i > 1 {
+			target = filepath.Join(dir, fmt.Sprintf("%s-%d%s", stem, i, extension))
+		}
+		existing, err := os.ReadFile(target)
+		if os.IsNotExist(err) {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+		if bytes.Equal(existing, data) {
+			return target, nil
+		}
+	}
+	temp, err := os.CreateTemp(dir, ".import-*")
+	if err != nil {
+		return "", err
+	}
+	defer os.Remove(temp.Name())
+	_, writeErr := temp.Write(data)
+	if err := errors.Join(writeErr, temp.Chmod(0o644), temp.Close()); err != nil {
+		return "", err
+	}
+	if err := os.Rename(temp.Name(), target); err != nil {
+		return "", err
+	}
+	return target, nil
 }
 
 func parsePosition(value string) (wallpaper.Position, error) {

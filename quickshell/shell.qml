@@ -13,6 +13,7 @@ import qs.modules.panels.Settings
 
 import Quickshell.Wayland
 
+import qs.modules.themes
 import qs.modules.wallpaper
 import qs.services
 import qs.modules.stt
@@ -60,6 +61,12 @@ ShellRoot {
 	}
 
 	WallpaperLayer {}
+
+	Variants {
+		model: Quickshell.screens
+
+		WallpaperPicker {}
+	}
 
 	Loader {
 		active: true
