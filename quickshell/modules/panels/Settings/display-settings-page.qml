@@ -243,6 +243,7 @@ Item {
             Repeater {
                 model: root.displays.filter(d => d.managedBy === "user")
                 delegate: SettingsRow {
+                    searchable: false
                     required property var modelData
                     label: modelData.name
                     description: modelData.source

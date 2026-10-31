@@ -107,6 +107,7 @@ Flickable {
             Repeater {
                 model: SendaSettings.connected ? SendaSettings.calendars : []
                 delegate: SettingsRow {
+                    searchable: false
                     id: calendarRow
                     required property var modelData
                     label: modelData.summary || modelData.id

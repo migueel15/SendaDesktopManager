@@ -41,6 +41,7 @@ Flickable {
             Repeater {
                 model: SendaSettings.places
                 delegate: SettingsRow {
+                    searchable: false
                     id: placeRow
                     required property var modelData
                     label: modelData.name

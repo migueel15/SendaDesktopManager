@@ -34,6 +34,7 @@ Flickable {
                 id: presentItems
                 model: SystemTray.items
                 delegate: SettingsRow {
+                    searchable: false
                     id: presentRow
                     required property SystemTrayItem modelData
                     // Removed tray items clear modelData before their delegate is destroyed.
@@ -57,6 +58,7 @@ Flickable {
             Repeater {
                 model: root.absentPinnedIds
                 delegate: SettingsRow {
+                    searchable: false
                     id: absentRow
                     required property string modelData
                     label: modelData

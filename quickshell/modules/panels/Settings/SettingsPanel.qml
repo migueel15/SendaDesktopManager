@@ -91,6 +91,102 @@ Item {
         border.color: Theme.colors.border
     }
 
+    // Search works on the rows the pages really have, so no list needs upkeep.
+    property string query: ""
+    function normalized(text) {
+        return String(text).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+    function collectRows(item, found) {
+        for (const child of Array.from(item.children ?? []).concat(Array.from(item.contentItem?.children ?? []))) {
+            if (child.searchable === true && child.label) found.push(child);
+            root.collectRows(child, found);
+        }
+        return found;
+    }
+    readonly property var results: {
+        const words = root.normalized(root.query).trim();
+        if (!words) return [];
+        const found = [];
+        root.sections.forEach((section, index) => {
+            if (root.normalized(section.label).includes(words))
+                found.push({ title: section.label, section: section.label, index: index, row: null });
+            const page = pages.children[index];
+            if (!page) return;
+            const seen = new Set();
+            for (const row of root.collectRows(page, [])) {
+                if (seen.has(row.label)) continue;
+                if (root.normalized(row.label + " " + row.description).includes(words)) {
+                    seen.add(row.label);
+                    found.push({ title: row.label, section: section.label, index: index, row: row });
+                }
+            }
+        });
+        return found;
+    }
+    function openResult(result) {
+        if (!result) return;
+        root.currentSection = result.index;
+        searchField.text = "";
+        if (result.row) Qt.callLater(result.row.reveal);
+    }
+
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: Theme.spacing.md
+
+        SettingsField {
+            id: searchField
+            Layout.fillWidth: true
+            placeholder: "Buscar ajustes"
+            onTextChanged: root.query = text
+            onAccepted: root.openResult(root.results[0])
+        }
+
+    Item {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
+    SettingsCard {
+        anchors.fill: parent
+        z: 1
+        visible: root.query.trim() !== ""
+        Text {
+            anchors.centerIn: parent
+            visible: root.results.length === 0
+            text: "Sin resultados"
+            color: Theme.colors.overlay
+            font: Theme.font.body
+        }
+        ListView {
+            anchors { fill: parent; margins: Theme.spacing.md }
+            clip: true
+            spacing: Theme.spacing.xs
+            model: root.results
+            delegate: Rectangle {
+                id: resultEntry
+                required property var modelData
+                width: ListView.view.width
+                height: resultColumn.implicitHeight + 2 * Theme.spacing.sm
+                radius: Theme.rounding.small
+                color: resultArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+                ColumnLayout {
+                    id: resultColumn
+                    anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }
+                    spacing: Theme.spacing.xxs
+                    Text { text: resultEntry.modelData.title; color: Theme.colors.text; font: Theme.font.body }
+                    Text { text: resultEntry.modelData.section; color: Theme.colors.overlay; font: Theme.font.caption }
+                }
+                MouseArea {
+                    id: resultArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.openResult(resultEntry.modelData)
+                }
+            }
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: Theme.spacing.md
@@ -195,6 +291,7 @@ Item {
                 }
 
                 StackLayout {
+                    id: pages
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     currentIndex: root.currentSection
@@ -257,5 +354,7 @@ Item {
                 }
             }
         }
+    }
+    }
     }
 }

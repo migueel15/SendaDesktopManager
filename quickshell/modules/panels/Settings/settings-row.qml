@@ -10,10 +10,35 @@ Item {
     property bool separator: true
     // The value differs from its default: shows the reset icon.
     property bool modified: false
+    // Found by the settings search. Rows generated from data set it to false.
+    property bool searchable: true
+    // Scrolls the row into view inside its page and highlights it.
+    function reveal() {
+        let page = root.parent;
+        while (page && page.contentY === undefined) page = page.parent;
+        if (page) {
+            const y = root.mapToItem(page.contentItem, 0, 0).y;
+            page.contentY = Math.max(0, Math.min(y - Theme.spacing.md, page.contentHeight - page.height));
+        }
+        flash.restart();
+    }
     signal resetRequested()
     default property alias controls: controlLayout.data
     Layout.fillWidth: true
     implicitHeight: content.implicitHeight + (separator ? Theme.spacing.md + 1 : 0)
+    Rectangle {
+        id: highlight
+        anchors { fill: parent; margins: -Theme.spacing.xs }
+        radius: Theme.rounding.small
+        color: Theme.colors.selection
+        opacity: 0
+        SequentialAnimation {
+            id: flash
+            NumberAnimation { target: highlight; property: "opacity"; to: 1; duration: 150 }
+            PauseAnimation { duration: 900 }
+            NumberAnimation { target: highlight; property: "opacity"; to: 0; duration: 500 }
+        }
+    }
     Rectangle {
         width: parent.width
         height: 1
