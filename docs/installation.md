@@ -40,6 +40,7 @@ Según `core/internal/setup/setup.go`, `senda setup`:
    | Uso | Paquetes |
    |---|---|
    | Shell y compositor | `quickshell`, `hyprland`, `hypridle` |
+   | Autenticación de administrador | `polkit`; ver [polkit](polkit.md) |
    | Capturas de pantalla | `grim`, `wl-clipboard` |
    | Fondo de pantalla | Integrado en Quickshell; no requiere otro paquete. |
    | Red, audio y batería | `networkmanager`, `wireplumber`, `upower` |

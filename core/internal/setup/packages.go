@@ -13,6 +13,7 @@ var Requirements = []Requirement{
 	{Command: "qs", Package: "quickshell"},
 	{Command: "hyprctl", Package: "hyprland"},
 	{Command: "hypridle", Package: "hypridle"},
+	{Command: "pkexec", Package: "polkit"},
 	{Command: "jq", Package: "jq"},
 	{Command: "nmcli", Package: "networkmanager"},
 	{Command: "wpctl", Package: "wireplumber"},

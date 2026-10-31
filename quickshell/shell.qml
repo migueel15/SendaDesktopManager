@@ -62,5 +62,11 @@ ShellRoot {
 		source: Qt.resolvedUrl("modules/panels/notifications/notification-popup.qml")
 	}
 
+	// Loaded by path so a Quickshell without polkit support only loses this dialog.
+	Loader {
+		active: true
+		source: Qt.resolvedUrl("modules/polkit/polkit-dialog.qml")
+	}
+
 	LazyLoader { active: Debug.enabled; DebugLayer {} }
 }
