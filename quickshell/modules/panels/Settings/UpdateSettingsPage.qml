@@ -28,13 +28,14 @@ Flickable {
                 description: SendaUpdate.message
                 SettingsButton {
                     label: "Comprobar"
-                    enabled: !SendaUpdate.busy
+                    enabled: !SendaUpdate.busy && !SendaUpdate.installing
                     onClicked: SendaUpdate.check()
                 }
                 SettingsButton {
-                    label: "Actualizar"
+                    label: SendaUpdate.installing ? "Actualizando y reiniciando…" : "Actualizar"
                     primary: true
-                    enabled: SendaUpdate.available
+                    busy: SendaUpdate.installing
+                    enabled: SendaUpdate.available && !SendaUpdate.installing
                     onClicked: SendaUpdate.install()
                 }
             }

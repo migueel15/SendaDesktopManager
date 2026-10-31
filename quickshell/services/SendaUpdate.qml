@@ -20,6 +20,9 @@ Singleton {
     // Release whose notice the user closed. A new release shows the notice again.
     property string dismissedTag: ""
 
+    // True from the moment the update starts until the new shell replaces this one.
+    property bool installing: false
+
     readonly property bool busy: checkProcess.running
     readonly property bool noticeVisible: root.available && root.latest !== "" && root.latest !== root.dismissedTag
 
@@ -44,7 +47,25 @@ Singleton {
     // The update stops the shell that started it, so it runs detached to finish
     // and start the new shell.
     function install() {
+        if (root.installing) {
+            return;
+        }
+        root.installing = true;
+        root.message = "";
         Quickshell.execDetached([root.binaryPath, "update"]);
+        installTimeout.restart();
+    }
+
+    // The new shell normally replaces this one well before this fires; if it
+    // does not, the update failed and the button becomes usable again.
+    Timer {
+        id: installTimeout
+        interval: 5 * 60 * 1000
+        onTriggered: {
+            root.installing = false;
+            root.message = "La actualización no terminó; vuelve a intentarlo";
+            root.check();
+        }
     }
 
     Process {
