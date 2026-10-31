@@ -16,6 +16,7 @@ Singleton {
     property string lastError: ""
     property bool pickerOpen: false
     property string pickerScreen: ""
+    property bool duplicatePending: false
     signal saved(var info)
     signal saveFailed(string error)
 
@@ -87,7 +88,15 @@ Singleton {
         refresh();
     }
 
-    function closePicker() { pickerOpen = false; }
+    function openDuplicate(screenName) {
+        duplicatePending = true;
+        openPicker(screenName);
+    }
+
+    function closePicker() {
+        duplicatePending = false;
+        pickerOpen = false;
+    }
 
     function accept(info, clearManual) {
         if (!info || info.valid !== true || typeof info.name !== "string"

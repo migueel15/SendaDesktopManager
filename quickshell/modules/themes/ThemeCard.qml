@@ -10,6 +10,7 @@ Rectangle {
     readonly property bool valid: themeInfo.valid === true
     readonly property bool selected: SendaTheme.active?.name === themeInfo.name
     signal editRequested(var info)
+    signal duplicateRequested(var info)
     signal deleteRequested(var info)
 
     implicitHeight: Theme.scaled(220)
@@ -82,8 +83,15 @@ Rectangle {
             CardButton {
                 text: "Editar"
                 font: Theme.font.caption
+                visible: root.themeInfo.builtin === false
                 enabled: !SendaTheme.busy
                 onClicked: root.editRequested(root.themeInfo)
+            }
+            CardButton {
+                text: "Duplicar"
+                font: Theme.font.caption
+                enabled: root.valid && !SendaTheme.busy
+                onClicked: root.duplicateRequested(root.themeInfo)
             }
             CardButton {
                 text: "Borrar"

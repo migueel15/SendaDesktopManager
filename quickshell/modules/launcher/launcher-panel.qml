@@ -36,6 +36,8 @@ SendaPanel {
                 () => root.closeThen(() => SendaSettings.openSection(""))),
             root.action("Selector de temas", "Cambiar el tema de Senda", "󰏘", "theme tema colores picker",
                 () => root.closeThen(() => SendaTheme.openPicker(root.screenName))),
+            root.action("Duplicar tema activo", "Crear una copia editable del tema actual", "󰆏", "theme tema copia copiar duplicar duplicate",
+                () => root.closeThen(() => SendaTheme.openDuplicate(root.screenName))),
             root.action("Emojis", "Buscar y copiar un emoji", "󰞅", "emoji emoticono :", () => { search.text = ":"; }),
             root.action("Captura de pantalla", "Seleccionar una zona y capturarla", "󰹑", "screenshot captura",
                 () => root.closeThen(() => captureTimer.start())),

@@ -9,6 +9,7 @@ Item {
 
     property var baseTheme: null
     property bool editing: false
+    property bool duplicating: false
     signal closed()
     signal saved(var info)
 
@@ -121,7 +122,8 @@ Item {
         anchors.fill: parent
         spacing: Theme.spacing.md
         Text {
-            text: root.editing ? "Editar tema" : "Crear tema"
+            text: root.editing ? "Editar tema"
+                : root.duplicating ? `Duplicar «${root.baseTheme?.name ?? ""}»` : "Crear tema"
             font: Theme.font.title
             color: Theme.colors.text
         }
@@ -137,14 +139,14 @@ Item {
                 spacing: Theme.spacing.sm
                 enabled: !root.pendingSave
                 Text {
-                    visible: !root.editing
+                    visible: !root.editing && !root.duplicating
                     text: "Tema base"
                     font: Theme.font.heading
                     color: Theme.colors.text
                 }
                 ComboBox {
                     id: baseSelector
-                    visible: !root.editing
+                    visible: !root.editing && !root.duplicating
                     Layout.fillWidth: true
                     model: root.validThemes
                     textRole: "name"
