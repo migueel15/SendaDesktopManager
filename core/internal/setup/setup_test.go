@@ -183,8 +183,8 @@ func TestEnsureConfigCreatesTemplateWithOwnerMode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(data), "\nDORLAB_API_KEY=\n") {
-		t.Errorf("template lacks an empty DORLAB_API_KEY line:\n%s", data)
+	if strings.Contains(string(data), "DORLAB_API_KEY=") {
+		t.Errorf("template has a secret key:\n%s", data)
 	}
 }
 

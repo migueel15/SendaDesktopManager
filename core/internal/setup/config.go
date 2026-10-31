@@ -8,12 +8,10 @@ import (
 	"path/filepath"
 )
 
-// configTemplate is written to a new config file. It holds no secret values;
-// the user fills in DORLAB_API_KEY.
+// configTemplate is written to a new config file. Secrets never go here.
 const configTemplate = `# Configuración de Senda.
-# Este archivo guarda valores privados, como claves de API.
-# No lo compartas ni lo subas a ningún repositorio.
-DORLAB_API_KEY=
+# Solo guarda preferencias: se puede compartir entre equipos.
+# Las claves se guardan con "senda config secret", nunca aquí.
 `
 
 // ensureConfig creates configDir with mode 0700 when missing, and creates

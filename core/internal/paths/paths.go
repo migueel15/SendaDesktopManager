@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
+	"github.com/migueel15/SendaDesktopManager/core/internal/secrets"
 )
 
 const appName = "senda"
@@ -15,7 +16,7 @@ const appName = "senda"
 // because Setting is called from several places.
 var configErrorOnce sync.Once
 
-// ConfigDir holds the user's settings file and its secrets.
+// ConfigDir holds the user's portable settings. It never holds secrets.
 func ConfigDir() string {
 	return filepath.Join(xdgDir("XDG_CONFIG_HOME", ".config"), appName)
 }
@@ -52,8 +53,7 @@ func DiscordBridgeScript() string {
 	return filepath.Join(DataDir(), "scripts", "discord-bridge.py")
 }
 
-// ConfigFile holds KEY=VALUE settings, including private values such as
-// DORLAB_API_KEY, so it is created with owner-only permissions.
+// ConfigFile holds KEY=VALUE preferences. It can be shared between computers.
 func ConfigFile() string {
 	return filepath.Join(ConfigDir(), "config")
 }
@@ -73,6 +73,35 @@ func Setting(name string) string {
 		return ""
 	}
 	return values[name]
+}
+
+// SecretsFile holds the secrets that the keyring could not keep. It lives in
+// StateDir so that sharing the config folder never includes it.
+func SecretsFile() string {
+	return filepath.Join(StateDir(), "secrets")
+}
+
+// Secrets returns the store of sensitive settings.
+func Secrets() secrets.Store {
+	return secrets.Store{FallbackFile: SecretsFile()}
+}
+
+// Secret returns a sensitive setting. An environment variable takes
+// precedence. Values still in the config file are moved out first. Failures
+// are logged without the value and the secret reads as empty.
+func Secret(name string) string {
+	if value := os.Getenv(name); value != "" {
+		return value
+	}
+	store := Secrets()
+	if err := store.Migrate(ConfigFile()); err != nil {
+		log.Println("error moving secrets out of the config file:", err)
+	}
+	value, err := store.Get(name)
+	if err != nil {
+		log.Println("error reading", name+":", err)
+	}
+	return value
 }
 
 // VersionFile records the release whose files are installed in DataDir.

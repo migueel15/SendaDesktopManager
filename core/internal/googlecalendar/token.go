@@ -3,8 +3,6 @@
 package googlecalendar
 
 import (
-	"bytes"
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -12,10 +10,9 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
-	"time"
+
+	"github.com/migueel15/SendaDesktopManager/core/internal/secrets"
 )
 
 var ErrNotConnected = errors.New("google calendar is not connected; run `senda calendar login`")
@@ -114,49 +111,26 @@ func (s TokenStore) Delete() error {
 
 type secretService struct{ account string }
 
-// Secrets are sent through stdin, never command arguments or error messages.
-func (s secretService) run(action, token string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
-	defer cancel()
-	args := []string{action}
-	if action == "store" {
-		args = append(args, "--label=Senda Google Calendar")
+func (s secretService) entry() secrets.Keyring {
+	return secrets.Keyring{
+		Label:      "Senda Google Calendar",
+		Attributes: []string{"application", "senda", "account", s.account, "type", "google-calendar-refresh-token"},
 	}
-	args = append(args, "application", "senda", "account", s.account, "type", "google-calendar-refresh-token")
-	cmd := exec.CommandContext(ctx, "secret-tool", args...)
-	if action == "store" {
-		cmd.Stdin = strings.NewReader(token)
-	}
-	var output, diagnostic bytes.Buffer
-	cmd.Stdout = &output
-	cmd.Stderr = &diagnostic
-	err := cmd.Run()
-	if err != nil {
-		// libsecret reports a missing match with exit 1 and no diagnostic.
-		var exit *exec.ExitError
-		if ctx.Err() == nil && errors.As(err, &exit) && exit.ExitCode() == 1 && diagnostic.Len() == 0 && action != "store" {
-			return "", ErrNotConnected
-		}
-		return "", errors.New("Google Calendar keyring unavailable: install libsecret (secret-tool) and unlock a password-protected Secret Service keyring, such as GNOME Keyring or compatible KWallet")
-	}
-	return output.String(), nil
 }
 
-func (s secretService) Save(token string) error { _, err := s.run("store", token); return err }
-func (s secretService) Load() (string, error) {
-	token, err := s.run("lookup", "")
+func keyringError(err error) error {
+	if errors.Is(err, secrets.ErrNotFound) {
+		return ErrNotConnected
+	}
 	if err != nil {
-		return "", err
+		return errors.New("Google Calendar keyring unavailable: install libsecret (secret-tool) and unlock a password-protected Secret Service keyring, such as GNOME Keyring or compatible KWallet")
 	}
-	if token == "" {
-		return "", ErrNotConnected
-	}
-	return token, nil
+	return nil
 }
-func (s secretService) Delete() error {
-	_, err := s.run("clear", "")
-	if errors.Is(err, ErrNotConnected) {
-		return nil
-	}
-	return err
+
+func (s secretService) Save(token string) error { return keyringError(s.entry().Save(token)) }
+func (s secretService) Load() (string, error) {
+	token, err := s.entry().Load()
+	return token, keyringError(err)
 }
+func (s secretService) Delete() error { return keyringError(s.entry().Delete()) }
