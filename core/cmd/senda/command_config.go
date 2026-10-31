@@ -12,13 +12,14 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/googlecalendar"
 	"github.com/migueel15/SendaDesktopManager/core/internal/location"
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/SendaDesktopManager/core/internal/secrets"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
 	"github.com/spf13/cobra"
 )
 
 const (
 	keyGoogleClientID     = "SENDA_GOOGLE_CLIENT_ID"
-	keyGoogleClientSecret = "SENDA_GOOGLE_CLIENT_SECRET"
+	keyGoogleClientSecret = secrets.GoogleClientSecret
 	keyGoogleCalendars    = "SENDA_GOOGLE_CALENDARS"
 	keyWeatherLocation    = "SENDA_WEATHER_LOCATION"
 	keyWeatherLat         = "SENDA_WEATHER_LAT"
@@ -62,7 +63,7 @@ func configCmd() *cobra.Command {
 		Use:   "config",
 		Short: "Read and write the Senda settings used by the settings panel",
 	}
-	cmd.AddCommand(configGetCmd(), configSetCmd())
+	cmd.AddCommand(configGetCmd(), configSetCmd(), configSecretCmd())
 	return cmd
 }
 
@@ -74,6 +75,8 @@ func configGetCmd() *cobra.Command {
 		Short: "Print the editable settings as JSON",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Secret moves any legacy value out before the file is read.
+			secretConfigured := paths.Secret(keyGoogleClientSecret) != ""
 			values, err := config.Load(paths.ConfigFile())
 			if err != nil {
 				return err
@@ -99,7 +102,7 @@ func configGetCmd() *cobra.Command {
 					stt.KeyShortcut:     sttSettings.Shortcut,
 					stt.KeyTerminals:    strings.Join(sttSettings.Terminals, ","),
 				},
-				"googleClientSecretConfigured": values[keyGoogleClientSecret] != "",
+				"googleClientSecretConfigured": secretConfigured,
 				"embeddedGoogleClient":         googlecalendar.HasEmbeddedCredentials(),
 				"defaultWeatherLocation":       defaultLocationName(),
 			}
@@ -121,10 +124,50 @@ func configSetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if err := config.Set(paths.ConfigFile(), changes); err != nil {
+			if err := saveChanges(changes); err != nil {
 				return err
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), "settings saved")
+			return nil
+		},
+	}
+}
+
+// saveChanges stores secrets first, then writes the config file, where the
+// same keys are removed so that an old value can never stay behind.
+func saveChanges(changes map[string]string) error {
+	store := paths.Secrets()
+	for key, value := range changes {
+		if secrets.IsSecret(key) {
+			if err := store.Set(key, value); err != nil {
+				return err
+			}
+			changes[key] = ""
+		}
+	}
+	return config.Set(paths.ConfigFile(), changes)
+}
+
+// configSecretCmd stores one secret read from stdin, so that it never appears
+// in the process list or the shell history. Empty input removes it.
+func configSecretCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:       "secret NAME",
+		Short:     "Store a secret from stdin in the keyring",
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: secrets.Names,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if !secrets.IsSecret(args[0]) {
+				return fmt.Errorf("%s is not a secret; expected one of %s", args[0], strings.Join(secrets.Names, ", "))
+			}
+			data, err := io.ReadAll(io.LimitReader(cmd.InOrStdin(), 1<<16))
+			if err != nil {
+				return err
+			}
+			if err := saveChanges(map[string]string{args[0]: strings.TrimSpace(string(data))}); err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), "secret saved")
 			return nil
 		},
 	}

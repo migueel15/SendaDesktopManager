@@ -14,11 +14,12 @@ import (
 	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/SendaDesktopManager/core/internal/secrets"
 	"github.com/migueel15/SendaDesktopManager/core/internal/service"
 	"github.com/spf13/cobra"
 )
 
-const dorlabAPIKeyEnv = "DORLAB_API_KEY"
+const dorlabAPIKeyEnv = secrets.DorlabAPIKey
 
 var shellCmd = &cobra.Command{
 	Use:   "shell",
@@ -241,18 +242,18 @@ func removePidFile() {
 }
 
 // quickshellEnv exposes the running senda binary to QML and passes the
-// private DORLAB_API_KEY from the environment or the config file.
+// private DORLAB_API_KEY from the environment or the secret store.
 func quickshellEnv() []string {
 	var env []string
 	if executable, err := os.Executable(); err == nil {
 		env = append(env, "SENDA_BIN="+executable)
 	}
 
-	if key := paths.Setting(dorlabAPIKeyEnv); key != "" {
+	if key := paths.Secret(dorlabAPIKeyEnv); key != "" {
 		log.Println("loaded", dorlabAPIKeyEnv)
 		env = append(env, dorlabAPIKeyEnv+"="+key)
 	} else {
-		log.Println(dorlabAPIKeyEnv, "not set in the environment or", paths.ConfigFile())
+		log.Println(dorlabAPIKeyEnv, "not set in the environment or the secret store")
 	}
 	return env
 }

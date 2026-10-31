@@ -8,8 +8,8 @@ var (
 	embeddedClientSecret string
 )
 
-// ResolveCredentials picks the OAuth client. A client ID in the settings file
-// means the user brings their own client, so both values come from the file.
+// ResolveCredentials picks the OAuth client. A configured client ID
+// means the user brings their own client, so both values are the user's.
 // Otherwise the client embedded at build time is used. The two values are
 // never mixed, because a secret only works with the client it was issued for.
 func ResolveCredentials(configuredID, configuredSecret string) Credentials {

@@ -1,12 +1,12 @@
 # Configuración
 
-Senda guarda los valores del usuario en un único archivo `KEY=VALUE`.
+Senda guarda las preferencias del usuario en un único archivo `KEY=VALUE`. El archivo no contiene secretos y se puede compartir entre equipos ([ADR 0010](adr/0010-secretos-fuera-de-la-configuracion.md)).
 
 ## Ubicación
 
 El archivo es `$XDG_CONFIG_HOME/senda/config`. Si `XDG_CONFIG_HOME` no está definido o no es una ruta absoluta, se usa `~/.config/senda/config`.
 
-Senda lo lee si existe; si no existe, usa valores vacíos. `senda config set` lo crea con permisos `0600`, porque puede contener secretos como `DORLAB_API_KEY`.
+Senda lo lee si existe; si no existe, usa valores vacíos. `senda config set` lo crea con permisos `0600`.
 
 ## Formato
 
@@ -20,8 +20,7 @@ Senda lo lee si existe; si no existe, usa valores vacíos. `senda config set` lo
 Ejemplo:
 
 ```sh
-# Clave de la API de Dorlab (placeholder)
-DORLAB_API_KEY=changeme
+SENDA_THEME=zenda-ice
 SENDA_DISCORD_BRIDGE='/ruta/absoluta/a/discord-bridge.py'
 ```
 
@@ -33,10 +32,8 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 
 | Clave | Uso |
 |---|---|
-| `DORLAB_API_KEY` | Se pasa a Quickshell como variable de entorno al ejecutar `senda shell run`. |
 | `SENDA_DISCORD_BRIDGE` | Ruta absoluta a `discord-bridge.py`. Tiene prioridad sobre la ubicación automática del script (ver [discord-bridge.md](discord-bridge.md)). |
 | `SENDA_GOOGLE_CLIENT_ID` | ID de tu propio cliente OAuth de escritorio. Si está vacío, se usa el cliente incluido en la release. Ver [google-calendar.md](google-calendar.md). |
-| `SENDA_GOOGLE_CLIENT_SECRET` | Secreto de ese cliente. Nunca se imprime; `senda config get` solo indica si está definido. |
 | `SENDA_GOOGLE_CALENDARS` | IDs de calendarios separados por comas. Vacío significa los calendarios que Google marca como visibles. |
 | `SENDA_WEATHER_LOCATION` | Nombre de la localidad elegida, solo para mostrarlo. |
 | `SENDA_WEATHER_LAT` y `SENDA_WEATHER_LON` | Coordenadas de la localidad, entre -90 y 90 y entre -180 y 180. |
@@ -62,7 +59,25 @@ Estas claves las escribe la ventana de ajustes con `senda config set`. La ventan
 
 En Ajustes → Widgets se pueden habilitar o deshabilitar los controles de Spotify y Discord de la barra. Ambos están habilitados por defecto. Sus preferencias se guardan como `SENDA_WIDGET_SPOTIFY` y `SENDA_WIDGET_DISCORD`, con valores `true` o `false`; un valor vacío restaura el comportamiento predeterminado. Al deshabilitar Discord se detiene su puente; si hay un dictado en curso, se espera a que termine para permitir la restauración del micrófono. Sin el puente, el dictado no silencia Discord automáticamente. El widget de Spotify utiliza MPRIS y no inicia un proceso propio.
 
-El refresh token de Google no está en este archivo. Se guarda en `$XDG_STATE_HOME/senda/google-calendar.json` (por defecto `~/.local/state/senda/google-calendar.json`), también con permisos `0600`. Se borra con `senda calendar logout`.
+## Secretos
+
+Estos valores no están en el archivo de configuración. Una variable de entorno con el mismo nombre sigue teniendo prioridad.
+
+| Secreto | Uso | Dónde |
+|---|---|---|
+| `DORLAB_API_KEY` | Se pasa a Quickshell como variable de entorno al ejecutar `senda shell run`. | Keyring; sin keyring, archivo de respaldo |
+| `SENDA_GOOGLE_CLIENT_SECRET` | Secreto de tu cliente OAuth. Nunca se imprime; `senda config get` solo indica si está definido. | Keyring; sin keyring, archivo de respaldo |
+| Refresh token de Google | Conexión con Calendar. Se borra con `senda calendar logout`. | Solo keyring ([ADR 0005](adr/0005-tokens-en-secret-service.md)) |
+
+El keyring es Secret Service, mediante `secret-tool`. El archivo de respaldo, sin cifrar y con permisos `0600`, es `$XDG_STATE_HOME/senda/secrets` (por defecto `~/.local/state/senda/secrets`); queda fuera de la carpeta de configuración, así que no se comparte con ella. Si el keyring vuelve a estar disponible, los valores pasan a él y salen del archivo.
+
+Para guardar un secreto, envíalo por la entrada estándar. Una entrada vacía lo elimina:
+
+```sh
+read -rs key; printf %s "$key" | senda config secret DORLAB_API_KEY
+```
+
+Los secretos que queden en el archivo de configuración se mueven al leerlos: se eliminan de él solo después de confirmar el guardado. En un equipo nuevo no hay secretos: Calendar pide reconectar y, con un cliente OAuth propio, pide de nuevo su secreto en Ajustes.
 
 El archivo `.env` ya no se lee.
 
