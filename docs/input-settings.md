@@ -20,10 +20,10 @@ Lo que nadie haya elegido ni definido usa: la distribución del sistema (`00-key
 
 ## Convivencia con tu configuración
 
-Senda solo escribe en `~/.config/senda/config` y en su módulo generado `modules/senda.lua`. Sigue los `require` y `source` desde `hyprland.lua` o `hyprland.conf`, sin contar comentarios, archivos no cargados ni bloques de dispositivo, y busca:
+Senda solo escribe en `~/.config/senda/config` y en su módulo generado `modules/senda.lua`; fuera de archivos, solo cambia el cursor GTK con `gsettings`. Sigue los `require` y `source` desde `hyprland.lua` o `hyprland.conf`, sin contar comentarios, archivos no cargados ni bloques de dispositivo, y busca:
 
 - `kb_layout`, `sensitivity`, `accel_profile`, `follow_mouse`, `tap_to_click`, `natural_scroll`, `disable_while_typing` y `scroll_factor` en `input`.
-- `XCURSOR_THEME` o `HYPRCURSOR_THEME` con `hl.env` o `env =`, `hyprctl setcursor`, y esas variables en `uwsm/env*` y `environment.d`.
+- `XCURSOR_THEME` o `HYPRCURSOR_THEME` con `hl.env` o `env =`, `hyprctl setcursor`, `gsettings set org.gnome.desktop.interface cursor…`, y esas variables en `uwsm/env*` y `environment.d`.
 
 Lo que definas tú gana: Senda no lo genera, aunque tenga un valor guardado, y lo muestra como gestionado por el usuario, con el control desactivado. `senda input set` rechaza esos campos. Los campos que nadie define no muestran ninguna indicación y usan los valores por defecto. Si quitas tu definición, vuelve a aplicarse el valor guardado en Senda.
 
@@ -33,4 +33,4 @@ Lo que definas tú gana: Senda no lo genera, aunque tenga un valor guardado, y l
 
 - Los `hl.device` y `tablet` no se controlan desde Ajustes. Un `hl.device` con `sensitivity` o `accel_profile` manda sobre el ajuste global para ese ratón.
 - Los `require` construidos en tiempo de ejecución no se siguen.
-- El tema se aplica con `hyprctl setcursor` y a las aplicaciones nuevas por entorno. Senda no toca `gsettings`, así que algunas aplicaciones GTK pueden mantener el suyo.
+- El tema se aplica con `hyprctl setcursor`, por entorno a las aplicaciones nuevas y con `gsettings` a las GTK. El cambio en `gsettings` se queda aunque quites el tema de Senda.

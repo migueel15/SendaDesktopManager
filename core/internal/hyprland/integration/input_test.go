@@ -73,7 +73,7 @@ func TestRenderOmitsUnsetAndUserFields(t *testing.T) {
 	}
 	s := InputSettings{Layout: "es", CursorTheme: "Bibata", NaturalScroll: "true"}.withoutUser(map[string]UserSetting{FieldLayout: {Value: "us"}})
 	out := renderInput(s, 24)
-	if strings.Contains(out, "kb_layout") || !strings.Contains(out, "natural_scroll = true") || !strings.Contains(out, "hyprctl setcursor 'Bibata' 24") {
+	if strings.Contains(out, "kb_layout") || !strings.Contains(out, "natural_scroll = true") || !strings.Contains(out, "hyprctl setcursor 'Bibata' 24") || !strings.Contains(out, "cursor-theme 'Bibata'") {
 		t.Fatalf("got %q", out)
 	}
 }
@@ -134,5 +134,12 @@ func TestDefaultsAndSystemLayout(t *testing.T) {
 	}
 	if got := d.withoutUser(map[string]UserSetting{FieldAccelProfile: {}}); got.AccelProfile != "" {
 		t.Fatal("a default must not override the user")
+	}
+}
+
+func TestDetectGsettingsCursor(t *testing.T) {
+	got := detected(t, map[string]string{"hyprland.lua": "hl.exec_cmd(\"gsettings set org.gnome.desktop.interface cursor_theme\" .. \" \" .. x)\n"})
+	if _, ok := got[FieldCursorTheme]; !ok {
+		t.Fatal("gsettings not detected")
 	}
 }

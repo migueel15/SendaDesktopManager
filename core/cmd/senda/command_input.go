@@ -81,6 +81,8 @@ func applyInput(ctx context.Context, s integration.Settings, cursorChanged bool)
 	}
 	user := integration.DetectInput(integration.LoadUserConfig(), integration.SessionEnvFiles())
 	if _, managed := user[integration.FieldCursorTheme]; cursorChanged && !managed && s.Input.CursorTheme != "" && integration.InSession() {
+		// GTK is best effort: gsettings may not be installed.
+		_, _ = shortcutRunner(ctx, nil, "gsettings", "set", integration.GTKCursorSchema, integration.GTKCursorKey, s.Input.CursorTheme)
 		return hyprctl.New(shortcutRunner).SetCursor(ctx, s.Input.CursorTheme, integration.CursorSize())
 	}
 	return nil

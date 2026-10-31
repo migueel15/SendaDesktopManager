@@ -140,6 +140,8 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 	}
 	s, ok = c.Contains(regexp.MustCompile(`hyprctl\s+setcursor`))
 	add(FieldCursorTheme, s, ok)
+	s, ok = c.Contains(regexp.MustCompile(`gsettings\s+set\s+org\.gnome\.desktop\.interface\s+cursor`))
+	add(FieldCursorTheme, s, ok)
 	sessionVar := regexp.MustCompile(`(?m)^\s*(?:export\s+)?(?:XCURSOR_THEME|HYPRCURSOR_THEME)=["']?([^"'\s]*)`)
 	for file, text := range sessionEnv {
 		if m := sessionVar.FindStringSubmatch(text); m != nil {
@@ -197,9 +199,16 @@ func renderInput(s InputSettings, size int) string {
 	if s.CursorTheme != "" {
 		out.WriteString(hyprctl.EnvLua("XCURSOR_THEME", s.CursorTheme) + "\n" + hyprctl.EnvLua("HYPRCURSOR_THEME", s.CursorTheme) + "\n")
 		out.WriteString(hyprctl.OnStart(hyprctl.SetCursorCommand(s.CursorTheme, size)) + "\n")
+		out.WriteString(hyprctl.OnStart("gsettings set "+GTKCursorSchema+" "+GTKCursorKey+" '"+strings.ReplaceAll(s.CursorTheme, "'", "'\\''")+"'") + "\n")
 	}
 	return out.String()
 }
+
+// GTK applications read their cursor from these settings.
+const (
+	GTKCursorSchema = "org.gnome.desktop.interface"
+	GTKCursorKey    = "cursor-theme"
+)
 
 // CursorSize is the size of the session, or Hyprland's default.
 func CursorSize() int {
