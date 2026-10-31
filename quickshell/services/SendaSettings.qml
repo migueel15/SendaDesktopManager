@@ -23,6 +23,20 @@ Singleton {
     // Monitor focused when the window last opened. Hyprland places the window
     // there, and the window takes its size from it.
     property var windowScreen: null
+    // Settings sections, in sidebar order. Adding one here also adds it to the
+    // launcher; the settings panel needs its page in the same position.
+    readonly property var sections: [
+        { label: "Apariencia", icon: "󰏘", keywords: "tema escala fuente appearance" },
+        { label: "Barra", icon: "󰍜", keywords: "bar" },
+        { label: "Widgets", icon: "󰕮", keywords: "spotify discord" },
+        { label: "Calendario", icon: "󰃭", keywords: "google calendar agenda" },
+        { label: "Tiempo", icon: "󰖐", keywords: "weather clima ubicacion" },
+        { label: "Dictado", icon: "󰍬", keywords: "stt voz voice" },
+        { label: "Pantallas", icon: "󰍹", keywords: "displays monitores resolucion" },
+        { label: "Teclado y ratón", icon: "󰌌", keywords: "keyboard mouse raton input" },
+        { label: "Sistema", icon: "󰒓", keywords: "system atajos" },
+        { label: "Actualización", icon: "󰚰", keywords: "update actualizar" }
+    ]
     // Section label the settings panel shows next; it clears it once applied.
     property string requestedSection: ""
     readonly property bool discordWidgetEnabled: configLoaded && values.SENDA_WIDGET_DISCORD !== "false"

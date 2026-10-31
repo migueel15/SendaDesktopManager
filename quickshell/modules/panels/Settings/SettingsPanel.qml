@@ -12,20 +12,9 @@ import qs.services
 Item {
     id: root
 
-    // Sidebar entries. Each one needs a page in the StackLayout below, in the
-    // same position.
-    readonly property var sections: [
-        { label: "Apariencia", icon: "󰏘" },
-        { label: "Barra", icon: "󰍜" },
-        { label: "Widgets", icon: "󰕮" },
-        { label: "Calendario", icon: "󰃭" },
-        { label: "Tiempo", icon: "󰖐" },
-        { label: "Dictado", icon: "󰍬" },
-        { label: "Pantallas", icon: "󰍹" },
-        { label: "Teclado y ratón", icon: "󰌌" },
-        { label: "Sistema", icon: "󰒓" },
-        { label: "Actualización", icon: "󰚰" }
-    ]
+    // Sidebar entries, shared with the launcher. Each one needs a page in the
+    // StackLayout below, in the same position.
+    readonly property var sections: SendaSettings.sections
     property int currentSection: 0
 
     // The panel lives in SettingsWindow, so its own visible flag never changes:

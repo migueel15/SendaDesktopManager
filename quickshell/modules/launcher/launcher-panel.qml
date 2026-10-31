@@ -23,35 +23,17 @@ SendaPanel {
     // glyph, and run(), which performs it from the launcher.
     property var results: []
 
-    // Senda actions searched together with the applications.
-    readonly property var actions: {
-        const settings = [
-            ["Apariencia", "tema escala fuente appearance"], ["Barra", "bar"], ["Widgets", "spotify discord"],
-            ["Calendario", "google calendar agenda"], ["Tiempo", "weather clima ubicacion"],
-            ["Dictado", "stt voz voice"], ["Sistema", "system atajos"], ["Actualización", "update actualizar"]
-        ].map(([label, keywords]) => root.action("Ajustes: " + label, "Abrir esta sección de ajustes", "󰒓",
-            "settings ajustes configuracion " + keywords, () => root.closeThen(() => SendaSettings.openSection(label))));
-        return [
-            root.action("Ajustes", "Abrir los ajustes de Senda", "󰒓", "settings configuracion preferencias",
-                () => root.closeThen(() => SendaSettings.openSection(""))),
-            root.action("Selector de temas", "Cambiar el tema de Senda", "󰏘", "theme tema colores picker",
-                () => root.closeThen(() => SendaTheme.openPicker(root.screenName))),
-            root.action("Duplicar tema activo", "Crear una copia editable del tema actual", "󰆏", "theme tema copia copiar duplicar duplicate",
-                () => root.closeThen(() => SendaTheme.openDuplicate(root.screenName))),
-            root.action("Emojis", "Buscar y copiar un emoji", "󰞅", "emoji emoticono :", () => { search.text = ":"; }),
-            root.action("Captura de pantalla", "Seleccionar una zona y capturarla", "󰹑", "screenshot captura",
-                () => root.closeThen(() => captureTimer.start())),
-            root.action("Bloquear pantalla", "Bloquear la sesión", "󰌾", "lock bloquear",
-                () => root.closeThen(() => LockService.lock()))
-        ].concat(settings);
-    }
-
-    function action(name, detail, glyph, keywords, run) {
-        return { kind: "action", name: name, genericName: detail, detail: detail, glyph: glyph, keywords: keywords.split(" "), run: run };
-    }
-    function closeThen(callback) {
+    // An action fills the search box or closes the launcher and opens its interface.
+    function runAction(entry) {
+        if (entry.query) {
+            search.text = entry.query;
+            return;
+        }
         LauncherService.close();
-        callback();
+        entry.open(root.screenName);
+    }
+    function actionResult(entry) {
+        return { kind: "action", name: entry.name, detail: entry.detail, glyph: entry.glyph, run: () => root.runAction(entry) };
     }
     function copy(text) {
         LauncherService.close();
@@ -80,22 +62,15 @@ SendaPanel {
             const value = Search.calculate(text);
             results = value === null ? [] : [{ kind: "calc", name: value, detail: text.replace(/^=/, "") + " · Copiar resultado", glyph: "󰃬", run: () => root.copy(value) }];
             const apps = DesktopEntries.applications.values;
-            const entries = query ? Array.from(apps).concat(root.actions) : apps;
+            const entries = query ? Array.from(apps).concat(LauncherActions.entries) : apps;
             results = results.concat(Search.sortEntries(entries, query, LauncherService.recentIds)
-                .map(entry => entry.kind === "action" ? entry : root.appResult(entry)));
+                .map(entry => entry.kind === "action" ? root.actionResult(entry) : root.appResult(entry)));
         }
         root.results = results;
         list.currentIndex = results.length ? 0 : -1;
     }
     function launch(index) {
         if (index >= 0 && index < root.results.length) root.results[index].run();
-    }
-
-    Timer {
-        // Lets the launcher fold away before the screen is frozen.
-        id: captureTimer
-        interval: 250
-        onTriggered: ScreenshotService.capture()
     }
 
     // Each opening starts with an empty search and the keyboard in it.
