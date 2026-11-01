@@ -234,3 +234,39 @@ func TestPreparedBundleRealInference(t *testing.T) {
 	}
 	t.Logf("real inference: %q -> %q in %s", "hola como estas", got, time.Since(before))
 }
+
+// Opt-in coverage for roughly ninety seconds of continuous dictation. Report
+// fallback explicitly: preserving the original is safe, but is not a correction.
+func TestPreparedBundleLongDictation(t *testing.T) {
+	dir := os.Getenv("SENDA_TEST_POSTPROCESS_BUNDLE")
+	if dir == "" {
+		t.Skip("no temporary real bundle supplied")
+	}
+	s := NewStore(dir)
+	if !s.Status(context.Background()).Ready {
+		t.Fatal("real bundle not ready")
+	}
+	cases := []struct{ name, input string }{
+		{"planes", `hoy quiero organizar un poco lo que tengo pendiente porque esta semana he ido dejando varias cosas para despues y ahora me cuesta saber por donde empezar primero voy a revisar los mensajes que llegaron ayer y luego quiero preparar una lista con las tareas que de verdad necesitan una respuesta no quiero pasar toda la mañana contestando cosas pequeñas y acabar el dia con lo importante sin hacer tambien tengo que llamar para confirmar la visita de mañana aunque todavia no se si me viene mejor ir por la mañana o despues de comer si puedo terminar pronto me gustaria salir a dar un paseo y comprar algo para la cena pero antes necesito dejar la cocina recogida porque ayer sali con prisa y se quedo todo a medias por la tarde quiero dedicar un rato a leer y otro a preparar la ropa de la semana que viene parece una tonteria pero cuando lo dejo hecho estoy mucho mas tranquilo y no tengo que pensar en ello nada mas levantarme en fin la idea es hacerlo con calma sin intentar resolverlo todo de golpe y dejar un poco de tiempo libre por si aparece algun imprevisto`},
+		{"preguntas", `queria comentarte una cosa sobre la reunion de mañana porque no tengo claro como vamos a organizar la conversacion vamos a empezar repasando lo que hicimos la semana pasada o prefieres que vayamos directamente a lo que queda pendiente a mi me parece bien cualquiera de las opciones pero estaria bien decidirlo antes para que todo el mundo pueda preparar lo que necesita tambien queria saber quien va a tomar notas porque la ultima vez hablamos de muchas cosas y despues cada uno recordaba una version un poco distinta no hace falta escribir cada palabra pero si estaria bien dejar claras las decisiones y lo que tiene que hacer cada persona despues cuando terminemos podemos mandar un mensaje corto con lo que hemos acordado y asi evitamos volver a discutir lo mismo dentro de unos dias por cierto sabes si vamos a tener tiempo para las preguntas del final me gustaria preguntar como vamos a repartir el trabajo cuando alguien este de vacaciones porque ahora mismo hay varias tareas que dependen siempre de la misma persona y creo que nos vendria bien aprender a hacerlas entre todos dime que te parece y lo dejamos preparado esta tarde`},
+		{"coloquial", `pues mira yo creo que al final lo que nos pasa es que queremos hacer demasiadas cosas a la vez y claro luego nos agobiamos porque vemos que no llegamos a todo ayer por ejemplo sali de casa pensando que iba a hacer la compra recoger un paquete pasar por casa de mi hermano y volver con tiempo para cocinar pero entre una cosa y otra se me fue la mañana y cuando llegue ya no tenia ganas de hacer nada entonces entonces me sente un rato y dije bueno vamos a parar un momento porque asi no tiene mucho sentido tampoco pasa nada por dejar algo para mañana si no es urgente lo que quiero es encontrar una forma de organizarme que pueda mantener de verdad sin estar mirando el reloj todo el dia y sin sentir que voy siempre tarde tambien me gustaria descansar mejor porque cuando duermo poco cualquier cosa se me hace mucho mas pesada no se igual lo primero es acostarme antes y preparar por la noche lo que voy a necesitar al dia siguiente pero bueno voy a probar poco a poco y ya vere que cosas me funcionan y cuales tengo que cambiar`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var raw []byte
+			var runErr error
+			p := Processor{Model: s.ModelPath(), Run: func(ctx context.Context, in io.Reader, args ...string) ([]byte, error) {
+				raw, runErr = executeLocal(ctx, in, s.Binary(), args...)
+				return raw, runErr
+			}}
+			before := time.Now()
+			got, err := p.Process(context.Background(), tc.input)
+			t.Logf("words=%d bytes=%d elapsed=%s corrected=%v runtime=%v error=%v\nraw=%q\nresult=%q", len(strings.Fields(tc.input)), len(tc.input), time.Since(before), got != tc.input, runErr, err, raw, got)
+			if got == tc.input {
+				t.Error("original preserved; no correction delivered")
+			} else if !Accept(tc.input, got) {
+				t.Error("correction violated fidelity guard")
+			}
+		})
+	}
+}

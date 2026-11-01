@@ -64,12 +64,15 @@ func (p Processor) Process(ctx context.Context, original string) (string, error)
 		"<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
 	out, err := run(ctx, strings.NewReader(prompt),
 		"-m", p.Model, "-f", "/dev/stdin", "-no-cnv", "--no-display-prompt",
-		"--no-escape", "--log-disable", "--offline", "-ngl", "0", "-t", "4",
+		"--no-escape", "--log-verbosity", "0", "--offline", "-ngl", "0", "-t", "4",
 		"-c", "4096", "-n", strconv.Itoa(len(original)+128), "--temp", "0")
 	if err != nil || ctx.Err() != nil || len(out) > maxOutput {
 		return original, nil
 	}
 	candidate := strings.TrimSpace(string(out))
+	// llama-completion emits this terminal marker on end-of-generation. Its
+	// output logger also carries generated text, so --log-disable cannot be used.
+	candidate = strings.TrimSpace(strings.TrimSuffix(candidate, " [end of text]"))
 	if !Accept(original, candidate) {
 		return original, nil
 	}

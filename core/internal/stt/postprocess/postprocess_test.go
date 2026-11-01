@@ -66,6 +66,7 @@ func TestProcessFallbackAndLocalInvocation(t *testing.T) {
 		want         string
 	}{
 		{"corrected", "Hola, ¿cómo estás?", nil, "Hola, ¿cómo estás?"},
+		{"completion-marker", "Hola, ¿cómo estás? [end of text]\n\n", nil, "Hola, ¿cómo estás?"},
 		{"rewrite", "Saludos, ¿qué tal?", nil, "hola como estas"},
 		{"unavailable", "", errors.New("missing runtime"), "hola como estas"},
 		{"truncated", "Hola", nil, "hola como estas"},
