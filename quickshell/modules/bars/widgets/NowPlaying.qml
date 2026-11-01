@@ -31,7 +31,7 @@ Rectangle {
     }
 
     function openSpotifyUrl(url) {
-        if (url) Quickshell.execDetached(["spotify", `--uri=${url}`]);
+        if (url) AppRunner.run(["spotify", `--uri=${url}`]);
     }
 
     function openSpotifyArtist() {

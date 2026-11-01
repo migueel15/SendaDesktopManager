@@ -171,7 +171,7 @@ Singleton {
     function openEvent(event) {
         const link = event.link ?? "";
         if (root.trustedLinkPrefixes.some(prefix => link.startsWith(prefix))) {
-            Quickshell.execDetached(["xdg-open", link]);
+            AppRunner.open(link);
         }
     }
 

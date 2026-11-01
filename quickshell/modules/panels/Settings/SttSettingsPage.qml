@@ -67,7 +67,7 @@ Flickable {
                         color: Theme.colors.overlay
                         font.family: Theme.font.overlay.family
                         font.pixelSize: Theme.scaled(11)
-                        onLinkActivated: link => Qt.openUrlExternally(link)
+                        onLinkActivated: link => AppRunner.open(link)
                     }
                     Rectangle {
                         Layout.fillWidth: true

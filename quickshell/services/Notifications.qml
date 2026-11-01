@@ -377,8 +377,10 @@ Singleton {
 
     function openBodyLink(value) {
         const url = String(value ?? "").trim();
-        if (/^https?:\/\/[^\s<>"']+$/i.test(url) || /^mailto:[^\s<>"']+$/i.test(url))
-            return Qt.openUrlExternally(url);
+        if (/^https?:\/\/[^\s<>"']+$/i.test(url) || /^mailto:[^\s<>"']+$/i.test(url)) {
+            AppRunner.open(url);
+            return true;
+        }
         return false;
     }
 
