@@ -17,7 +17,6 @@ Singleton {
     property string phase: "idle"
     property string transcript: ""
     // Kept in memory until the next final event or shell shutdown.
-    property string originalTranscript: ""
     property bool audioActive: false
     onPhaseChanged: if (phase !== "listening") audioActive = false
     property string errorMessage: ""
@@ -40,8 +39,6 @@ Singleton {
     readonly property string preloadConfiguration: JSON.stringify([
         root.preloadEnabled, SendaSettings.values.SENDA_STT_MODEL || "",
         SendaSettings.values.SENDA_STT_LANGUAGE || "",
-		SendaSettings.values.SENDA_STT_POSTPROCESS || "false",
-		SendaSettings.values.SENDA_STT_POSTPROCESS_MODEL || "",
         SendaSettings.values.SENDA_STT_AUDIO_DUCKING || "true",
         SendaSettings.values.SENDA_STT_AUDIO_VOLUME || "10"
     ])
@@ -296,7 +293,6 @@ Singleton {
                         }
                         break;
                     case "final":
-                        root.originalTranscript = event.originalText || "";
                         root.transcript = event.text || root.transcript;
                         root.phase = "delivering";
                         break;

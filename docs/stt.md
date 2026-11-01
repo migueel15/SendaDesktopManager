@@ -8,11 +8,11 @@
 
 ```sh
 senda stt models list
-senda stt models install nemotron-3.5-streaming-0.6b-int8
+senda stt models install parakeet-tdt-0.6b-v3-int8
 senda stt runtime install
 ```
 
-También se pueden instalar el motor y los modelos desde Ajustes → Dictado. El modelo Nemotron predeterminado ocupa unos 475 MB. El catálogo muestra tamaño, idiomas, licencia y enlace a la licencia. Incluye Nemotron 3.5 Streaming 0.6B INT8 (español, OpenMDW 1.1), Nemotron Speech Streaming EN 0.6B INT8 (inglés, NVIDIA Open Model License), Streaming Zipformer EN 20M INT8 y Streaming Zipformer ZH/EN INT8 (Apache 2.0).
+También se pueden instalar el motor y los modelos desde Ajustes → Dictado; ningún modelo se instala por sí solo. El catálogo muestra tipo, tamaño, idiomas, licencia y enlace a la licencia. Los modelos con streaming escriben texto en vivo mientras hablas. Los modelos sin streaming guardan el audio en memoria y transcriben todo al terminar: el dock solo muestra las barras hasta entregar el texto, y la espera crece con la duración del dictado. Incluye Parakeet TDT 0.6B V3 INT8 (sin streaming; multilingüe, con español e inglés; CC-BY-4.0), Nemotron 3.5 Streaming 0.6B INT8 (español, OpenMDW 1.1), Nemotron Speech Streaming EN 0.6B INT8 (inglés, NVIDIA Open Model License), Streaming Zipformer EN 20M INT8 y Streaming Zipformer ZH/EN INT8 (Apache 2.0).
 
 El motor se instala en un entorno virtual Python bajo `$XDG_DATA_HOME/senda/stt/venv` (por defecto `~/.local/share/senda/stt/venv`). Usa sherpa-onnx. Si `nvidia-smi -L` detecta NVIDIA, intenta instalar el runtime CUDA; si no está disponible o falla, instala CPU. Comprueba el estado con `senda stt runtime status`.
 
@@ -37,20 +37,6 @@ Si pulsas el atajo mientras se carga el modelo, el dictado empieza al terminar l
 Con precarga, una pulsación mientras termina o entrega el dictado pide el siguiente; otra pulsación anula esa petición. Lo mismo ocurre mientras el motor vuelve a estar listo o se reinicia por un cambio de ajustes. Si el proceso cae con esa petición pendiente, la shell la conserva al reiniciarlo, con el mismo límite de tres fallos. Sin precarga, las pulsaciones durante el cierre final se ignoran. Ajustes muestra «Listo» mientras el modelo residente está cargado, también durante el dictado, pero deja de mostrarlo mientras se cierra el motor. El dock permanece visible desde la pulsación hasta su cierre normal.
 
 `senda stt cancel` durante un dictado descarta solo ese dictado y mantiene el modelo residente. En reposo, o durante la carga sin un dictado pendiente, cierra el motor y detiene la precarga automática hasta la siguiente pulsación del atajo; los cambios de ajustes tampoco reactivan la precarga durante esa pausa. La siguiente pulsación aplica los ajustes actuales, carga el modelo, empieza el dictado y vuelve a dejarlo residente al terminar si la precarga sigue activada.
-
-## Corrección local opcional
-
-En Ajustes → Dictado, activa «Corregir transcripción al terminar». La primera vez, Senda descarga y prepara automáticamente el motor y el modelo (aproximadamente 1,13 GB en total). Muestra la fase y el porcentaje, permite cancelar y solo activa la preferencia después de preparar ambos componentes. No necesitas terminal, rutas de archivos, permisos de administrador ni instalar paquetes. Si se cancela o falla, conserva el dictado sin corrección, muestra el motivo y permite volver a activar la opción para reintentar. El interruptor aparece activado únicamente cuando la preferencia está habilitada y los componentes están disponibles.
-
-La preparación automática está disponible para Linux x86-64. Usa [llama.cpp b11979 CPU](https://github.com/ggml-org/llama.cpp/releases/tag/b11979) y [Qwen3 1.7B Q4_K_M de Unsloth](https://huggingface.co/unsloth/Qwen3-1.7B-GGUF/tree/d7f544eead698dbd1f15126ef60b45a1e1933222), con revisiones, tamaños y SHA-256 fijados. El motor incluye sus bibliotecas y se comprueba que pueda ejecutarse antes de descargar el modelo. La interfaz muestra «Preparada» después de comprobar el manifiesto, el archivo GGUF y la ejecución del motor. Ese estado confirma disponibilidad, no que cada propuesta del modelo vaya a superar el filtro de fidelidad.
-
-Ambos componentes se guardan bajo `$XDG_DATA_HOME/senda/stt/postprocess` (o `$SENDA_HOME/stt/postprocess` en desarrollo). La instalación se prepara en un directorio temporal y se activa por renombrado, conservando la anterior ante errores. No depende de ejecutables en `PATH`. Desactivar la corrección conserva la descarga para la próxima activación. La desinstalación normal de Senda elimina estos datos con el resto de la aplicación. La CLI interna utilizada por Ajustes es `senda stt postprocess status --json` y `senda stt postprocess install`.
-
-El modelo se carga una vez al finalizar cada dictado y se libera al terminar la fase. Los parciales siguen usando únicamente sherpa-onnx. Se ejecuta en CPU, con cuatro hilos, contexto limitado, sin pensamiento, sin servidor, en modo offline y sin heredar opciones de llama.cpp que puedan activar RPC o descargas. El texto entra por stdin y no se guarda en archivos de prompts ni registros. La conexión a internet solo se usa para preparar los componentes desde Ajustes, sin enviar audio ni transcripciones. Si falta el modelo o el ejecutable, falla la inferencia, vence el plazo de ocho segundos o el filtro rechaza la propuesta, se entrega el original. Cancelar descarta el dictado también durante esta fase. Los cambios de ajustes se aplican al siguiente dictado, también con precarga.
-
-El filtro permite puntuación con signos de apertura y cierre, mayúsculas y tildes de un vocabulario común, tres errores ortográficos enumerados (`holaa`, `nesecito`, `grasias`) y las separaciones `enton ces` y `tam bien`. Las palabras desconocidas se conservan literalmente; con números, identificadores o marcadores de código se conserva el dictado completo. No cambia el orden ni acepta palabras nuevas, sinónimos, resúmenes, párrafos nuevos o eliminaciones. Conserva incluso posibles repeticiones accidentales, muletillas y palabras sueltas cuando el texto no permite distinguir con seguridad la intención. La edición es deliberadamente limitada; no equivale a un corrector general. Si una propuesta contiene un cambio fuera de esas reglas se descarta entera.
-
-La última transcripción original queda seleccionable en Ajustes → Dictado mientras siga abierta la shell y hasta la siguiente transcripción final. El evento JSON `final` de `senda stt session` incluye `text` y `originalText`; no se crea un historial en disco. La puntuación puede afectar al sentido aunque las palabras se conserven: estas comprobaciones no garantizan fidelidad semántica absoluta. La calidad y latencia del modelo real requieren validación independiente de las pruebas con salidas simuladas.
 
 ## Dock de dictado
 

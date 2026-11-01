@@ -9,12 +9,25 @@ import (
 
 const ManifestFile = "manifest.json"
 
+const (
+	// KindStreaming models decode while the user speaks and emit partials.
+	KindStreaming = "transducer"
+	// KindOffline models decode the whole recording after it stops.
+	KindOffline = "offline-transducer"
+)
+
 // Manifest names the files relative to the installed model directory.
 type Manifest struct {
 	ID                               string `json:"id"`
-	Kind                             string `json:"kind"` // "transducer"
+	Kind                             string `json:"kind"` // KindStreaming or KindOffline
 	Encoder, Decoder, Joiner, Tokens string
 	LanguageOption                   bool `json:"languageOption"`
+}
+
+// CompleteTransducer reports whether m names a known kind and all its files.
+func (m Manifest) CompleteTransducer() bool {
+	return (m.Kind == KindStreaming || m.Kind == KindOffline) &&
+		m.Encoder != "" && m.Decoder != "" && m.Joiner != "" && m.Tokens != ""
 }
 
 func ReadManifest(dir string) (Manifest, error) {

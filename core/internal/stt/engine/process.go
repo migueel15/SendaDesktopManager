@@ -354,7 +354,7 @@ func (e *engine) Prepare(ctx context.Context, opts stt.EngineOptions) (stt.Stand
 	if err != nil {
 		return nil, fmt.Errorf("No se pudo leer el modelo: %w", err)
 	}
-	if m.Kind != "transducer" || m.Encoder == "" || m.Decoder == "" || m.Joiner == "" || m.Tokens == "" {
+	if !m.CompleteTransducer() {
 		return nil, fmt.Errorf("El manifiesto del modelo no contiene un transductor completo")
 	}
 	python := e.python

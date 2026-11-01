@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/migueel15/SendaDesktopManager/core/internal/config"
 	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
@@ -14,7 +15,6 @@ import (
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/deliver"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/engine"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/models"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt/postprocess"
 	"github.com/migueel15/SendaDesktopManager/core/internal/stt/session"
 	"github.com/spf13/cobra"
 )
@@ -26,21 +26,22 @@ func sttSessionCmd() *cobra.Command {
 			return session.Deps{}, fmt.Errorf("no se pudo leer la configuración del dictado: %w", err)
 		}
 		settings := stt.LoadSettings(values)
-		bundle := postprocess.ManagedStore()
-		if settings.PostprocessModel == "" {
-			settings.PostprocessModel = bundle.ModelPath()
-		}
 		command, err := os.Executable()
 		if err != nil {
 			command = "senda"
 		}
+		modelDir := models.NewStore(stt.ModelsDir()).ModelDir(settings.ModelID)
+		var stopTimeout time.Duration
+		if m, err := stt.ReadManifest(modelDir); err == nil && m.Kind == stt.KindOffline {
+			stopTimeout = 5 * time.Minute // Whole-recording decode grows with its length.
+		}
 		return session.Deps{
-			Postprocess: postprocess.Processor{Model: settings.PostprocessModel, Binary: bundle.Binary()}.Process,
+			StopTimeout: stopTimeout,
 			Engine:      engine.New(), Deliverer: deliver.New(stt.ExecRunner),
 			DuckAudio:   control.DuckAudio(stt.ExecRunner, settings),
 			MuteDiscord: control.MuteDiscord(stt.ExecRunner, command),
 			Submap:      binds.NewSubmap(stt.ExecRunner), Notifier: control.NewNotifier(),
-			Settings: settings, ModelDir: models.NewStore(stt.ModelsDir()).ModelDir(settings.ModelID),
+			Settings: settings, ModelDir: modelDir,
 		}, nil
 	})
 }

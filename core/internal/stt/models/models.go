@@ -14,7 +14,18 @@ type Entry struct {
 	Languages                                           []string
 	Files                                               ModelFiles
 	LanguageOption                                      bool
+	// Offline models transcribe the whole recording when it stops.
+	Offline bool
 }
+
+// ManifestKind is the engine kind recorded for the installed model.
+func (e Entry) ManifestKind() string {
+	if e.Offline {
+		return stt.KindOffline
+	}
+	return stt.KindStreaming
+}
+
 type ModelFiles struct{ Encoder, Decoder, Joiner, Tokens string }
 type Status struct {
 	Entry
@@ -26,6 +37,14 @@ type Status struct {
 func Catalog() []Entry {
 	const archive = "sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11"
 	return []Entry{{
+		ID: "parakeet-tdt-0.6b-v3-int8", Name: "Parakeet TDT 0.6B V3 INT8", Archive: "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8",
+		URL:       "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2",
+		SHA256:    "5793d0fd397c5778d2cf2126994d58e9d56b1be7c04d13c7a15bb1b4eafb16bf",
+		SizeBytes: 487170055, License: "CC-BY-4.0",
+		LicenseURL: "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3",
+		Languages:  []string{"es", "en"}, Offline: true,
+		Files: ModelFiles{Encoder: "encoder.int8.onnx", Decoder: "decoder.int8.onnx", Joiner: "joiner.int8.onnx", Tokens: "tokens.txt"},
+	}, {
 		ID: stt.DefaultModelID, Name: "Nemotron 3.5 Streaming 0.6B INT8", Archive: archive,
 		URL:       "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/" + archive + ".tar.bz2",
 		SHA256:    "c6bf5e0df765f9d5b43bc9e0536d4b4b3e7d40bdf5ecf13e45f134c51c05ae3a",

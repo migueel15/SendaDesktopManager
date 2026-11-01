@@ -93,9 +93,6 @@ func (m *Machine) Apply(in Input) (State, error) {
 }
 
 type Deps struct {
-	// Postprocess runs only after Stop, with a separate deadline. Errors/panics
-	// fall back to the original. It must not deliver text or mutate session state.
-	Postprocess func(context.Context, string) (string, error)
 	// DuckAudio returns cleanup for one active dictation, never standby.
 	DuckAudio func(context.Context) (func(context.Context) error, error)
 	// MuteDiscord mutes Discord before the microphone opens and returns the restoration, or nil when it changed nothing.
@@ -107,6 +104,8 @@ type Deps struct {
 	Settings       stt.Settings
 	ModelDir       string
 	CleanupTimeout time.Duration
+	// StopTimeout bounds the final decode; zero uses CleanupTimeout.
+	StopTimeout time.Duration
 	// Standby keeps the prepared engine resident across successive dictations.
 	Standby bool
 }
@@ -372,9 +371,8 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 				}
 			}()
 			type stoppedResult struct {
-				text     string
-				original string
-				err      error
+				text string
+				err  error
 			}
 			var stopped <-chan stoppedResult
 			var stopCancel context.CancelFunc
@@ -384,26 +382,19 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 				}
 			}()
 			beginStop := func() {
-				stopCtx, done := fresh()
-				processCtx, processDone := context.WithCancel(ctx)
-				stopCancel = func() { done(); processDone() }
+				stopTimeout := deps.StopTimeout
+				if stopTimeout <= 0 {
+					stopTimeout = deps.CleanupTimeout
+				}
+				stopCtx, done := context.WithTimeout(context.Background(), stopTimeout)
+				stopCancel = done
 				ch := make(chan stoppedResult, 1)
 				stopped = ch
 				activeStream := stream
 				go func() {
 					defer done()
-					defer processDone()
 					text, err := bounded(stopCtx, func() (string, error) { return activeStream.Stop(stopCtx) })
-					original := text
-					if err == nil && text != "" && deps.Settings.Postprocess && deps.Postprocess != nil {
-						c, cancelProcess := context.WithTimeout(processCtx, 8*time.Second)
-						corrected, processErr := bounded(c, func() (string, error) { return deps.Postprocess(c, original) })
-						cancelProcess()
-						if processErr == nil && corrected != "" {
-							text = corrected
-						}
-					}
-					ch <- stoppedResult{text: text, original: original, err: err}
+					ch <- stoppedResult{text: text, err: err}
 				}()
 			}
 			cancelled := func(resident bool) error {
@@ -576,7 +567,7 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 					}
 					completed = true
 					m.Apply(InputFinalized)
-					if err := emit(stt.Event{Type: stt.EventFinal, Text: r.text, OriginalText: r.original}); err != nil {
+					if err := emit(stt.Event{Type: stt.EventFinal, Text: r.text}); err != nil {
 						return err
 					}
 					if r.text != "" {

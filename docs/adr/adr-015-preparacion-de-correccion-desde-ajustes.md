@@ -1,6 +1,6 @@
 # ADR 015: Preparación de la corrección desde Ajustes
 
-- Estado: aceptada para la implementación; validación visual pendiente.
+- Estado: sustituida por el [ADR 016](adr-016-modelos-sin-streaming.md).
 - Fecha: 2026-10-31
 
 ## Contexto

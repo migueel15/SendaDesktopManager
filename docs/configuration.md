@@ -41,8 +41,6 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 | `SENDA_STT_AUDIO_DUCKING` | Atenúa el volumen durante el dictado. `false` lo desactiva; predeterminado: `true`. |
 | `SENDA_STT_AUDIO_VOLUME` | Volumen de salida durante el dictado: entero de 0 a 100. Predeterminado: `10`. Solo se baja si la salida no está silenciada y su volumen es mayor; se restaura el anterior al terminar. |
 | `SENDA_STT_PRELOAD` | Precarga del modelo en la shell: `true` la activa; cualquier otro valor la deja desactivada. Predeterminado: desactivada. |
-| `SENDA_STT_POSTPROCESS` | Corrección local conservadora al terminar: `true` la activa. Predeterminado: desactivada. |
-| `SENDA_STT_POSTPROCESS_MODEL` | Sobrescritura avanzada de la ruta al GGUF local. Vacío usa el modelo que Senda prepara automáticamente desde Ajustes; no hace falta configurarlo. |
 | `SENDA_STT_LANGUAGE` | Idioma del reconocimiento. Predeterminado `es`; también admite `auto` y códigos de idioma. |
 | `SENDA_STT_PASTE_MODE` | Entrega del resultado: `paste` (predeterminado) o `clipboard`. |
 | `SENDA_SCREENSHOT_SHORTCUT` | Atajo de captura de pantalla. Predeterminado: `Print`. |

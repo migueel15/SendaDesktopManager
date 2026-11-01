@@ -48,27 +48,25 @@ const (
 // other key is refused, so a bad caller cannot change unrelated settings such
 // as DORLAB_API_KEY.
 var editableSettings = map[string]bool{
-	keyScreenshotDir:        true,
-	keyGoogleClientID:       true,
-	keyGoogleClientSecret:   true,
-	keyGoogleCalendars:      true,
-	keyWeatherLocation:      true,
-	keyWeatherLat:           true,
-	keyWeatherLon:           true,
-	keyUIFontScale:          true,
-	keyWidgetSpotify:        true,
-	keyWidgetDiscord:        true,
-	keyBatteryWarning:       true,
-	stt.KeyLanguage:         true,
-	stt.KeyPreload:          true,
-	stt.KeyPostprocess:      true,
-	stt.KeyPostprocessModel: true,
-	stt.KeyAudioDucking:     true,
-	stt.KeyAudioVolume:      true,
-	stt.KeyPasteMode:        true,
-	stt.KeyTerminals:        true,
-	clipboard.KeyEnabled:    true,
-	clipboard.KeyMax:        true,
+	keyScreenshotDir:      true,
+	keyGoogleClientID:     true,
+	keyGoogleClientSecret: true,
+	keyGoogleCalendars:    true,
+	keyWeatherLocation:    true,
+	keyWeatherLat:         true,
+	keyWeatherLon:         true,
+	keyUIFontScale:        true,
+	keyWidgetSpotify:      true,
+	keyWidgetDiscord:      true,
+	keyBatteryWarning:     true,
+	stt.KeyLanguage:       true,
+	stt.KeyPreload:        true,
+	stt.KeyAudioDucking:   true,
+	stt.KeyAudioVolume:    true,
+	stt.KeyPasteMode:      true,
+	stt.KeyTerminals:      true,
+	clipboard.KeyEnabled:  true,
+	clipboard.KeyMax:      true,
 }
 
 func configCmd() *cobra.Command {
@@ -97,28 +95,26 @@ func configGetCmd() *cobra.Command {
 			sttSettings := stt.LoadSettings(values)
 			result := map[string]any{
 				"values": map[string]string{
-					keyScreenshotDir:        values[keyScreenshotDir],
-					keyGoogleClientID:       values[keyGoogleClientID],
-					keyGoogleCalendars:      values[keyGoogleCalendars],
-					keyWeatherLocation:      values[keyWeatherLocation],
-					keyWeatherLat:           values[keyWeatherLat],
-					keyWeatherLon:           values[keyWeatherLon],
-					keyUIFontScale:          values[keyUIFontScale],
-					keyWidgetSpotify:        values[keyWidgetSpotify],
-					keyWidgetDiscord:        values[keyWidgetDiscord],
-					keyBatteryWarning:       values[keyBatteryWarning],
-					clipboard.KeyEnabled:    values[clipboard.KeyEnabled],
-					clipboard.KeyMax:        values[clipboard.KeyMax],
-					stt.KeyPreload:          strconv.FormatBool(sttSettings.Preload),
-					stt.KeyPostprocess:      strconv.FormatBool(sttSettings.Postprocess),
-					stt.KeyPostprocessModel: sttSettings.PostprocessModel,
-					stt.KeyAudioDucking:     strconv.FormatBool(sttSettings.AudioDucking),
-					stt.KeyAudioVolume:      strconv.Itoa(sttSettings.AudioVolume),
-					stt.KeyModel:            sttSettings.ModelID,
-					stt.KeyLanguage:         sttSettings.Language,
-					stt.KeyPasteMode:        string(sttSettings.PasteMode),
-					stt.KeyShortcut:         sttSettings.Shortcut,
-					stt.KeyTerminals:        strings.Join(sttSettings.Terminals, ","),
+					keyScreenshotDir:     values[keyScreenshotDir],
+					keyGoogleClientID:    values[keyGoogleClientID],
+					keyGoogleCalendars:   values[keyGoogleCalendars],
+					keyWeatherLocation:   values[keyWeatherLocation],
+					keyWeatherLat:        values[keyWeatherLat],
+					keyWeatherLon:        values[keyWeatherLon],
+					keyUIFontScale:       values[keyUIFontScale],
+					keyWidgetSpotify:     values[keyWidgetSpotify],
+					keyWidgetDiscord:     values[keyWidgetDiscord],
+					keyBatteryWarning:    values[keyBatteryWarning],
+					clipboard.KeyEnabled: values[clipboard.KeyEnabled],
+					clipboard.KeyMax:     values[clipboard.KeyMax],
+					stt.KeyPreload:       strconv.FormatBool(sttSettings.Preload),
+					stt.KeyAudioDucking:  strconv.FormatBool(sttSettings.AudioDucking),
+					stt.KeyAudioVolume:   strconv.Itoa(sttSettings.AudioVolume),
+					stt.KeyModel:         sttSettings.ModelID,
+					stt.KeyLanguage:      sttSettings.Language,
+					stt.KeyPasteMode:     string(sttSettings.PasteMode),
+					stt.KeyShortcut:      sttSettings.Shortcut,
+					stt.KeyTerminals:     strings.Join(sttSettings.Terminals, ","),
 				},
 				"googleClientSecretConfigured": secretConfigured,
 				"embeddedGoogleClient":         googlecalendar.HasEmbeddedCredentials(),
@@ -231,11 +227,7 @@ func validateSetting(key, value string) error {
 				return fmt.Errorf("%s must be a whole number between %d and %d", key, minBatteryWarning, maxBatteryWarning)
 			}
 		}
-	case stt.KeyPostprocessModel:
-		if value != "" && (!filepath.IsAbs(value) || !strings.HasSuffix(strings.ToLower(value), ".gguf") || strings.ContainsAny(value, "\x00\n\r")) {
-			return fmt.Errorf("el modelo de corrección debe ser una ruta absoluta a un archivo GGUF local")
-		}
-	case stt.KeyPostprocess, stt.KeyPreload, stt.KeyAudioDucking, keyWidgetSpotify, keyWidgetDiscord, clipboard.KeyEnabled:
+	case stt.KeyPreload, stt.KeyAudioDucking, keyWidgetSpotify, keyWidgetDiscord, clipboard.KeyEnabled:
 		if value != "" && value != "true" && value != "false" {
 			return fmt.Errorf("%s must be true or false", key)
 		}
