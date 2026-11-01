@@ -26,11 +26,10 @@ const (
 
 // Event is encoded as one JSON line on the session's stdout.
 type Event struct {
-	Type         EventType `json:"event"`
-	Text         string    `json:"text,omitempty"`
-	OriginalText string    `json:"originalText,omitempty"`
-	Message      string    `json:"message,omitempty"`
-	Active       bool      `json:"active,omitempty"`
+	Type    EventType `json:"event"`
+	Text    string    `json:"text,omitempty"`
+	Message string    `json:"message,omitempty"`
+	Active  bool      `json:"active,omitempty"`
 }
 
 // ActivityStream optionally exposes recent microphone activity independently of transcription.

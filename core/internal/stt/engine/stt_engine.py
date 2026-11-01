@@ -32,7 +32,11 @@ def main():
     m = json.loads(a.manifest)
     files = {key.lower(): os.path.join(a.model_dir, m[key])
              for key in ("Encoder", "Decoder", "Joiner", "Tokens")}
+    offline = m.get("kind") == "offline-transducer"
     def recognizer(provider):
+        if offline:
+            return sherpa_onnx.OfflineRecognizer.from_transducer(
+                **files, provider=provider, num_threads=4, model_type="nemo_transducer")
         return sherpa_onnx.OnlineRecognizer.from_transducer(
             **files, provider=provider, num_threads=4, enable_endpoint_detection=True)
     try:
@@ -49,8 +53,8 @@ def main():
         commands.put("eof")
     threading.Thread(target=receive, daemon=True).start()
     while True:
-        s = r.create_stream()
-        if m.get("languageOption"):
+        s = None if offline else r.create_stream()
+        if s and m.get("languageOption"):
             s.set_option("language", "" if a.language == "auto" else a.language)
 
         if a.standby:
@@ -62,7 +66,7 @@ def main():
                 raise RuntimeError("Orden del motor no válida")
         proc, wav = None, None
         diagnostics = deque(maxlen=8)
-        segments, previous = [], ""
+        segments, previous, audio = [], "", []
         last_activity = 0.0
         def text():
             return " ".join(segments + [r.get_result(s).strip()]).strip()
@@ -73,6 +77,9 @@ def main():
             if now - last_activity >= 0.1:
                 emit("activity", active=bool(np.sqrt(np.mean(samples * samples)) >= 0.015))
                 last_activity = now
+            if offline:
+                audio.append(samples)
+                return
             s.accept_waveform(16000, samples)
             while r.is_ready(s):
                 r.decode_stream(s)
@@ -135,7 +142,15 @@ def main():
                     if size:
                         decode(pending[:size])
                         pending = pending[size:]
-                if command == "stop":
+                if command == "stop" and offline:
+                    if audio:
+                        whole = r.create_stream()
+                        whole.accept_waveform(16000, np.concatenate(audio))
+                        r.decode_stream(whole)
+                        emit("final", text=whole.result.text.strip())
+                    else:
+                        emit("final", text="")
+                elif command == "stop":
                     s.accept_waveform(16000, np.zeros(32000, dtype=np.float32))
                     while r.is_ready(s):
                         r.decode_stream(s)

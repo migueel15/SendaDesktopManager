@@ -17,6 +17,7 @@ type modelListItem struct {
 	Name       string   `json:"name"`
 	Languages  []string `json:"languages"`
 	SizeBytes  int64    `json:"sizeBytes"`
+	Streaming  bool     `json:"streaming"`
 	License    string   `json:"license"`
 	LicenseURL string   `json:"licenseUrl"`
 	Installed  bool     `json:"installed"`
@@ -36,14 +37,18 @@ func sttModelsCmd() *cobra.Command {
 		if asJSON {
 			items := make([]modelListItem, 0, len(statuses))
 			for _, s := range statuses {
-				items = append(items, modelListItem{ID: s.ID, Name: s.Name, Languages: s.Languages, SizeBytes: s.SizeBytes, License: s.License, LicenseURL: s.LicenseURL, Installed: s.Installed, Active: s.Active})
+				items = append(items, modelListItem{ID: s.ID, Name: s.Name, Languages: s.Languages, SizeBytes: s.SizeBytes, Streaming: !s.Offline, License: s.License, LicenseURL: s.LicenseURL, Installed: s.Installed, Active: s.Active})
 			}
 			return json.NewEncoder(cmd.OutOrStdout()).Encode(items)
 		}
 		w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "ID\tNOMBRE\tIDIOMAS\tTAMAÑO (B)\tLICENCIA\tINSTALADO\tACTIVO")
+		fmt.Fprintln(w, "ID\tNOMBRE\tTIPO\tIDIOMAS\tTAMAÑO (B)\tLICENCIA\tINSTALADO\tACTIVO")
 		for _, s := range statuses {
-			fmt.Fprintf(w, "%s\t%s\t%v\t%d\t%s\t%t\t%t\n", s.ID, s.Name, s.Languages, s.SizeBytes, s.License, s.Installed, s.Active)
+			kind := "streaming"
+			if s.Offline {
+				kind = "sin streaming"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%v\t%d\t%s\t%t\t%t\n", s.ID, s.Name, kind, s.Languages, s.SizeBytes, s.License, s.Installed, s.Active)
 		}
 		return w.Flush()
 	}}

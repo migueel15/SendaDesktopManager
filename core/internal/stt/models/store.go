@@ -41,7 +41,7 @@ func (s *Store) Installed(id string) bool {
 	}
 	dir := s.ModelDir(id)
 	m, err := stt.ReadManifest(dir)
-	if err != nil || m.ID != id || m.Kind != "transducer" || m.LanguageOption != e.LanguageOption ||
+	if err != nil || m.ID != id || m.Kind != e.ManifestKind() || m.LanguageOption != e.LanguageOption ||
 		m.Encoder != e.Files.Encoder || m.Decoder != e.Files.Decoder || m.Joiner != e.Files.Joiner || m.Tokens != e.Files.Tokens {
 		return false
 	}
@@ -151,7 +151,7 @@ func (s *Store) Install(ctx context.Context, id string, progress func(int64, int
 	if err := verifyFiles(staging, e.Files); err != nil {
 		return err
 	}
-	m := stt.Manifest{ID: id, Kind: "transducer", Encoder: e.Files.Encoder, Decoder: e.Files.Decoder, Joiner: e.Files.Joiner, Tokens: e.Files.Tokens, LanguageOption: e.LanguageOption}
+	m := stt.Manifest{ID: id, Kind: e.ManifestKind(), Encoder: e.Files.Encoder, Decoder: e.Files.Decoder, Joiner: e.Files.Joiner, Tokens: e.Files.Tokens, LanguageOption: e.LanguageOption}
 	if err := stt.WriteManifest(staging, m); err != nil {
 		return err
 	}

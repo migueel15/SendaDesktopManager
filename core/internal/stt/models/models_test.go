@@ -12,7 +12,7 @@ func TestDefaultCatalogArtifact(t *testing.T) {
 	if len(catalog) == 0 {
 		t.Fatal("empty catalog")
 	}
-	e := catalog[0]
+	e := catalog[1]
 	const archive = "sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11"
 	if e.ID != stt.DefaultModelID || e.Archive != archive || e.Name == "" ||
 		e.URL != "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/"+archive+".tar.bz2" ||
@@ -26,7 +26,17 @@ func TestDefaultCatalogArtifact(t *testing.T) {
 	}
 	catalog[0].Languages[0] = "changed"
 	catalog[0].ID = "changed"
-	if fresh := Catalog()[0]; fresh.ID != stt.DefaultModelID || fresh.Languages[0] != "es" {
+	if fresh := Catalog()[1]; fresh.ID != stt.DefaultModelID || fresh.Languages[0] != "es" {
 		t.Fatal("catalog shares mutable data")
+	}
+}
+
+func TestParakeetIsFirstAndOffline(t *testing.T) {
+	first, second := Catalog()[0], Catalog()[1]
+	if first.ID != "parakeet-tdt-0.6b-v3-int8" || first.ManifestKind() != stt.KindOffline {
+		t.Fatalf("first model = %s (%s)", first.ID, first.ManifestKind())
+	}
+	if second.ManifestKind() != stt.KindStreaming {
+		t.Fatalf("second model kind = %s", second.ManifestKind())
 	}
 }

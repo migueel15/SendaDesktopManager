@@ -1,6 +1,6 @@
 # ADR 014: Postprocesamiento local conservador del dictado
 
-- Estado: aceptada para la implementación; preparación manual sustituida por el [ADR 015](adr-015-preparacion-de-correccion-desde-ajustes.md). Calidad con modelo real pendiente de validación.
+- Estado: sustituida por el [ADR 016](adr-016-modelos-sin-streaming.md).
 - Fecha: 2026-10-31
 
 ## Contexto
