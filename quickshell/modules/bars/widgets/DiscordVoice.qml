@@ -64,7 +64,7 @@ Rectangle {
     function openParticipantProfile(userId) {
         const id = String(userId || "");
         if (!id) return;
-        Quickshell.execDetached([
+        AppRunner.run([
             "gtk-launch",
             "discord",
             `discord://-/users/${encodeURIComponent(id)}`
@@ -76,7 +76,7 @@ Rectangle {
         if (!channel || !channel.id) return;
         const guildPath = channel.guild_id ? encodeURIComponent(String(channel.guild_id)) : "@me";
         const channelPath = encodeURIComponent(String(channel.id));
-        Quickshell.execDetached([
+        AppRunner.run([
             "gtk-launch",
             "discord",
             `discord://-/channels/${guildPath}/${channelPath}`
