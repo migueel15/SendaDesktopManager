@@ -23,6 +23,9 @@ Rectangle {
     property string transitionType: "none"
     property real progress: 0
     property point origin: Qt.point(width / 2, height / 2)
+    // Sweep direction for wipe/wave: mirrors the diagonal on each axis.
+    property bool flipX: false
+    property bool flipY: false
     readonly property real radius: Math.hypot(Math.max(Math.abs(origin.x), Math.abs(width - origin.x)),
         Math.max(Math.abs(origin.y), Math.abs(height - origin.y))) + 2
 
@@ -73,9 +76,13 @@ Rectangle {
 
     function begin() {
         const transition = pending.transition;
-        const choices = ["fade", "wipe", "wave", "grow", "center", "any", "outer"];
+        // Random only uses the straight sweep; the other masks stutter on large screens.
+        const choices = ["wipe"];
         transitionType = transition.type === "random"
             ? choices[Math.floor(Math.random() * choices.length)] : transition.type;
+        const random = transition.type === "random";
+        flipX = random && Math.random() < 0.5;
+        flipY = random && Math.random() < 0.5;
         const pos = transition.pos;
         origin = transitionType === "any" ? Qt.point(Math.round(Math.random() * width), Math.round(Math.random() * height))
             : transitionType === "center" || !pos ? Qt.point(Math.round(width / 2), Math.round(height / 2))
@@ -104,8 +111,8 @@ Rectangle {
 
     // A diagonal half-plane x + y <= edge; wave perturbs its boundary.
     // The extra margin keeps both endpoints fully outside the viewport.
-    function sweepPoints() {
-        const amplitude = transitionType === "wave" ? Math.min(width, height) * 0.04 : 0;
+    function sweepPoints(progress, type, width, height, flipX, flipY) {
+        const amplitude = type === "wave" ? Math.min(width, height) * 0.04 : 0;
         const margin = amplitude + 2;
         const edge = progress * (width + height + 2 * margin) - margin;
         const points = [Qt.point(-margin, -margin)];
@@ -116,7 +123,7 @@ Rectangle {
         }
         points.push(Qt.point(-height - 2 * margin, height + margin));
         points.push(points[0]);
-        return points;
+        return points.map(p => Qt.point(flipX ? width - p.x : p.x, flipY ? height - p.y : p.y));
     }
 
     onScreenNameChanged: refresh()
@@ -182,10 +189,10 @@ Rectangle {
         visible: false
 
         readonly property bool sweep: root.transitionType === "wipe" || root.transitionType === "wave"
-        readonly property real circleRadius: root.radius * (root.transitionType === "outer" ? 1 - root.progress : root.progress)
+        // Collapse shapes instead of toggling visible inside the hidden mask.
+        readonly property real circleRadius: sweep ? 0 : root.radius * (root.transitionType === "outer" ? 1 - root.progress : root.progress)
 
         Rectangle {
-            visible: !transitionMask.sweep
             x: Math.round(root.origin.x - transitionMask.circleRadius)
             y: Math.round(root.origin.y - transitionMask.circleRadius)
             width: Math.ceil(transitionMask.circleRadius * 2)
@@ -196,13 +203,14 @@ Rectangle {
 
         Shape {
             anchors.fill: parent
-            visible: transitionMask.sweep
             ShapePath {
                 strokeWidth: 0
                 strokeColor: "transparent"
                 fillColor: "white"
                 PathPolyline {
-                    path: root.sweepPoints()
+                    // An empty path when the circle mask is in use.
+                    // Explicit arguments make the binding follow every frame.
+                    path: !transitionMask.sweep ? [] : root.sweepPoints(root.progress, root.transitionType, root.width, root.height, root.flipX, root.flipY)
                 }
             }
         }

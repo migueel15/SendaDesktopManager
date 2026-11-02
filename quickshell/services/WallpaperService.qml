@@ -26,7 +26,7 @@ Singleton {
 
     // Until the theme is reloaded; the manual selection stays across restarts.
     function setForSession(path) {
-        return set({path: path, monitor: "", resize: "crop", transition: transition("fade", 800)});
+        return set({path: path, monitor: "", resize: "crop", transition: transition("random", 900)});
     }
 
     QtObject {
@@ -137,7 +137,7 @@ Singleton {
         }
         for (const screen of Quickshell.screens) {
             if (operation.clearManual || !state.manuals[screen.name])
-                publish(screen.name, transition(operation.clearManual ? "fade" : "none", operation.clearManual ? 800 : 0));
+                publish(screen.name, transition(operation.clearManual ? "random" : "none", operation.clearManual ? 900 : 0));
         }
     }
 
