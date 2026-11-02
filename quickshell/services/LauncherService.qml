@@ -13,9 +13,16 @@ Singleton {
     property var recentIds: []
     property var pendingIds: []
     property bool historyReady: false
+    // Search text the next opening starts with; the panel consumes it.
+    property string initialQuery: ""
     property bool historyWritable: true
     readonly property string historyDirectory: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/senda"
 
+    function toggleWithQuery(name, query) {
+        if (OverlayService.isOpen("launcher")) { root.close(); return; }
+        root.initialQuery = query || "";
+        root.toggle(name);
+    }
     function toggle(name) {
         OverlayService.togglePanel("launcher", name || Hyprland.focusedMonitor?.name || "");
     }
@@ -97,5 +104,6 @@ Singleton {
         target: "launcher"
         function toggle() { root.toggle(""); }
         function toggleOnScreen(screenName: string) { root.toggle(screenName); }
+        function toggleWithQuery(screenName: string, query: string) { root.toggleWithQuery(screenName, query); }
     }
 }

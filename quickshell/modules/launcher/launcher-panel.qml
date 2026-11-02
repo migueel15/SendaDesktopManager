@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import qs.common
 import qs.common.components
 import qs.services
@@ -40,6 +41,16 @@ SendaPanel {
         LauncherService.close();
         Quickshell.execDetached(["wl-copy", "--", text]);
     }
+    // Copies the emoji and pastes it into the focused window, with
+    // Ctrl+Shift+V in the terminals configured for dictation.
+    function paste(text) {
+        const terminals = (SendaSettings.values.SENDA_STT_TERMINALS || "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty")
+            .split(",").map(t => t.trim().toLowerCase());
+        const windowClass = (Hyprland.activeToplevel?.lastIpcObject?.class || "").toLowerCase();
+        const mods = terminals.includes(windowClass) ? "CTRL SHIFT" : "CTRL";
+        LauncherService.close();
+        Quickshell.execDetached(["sh", "-c", 'printf %s "$1" | wl-copy && sleep 0.15 && hyprctl dispatch "hl.dsp.send_shortcut({mods = \\"$2\\", key = \\"V\\"})"', "sh", text, mods]);
+    }
     function appResult(entry) {
         return { kind: "app", name: entry.name, icon: entry.icon || "application-x-executable", run: () => LauncherService.launch(entry) };
     }
@@ -51,7 +62,7 @@ SendaPanel {
         let results;
         if (text.startsWith(":")) {
             results = Emojis.search(text.slice(1)).map(([emoji, keywords]) =>
-                ({ kind: "emoji", name: keywords.split(" ").slice(0, 3).join(" "), detail: "Copiar al portapapeles", glyph: emoji, run: () => root.copy(emoji) }));
+                ({ kind: "emoji", name: keywords.split(" ").slice(0, 3).join(" "), detail: "Pegar y copiar al portapapeles", glyph: emoji, run: () => root.paste(emoji) }));
         } else if (text.startsWith("#")) {
             const query = text.slice(1).trim().toLocaleLowerCase();
             results = SendaClipboard.entries.filter(entry => entry.text.toLocaleLowerCase().includes(query)).map(entry =>
@@ -85,7 +96,8 @@ SendaPanel {
     function prepareOpen() {
         if (!root.viewReady) return;
         if (!root.open) return;
-        search.text = "";
+        search.text = LauncherService.initialQuery;
+        LauncherService.initialQuery = "";
         SendaClipboard.refresh();
         root.refresh();
         Qt.callLater(() => { if (root.open) search.forceActiveFocus(); });
