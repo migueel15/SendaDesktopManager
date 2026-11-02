@@ -130,7 +130,8 @@ Además de aplicaciones, el lanzador sirve para tareas rápidas:
 - **Comandos.** `>` seguido de un comando lo ejecuta con `sh -c` en segundo plano,
   sin terminal.
 - **Emojis.** `:` seguido de palabras en español o inglés (`:corazon`, `:fire`)
-  busca emojis; Enter copia el elegido al portapapeles.
+  busca emojis; Enter copia el elegido al portapapeles y lo pega en la ventana
+  enfocada (con `Ctrl+Shift+V` en las terminales configuradas para el dictado).
 
 También puedes abrirlo o cerrarlo desde una terminal o un atajo del compositor:
 
@@ -140,7 +141,9 @@ senda launcher toggle
 
 El comando usa el monitor enfocado por Hyprland. Para elegir uno explícitamente,
 añade `--screen <nombre>`; el icono de la barra usa esta opción para abrirlo en
-su propio monitor. La shell de Senda debe estar en ejecución.
+su propio monitor. `--query <texto>` abre el launcher con esa búsqueda ya
+escrita; por ejemplo, `senda launcher toggle --query :` lo abre en modo emoji.
+La shell de Senda debe estar en ejecución.
 
 ## Variables de entorno solo para desarrollo
 
