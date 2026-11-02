@@ -26,7 +26,7 @@ Singleton {
         if (!entry) return;
         root.recordLaunch(entry.id);
         root.close();
-        entry.execute();
+        AppRunner.runEntry(entry);
     }
     function addRecent(id) {
         if (typeof id !== "string" || !id) return;

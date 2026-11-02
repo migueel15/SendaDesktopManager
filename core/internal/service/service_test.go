@@ -14,6 +14,7 @@ func TestUnitRunsShellFromExe(t *testing.T) {
 		"WantedBy=default.target",
 		"ExecStartPre=",
 		"Type=dbus",
+		"Environment=XDG_SESSION_TYPE=wayland",
 		"BusName=org.kde.StatusNotifierWatcher",
 		"TimeoutStartSec=30",
 		"RestartSec=2",

@@ -43,7 +43,9 @@ func UnitPath() string {
 // Quickshell owns once its tray is up. systemctl start returns only after that
 // name exists, so a session can launch tray apps after it: an Electron app
 // such as Discord registers its icon once and never retries when the watcher is
-// missing. TimeoutStartSec bounds the wait, so a shell that never takes the
+// missing. XDG_SESSION_TYPE is set because the user manager lacks it and
+// Electron apps started by the shell would otherwise fall back to XWayland.
+// TimeoutStartSec bounds the wait, so a shell that never takes the
 // name fails the start instead of blocking the caller forever.
 func Unit(exe string) string {
 	return fmt.Sprintf(`[Unit]
@@ -52,6 +54,7 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=dbus
+Environment=XDG_SESSION_TYPE=wayland
 BusName=org.kde.StatusNotifierWatcher
 TimeoutStartSec=30
 ExecStartPre=/bin/sh -c '[ -n "$WAYLAND_DISPLAY" ] && [ -n "$%s" ] && [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ]'

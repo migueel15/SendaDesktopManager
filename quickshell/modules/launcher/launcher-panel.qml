@@ -63,7 +63,7 @@ SendaPanel {
             const command = text.slice(1).trim();
             results = command ? [{ kind: "command", name: command, detail: "Ejecutar comando", glyph: "󰆍", run: () => {
                         LauncherService.close();
-                        Quickshell.execDetached(["sh", "-c", command]);
+                        AppRunner.run(["sh", "-c", command]);
             } }] : [];
         } else {
             const query = text.toLocaleLowerCase();
