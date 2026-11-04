@@ -11,6 +11,8 @@ import (
 const (
 	KeyScreenshotShortcut = "ZENDA_SCREENSHOT_SHORTCUT"
 	KeyLockShortcut       = "ZENDA_LOCK_SHORTCUT"
+	KeyLauncherShortcut   = "ZENDA_LAUNCHER_SHORTCUT"
+	KeyEmojiShortcut      = "ZENDA_EMOJI_SHORTCUT"
 	KeyIdleSeconds        = "ZENDA_IDLE_SECONDS"
 	KeyBlur               = "ZENDA_LOCK_BLUR"
 	KeyIdleMode           = "ZENDA_IDLE_MODE"
@@ -36,6 +38,15 @@ func LoadSettings(values map[string]string) (Settings, error) {
 	if v := values[KeyScreenshotShortcut]; v != "" {
 		s.ScreenshotShortcut = v
 	}
+	launcher, launcherSet := values[KeyLauncherShortcut]
+	emoji, emojiSet := values[KeyEmojiShortcut]
+	if launcherSet {
+		s.LauncherShortcut = launcher
+	}
+	if emojiSet {
+		s.EmojiShortcut = emoji
+	}
+	dropCollidingDefaults(&s, map[string]bool{"launcher": launcherSet, "emoji": emojiSet})
 	if v := values[KeyIdleSeconds]; v != "" {
 		n, err := strconv.Atoi(v)
 		if err != nil {
@@ -68,5 +79,5 @@ func SaveSettings(path string, s Settings) error {
 	if _, err := Render(s, "/usr/bin/zenda"); err != nil {
 		return err
 	}
-	return config.Set(path, map[string]string{KeyScreenshotShortcut: s.ScreenshotShortcut, KeyLockShortcut: s.LockShortcut, stt.KeyShortcut: s.DictationShortcut, KeyIdleSeconds: strconv.Itoa(s.IdleSeconds), KeyBlur: strconv.FormatBool(s.Blur), KeyIdleMode: s.IdleMode})
+	return config.Set(path, map[string]string{KeyScreenshotShortcut: s.ScreenshotShortcut, KeyLockShortcut: s.LockShortcut, stt.KeyShortcut: s.DictationShortcut, KeyLauncherShortcut: s.LauncherShortcut, KeyEmojiShortcut: s.EmojiShortcut, KeyIdleSeconds: strconv.Itoa(s.IdleSeconds), KeyBlur: strconv.FormatBool(s.Blur), KeyIdleMode: s.IdleMode})
 }

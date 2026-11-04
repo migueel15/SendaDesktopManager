@@ -97,7 +97,7 @@ func printHyprland(cmd *cobra.Command, status integration.Status, asJSON bool) e
 	if asJSON {
 		return writeJSON(cmd, status)
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "Bloqueo: %s\nDictado: %s\nCaptura: %s\nInactividad: %d s\nDesenfoque: %t\nMódulo: %s (activo: %t)\nHypridle: %s (modo: %s)\n", status.LockShortcut, status.DictationShortcut, status.ScreenshotShortcut, status.IdleSeconds, status.Blur, status.ModulePath, status.ModuleActive, status.IdleConfigPath, status.IdleMode)
+	fmt.Fprintf(cmd.OutOrStdout(), "Bloqueo: %s\nDictado: %s\nCaptura: %s\nLauncher: %s\nEmojis: %s\nInactividad: %d s\nDesenfoque: %t\nMódulo: %s (activo: %t)\nHypridle: %s (modo: %s)\n", status.LockShortcut, status.DictationShortcut, status.ScreenshotShortcut, status.LauncherShortcut, status.EmojiShortcut, status.IdleSeconds, status.Blur, status.ModulePath, status.ModuleActive, status.IdleConfigPath, status.IdleMode)
 	for _, warning := range status.Warnings {
 		fmt.Fprintln(cmd.OutOrStdout(), "Aviso:", warning)
 	}
@@ -115,7 +115,7 @@ func hyprlandCmd() *cobra.Command {
 		return printHyprland(cmd, integration.Inspect(cmd.Context(), s, shortcutRunner), asJSON)
 	}}
 	show.Flags().Bool("json", false, "Mostrar JSON")
-	var lock, dictation, screenshot, blur, idleMode string
+	var lock, dictation, screenshot, launcher, emoji, blur, idleMode string
 	var idle int
 	var asJSON bool
 	set := &cobra.Command{Use: "set", Short: "Cambiar ajustes", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
@@ -131,6 +131,12 @@ func hyprlandCmd() *cobra.Command {
 		}
 		if cmd.Flags().Changed("screenshot-shortcut") {
 			s.ScreenshotShortcut = screenshot
+		}
+		if cmd.Flags().Changed("launcher-shortcut") {
+			s.LauncherShortcut = launcher
+		}
+		if cmd.Flags().Changed("emoji-shortcut") {
+			s.EmojiShortcut = emoji
 		}
 		if cmd.Flags().Changed("idle-seconds") {
 			s.IdleSeconds = idle
@@ -169,6 +175,8 @@ func hyprlandCmd() *cobra.Command {
 	set.Flags().StringVar(&screenshot, "screenshot-shortcut", "", "Atajo de captura")
 	set.Flags().StringVar(&lock, "lock-shortcut", "", "Atajo de bloqueo")
 	set.Flags().StringVar(&dictation, "dictation-shortcut", "", "Atajo de dictado")
+	set.Flags().StringVar(&launcher, "launcher-shortcut", "", "Atajo del launcher")
+	set.Flags().StringVar(&emoji, "emoji-shortcut", "", "Atajo del launcher en modo emoji")
 	set.Flags().IntVar(&idle, "idle-seconds", 0, "Segundos de inactividad (0 desactiva)")
 	set.Flags().StringVar(&blur, "blur", "", "Desenfoque: true o false")
 	set.Flags().StringVar(&idleMode, "idle-mode", "", "hypridle: zenda (configuración de Zenda) o user (la tuya)")
@@ -212,8 +220,8 @@ type shortcutCheck struct {
 func checkCmd() *cobra.Command {
 	var shortcut, target string
 	cmd := &cobra.Command{Use: "check", SilenceUsage: true, Short: "Comprobar si un atajo está libre", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		if target != "lock" && target != "dictation" && target != "screenshot" {
-			return fmt.Errorf("--for debe ser lock, dictation o screenshot")
+		if !integration.IsShortcutTarget(target) {
+			return fmt.Errorf("--for debe ser lock, dictation, screenshot, launcher o emoji")
 		}
 		normalized, err := binds.NormalizeShortcut(shortcut)
 		if err != nil {
@@ -224,12 +232,12 @@ func checkCmd() *cobra.Command {
 			return fmt.Errorf("leer ajustes: %w", err)
 		}
 		result := shortcutCheck{Shortcut: normalized, Conflicts: []string{}}
-		for _, pair := range []struct{ target, shortcut, label string }{{"lock", s.LockShortcut, "bloqueo"}, {"dictation", s.DictationShortcut, "dictado"}, {"screenshot", s.ScreenshotShortcut, "captura"}} {
-			if pair.target == target {
+		for _, pair := range s.Shortcuts() {
+			if pair.Target == target {
 				continue
 			}
-			if o, err := binds.NormalizeShortcut(pair.shortcut); err == nil && sameShortcut(o, normalized) {
-				result.Conflicts = append(result.Conflicts, "Zenda: "+pair.label)
+			if o, err := binds.NormalizeShortcut(pair.Value); err == nil && sameShortcut(o, normalized) {
+				result.Conflicts = append(result.Conflicts, "Zenda: "+pair.Label)
 			}
 		}
 		if integration.InSession() {
@@ -238,7 +246,7 @@ func checkCmd() *cobra.Command {
 				return err
 			}
 			for _, c := range conflicts {
-				if c == "Zenda lock" || c == "Zenda screenshot" || c == "Zenda: cancelar grabación de atajo" {
+				if integration.IsGeneratedBind(c) || c == "Zenda: cancelar grabación de atajo" {
 					continue
 				}
 				result.Conflicts = append(result.Conflicts, c)
@@ -247,7 +255,7 @@ func checkCmd() *cobra.Command {
 		return writeJSON(cmd, result)
 	}}
 	cmd.Flags().StringVar(&shortcut, "shortcut", "", "Atajo a comprobar")
-	cmd.Flags().StringVar(&target, "for", "", "Atajo de Zenda que se cambiaría: lock, dictation o screenshot")
+	cmd.Flags().StringVar(&target, "for", "", "Atajo de Zenda que se cambiaría: lock, dictation, screenshot, launcher o emoji")
 	return cmd
 }
 

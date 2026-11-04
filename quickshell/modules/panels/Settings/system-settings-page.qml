@@ -106,6 +106,24 @@ Flickable {
                 }
             }
             SettingsRow {
+                label: "Atajo del launcher"
+                SettingsShortcut {
+                    target: "launcher"
+                    enabled: ZendaHyprlandSettings.loaded
+                    value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.launcherShortcut : ""
+                    defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultLauncherShortcut : ""
+                }
+            }
+            SettingsRow {
+                label: "Atajo de emojis"
+                SettingsShortcut {
+                    target: "emoji"
+                    enabled: ZendaHyprlandSettings.loaded
+                    value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.emojiShortcut : ""
+                    defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultEmojiShortcut : ""
+                }
+            }
+            SettingsRow {
                 label: "Carpeta de capturas"
                 modified: (ZendaSettings.values.ZENDA_SCREENSHOT_DIR || "") !== ""
                 onResetRequested: { screenshotDirField.text = ""; ZendaSettings.save({ ZENDA_SCREENSHOT_DIR: "" }, "Carpeta de capturas restablecida"); }
