@@ -93,4 +93,5 @@ ShellRoot {
 	}
 
 	LazyLoader { active: Debug.enabled; DebugLayer {} }
+	LazyLoader { active: Debug.gallery; DesignGallery {} }
 	}
