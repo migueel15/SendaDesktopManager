@@ -490,7 +490,7 @@ def rpc(action, parameters=None):
             request = {"action": action}
             if parameters is not None:
                 request["args"] = parameters
-            sock.zendall((json.dumps(request) + "\n").encode())
+            sock.sendall((json.dumps(request) + "\n").encode())
             chunks = b""
             while not chunks.endswith(b"\n"):
                 chunks += sock.recv(65536)
