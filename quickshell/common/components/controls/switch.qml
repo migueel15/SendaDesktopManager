@@ -19,15 +19,15 @@ Controls.AbstractButton {
         Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
         Rectangle {
             // The thumb grows when on and slides with a spring.
-            readonly property real size: parent.height * (root.checkedValue ? 0.7 : 0.46)
-            x: root.checkedValue ? parent.width - size - (parent.height - size) / 2 : parent.height * 0.27
+            property real thumbSize: parent.height * (root.checkedValue ? 0.7 : 0.46)
+            x: root.checkedValue ? parent.width - thumbSize - (parent.height - thumbSize) / 2 : parent.height * 0.27
             anchors.verticalCenter: parent.verticalCenter
-            width: size
-            height: size
+            width: thumbSize
+            height: thumbSize
             radius: Theme.rounding.full
             color: root.checkedValue ? Theme.colors.base : Theme.colors.overlay
             Behavior on x { SpringAnimation { spring: Theme.motion.spring; damping: Theme.motion.damping } }
-            Behavior on size { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
+            Behavior on thumbSize { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
         }
     }
 }
