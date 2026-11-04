@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import qs.common
+import qs.common.components.controls
 import qs.services
 import qs.common.components.barextension as BarComponents
 
@@ -12,7 +13,13 @@ BarComponents.BarExtension {
     property real maximumHeight: 800
     property var pendingDelete: null
     readonly property bool editing: editor.source.toString() !== ""
-    readonly property real listHeight: Theme.scaled(560)
+    // Fits the grid rows, up to three, so the panel has no empty space.
+    readonly property int columns: Math.max(1, Math.floor((width - 2 * cornerRadius - Theme.spacing.lg * 2) / Theme.scaled(210)))
+    readonly property int rows: Math.max(1, Math.ceil(ZendaTheme.themes.length / columns))
+    readonly property real cellHeight: Theme.scaled(184) + Theme.spacing.md
+    readonly property real listHeight: Theme.spacing.lg * 2 + Theme.scaled(40) + Theme.spacing.md
+        + (pendingDelete ? Theme.scaled(130) : 0) + (ZendaTheme.lastError !== "" ? Theme.scaled(24) : 0)
+        + Math.min(3, rows) * cellHeight - Theme.spacing.md
     expanded: onPickerScreen && ZendaTheme.pickerOpen
     expandedHeight: Math.min(maximumHeight, editing
         ? (editor.item?.implicitHeight || listHeight) + Theme.spacing.lg * 2 : listHeight)
@@ -91,19 +98,32 @@ BarComponents.BarExtension {
             spacing: Theme.spacing.md
             RowLayout {
                 Layout.fillWidth: true
-                Text {
-                    Layout.fillWidth: true
-                    text: "Temas"
-                    font: Theme.font.title
-                    color: Theme.colors.text
+                spacing: Theme.spacing.sm
+                ColumnLayout {
+                    spacing: 0
+                    Text {
+                        text: "Temas"
+                        font.family: Theme.textFamily
+                        font.pixelSize: Theme.scaled(20)
+                        font.weight: Font.DemiBold
+                        color: Theme.colors.text
+                    }
+                    Text {
+                        text: ZendaTheme.themes.length === 1 ? "1 tema" : `${ZendaTheme.themes.length} temas`
+                        font: Theme.font.caption
+                        color: Theme.colors.overlay
+                    }
                 }
-                ActionButton {
-                    text: "Nuevo tema"
+                Item { Layout.fillWidth: true }
+                ZendaButton {
+                    label: "Nuevo tema"
+                    primary: true
                     enabled: !!ZendaTheme.active && !ZendaTheme.busy
                     onClicked: root.editTheme(ZendaTheme.active, false)
                 }
-                ActionButton {
-                    text: "Cerrar"
+                ZendaIconButton {
+                    icon: "\uf00d"
+                    accessibleLabel: "Cerrar"
                     onClicked: ZendaTheme.closePicker()
                 }
             }
@@ -119,14 +139,12 @@ BarComponents.BarExtension {
                 Layout.fillWidth: true
                 implicitHeight: confirmation.implicitHeight + Theme.spacing.md * 2
                 visible: root.pendingDelete !== null
-                radius: Theme.rounding.normal
+                radius: Theme.card.radius
                 color: Qt.rgba(Theme.colors.error.r, Theme.colors.error.g, Theme.colors.error.b, 0.14)
-                border.width: 2
-                border.color: Theme.colors.error
                 ColumnLayout {
                     id: confirmation
                     anchors.fill: parent
-                    anchors.margins: Theme.spacing.md
+                    anchors.margins: Theme.spacing.lg
                     Text {
                         Layout.fillWidth: true
                         text: `¿Borrar el tema «${root.pendingDelete?.name ?? ""}»?`
@@ -142,12 +160,13 @@ BarComponents.BarExtension {
                         wrapMode: Text.Wrap
                     }
                     RowLayout {
-                        ActionButton {
-                            text: "Cancelar"
+                        Layout.alignment: Qt.AlignRight
+                        ZendaButton {
+                            label: "Cancelar"
                             onClicked: root.pendingDelete = null
                         }
-                        ActionButton {
-                            text: "Borrar tema"
+                        ZendaButton {
+                            label: "Borrar tema"
                             destructive: true
                             enabled: !ZendaTheme.busy
                             onClicked: {
@@ -164,8 +183,8 @@ BarComponents.BarExtension {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                cellWidth: width / Math.max(1, Math.floor(width / Theme.scaled(210)))
-                cellHeight: Theme.scaled(220) + Theme.spacing.sm
+                cellWidth: width / root.columns
+                cellHeight: root.cellHeight
                 model: ZendaTheme.themes
                 // The list steps back while a deletion waits for confirmation.
                 enabled: root.pendingDelete === null
@@ -174,8 +193,8 @@ BarComponents.BarExtension {
                 delegate: ThemeCard {
                     required property var modelData
                     themeInfo: modelData
-                    width: grid.cellWidth - Theme.spacing.sm
-                    height: grid.cellHeight - Theme.spacing.sm
+                    width: grid.cellWidth - Theme.spacing.md
+                    height: grid.cellHeight - Theme.spacing.md
                     onEditRequested: info => root.editTheme(info, true)
                     onDuplicateRequested: info => root.editTheme(info, false, true)
                     onDeleteRequested: info => root.pendingDelete = info
@@ -183,25 +202,5 @@ BarComponents.BarExtension {
             }
         }
     }
-    component ActionButton: Button {
-        id: button
-        property bool destructive: false
-        font: Theme.font.body
-        padding: Theme.spacing.sm
-        background: Rectangle {
-            radius: Theme.rounding.normal
-            color: button.destructive ? (button.hovered ? Qt.lighter(Theme.colors.error, 1.1) : Theme.colors.error)
-                : button.hovered ? Theme.colors.surfaceVariant : Theme.colors.surface
-            opacity: button.enabled ? 1 : 0.5
-            border.width: 1
-            border.color: button.activeFocus ? Theme.colors.focus
-                : button.destructive ? Theme.colors.error : Theme.colors.surfaceVariant
-        }
-        contentItem: Text {
-            text: button.text
-            font: button.font
-            color: !button.enabled ? Theme.colors.overlay
-                : button.destructive ? Theme.colors.base : Theme.colors.text
-        }
-    }
+
 }

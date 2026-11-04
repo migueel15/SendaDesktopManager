@@ -7,6 +7,8 @@ Controls.AbstractButton {
     id: root
     property string label: ""
     property bool primary: false
+    // Filled with the error color, for actions that cannot be undone.
+    property bool destructive: false
     // Shows a spinning reload icon next to the label while work is running.
     property bool busy: false
     implicitWidth: content.implicitWidth + Theme.spacing.xl
@@ -51,7 +53,7 @@ Controls.AbstractButton {
                 text: root.label
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                color: root.primary ? Theme.colors.base : Theme.colors.secondary
+                color: root.primary || root.destructive ? Theme.colors.base : Theme.colors.secondary
                 font.family: Theme.textFamily
                 font.pixelSize: Theme.scaled(12)
                 font.weight: Font.Bold
@@ -62,7 +64,8 @@ Controls.AbstractButton {
     Behavior on scale { SpringAnimation { spring: Theme.motion.spring + 1; damping: Theme.motion.damping } }
     background: Rectangle {
         radius: Theme.rounding.full
-        color: root.primary ? (root.hovered ? Theme.colors.secondary : Theme.colors.primary)
+        color: root.destructive ? (root.hovered ? Qt.lighter(Theme.colors.error, 1.1) : Theme.colors.error)
+            : root.primary ? (root.hovered ? Theme.colors.secondary : Theme.colors.primary)
             : root.down || root.hovered ? Theme.colors.surfaceVariant : Theme.colors.selection
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
         border.width: root.visualFocus ? 2 : 0
