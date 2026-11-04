@@ -275,16 +275,20 @@ PanelWindow {
                         required property url fileUrl
                         readonly property bool current: ListView.isCurrentItem
                         width: Theme.scaled(300)
-                        // Inset so the ring is never clipped at the top or bottom.
-                        y: list.ringRoom
-                        height: ListView.view.height - 2 * list.ringRoom
+                        height: ListView.view.height
                         opacity: current ? 1 : hover.hovered ? 0.85 : 0.6
                         scale: current ? 1 : 0.92
                         Behavior on scale { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.OutQuint } }
                         Behavior on opacity { NumberAnimation { duration: Theme.motion.normal } }
 
+                        // Inset from the list's top and bottom, so the ring around it
+                        // is never clipped. ListView places delegates at y = 0, so the
+                        // inset lives inside the delegate.
                         ClippingRectangle {
+                            id: frame
                             anchors.fill: parent
+                            anchors.topMargin: list.ringRoom
+                            anchors.bottomMargin: list.ringRoom
                             radius: Theme.card.radius
                             color: Theme.card.fill
                             Image {
@@ -298,7 +302,7 @@ PanelWindow {
                         }
                         // Selection ring and check badge on the current wallpaper.
                         Rectangle {
-                            anchors.fill: parent
+                            anchors.fill: frame
                             anchors.margins: -4
                             radius: Theme.card.radius + 4
                             color: "transparent"
@@ -308,7 +312,7 @@ PanelWindow {
                             Behavior on opacity { NumberAnimation { duration: Theme.motion.normal } }
                         }
                         Rectangle {
-                            anchors { top: parent.top; right: parent.right; margins: Theme.spacing.md }
+                            anchors { top: frame.top; right: frame.right; margins: Theme.spacing.md }
                             width: Theme.scaled(26); height: width; radius: width / 2
                             color: Theme.colors.primary
                             scale: card.current ? 1 : 0
