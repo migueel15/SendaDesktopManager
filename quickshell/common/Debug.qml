@@ -6,7 +6,7 @@ import Quickshell
 Singleton {
     id: root
 
-    property bool enabled: true
+    property bool enabled: false
     property string debugScreenName: "DP-4"
     // controlCenter, dashboard, themes or wallpapers.
     property string panel: "wallpapers"
