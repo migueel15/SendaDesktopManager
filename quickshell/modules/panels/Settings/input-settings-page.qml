@@ -182,6 +182,19 @@ Flickable {
                     onCommitted: value => ZendaInputSettings.set("scroll-factor", (value / 100).toFixed(2))
                 }
             }
+            ZendaRow {
+                label: "Velocidad del touchpad"
+                modified: root.modified_("touchpadSensitivity")
+                onResetRequested: ZendaInputSettings.set("touchpad-sensitivity", "")
+                description: root.note("touchpadSensitivity", "Sigue a la del ratón hasta que eliges una; 50 % es la normal")
+                ZendaSlider {
+                    implicitWidth: Theme.scaled(200)
+                    enabled: !root.managed("touchpadSensitivity")
+                    from: 0; to: 100; stepSize: 5
+                    value: Math.round((Number(ZendaInputSettings.current.touchpadSensitivity || 0) + 1) * 50)
+                    onCommitted: value => ZendaInputSettings.set("touchpad-sensitivity", (value / 50 - 1).toFixed(2))
+                }
+            }
         }
 
         ZendaGroup {

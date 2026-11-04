@@ -36,7 +36,7 @@ var inputOptions = map[string]string{
 }
 
 func fieldValues(s integration.InputSettings) map[string]string {
-	return map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme, integration.FieldCursorSize: s.CursorSize, integration.FieldAccelProfile: s.AccelProfile, integration.FieldFollowMouse: s.FollowMouse, integration.FieldDisableTyping: s.DisableTyping, integration.FieldScrollFactor: s.ScrollFactor}
+	return map[string]string{integration.FieldLayout: s.Layout, integration.FieldSensitivity: s.Sensitivity, integration.FieldTapToClick: s.TapToClick, integration.FieldNaturalScroll: s.NaturalScroll, integration.FieldCursorTheme: s.CursorTheme, integration.FieldCursorSize: s.CursorSize, integration.FieldAccelProfile: s.AccelProfile, integration.FieldFollowMouse: s.FollowMouse, integration.FieldDisableTyping: s.DisableTyping, integration.FieldScrollFactor: s.ScrollFactor, integration.FieldTouchpadSensitivity: s.TouchpadSensitivity}
 }
 
 func readInputStatus(ctx context.Context, s integration.InputSettings) inputStatus {
@@ -68,6 +68,10 @@ func readInputStatus(ctx context.Context, s integration.InputSettings) inputStat
 		}
 		current[field] = value
 	}
+	// Until the touchpad has its own speed it follows the mouse.
+	if current[integration.FieldTouchpadSensitivity] == "" {
+		current[integration.FieldTouchpadSensitivity] = current[integration.FieldSensitivity]
+	}
 	return inputStatus{Current: current, User: user, Saved: saved, Defaults: defaults, Themes: integration.CursorThemes()}
 }
 
@@ -75,7 +79,7 @@ func printInput(cmd *cobra.Command, status inputStatus, asJSON bool) error {
 	if asJSON {
 		return writeJSON(cmd, status)
 	}
-	labels := []struct{ field, label string }{{integration.FieldLayout, "Distribución"}, {integration.FieldSensitivity, "Velocidad del ratón"}, {integration.FieldTapToClick, "Tocar para hacer clic"}, {integration.FieldNaturalScroll, "Desplazamiento natural"}, {integration.FieldCursorTheme, "Tema de cursor"}, {integration.FieldCursorSize, "Tamaño del cursor"}, {integration.FieldAccelProfile, "Aceleración"}, {integration.FieldFollowMouse, "Foco con el ratón"}, {integration.FieldDisableTyping, "Desactivar touchpad al escribir"}, {integration.FieldScrollFactor, "Velocidad de desplazamiento"}}
+	labels := []struct{ field, label string }{{integration.FieldLayout, "Distribución"}, {integration.FieldSensitivity, "Velocidad del ratón"}, {integration.FieldTapToClick, "Tocar para hacer clic"}, {integration.FieldNaturalScroll, "Desplazamiento natural"}, {integration.FieldCursorTheme, "Tema de cursor"}, {integration.FieldCursorSize, "Tamaño del cursor"}, {integration.FieldAccelProfile, "Aceleración"}, {integration.FieldFollowMouse, "Foco con el ratón"}, {integration.FieldDisableTyping, "Desactivar touchpad al escribir"}, {integration.FieldScrollFactor, "Velocidad de desplazamiento"}, {integration.FieldTouchpadSensitivity, "Velocidad del touchpad"}}
 	for _, l := range labels {
 		line := fmt.Sprintf("%s: %s", l.label, status.Current[l.field])
 		if u, ok := status.User[l.field]; ok {
@@ -189,7 +193,7 @@ func inputCmd() *cobra.Command {
 		}
 		return printInput(cmd, readInputStatus(cmd.Context(), s.Input), asJSON)
 	}}
-	var layout, sensitivity, tap, natural, cursor, cursorSize, accel, follow, typing, scroll string
+	var layout, sensitivity, tap, natural, cursor, cursorSize, accel, follow, typing, scroll, touchpadSens string
 	set := &cobra.Command{Use: "set", Short: "Cambiar ajustes (valor vacío: Zenda deja de definirlo)", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		s, err := integration.ReadSettings()
 		if err != nil {
@@ -200,7 +204,7 @@ func inputCmd() *cobra.Command {
 			flag, field string
 			value       string
 			target      *string
-		}{{"layout", integration.FieldLayout, layout, &s.Input.Layout}, {"sensitivity", integration.FieldSensitivity, sensitivity, &s.Input.Sensitivity}, {"tap-to-click", integration.FieldTapToClick, tap, &s.Input.TapToClick}, {"natural-scroll", integration.FieldNaturalScroll, natural, &s.Input.NaturalScroll}, {"cursor-theme", integration.FieldCursorTheme, cursor, &s.Input.CursorTheme}, {"cursor-size", integration.FieldCursorSize, cursorSize, &s.Input.CursorSize}, {"accel-profile", integration.FieldAccelProfile, accel, &s.Input.AccelProfile}, {"follow-mouse", integration.FieldFollowMouse, follow, &s.Input.FollowMouse}, {"disable-while-typing", integration.FieldDisableTyping, typing, &s.Input.DisableTyping}, {"scroll-factor", integration.FieldScrollFactor, scroll, &s.Input.ScrollFactor}}
+		}{{"layout", integration.FieldLayout, layout, &s.Input.Layout}, {"sensitivity", integration.FieldSensitivity, sensitivity, &s.Input.Sensitivity}, {"tap-to-click", integration.FieldTapToClick, tap, &s.Input.TapToClick}, {"natural-scroll", integration.FieldNaturalScroll, natural, &s.Input.NaturalScroll}, {"cursor-theme", integration.FieldCursorTheme, cursor, &s.Input.CursorTheme}, {"cursor-size", integration.FieldCursorSize, cursorSize, &s.Input.CursorSize}, {"accel-profile", integration.FieldAccelProfile, accel, &s.Input.AccelProfile}, {"follow-mouse", integration.FieldFollowMouse, follow, &s.Input.FollowMouse}, {"disable-while-typing", integration.FieldDisableTyping, typing, &s.Input.DisableTyping}, {"scroll-factor", integration.FieldScrollFactor, scroll, &s.Input.ScrollFactor}, {"touchpad-sensitivity", integration.FieldTouchpadSensitivity, touchpadSens, &s.Input.TouchpadSensitivity}}
 		for _, c := range changes {
 			if !cmd.Flags().Changed(c.flag) {
 				continue
@@ -238,6 +242,7 @@ func inputCmd() *cobra.Command {
 	set.Flags().StringVar(&follow, "follow-mouse", "", "Foco con el ratón, de 0 a 3")
 	set.Flags().StringVar(&typing, "disable-while-typing", "", "true o false")
 	set.Flags().StringVar(&scroll, "scroll-factor", "", "De 0.1 a 3")
+	set.Flags().StringVar(&touchpadSens, "touchpad-sensitivity", "", "Velocidad del touchpad, de -1 a 1 (vacío: la del ratón)")
 	cmd.PersistentFlags().BoolVar(&asJSON, "json", false, "Mostrar JSON")
 	cmd.AddCommand(show, set, themes, sync)
 	return cmd
