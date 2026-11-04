@@ -61,20 +61,14 @@ Rectangle {
                 Accessible.name: modelData.label
                 Accessible.checked: selected
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: Theme.rounding.full
-                    color: Theme.colors.surfaceVariant
-                    opacity: hover.hovered && !segment.selected && root.enabled ? 0.6 : 0
-                    Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
-                }
                 Text {
                     id: label
                     anchors.centerIn: parent
                     width: Math.min(implicitWidth, parent.width - Theme.spacing.sm)
                     elide: Text.ElideRight
                     text: segment.modelData.label
-                    color: segment.selected ? Theme.colors.base : Theme.colors.textMuted
+                    // Hover only brightens the text, as in the gallery design.
+                    color: segment.selected ? Theme.colors.base : hover.hovered && root.enabled ? Theme.colors.text : Theme.colors.textMuted
                     font.family: Theme.textFamily
                     font.pixelSize: Theme.scaled(12)
                     font.weight: Font.Bold
