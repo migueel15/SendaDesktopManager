@@ -1,7 +1,9 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell.Widgets
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Item {
@@ -86,38 +88,6 @@ Item {
             root.errorMessage = error;
         }
     }
-    component Field: TextField {
-        font: Theme.font.body
-        color: Theme.colors.text
-        placeholderTextColor: Theme.colors.overlay
-        selectByMouse: true
-        padding: Theme.spacing.sm
-        background: Rectangle {
-            color: Theme.colors.background
-            radius: Theme.rounding.small
-            border.color: parent.activeFocus ? Theme.colors.focus : Theme.colors.surfaceVariant
-        }
-    }
-    component Action: Button {
-        property bool primary: false
-        font: Theme.font.body
-        padding: Theme.spacing.sm
-        contentItem: Text {
-            text: parent.text
-            font: Theme.font.body
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            color: !parent.enabled ? Theme.colors.overlay
-                : parent.primary ? Theme.colors.base : Theme.colors.text
-        }
-        background: Rectangle {
-            radius: Theme.rounding.normal
-            color: !parent.enabled ? Theme.colors.surface
-                : parent.primary ? (parent.hovered ? Theme.colors.secondary : Theme.colors.primary)
-                : parent.hovered ? Theme.colors.surfaceVariant : Theme.colors.surface
-            border.color: parent.activeFocus ? Theme.colors.focus : Theme.colors.surfaceVariant
-        }
-    }
     ColumnLayout {
         anchors.fill: parent
         spacing: Theme.spacing.md
@@ -144,62 +114,19 @@ Item {
                     font: Theme.font.heading
                     color: Theme.colors.text
                 }
-                ComboBox {
-                    id: baseSelector
+ZendaSelect {
                     visible: !root.editing && !root.duplicating
                     Layout.fillWidth: true
-                    model: root.validThemes
-                    textRole: "name"
-                    currentIndex: root.validThemes.findIndex(theme =>
-                        theme.name === (root.baseTheme || ZendaTheme.active || {}).name)
-                    onActivated: index => root.copyBase(root.validThemes[index])
-                    font: Theme.font.body
-                    contentItem: Text {
-                        leftPadding: Theme.spacing.sm
-                        rightPadding: Theme.spacing.xl
-                        verticalAlignment: Text.AlignVCenter
-                        text: baseSelector.displayText
-                        color: Theme.colors.text
-                        font: Theme.font.body
-                    }
-                    background: Rectangle {
-                        implicitHeight: 36
-                        color: Theme.colors.surface
-                        radius: Theme.rounding.small
-                        border.color: baseSelector.activeFocus ? Theme.colors.focus : Theme.colors.border
-                    }
-                    delegate: ItemDelegate {
-                        required property var modelData
-                        width: baseSelector.width
-                        text: modelData.name
-                        font: Theme.font.body
-                        contentItem: Text { text: parent.text; color: Theme.colors.text; font: Theme.font.body }
-                        background: Rectangle { color: parent.hovered ? Theme.colors.surfaceVariant : Theme.colors.surfaceRaised }
-                    }
-                    popup: Popup {
-                        y: baseSelector.height
-                        width: baseSelector.width
-                        implicitHeight: Math.min(240, baseList.contentHeight + Theme.spacing.sm)
-                        padding: Theme.spacing.xs
-                        contentItem: ListView {
-                            id: baseList
-                            clip: true
-                            model: baseSelector.popup.visible ? baseSelector.delegateModel : null
-                            ScrollBar.vertical: ScrollBar {}
-                        }
-                        background: Rectangle {
-                            color: Theme.colors.surfaceRaised
-                            radius: Theme.rounding.normal
-                            border.color: Theme.colors.surfaceRaisedBorder
-                        }
-                    }
+                    options: root.validThemes.map(theme => theme.name)
+                    value: (root.baseTheme || ZendaTheme.active || {}).name ?? ""
+                    onChosen: name => root.copyBase(root.validThemes.find(theme => theme.name === name))
                 }
                 Text { text: "Nombre"; font: Theme.font.heading; color: Theme.colors.text }
-                Field {
+                ZendaField {
                     Layout.fillWidth: true
                     text: root.draftName
-                    placeholderText: "mi-tema"
-                    onTextEdited: root.draftName = text
+                    placeholder: "mi-tema"
+                    onTextChanged: root.draftName = text
                 }
                 Text {
                     Layout.fillWidth: true
@@ -212,26 +139,24 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 116
-                    radius: Theme.rounding.normal
+                    radius: Theme.card.radius
                     color: root.previewColor("base")
-                    border.color: root.previewColor("border")
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: Theme.spacing.sm
+                        anchors.margins: Theme.spacing.md
                         spacing: Theme.spacing.sm
                         Rectangle {
                             Layout.fillWidth: true
                             implicitHeight: 28
-                            radius: Theme.rounding.small
+                            radius: height / 2
                             color: root.previewColor("background")
                             Text { anchors.centerIn: parent; text: "Zenda · Vista previa"; font: Theme.font.body; color: root.previewColor("primary") }
                         }
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            radius: Theme.rounding.small
-                            color: root.previewColor("surface")
-                            border.color: root.previewColor("border")
+                            radius: Theme.rounding.large
+                            color: root.previewColor("surfaceRaised") || root.previewColor("surface")
                             Text { anchors.centerIn: parent; text: "Texto de una tarjeta"; font: Theme.font.body; color: root.previewColor("text") }
                             }
                         }
@@ -257,13 +182,13 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Theme.spacing.sm
-                    Field {
+                    ZendaField {
                         Layout.fillWidth: true
                         text: root.draftWallpaper
-                        placeholderText: "/ruta/a/imagen.png"
-                        onTextEdited: root.draftWallpaper = text
+                        placeholder: "/ruta/a/imagen.png"
+                        onTextChanged: root.draftWallpaper = text
                     }
-                    Action { text: "Elegir…"; onClicked: root.browsing = !root.browsing }
+                    ZendaButton { label: "Elegir…"; onClicked: root.browsing = !root.browsing }
                 }
                 Loader {
                     Layout.fillWidth: true
@@ -278,16 +203,20 @@ Item {
                         }
                     }
                 }
-                Image {
-                    id: thumbnail
-                    sourceSize: Qt.size(320, 240)
-                    cache: false
+                ClippingRectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 120
-                    source: root.imageUrl(root.draftWallpaper)
-                    fillMode: Image.PreserveAspectFit
-                    asynchronous: true
+                    radius: Theme.card.radius
+                    color: Theme.card.fill
+                Image {
+                    id: thumbnail
+                    anchors.fill: parent
+                    sourceSize: Qt.size(320, 240)
                     cache: false
+                    source: root.imageUrl(root.draftWallpaper)
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                }
                 }
                 Text {
                     Layout.fillWidth: true
@@ -311,9 +240,10 @@ Item {
             Layout.fillWidth: true
             spacing: Theme.spacing.sm
             Item { Layout.fillWidth: true }
-            Action { text: "Cancelar"; enabled: !root.pendingSave; onClicked: root.closed() }
-            Action {
-                text: root.pendingSave ? "Guardando…" : "Guardar"
+            ZendaButton { label: "Cancelar"; enabled: !root.pendingSave; onClicked: root.closed() }
+            ZendaButton {
+                label: root.pendingSave ? "Guardando…" : "Guardar"
+                busy: root.pendingSave
                 primary: true
                 enabled: root.canSave
                 onClicked: root.save()

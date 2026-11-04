@@ -22,14 +22,15 @@ RowLayout {
     Rectangle {
         Layout.preferredWidth: 120
         Layout.preferredHeight: 32
-        radius: Theme.rounding.small
-        color: Theme.colors.background
-        border.color: !root.valid ? Theme.colors.error
-            : input.activeFocus ? Theme.colors.focus : Theme.colors.surfaceVariant
+        radius: Theme.rounding.control
+        color: input.activeFocus ? Theme.colors.surfaceVariant : Theme.colors.surface
+        border.width: root.valid ? 0 : 1
+        border.color: Theme.colors.error
         TextInput {
             id: input
             anchors.fill: parent
-            anchors.margins: Theme.spacing.sm
+            anchors.leftMargin: Theme.spacing.md
+            anchors.rightMargin: Theme.spacing.md
             verticalAlignment: TextInput.AlignVCenter
             selectByMouse: true
             clip: true
@@ -41,9 +42,10 @@ RowLayout {
     Rectangle {
         Layout.preferredWidth: 32
         Layout.preferredHeight: 32
-        radius: Theme.rounding.small
+        radius: width / 2
         color: root.valid ? root.text : Theme.colors.surface
-        border.color: root.valid ? Theme.colors.border : Theme.colors.error
+        border.width: root.valid ? 0 : 1
+        border.color: Theme.colors.error
         Text {
             anchors.centerIn: parent
             visible: !root.valid
