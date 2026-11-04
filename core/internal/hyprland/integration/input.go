@@ -24,6 +24,7 @@ const (
 	KeyInputFollowMouse   = "ZENDA_INPUT_FOLLOW_MOUSE"
 	KeyInputDisableTyping = "ZENDA_INPUT_DISABLE_WHILE_TYPING"
 	KeyInputScrollFactor  = "ZENDA_INPUT_SCROLL_FACTOR"
+	KeyInputTouchpadSens  = "ZENDA_INPUT_TOUCHPAD_SENSITIVITY"
 )
 
 // Field names shared by the CLI, the JSON status and the interface.
@@ -38,6 +39,8 @@ const (
 	FieldFollowMouse   = "followMouse"
 	FieldDisableTyping = "disableWhileTyping"
 	FieldScrollFactor  = "scrollFactor"
+	// FieldTouchpadSensitivity is empty while the touchpad follows the mouse.
+	FieldTouchpadSensitivity = "touchpadSensitivity"
 )
 
 // InputSettings holds what the user chose in Zenda. An empty value means that
@@ -53,14 +56,19 @@ type InputSettings struct {
 	FollowMouse   string
 	DisableTyping string
 	ScrollFactor  string
+	// TouchpadSensitivity is empty while the touchpad follows the mouse.
+	TouchpadSensitivity string
+	// touchpads are the Hyprland names that get their own sensitivity; it is
+	// filled only when the module is generated.
+	touchpads []string
 }
 
 func LoadInputSettings(values map[string]string) InputSettings {
-	return InputSettings{Layout: values[KeyInputLayout], Sensitivity: values[KeyInputSensitivity], TapToClick: values[KeyInputTapToClick], NaturalScroll: values[KeyInputNaturalScrol], CursorTheme: values[KeyCursorTheme], CursorSize: values[KeyCursorSize], AccelProfile: values[KeyInputAccel], FollowMouse: values[KeyInputFollowMouse], DisableTyping: values[KeyInputDisableTyping], ScrollFactor: values[KeyInputScrollFactor]}
+	return InputSettings{Layout: values[KeyInputLayout], Sensitivity: values[KeyInputSensitivity], TapToClick: values[KeyInputTapToClick], NaturalScroll: values[KeyInputNaturalScrol], CursorTheme: values[KeyCursorTheme], CursorSize: values[KeyCursorSize], AccelProfile: values[KeyInputAccel], FollowMouse: values[KeyInputFollowMouse], DisableTyping: values[KeyInputDisableTyping], ScrollFactor: values[KeyInputScrollFactor], TouchpadSensitivity: values[KeyInputTouchpadSens]}
 }
 
 func (s InputSettings) values() map[string]string {
-	return map[string]string{KeyInputLayout: s.Layout, KeyInputSensitivity: s.Sensitivity, KeyInputTapToClick: s.TapToClick, KeyInputNaturalScrol: s.NaturalScroll, KeyCursorTheme: s.CursorTheme, KeyCursorSize: s.CursorSize, KeyInputAccel: s.AccelProfile, KeyInputFollowMouse: s.FollowMouse, KeyInputDisableTyping: s.DisableTyping, KeyInputScrollFactor: s.ScrollFactor}
+	return map[string]string{KeyInputLayout: s.Layout, KeyInputSensitivity: s.Sensitivity, KeyInputTapToClick: s.TapToClick, KeyInputNaturalScrol: s.NaturalScroll, KeyCursorTheme: s.CursorTheme, KeyCursorSize: s.CursorSize, KeyInputAccel: s.AccelProfile, KeyInputFollowMouse: s.FollowMouse, KeyInputDisableTyping: s.DisableTyping, KeyInputScrollFactor: s.ScrollFactor, KeyInputTouchpadSens: s.TouchpadSensitivity}
 }
 
 // SaveInputSettings stores the fields after validating them.
@@ -82,6 +90,12 @@ func (s InputSettings) Validate() error {
 		v, err := strconv.ParseFloat(s.Sensitivity, 64)
 		if err != nil || v < -1 || v > 1 {
 			return fmt.Errorf("la velocidad del ratón debe estar entre -1 y 1")
+		}
+	}
+	if s.TouchpadSensitivity != "" {
+		v, err := strconv.ParseFloat(s.TouchpadSensitivity, 64)
+		if err != nil || v < -1 || v > 1 {
+			return fmt.Errorf("la velocidad del touchpad debe estar entre -1 y 1")
 		}
 	}
 	for _, v := range []string{s.TapToClick, s.NaturalScroll, s.DisableTyping} {
@@ -148,6 +162,8 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 	add(FieldDisableTyping, s, ok)
 	s, ok = c.ConfigKey(touchpad, "scroll_factor")
 	add(FieldScrollFactor, s, ok)
+	s, ok = c.DeviceSensitivity(touchpadNames())
+	add(FieldTouchpadSensitivity, s, ok)
 	for _, name := range []string{"XCURSOR_THEME", "HYPRCURSOR_THEME"} {
 		s, ok = c.EnvVar(name)
 		add(FieldCursorTheme, s, ok)
@@ -170,10 +186,13 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 // withoutUser drops the fields the user defines: the user always wins, and
 // Zenda's module loads last, so generating them would override the user.
 func (s InputSettings) withoutUser(user map[string]UserSetting) InputSettings {
-	for field, target := range map[string]*string{FieldLayout: &s.Layout, FieldSensitivity: &s.Sensitivity, FieldTapToClick: &s.TapToClick, FieldNaturalScroll: &s.NaturalScroll, FieldCursorTheme: &s.CursorTheme, FieldCursorSize: &s.CursorSize, FieldAccelProfile: &s.AccelProfile, FieldFollowMouse: &s.FollowMouse, FieldDisableTyping: &s.DisableTyping, FieldScrollFactor: &s.ScrollFactor} {
+	for field, target := range map[string]*string{FieldLayout: &s.Layout, FieldSensitivity: &s.Sensitivity, FieldTapToClick: &s.TapToClick, FieldNaturalScroll: &s.NaturalScroll, FieldCursorTheme: &s.CursorTheme, FieldCursorSize: &s.CursorSize, FieldAccelProfile: &s.AccelProfile, FieldFollowMouse: &s.FollowMouse, FieldDisableTyping: &s.DisableTyping, FieldScrollFactor: &s.ScrollFactor, FieldTouchpadSensitivity: &s.TouchpadSensitivity} {
 		if _, ok := user[field]; ok {
 			*target = ""
 		}
+	}
+	if s.TouchpadSensitivity != "" {
+		s.touchpads = touchpadNames()
 	}
 	return s
 }
@@ -211,6 +230,11 @@ func renderInput(s InputSettings, size int) string {
 	var out strings.Builder
 	if len(input) > 0 {
 		out.WriteString("hl.config({ input = { " + strings.Join(input, ", ") + " } })\n")
+	}
+	if s.TouchpadSensitivity != "" {
+		for _, name := range s.touchpads {
+			out.WriteString("hl.device({ name = " + strconv.Quote(name) + ", sensitivity = " + s.TouchpadSensitivity + " })\n")
+		}
 	}
 	if s.CursorSize != "" {
 		if n, err := strconv.Atoi(s.CursorSize); err == nil {

@@ -230,3 +230,20 @@ func SessionEnvFiles() map[string]string {
 	}
 	return found
 }
+
+var deviceSensitivity = regexp.MustCompile(`hl\.device\s*\(\s*\{[^}]*?\bname\s*=\s*["']([^"']+)["'][^}]*?\bsensitivity\s*=`)
+
+// DeviceSensitivity finds an hl.device that sets the sensitivity of one of the
+// named devices.
+func (c UserConfig) DeviceSensitivity(names []string) (UserSetting, bool) {
+	for file, text := range c {
+		for _, m := range deviceSensitivity.FindAllStringSubmatch(text, -1) {
+			for _, name := range names {
+				if m[1] == name {
+					return UserSetting{Value: m[1], File: file}, true
+				}
+			}
+		}
+	}
+	return UserSetting{}, false
+}

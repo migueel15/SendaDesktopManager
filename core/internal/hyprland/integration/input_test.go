@@ -162,3 +162,46 @@ func TestCursorSize(t *testing.T) {
 		t.Fatal("accepted a small size")
 	}
 }
+
+func TestTouchpadSensitivity(t *testing.T) {
+	old := touchpadNames
+	touchpadNames = func() []string { return []string{"elan-touchpad"} }
+	defer func() { touchpadNames = old }()
+
+	if out := renderInput(InputSettings{Sensitivity: "0.2"}.withoutUser(nil), 24); strings.Contains(out, "hl.device") {
+		t.Fatalf("inherited speed must generate no device: %q", out)
+	}
+	out := renderInput(InputSettings{Sensitivity: "0.2", TouchpadSensitivity: "0.6"}.withoutUser(nil), 24)
+	if !strings.Contains(out, `hl.device({ name = "elan-touchpad", sensitivity = 0.6 })`) || !strings.Contains(out, "sensitivity = 0.2") {
+		t.Fatalf("got %q", out)
+	}
+	user := UserConfig{"/c/hyprland.lua": `hl.device({ name = "elan-touchpad", sensitivity = -0.3 })`}
+	found := DetectInput(user, nil)
+	if _, ok := found[FieldTouchpadSensitivity]; !ok {
+		t.Fatal("user device not detected")
+	}
+	if _, ok := found[FieldSensitivity]; ok {
+		t.Fatal("device counted as global")
+	}
+	if out := renderInput(InputSettings{TouchpadSensitivity: "0.6"}.withoutUser(found), 24); strings.Contains(out, "hl.device") {
+		t.Fatalf("user wins: %q", out)
+	}
+	if err := (InputSettings{TouchpadSensitivity: "2"}).Validate(); err == nil {
+		t.Fatal("out of range accepted")
+	}
+}
+
+func TestDetectTouchpads(t *testing.T) {
+	dir := t.TempDir()
+	sys, udev := filepath.Join(dir, "sys"), filepath.Join(dir, "udev")
+	os.MkdirAll(udev, 0o755)
+	for ev, spec := range map[string][3]string{"event1": {"13:65", "ELAN Touchpad\n", "E:ID_INPUT_TOUCHPAD=1\n"}, "event2": {"13:66", "Some Mouse\n", "E:ID_INPUT_MOUSE=1\n"}} {
+		os.MkdirAll(filepath.Join(sys, ev, "device"), 0o755)
+		os.WriteFile(filepath.Join(sys, ev, "dev"), []byte(spec[0]+"\n"), 0o644)
+		os.WriteFile(filepath.Join(sys, ev, "device/name"), []byte(spec[1]), 0o644)
+		os.WriteFile(filepath.Join(udev, "c"+spec[0]), []byte(spec[2]), 0o644)
+	}
+	if got := detectTouchpads(sys, udev); len(got) != 1 || got[0] != "elan-touchpad" {
+		t.Fatalf("got %v", got)
+	}
+}
