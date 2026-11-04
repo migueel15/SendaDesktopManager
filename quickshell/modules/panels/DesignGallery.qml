@@ -188,6 +188,134 @@ FloatingWindow {
         }
     }
 
+    // ---- Style B: settings building blocks -------------------------------
+    component SegmentsB: Rectangle {
+        id: seg
+        property var options: ["Auto", "Claro", "Oscuro"]
+        property int current: 0
+        implicitWidth: 240; implicitHeight: 34; radius: height / 2
+        color: Theme.colors.surfaceRaised
+        Rectangle {   // sliding pill behind the selected option
+            width: seg.width / seg.options.length - 6; height: seg.height - 6; y: 3
+            x: 3 + seg.current * seg.width / seg.options.length
+            radius: height / 2; color: Theme.colors.primary
+            Behavior on x { SpringAnimation { spring: 4; damping: 0.3 } }
+        }
+        Row {
+            anchors.fill: parent
+            Repeater {
+                model: seg.options
+                Item {
+                    width: seg.width / seg.options.length; height: seg.height
+                    Text { anchors.centerIn: parent; text: modelData; font: Theme.font.body
+                        color: index === seg.current ? Theme.colors.base : Theme.colors.textMuted
+                        Behavior on color { ColorAnimation { duration: Theme.motion.normal } } }
+                    TapHandler { onTapped: seg.current = index }
+                }
+            }
+        }
+    }
+
+    component FieldB: Rectangle {
+        implicitWidth: 240; implicitHeight: 36; radius: 12
+        color: input.activeFocus ? Theme.colors.surfaceVariant : Theme.colors.surfaceRaised
+        Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+        Rectangle {   // focus underline that grows from the centre
+            anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: 2 }
+            height: 2; radius: 1; color: Theme.colors.primary
+            width: input.activeFocus ? parent.width - 24 : 0
+            Behavior on width { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.OutQuint } }
+        }
+        TextInput {
+            id: input
+            anchors { fill: parent; leftMargin: Theme.spacing.md; rightMargin: Theme.spacing.md }
+            verticalAlignment: TextInput.AlignVCenter
+            text: "Madrid"; color: Theme.colors.text; font: Theme.font.body
+            selectionColor: Theme.colors.selection
+        }
+    }
+
+    component SelectB: Rectangle {
+        id: sel
+        property var options: ["Inter", "JetBrains Mono", "Noto Sans"]
+        property int current: 0
+        property bool open: false
+        implicitWidth: 240; implicitHeight: 36; radius: 12; z: open ? 10 : 0
+        color: hs.hovered || open ? Theme.colors.surfaceVariant : Theme.colors.surfaceRaised
+        Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+        HoverHandler { id: hs }
+        TapHandler { onTapped: sel.open = !sel.open }
+        Text { anchors { left: parent.left; leftMargin: Theme.spacing.md; verticalCenter: parent.verticalCenter }
+            text: sel.options[sel.current]; color: Theme.colors.text; font: Theme.font.body }
+        Text { anchors { right: parent.right; rightMargin: Theme.spacing.md; verticalCenter: parent.verticalCenter }
+            text: "▾"; color: Theme.colors.textMuted; font: Theme.font.body
+            rotation: sel.open ? 180 : 0; Behavior on rotation { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } } }
+        Rectangle {   // popup list that unfolds with scale and fade
+            y: parent.height + 6; width: parent.width; radius: 16
+            height: list.implicitHeight + 12
+            color: Theme.colors.surfaceVariant
+            transformOrigin: Item.Top
+            scale: sel.open ? 1 : 0.9; opacity: sel.open ? 1 : 0; visible: opacity > 0
+            Behavior on scale { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
+            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
+            Column {
+                id: list; x: 6; y: 6; width: parent.width - 12
+                Repeater {
+                    model: sel.options
+                    Rectangle {
+                        width: list.width; height: 32; radius: 10
+                        color: index === sel.current ? Theme.colors.selection : (ho.hovered ? Theme.colors.surfaceRaised : "transparent")
+                        HoverHandler { id: ho }
+                        TapHandler { onTapped: { sel.current = index; sel.open = false } }
+                        Text { anchors { left: parent.left; leftMargin: Theme.spacing.sm; verticalCenter: parent.verticalCenter }
+                            text: modelData; font: Theme.font.body
+                            color: index === sel.current ? Theme.colors.primary : Theme.colors.text }
+                    }
+                }
+            }
+        }
+    }
+
+    // One settings row: label + description on the left, control on the right.
+    component RowB: Item {
+        property string label
+        property string description
+        default property alias control: slot.data
+        Layout.fillWidth: true
+        implicitHeight: Math.max(texts.implicitHeight, slot.childrenRect.height) + 2 * Theme.spacing.sm
+        Rectangle {   // hover wash instead of separator lines
+            anchors { fill: parent; margins: -Theme.spacing.sm }
+            radius: 14; color: Theme.colors.surfaceVariant
+            opacity: hr.hovered ? 0.5 : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.motion.normal } }
+        }
+        HoverHandler { id: hr }
+        Column {
+            id: texts; anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+            spacing: 2
+            Text { text: parent.parent.label; color: Theme.colors.text; font: Theme.font.heading }
+            Text { text: parent.parent.description; color: Theme.colors.textMuted; font: Theme.font.caption; visible: text !== "" }
+        }
+        Item { id: slot; anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+            width: childrenRect.width; height: childrenRect.height }
+    }
+
+    // A settings group in style B: tonal card, large radius, no borders.
+    component GroupB: Rectangle {
+        property string title
+        default property alias rows: rowsColumn.data
+        Layout.fillWidth: true
+        implicitHeight: groupColumn.implicitHeight + 2 * Theme.spacing.lg
+        radius: 24; color: Theme.colors.surfaceRaised
+        ColumnLayout {
+            id: groupColumn
+            anchors { fill: parent; margins: Theme.spacing.lg }
+            spacing: Theme.spacing.md
+            Text { text: parent.parent.title; color: Theme.colors.primary; font: Theme.font.label }
+            ColumnLayout { id: rowsColumn; Layout.fillWidth: true; spacing: Theme.spacing.md }
+        }
+    }
+
     // ---- Layout ----------------------------------------------------------
     Flickable {
         anchors { fill: parent; margins: Theme.spacing.xl }
@@ -199,6 +327,23 @@ FloatingWindow {
             spacing: Theme.spacing.xl
 
             Text { text: "Galería de diseño · Zenda"; color: Theme.colors.white; font: Theme.font.display }
+
+            Text { text: "Estilo B · Ajustes"; color: Theme.colors.text; font: Theme.font.title }
+            GroupB {
+                title: "Apariencia"
+                RowB { label: "Modo de color"; description: "Sigue al sistema o fíjalo"; SegmentsB {} }
+                RowB { label: "Fuente de la interfaz"; SelectB {} }
+                RowB { label: "Animaciones"; description: "Suaviza las transiciones de los paneles"; SwitchB {} }
+                RowB { label: "Transparencia"; SliderBase { width: 240; trackHeight: 14; track: Theme.colors.surfaceVariant
+                    handle: Rectangle { width: 4; height: 22; radius: 2; color: Theme.colors.white } } }
+            }
+            GroupB {
+                title: "Tiempo"
+                RowB { label: "Ciudad"; description: "Para el widget del tiempo"; FieldB {} }
+                RowB { label: "Restablecer"; description: "Vuelve a los valores por defecto"; ButtonB {} }
+            }
+
+            Text { text: "Comparativa A / B / C"; color: Theme.colors.textMuted; font: Theme.font.heading }
 
             Section {
                 title: "Switches"
