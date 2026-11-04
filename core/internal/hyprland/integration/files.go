@@ -58,6 +58,9 @@ func ReadSettings() (Settings, error) {
 					if value, e := strconv.Unquote(match[1]); e == nil {
 						if value, e = binds.NormalizeShortcut(value); e == nil {
 							s.DictationShortcut = value
+							_, launcherSet := values[KeyLauncherShortcut]
+							_, emojiSet := values[KeyEmojiShortcut]
+							dropCollidingDefaults(&s, map[string]bool{"launcher": launcherSet, "emoji": emojiSet})
 						}
 					}
 				}

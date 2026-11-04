@@ -40,13 +40,15 @@ Singleton {
 
     function save(flag, value) {
         if (root.busy || !root.loaded) return false;
-        const shortcuts = ["lock", "dictation", "screenshot"].map(name =>
-            flag === "--" + name + "-shortcut" ? String(value).trim() : root.values[name + "Shortcut"].trim());
-        if (shortcuts.some(value => !value)) {
+        // The launcher and emoji shortcuts may be unbound; the rest are required.
+        const shortcuts = ["lock", "dictation", "screenshot", "launcher", "emoji"].map(name =>
+            flag === "--" + name + "-shortcut" ? String(value).trim() : (root.values[name + "Shortcut"] || "").trim());
+        if (shortcuts.slice(0, 3).some(value => !value) || (flag.endsWith("-shortcut") && !String(value).trim())) {
             root.showError("Los atajos no pueden estar vacíos"); return false;
         }
-        if (new Set(shortcuts.map(value => value.replace(/\s/g, "").toLowerCase())).size !== 3) {
-            root.showError("Los atajos de bloqueo, dictado y captura deben ser distintos"); return false;
+        const bound = shortcuts.filter(value => value).map(value => value.replace(/\s/g, "").toLowerCase());
+        if (new Set(bound).size !== bound.length) {
+            root.showError("Los atajos de Zenda deben ser distintos entre sí"); return false;
         }
         if (flag === "--idle-seconds" && (!/^\d+$/.test(String(value)) || Number(value) > 86400)) {
             root.showError("El tiempo de inactividad debe ser un entero entre 0 y 86400 segundos");
@@ -73,6 +75,7 @@ Singleton {
                 try {
                     const data = JSON.parse(readOutput.text);
                     if (typeof data.screenshotShortcut !== "string" || typeof data.lockShortcut !== "string" || typeof data.dictationShortcut !== "string"
+                        || typeof data.launcherShortcut !== "string" || typeof data.emojiShortcut !== "string"
                         || !Number.isInteger(data.idleSeconds) || data.idleSeconds < 0 || data.idleSeconds > 86400
                         || typeof data.blur !== "boolean" || typeof data.modulePath !== "string"
                         || typeof data.moduleActive !== "boolean" || typeof data.idleConfigPath !== "string"

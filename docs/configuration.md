@@ -46,6 +46,8 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 | `ZENDA_SCREENSHOT_SHORTCUT` | Atajo de captura de pantalla. Predeterminado: `Print`. |
 | `ZENDA_SCREENSHOT_DIR` | Carpeta para Guardar en el editor; vacía usa Imágenes/Capturas. Ver [capturas](screenshots.md). |
 | `ZENDA_LOCK_SHORTCUT` | Atajo de bloqueo de Hyprland. Predeterminado: `SUPER + CTRL + l`. |
+| `ZENDA_LAUNCHER_SHORTCUT` | Atajo que abre el launcher. Predeterminado: `SUPER + d`. |
+| `ZENDA_EMOJI_SHORTCUT` | Atajo que abre el launcher en modo emoji. Predeterminado: `SUPER + period`. |
 | `ZENDA_IDLE_SECONDS` | Segundos de inactividad antes del bloqueo; `0` lo desactiva. Predeterminado: `600`. |
 | `ZENDA_BATTERY_WARNING` | Porcentaje de batería que dispara el aviso: entero de 5 a 95. Predeterminado: `20`. Ver [energía](power.md). |
 | `ZENDA_LOCK_BLUR` | Activa el desenfoque de la pantalla de bloqueo. Predeterminado: `true`. |
@@ -143,6 +145,13 @@ El comando usa el monitor enfocado por Hyprland. Para elegir uno explícitamente
 añade `--screen <nombre>`; el icono de la barra usa esta opción para abrirlo en
 su propio monitor. `--query <texto>` abre el launcher con esa búsqueda ya
 escrita; por ejemplo, `zenda launcher toggle --query :` lo abre en modo emoji.
+
+Zenda genera en `binds.lua` los atajos del launcher (`SUPER + d`) y del modo
+emoji (`SUPER + period`). Se cambian en Ajustes → Sistema o con
+`zenda hyprland set --launcher-shortcut` y `--emoji-shortcut`. Si al actualizar
+la tecla por defecto ya la usa otro atajo de Zenda, ese atajo queda sin asignar
+hasta que elijas uno. Si tu configuración de Hyprland ya tiene un atajo propio
+con la misma tecla, Ajustes lo muestra como conflicto: quita el tuyo.
 La shell de Zenda debe estar en ejecución.
 
 ## Variables de entorno solo para desarrollo

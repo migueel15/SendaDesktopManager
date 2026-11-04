@@ -19,6 +19,10 @@ type Status struct {
 	DefaultScreenshot  string   `json:"defaultScreenshotShortcut"`
 	LockShortcut       string   `json:"lockShortcut"`
 	DictationShortcut  string   `json:"dictationShortcut"`
+	LauncherShortcut   string   `json:"launcherShortcut"`
+	DefaultLauncher    string   `json:"defaultLauncherShortcut"`
+	EmojiShortcut      string   `json:"emojiShortcut"`
+	DefaultEmoji       string   `json:"defaultEmojiShortcut"`
 	IdleSeconds        int      `json:"idleSeconds"`
 	Blur               bool     `json:"blur"`
 	ModulePath         string   `json:"modulePath"`
@@ -31,10 +35,11 @@ type Status struct {
 }
 
 func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
-	status := Status{ScreenshotShortcut: s.ScreenshotShortcut, LockShortcut: s.LockShortcut, DictationShortcut: s.DictationShortcut, IdleSeconds: s.IdleSeconds, Blur: s.Blur, ModulePath: ModulePath(), IdleConfigPath: IdlePath(), IdleMode: s.IdleMode, Warnings: []string{}}
+	status := Status{ScreenshotShortcut: s.ScreenshotShortcut, LockShortcut: s.LockShortcut, DictationShortcut: s.DictationShortcut, LauncherShortcut: s.LauncherShortcut, EmojiShortcut: s.EmojiShortcut, IdleSeconds: s.IdleSeconds, Blur: s.Blur, ModulePath: ModulePath(), IdleConfigPath: IdlePath(), IdleMode: s.IdleMode, Warnings: []string{}}
 	defaults := DefaultSettings()
 	status.DefaultScreenshot = defaults.ScreenshotShortcut
 	status.DefaultLock, status.DefaultDictation = defaults.LockShortcut, defaults.DictationShortcut
+	status.DefaultLauncher, status.DefaultEmoji = defaults.LauncherShortcut, defaults.EmojiShortcut
 	if InSession() {
 		if run == nil {
 			run = stt.ExecRunner
@@ -47,17 +52,17 @@ func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
 			status.ModulePath = ModulePath()
 			status.ModuleActive = link.Loaded
 		}
-		for _, pair := range []struct{ label, shortcut string }{{"bloqueo", s.LockShortcut}, {"dictado", s.DictationShortcut}, {"captura", s.ScreenshotShortcut}} {
-			conflicts, err := binds.Conflicts(ctx, run, pair.shortcut)
+		for _, pair := range s.Shortcuts() {
+			conflicts, err := binds.Conflicts(ctx, run, pair.Value)
 			if err != nil {
-				status.Warnings = append(status.Warnings, "No se pudieron comprobar conflictos de "+pair.label+": "+err.Error())
+				status.Warnings = append(status.Warnings, "No se pudieron comprobar conflictos de "+pair.Label+": "+err.Error())
 				continue
 			}
 			for _, conflict := range conflicts {
-				if (pair.label == "bloqueo" && conflict == "Zenda lock") || (pair.label == "captura" && conflict == "Zenda screenshot") {
+				if conflict == pair.Description {
 					continue
 				}
-				status.Warnings = append(status.Warnings, fmt.Sprintf("Conflicto de %s (%s): %s", pair.label, pair.shortcut, conflict))
+				status.Warnings = append(status.Warnings, fmt.Sprintf("Conflicto de %s (%s): %s", pair.Label, pair.Value, conflict))
 			}
 		}
 	} else {

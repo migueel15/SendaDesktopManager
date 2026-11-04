@@ -27,8 +27,9 @@ type generatedModule struct {
 
 // moduleInput is the validated data modules render from.
 type moduleInput struct {
-	Settings                    Settings
-	Lock, Dictation, Screenshot string
+	Settings Settings
+	// Shortcuts are the normalized shortcuts by target.
+	Shortcuts map[string]string
 	// Command is the Zenda executable, quoted for a shell.
 	Command string
 }
@@ -47,12 +48,19 @@ var generatedModules = []generatedModule{
 
 func renderLockModule(in moduleInput) (string, error) {
 	return hyprctl.SessionLockConfig(in.Settings.Blur, in.Settings.Blur) + "\n" +
-		hyprctl.BindLua(in.Lock, hyprctl.DspExec("loginctl lock-session"), hyprctl.BindOptions{Description: "Zenda lock"}) + "\n", nil
+		hyprctl.BindLua(in.Shortcuts["lock"], hyprctl.DspExec("loginctl lock-session"), hyprctl.BindOptions{Description: "Zenda lock"}) + "\n", nil
 }
 
 func renderBindsModule(in moduleInput) (string, error) {
-	return hyprctl.BindLua(in.Dictation, hyprctl.DspExec(in.Command+" stt toggle"), hyprctl.BindOptions{Description: binds.DictationDescription, Universal: true}) + "\n" +
-		hyprctl.BindLua(in.Screenshot, hyprctl.DspExec(in.Command+" screenshot"), hyprctl.BindOptions{Description: "Zenda screenshot"}) + "\n", nil
+	text := hyprctl.BindLua(in.Shortcuts["dictation"], hyprctl.DspExec(in.Command+" stt toggle"), hyprctl.BindOptions{Description: binds.DictationDescription, Universal: true}) + "\n" +
+		hyprctl.BindLua(in.Shortcuts["screenshot"], hyprctl.DspExec(in.Command+" screenshot"), hyprctl.BindOptions{Description: "Zenda screenshot"}) + "\n"
+	if shortcut := in.Shortcuts["launcher"]; shortcut != "" {
+		text += hyprctl.BindLua(shortcut, hyprctl.DspExec(in.Command+" launcher toggle"), hyprctl.BindOptions{Description: "Zenda launcher"}) + "\n"
+	}
+	if shortcut := in.Shortcuts["emoji"]; shortcut != "" {
+		text += hyprctl.BindLua(shortcut, hyprctl.DspExec(in.Command+" launcher toggle --query :"), hyprctl.BindOptions{Description: "Zenda emoji"}) + "\n"
+	}
+	return text, nil
 }
 
 func renderRulesModule(moduleInput) (string, error) {

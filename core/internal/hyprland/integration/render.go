@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/migueel15/Zenda/core/internal/hyprland/binds"
 	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 )
 
@@ -34,6 +33,8 @@ type Settings struct {
 	ScreenshotShortcut string
 	LockShortcut       string
 	DictationShortcut  string
+	LauncherShortcut   string
+	EmojiShortcut      string
 	IdleSeconds        int
 	Blur               bool
 	// IdleMode is IdleModeZenda, IdleModeUser or empty when undecided.
@@ -47,7 +48,7 @@ type Settings struct {
 }
 
 func DefaultSettings() Settings {
-	return Settings{ScreenshotShortcut: "Print", LockShortcut: "SUPER + CTRL + l", DictationShortcut: "ALT + ntilde", IdleSeconds: 600, Blur: true}
+	return Settings{ScreenshotShortcut: "Print", LockShortcut: "SUPER + CTRL + l", DictationShortcut: "ALT + ntilde", LauncherShortcut: "SUPER + d", EmojiShortcut: "SUPER + period", IdleSeconds: 600, Blur: true}
 }
 
 // Render produces every generated file from one validated set of settings. The
@@ -56,23 +57,9 @@ func Render(settings Settings, executable string) (Generated, error) {
 	if !filepath.IsAbs(executable) || strings.ContainsAny(executable, "\x00\n\r") {
 		return nil, fmt.Errorf("ruta del ejecutable inválida")
 	}
-	lock, err := binds.NormalizeShortcut(settings.LockShortcut)
+	shortcuts, err := normalizedShortcuts(settings)
 	if err != nil {
-		return nil, fmt.Errorf("atajo de bloqueo: %w", err)
-	}
-	dictation, err := binds.NormalizeShortcut(settings.DictationShortcut)
-	if err != nil {
-		return nil, fmt.Errorf("atajo de dictado: %w", err)
-	}
-	screenshot, err := binds.NormalizeShortcut(settings.ScreenshotShortcut)
-	if err != nil {
-		return nil, fmt.Errorf("atajo de captura: %w", err)
-	}
-	if shortcutIdentity(screenshot) == shortcutIdentity(lock) || shortcutIdentity(screenshot) == shortcutIdentity(dictation) {
-		return nil, fmt.Errorf("el atajo de captura debe ser distinto de bloqueo y dictado")
-	}
-	if shortcutIdentity(lock) == shortcutIdentity(dictation) {
-		return nil, fmt.Errorf("los atajos de bloqueo y dictado deben ser distintos")
+		return nil, err
 	}
 	if settings.IdleMode != "" && settings.IdleMode != IdleModeZenda && settings.IdleMode != IdleModeUser {
 		return nil, fmt.Errorf("modo de hypridle inválido: %q", settings.IdleMode)
@@ -82,7 +69,7 @@ func Render(settings Settings, executable string) (Generated, error) {
 	}
 	command := "'" + strings.ReplaceAll(executable, "'", "'\\''") + "'"
 	files := Generated{{initFile, []byte(generatedInit())}}
-	input := moduleInput{Settings: settings, Lock: lock, Dictation: dictation, Screenshot: screenshot, Command: command}
+	input := moduleInput{Settings: settings, Shortcuts: shortcuts, Command: command}
 	for _, module := range generatedModules {
 		text, err := module.Render(input)
 		if err != nil {
