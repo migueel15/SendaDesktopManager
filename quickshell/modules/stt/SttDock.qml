@@ -12,15 +12,15 @@ Scope {
     LazyLoader {
         // Keep the dock loaded until its close animation ends, even when the
         // resident session is already back in standby.
-        active: SendaStt.dockVisible
+        active: ZendaStt.dockVisible
 
         PanelWindow {
             property bool entered: false
-            readonly property bool listening: SendaStt.phase === "listening"
+            readonly property bool listening: ZendaStt.phase === "listening"
             // Bars stay while the dictation finishes; only loading and errors show text.
-            readonly property bool showBars: SendaStt.phase !== "preparing"
-                && SendaStt.phase !== "starting" && SendaStt.phase !== "error"
-            readonly property bool expanded: listening && SendaStt.transcript !== ""
+            readonly property bool showBars: ZendaStt.phase !== "preparing"
+                && ZendaStt.phase !== "starting" && ZendaStt.phase !== "error"
+            readonly property bool expanded: listening && ZendaStt.transcript !== ""
             // The elapsed time appears under the bars once the dictation passes this mark.
             readonly property int timerDelay: 60
             property real listenStart: 0
@@ -58,7 +58,7 @@ Scope {
                 font: Theme.font.caption
             }
 
-            WlrLayershell.namespace: "senda-stt-dock"
+            WlrLayershell.namespace: "zenda-stt-dock"
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
             // The dock grows out of the bottom screen frame, like a drop.
@@ -136,7 +136,7 @@ Scope {
                         + (rootWindow.expanded ? Theme.spacing.xs + transcriptView.height : 0)
                     : Math.ceil(statusText.implicitHeight))
                 // Closing mirrors opening: the pill slides back into the frame.
-                property real slideOffset: rootWindow.entered && !SendaStt.dockClosing
+                property real slideOffset: rootWindow.entered && !ZendaStt.dockClosing
                     ? 0 : Math.ceil(animatedHeight)
 
                 width: Math.round(animatedWidth)
@@ -147,7 +147,7 @@ Scope {
                 clip: true
                 // Same color as the screen frame, without a border, so both read as one shape.
                 color: Theme.colors.background
-                opacity: rootWindow.entered && !SendaStt.dockClosing ? 1 : 0
+                opacity: rootWindow.entered && !ZendaStt.dockClosing ? 1 : 0
 
                 // Squares the bottom corners where the dock meets the frame.
                 Rectangle {
@@ -220,7 +220,7 @@ Scope {
                                 readonly property real restingScale: Theme.spacing.sm / Theme.spacing.xl
                                 readonly property real maximumScale: animatedBar.index === 2 ? 1
                                     : (animatedBar.index === 1 || animatedBar.index === 3 ? 0.8 : 0.6)
-                                running: rootWindow.listening && SendaStt.audioActive && rootWindow.visible && !SendaStt.dockClosing
+                                running: rootWindow.listening && ZendaStt.audioActive && rootWindow.visible && !ZendaStt.dockClosing
                                 repeat: true
                                 triggeredOnStart: true
                                 interval: Theme.motion.normal
@@ -259,11 +259,11 @@ Scope {
                     y: Theme.spacing.md
                     width: Math.max(0, content.width - Theme.spacing.md * 2)
                     visible: !rootWindow.showBars
-                    text: SendaStt.phase === "preparing" ? "Preparando el modelo…"
-                        : SendaStt.phase === "starting" ? "Cargando el modelo…"
-                        : SendaStt.phase === "stopping" || SendaStt.phase === "delivering" ? "Procesando…"
-                        : SendaStt.phase === "error" ? SendaStt.errorMessage : "Dictado"
-                    color: SendaStt.phase === "error" ? Theme.colors.error : Theme.colors.text
+                    text: ZendaStt.phase === "preparing" ? "Preparando el modelo…"
+                        : ZendaStt.phase === "starting" ? "Cargando el modelo…"
+                        : ZendaStt.phase === "stopping" || ZendaStt.phase === "delivering" ? "Procesando…"
+                        : ZendaStt.phase === "error" ? ZendaStt.errorMessage : "Dictado"
+                    color: ZendaStt.phase === "error" ? Theme.colors.error : Theme.colors.text
                     font: Theme.font.body
                     textFormat: Text.PlainText
                     horizontalAlignment: Text.AlignHCenter
@@ -308,7 +308,7 @@ Scope {
                     Text {
                         id: transcriptText
                         width: transcriptView.width
-                        text: SendaStt.transcript
+                        text: ZendaStt.transcript
                         color: Theme.colors.textMuted
                         font: Theme.font.body
                         textFormat: Text.PlainText

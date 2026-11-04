@@ -22,7 +22,7 @@ Variants {
 			aboveWindows: true
 			exclusionMode: ExclusionMode.Normal
 			exclusiveZone: Theme.frameSize
-			WlrLayershell.namespace: "Senda:ScreenFrame"
+			WlrLayershell.namespace: "Zenda:ScreenFrame"
 			WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 		}
 
@@ -63,7 +63,7 @@ Variants {
 			margins { top: -Theme.barSize; left: -Theme.frameSize; right: -Theme.frameSize; bottom: -Theme.frameSize }
 			focusable: false
 			aboveWindows: true
-			WlrLayershell.namespace: "Senda:FrameShadow"
+			WlrLayershell.namespace: "Zenda:FrameShadow"
 			WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 			mask: Region {}
 			color: "transparent"

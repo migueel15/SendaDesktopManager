@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	// EventsReadonlyScope lets Senda read events, and nothing else.
+	// EventsReadonlyScope lets Zenda read events, and nothing else.
 	EventsReadonlyScope = "https://www.googleapis.com/auth/calendar.events.readonly"
-	// CalendarListReadonlyScope lets Senda list the calendars the user chose.
+	// CalendarListReadonlyScope lets Zenda list the calendars the user chose.
 	CalendarListReadonlyScope = "https://www.googleapis.com/auth/calendar.calendarlist.readonly"
 
 	loginTimeout = 5 * time.Minute
@@ -31,11 +31,11 @@ const (
 
 // ErrMissingCredentials means neither the build nor the config file has an
 // OAuth client.
-var ErrMissingCredentials = errors.New("no Google OAuth client is available; enter your client ID and secret in Senda settings")
+var ErrMissingCredentials = errors.New("no Google OAuth client is available; enter your client ID and secret in Zenda settings")
 
 // ErrSessionExpired means Google rejected the refresh token. The user must log
 // in again.
-var ErrSessionExpired = errors.New("google session expired; run `senda calendar login` again")
+var ErrSessionExpired = errors.New("google session expired; run `zenda calendar login` again")
 
 // Endpoints are Google's OAuth URLs. Tests replace them with a local server.
 type Endpoints struct {
@@ -53,7 +53,7 @@ var DefaultEndpoints = Endpoints{
 	Calendar: "https://www.googleapis.com/calendar/v3",
 }
 
-// Credentials identify Senda's OAuth client, created as a desktop application.
+// Credentials identify Zenda's OAuth client, created as a desktop application.
 type Credentials struct {
 	ClientID     string
 	ClientSecret string
@@ -119,9 +119,9 @@ func (c *Client) Login(ctx context.Context, handleURL func(authURL string) error
 	mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
 		result := readCallback(r.URL.Query(), state)
 		if result.err != nil {
-			http.Error(w, "Senda could not complete the Google login. You can close this tab.", http.StatusBadRequest)
+			http.Error(w, "Zenda could not complete the Google login. You can close this tab.", http.StatusBadRequest)
 		} else {
-			fmt.Fprint(w, "Senda is connected to Google Calendar. You can close this tab.")
+			fmt.Fprint(w, "Zenda is connected to Google Calendar. You can close this tab.")
 		}
 		select {
 		case callbacks <- result:
@@ -162,7 +162,7 @@ func (c *Client) Login(ctx context.Context, handleURL func(authURL string) error
 		return err
 	}
 	if tokens.RefreshToken == "" {
-		return errors.New("google did not return a refresh token; remove Senda's access in your Google account and log in again")
+		return errors.New("google did not return a refresh token; remove Zenda's access in your Google account and log in again")
 	}
 	if err := c.store.Save(tokens.RefreshToken); err != nil {
 		return err

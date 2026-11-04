@@ -27,7 +27,7 @@ Rectangle {
     }
 
     function focusSpotify() {
-        Quickshell.execDetached([SendaManager.binaryPath, "window", "focus", "spotify"]);
+        Quickshell.execDetached([ZendaManager.binaryPath, "window", "focus", "spotify"]);
     }
 
     function openSpotifyUrl(url) {

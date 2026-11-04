@@ -3,7 +3,7 @@ package theme
 import (
 	"path/filepath"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/paths"
 )
 
 // DefaultDirs devuelve las carpetas de temas integrados y de usuario.

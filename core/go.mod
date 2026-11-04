@@ -1,4 +1,4 @@
-module github.com/migueel15/SendaDesktopManager/core
+module github.com/migueel15/Zenda/core
 
 go 1.26.3
 

@@ -9,21 +9,21 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 )
 
 const (
-	KeyInputLayout        = "SENDA_INPUT_LAYOUT"
-	KeyInputSensitivity   = "SENDA_INPUT_SENSITIVITY"
-	KeyInputTapToClick    = "SENDA_INPUT_TAP_TO_CLICK"
-	KeyInputNaturalScrol  = "SENDA_INPUT_NATURAL_SCROLL"
-	KeyCursorTheme        = "SENDA_CURSOR_THEME"
-	KeyCursorSize         = "SENDA_CURSOR_SIZE"
-	KeyInputAccel         = "SENDA_INPUT_ACCEL_PROFILE"
-	KeyInputFollowMouse   = "SENDA_INPUT_FOLLOW_MOUSE"
-	KeyInputDisableTyping = "SENDA_INPUT_DISABLE_WHILE_TYPING"
-	KeyInputScrollFactor  = "SENDA_INPUT_SCROLL_FACTOR"
+	KeyInputLayout        = "ZENDA_INPUT_LAYOUT"
+	KeyInputSensitivity   = "ZENDA_INPUT_SENSITIVITY"
+	KeyInputTapToClick    = "ZENDA_INPUT_TAP_TO_CLICK"
+	KeyInputNaturalScrol  = "ZENDA_INPUT_NATURAL_SCROLL"
+	KeyCursorTheme        = "ZENDA_CURSOR_THEME"
+	KeyCursorSize         = "ZENDA_CURSOR_SIZE"
+	KeyInputAccel         = "ZENDA_INPUT_ACCEL_PROFILE"
+	KeyInputFollowMouse   = "ZENDA_INPUT_FOLLOW_MOUSE"
+	KeyInputDisableTyping = "ZENDA_INPUT_DISABLE_WHILE_TYPING"
+	KeyInputScrollFactor  = "ZENDA_INPUT_SCROLL_FACTOR"
 )
 
 // Field names shared by the CLI, the JSON status and the interface.
@@ -40,8 +40,8 @@ const (
 	FieldScrollFactor  = "scrollFactor"
 )
 
-// InputSettings holds what the user chose in Senda. An empty value means that
-// Senda has no opinion and generates nothing for that field.
+// InputSettings holds what the user chose in Zenda. An empty value means that
+// Zenda has no opinion and generates nothing for that field.
 type InputSettings struct {
 	Layout        string
 	Sensitivity   string
@@ -168,7 +168,7 @@ func DetectInput(c UserConfig, sessionEnv map[string]string) map[string]UserSett
 }
 
 // withoutUser drops the fields the user defines: the user always wins, and
-// Senda's module loads last, so generating them would override the user.
+// Zenda's module loads last, so generating them would override the user.
 func (s InputSettings) withoutUser(user map[string]UserSetting) InputSettings {
 	for field, target := range map[string]*string{FieldLayout: &s.Layout, FieldSensitivity: &s.Sensitivity, FieldTapToClick: &s.TapToClick, FieldNaturalScroll: &s.NaturalScroll, FieldCursorTheme: &s.CursorTheme, FieldCursorSize: &s.CursorSize, FieldAccelProfile: &s.AccelProfile, FieldFollowMouse: &s.FollowMouse, FieldDisableTyping: &s.DisableTyping, FieldScrollFactor: &s.ScrollFactor} {
 		if _, ok := user[field]; ok {
@@ -178,7 +178,7 @@ func (s InputSettings) withoutUser(user map[string]UserSetting) InputSettings {
 	return s
 }
 
-// renderInput returns the Lua for the fields that remain Senda's.
+// renderInput returns the Lua for the fields that remain Zenda's.
 func renderInput(s InputSettings, size int) string {
 	var input, touchpad []string
 	if s.Layout != "" {
@@ -317,7 +317,7 @@ func SystemLayout(xorgFile, vconsoleFile string) string {
 	return ""
 }
 
-// WithDefaults fills what nobody chose with Senda's defaults.
+// WithDefaults fills what nobody chose with Zenda's defaults.
 func (s InputSettings) WithDefaults() InputSettings {
 	fill := func(target *string, value string) {
 		if *target == "" {

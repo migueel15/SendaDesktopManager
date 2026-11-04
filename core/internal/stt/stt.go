@@ -9,7 +9,7 @@ import (
 )
 
 var ErrNotImplemented = errors.New("not implemented")
-var ErrSubmapUnavailable = errors.New("el módulo de atajos de Senda no está cargado")
+var ErrSubmapUnavailable = errors.New("el módulo de atajos de Zenda no está cargado")
 
 type EventType string
 

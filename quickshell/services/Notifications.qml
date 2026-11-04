@@ -40,7 +40,7 @@ Singleton {
         if (!stateLoaded) return;
         const dto = {
             id: "notification-" + nextId++, receivedAt: new Date().toISOString(),
-            appName: "Senda", summary: "Captura de pantalla tomada", body: "Pulsa para editar la captura.",
+            appName: "Zenda", summary: "Captura de pantalla tomada", body: "Pulsa para editar la captura.",
             image: "file://" + encodeURI(path), screenshotPath: path,
             appIcon: "", desktopEntry: "", urgency: 1, expireTimeout: 0,
             actions: [{ identifier: "default", text: "Editar captura" }], hints: []
@@ -355,7 +355,7 @@ Singleton {
         if (desktopEntry.length === 0)
             return false;
 
-        const command = [SendaManager.binaryPath, "window", "focus", desktopEntry];
+        const command = [ZendaManager.binaryPath, "window", "focus", desktopEntry];
         Quickshell.execDetached(command);
         return true;
     }

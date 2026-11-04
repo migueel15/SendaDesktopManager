@@ -8,9 +8,9 @@ El estado duradero y las operaciones viven en los servicios: cerrar una vista no
 
 ## Implementación
 
-- Los cinco paneles de `OverlayLayer` usan `PanelLoader`, solo en el monitor solicitado. El contenedor intermedio conserva las dimensiones del panel: el `Loader` ocupa la pantalla, pero no redimensiona directamente el `SendaPanel`.
+- Los cinco paneles de `OverlayLayer` usan `PanelLoader`, solo en el monitor solicitado. El contenedor intermedio conserva las dimensiones del panel: el `Loader` ocupa la pantalla, pero no redimensiona directamente el `ZendaPanel`.
 - Ajustes carga su contenido al abrir. Cada página tiene su propio `Loader`; normalmente solo existe la seleccionada. Buscar carga temporalmente todas las páginas para consultar sus filas reales. Vaciar la búsqueda descarga las no seleccionadas que no tengan un borrador.
-- La sección seleccionada se conserva como un entero en `SendaSettings`. Las consultas específicas de una página se hacen al cargarla, en vez de consultar todos los subsistemas al abrir Ajustes.
+- La sección seleccionada se conserva como un entero en `ZendaSettings`. Las consultas específicas de una página se hacen al cargarla, en vez de consultar todos los subsistemas al abrir Ajustes.
 - Los selectores de temas y fondos, los popups de música, Discord y bandeja, los OSD, la autenticación polkit y el editor de capturas usan carga bajo demanda. El agente polkit, las conexiones de volumen y el receptor IPC de brillo permanecen disponibles.
 - Las ventanas de notificaciones existen mientras hay popups. La transición `populate` cubre la primera aparición de una ventana recién construida.
 - Los exploradores de archivos para fondos solo se crean al entrar en la exploración. Los menús de bandeja conservan su controlador de apertura, pero descargan su contenido y dejan de solicitar el menú D-Bus cuando están ocultos.

@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 func TestDefaultCatalogArtifact(t *testing.T) {

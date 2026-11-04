@@ -8,11 +8,11 @@ import (
 )
 
 func TestSetCreatesOwnerOnlyFileAndRoundTrips(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "senda", "config")
+	path := filepath.Join(t.TempDir(), "zenda", "config")
 
 	if err := Set(path, map[string]string{
-		"SENDA_WEATHER_LOCATION": "Valencia, España # ciudad",
-		"SENDA_WEATHER_LAT":      "39.47",
+		"ZENDA_WEATHER_LOCATION": "Valencia, España # ciudad",
+		"ZENDA_WEATHER_LAT":      "39.47",
 	}); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
@@ -29,21 +29,21 @@ func TestSetCreatesOwnerOnlyFileAndRoundTrips(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
-	if values["SENDA_WEATHER_LOCATION"] != "Valencia, España # ciudad" {
-		t.Fatalf("location = %q", values["SENDA_WEATHER_LOCATION"])
+	if values["ZENDA_WEATHER_LOCATION"] != "Valencia, España # ciudad" {
+		t.Fatalf("location = %q", values["ZENDA_WEATHER_LOCATION"])
 	}
-	if values["SENDA_WEATHER_LAT"] != "39.47" {
-		t.Fatalf("lat = %q", values["SENDA_WEATHER_LAT"])
+	if values["ZENDA_WEATHER_LAT"] != "39.47" {
+		t.Fatalf("lat = %q", values["ZENDA_WEATHER_LAT"])
 	}
 }
 
 func TestSetKeepsCommentsAndUnknownKeys(t *testing.T) {
 	path := writeConfig(t, `# mi configuración
 DORLAB_API_KEY=secret
-SENDA_WEATHER_LAT=1.0
+ZENDA_WEATHER_LAT=1.0
 `)
 
-	if err := Set(path, map[string]string{"SENDA_WEATHER_LAT": "2.5", "SENDA_WEATHER_LON": "-3.7"}); err != nil {
+	if err := Set(path, map[string]string{"ZENDA_WEATHER_LAT": "2.5", "ZENDA_WEATHER_LON": "-3.7"}); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
 
@@ -52,20 +52,20 @@ SENDA_WEATHER_LAT=1.0
 		t.Fatal(err)
 	}
 	text := string(data)
-	for _, want := range []string{"# mi configuración", "DORLAB_API_KEY=secret", `SENDA_WEATHER_LAT="2.5"`, `SENDA_WEATHER_LON="-3.7"`} {
+	for _, want := range []string{"# mi configuración", "DORLAB_API_KEY=secret", `ZENDA_WEATHER_LAT="2.5"`, `ZENDA_WEATHER_LON="-3.7"`} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("config = %q, missing %q", text, want)
 		}
 	}
-	if strings.Count(text, "SENDA_WEATHER_LAT") != 1 {
-		t.Fatalf("SENDA_WEATHER_LAT written more than once: %q", text)
+	if strings.Count(text, "ZENDA_WEATHER_LAT") != 1 {
+		t.Fatalf("ZENDA_WEATHER_LAT written more than once: %q", text)
 	}
 }
 
 func TestSetEmptyValueRemovesKey(t *testing.T) {
-	path := writeConfig(t, "SENDA_GOOGLE_CALENDARS=a,b\nDORLAB_API_KEY=secret\n")
+	path := writeConfig(t, "ZENDA_GOOGLE_CALENDARS=a,b\nDORLAB_API_KEY=secret\n")
 
-	if err := Set(path, map[string]string{"SENDA_GOOGLE_CALENDARS": ""}); err != nil {
+	if err := Set(path, map[string]string{"ZENDA_GOOGLE_CALENDARS": ""}); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
 
@@ -73,7 +73,7 @@ func TestSetEmptyValueRemovesKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := values["SENDA_GOOGLE_CALENDARS"]; ok {
+	if _, ok := values["ZENDA_GOOGLE_CALENDARS"]; ok {
 		t.Fatalf("key still present: %v", values)
 	}
 	if values["DORLAB_API_KEY"] != "secret" {
@@ -85,7 +85,7 @@ func TestSetRejectsInvalidFileWithoutOverwriting(t *testing.T) {
 	original := "this line has no equals sign\n"
 	path := writeConfig(t, original)
 
-	if err := Set(path, map[string]string{"SENDA_WEATHER_LAT": "1"}); err == nil {
+	if err := Set(path, map[string]string{"ZENDA_WEATHER_LAT": "1"}); err == nil {
 		t.Fatal("Set() rewrote an invalid config file")
 	}
 
@@ -109,7 +109,7 @@ func TestSetRejectsInvalidKeyName(t *testing.T) {
 func TestSetKeepsValueWithNewlineInsideQuotes(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config")
 
-	if err := Set(path, map[string]string{"SENDA_WEATHER_LOCATION": "linea\nnueva"}); err != nil {
+	if err := Set(path, map[string]string{"ZENDA_WEATHER_LOCATION": "linea\nnueva"}); err != nil {
 		t.Fatalf("Set() error = %v", err)
 	}
 
@@ -117,7 +117,7 @@ func TestSetKeepsValueWithNewlineInsideQuotes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if values["SENDA_WEATHER_LOCATION"] != "linea\nnueva" {
-		t.Fatalf("value = %q, want the newline preserved", values["SENDA_WEATHER_LOCATION"])
+	if values["ZENDA_WEATHER_LOCATION"] != "linea\nnueva" {
+		t.Fatalf("value = %q, want the newline preserved", values["ZENDA_WEATHER_LOCATION"])
 	}
 }

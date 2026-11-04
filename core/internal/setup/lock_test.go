@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
+	"github.com/migueel15/Zenda/core/internal/hyprland/integration"
 )
 
-// isolate points every Senda path at a temporary directory and hides the
+// isolate points every Zenda path at a temporary directory and hides the
 // running session and its hypridle processes.
 func isolate(t *testing.T, external int) string {
 	t.Helper()
@@ -45,13 +45,13 @@ func runIntegration(t *testing.T, executable, answer string) (string, error) {
 
 func TestEnsureLockIntegrationCreatesAndPreservesFiles(t *testing.T) {
 	home := isolate(t, 0)
-	executable := filepath.Join(home, "bin with space", "senda")
+	executable := filepath.Join(home, "bin with space", "zenda")
 	original := filepath.Join(home, "hypr", "hyprland.lua")
 	writeFile(t, original, "user config")
 	if _, err := runIntegration(t, executable, ""); err != nil {
 		t.Fatal(err)
 	}
-	idlePath := filepath.Join(home, "hypr", "senda", "hypridle.conf")
+	idlePath := filepath.Join(home, "hypr", "zenda", "hypridle.conf")
 	lua, err := integration.ReadGenerated()
 	if err != nil {
 		t.Fatal(err)
@@ -71,7 +71,7 @@ func TestEnsureLockIntegrationCreatesAndPreservesFiles(t *testing.T) {
 		}
 	}
 	data, err := os.ReadFile(original)
-	if err != nil || !strings.HasPrefix(string(data), "user config\n") || !strings.HasSuffix(string(data), integration.RequireLine+" -- Senda: referencia gestionada\n") {
+	if err != nil || !strings.HasPrefix(string(data), "user config\n") || !strings.HasSuffix(string(data), integration.RequireLine+" -- Zenda: referencia gestionada\n") {
 		t.Fatalf("require not appended: %q %v", data, err)
 	}
 	if _, err := runIntegration(t, executable, ""); err != nil {
@@ -94,7 +94,7 @@ func TestEnsureLockIntegrationKeepsMovedRequire(t *testing.T) {
 	home := isolate(t, 0)
 	original := filepath.Join(home, "hypr", "hyprland.lua")
 	writeFile(t, original, "  "+integration.RequireLine+"\nother()\n")
-	if _, err := runIntegration(t, filepath.Join(home, "senda-bin"), ""); err != nil {
+	if _, err := runIntegration(t, filepath.Join(home, "zenda-bin"), ""); err != nil {
 		t.Fatal(err)
 	}
 	if data, _ := os.ReadFile(original); strings.Count(string(data), integration.RequireLine) != 1 {
@@ -103,15 +103,15 @@ func TestEnsureLockIntegrationKeepsMovedRequire(t *testing.T) {
 }
 
 func TestEnsureLockIntegrationAsksWhenUserHasHypridle(t *testing.T) {
-	for _, tc := range []struct{ answer, mode string }{{"s\n", integration.IdleModeSenda}, {"n\n", integration.IdleModeUser}, {"", integration.IdleModeUser}} {
+	for _, tc := range []struct{ answer, mode string }{{"s\n", integration.IdleModeZenda}, {"n\n", integration.IdleModeUser}, {"", integration.IdleModeUser}} {
 		home := isolate(t, 0)
 		writeFile(t, filepath.Join(home, "hypr", "hyprland.lua"), "")
 		writeFile(t, filepath.Join(home, "hypr", "hypridle.conf"), "general {}\n")
-		out, err := runIntegration(t, filepath.Join(home, "senda-bin"), tc.answer)
+		out, err := runIntegration(t, filepath.Join(home, "zenda-bin"), tc.answer)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !strings.Contains(out, "¿Usar la configuración de Senda") {
+		if !strings.Contains(out, "¿Usar la configuración de Zenda") {
 			t.Fatalf("no question asked: %s", out)
 		}
 		s, err := integration.ReadSettings()
@@ -119,14 +119,14 @@ func TestEnsureLockIntegrationAsksWhenUserHasHypridle(t *testing.T) {
 			t.Fatalf("answer %q: mode %q, want %q (%v)", tc.answer, s.IdleMode, tc.mode, err)
 		}
 		lua, _ := integration.ReadGenerated()
-		if starts := strings.Contains(string(lua), "hypridle -c"); starts != (tc.mode == integration.IdleModeSenda) {
+		if starts := strings.Contains(string(lua), "hypridle -c"); starts != (tc.mode == integration.IdleModeZenda) {
 			t.Fatalf("mode %q: module starts hypridle = %t", tc.mode, starts)
 		}
 		if data, _ := os.ReadFile(filepath.Join(home, "hypr", "hypridle.conf")); string(data) != "general {}\n" {
 			t.Fatalf("user hypridle changed: %q", data)
 		}
 		// The choice is remembered and not asked again.
-		if out, _ := runIntegration(t, filepath.Join(home, "senda-bin"), ""); strings.Contains(out, "¿Usar") {
+		if out, _ := runIntegration(t, filepath.Join(home, "zenda-bin"), ""); strings.Contains(out, "¿Usar") {
 			t.Fatalf("asked twice: %s", out)
 		}
 	}
@@ -135,8 +135,8 @@ func TestEnsureLockIntegrationAsksWhenUserHasHypridle(t *testing.T) {
 func TestEnsureLockIntegrationAsksWhenExternalHypridleRuns(t *testing.T) {
 	home := isolate(t, 1)
 	writeFile(t, filepath.Join(home, "hypr", "hyprland.lua"), "")
-	out, err := runIntegration(t, filepath.Join(home, "senda-bin"), "")
-	if err != nil || !strings.Contains(out, "¿Usar la configuración de Senda") {
+	out, err := runIntegration(t, filepath.Join(home, "zenda-bin"), "")
+	if err != nil || !strings.Contains(out, "¿Usar la configuración de Zenda") {
 		t.Fatalf("no question: %v %s", err, out)
 	}
 }

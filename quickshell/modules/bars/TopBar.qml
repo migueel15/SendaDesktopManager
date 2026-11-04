@@ -18,7 +18,7 @@ Variants {
 	delegate: PanelWindow {
 		id: topbar
 
-		WlrLayershell.namespace: "Senda:TopBar"
+		WlrLayershell.namespace: "Zenda:TopBar"
 
 		required property var modelData
 		screen: modelData
@@ -43,9 +43,9 @@ Variants {
 		implicitHeight: Theme.barSize
 
 		LazyLoader {
-			active: ((SendaTheme.pickerScreen === topbar.screenName
-			|| (SendaTheme.pickerScreen === "" && topbar.modelData === Quickshell.screens[0]))
-			&& SendaTheme.pickerOpen) || (item?.visible ?? false) || (item?.retainWhenHidden ?? false)
+			active: ((ZendaTheme.pickerScreen === topbar.screenName
+			|| (ZendaTheme.pickerScreen === "" && topbar.modelData === Quickshell.screens[0]))
+			&& ZendaTheme.pickerOpen) || (item?.visible ?? false) || (item?.retainWhenHidden ?? false)
 			PanelWindow {
 				id: themeWindow
 				readonly property bool retainWhenHidden: themePicker.editing
@@ -55,11 +55,11 @@ Variants {
 				anchors { top: true; bottom: true; left: true; right: true }
 				exclusionMode: ExclusionMode.Normal
 				exclusiveZone: 0
-				WlrLayershell.namespace: "Senda:ThemePicker"
+				WlrLayershell.namespace: "Zenda:ThemePicker"
 				WlrLayershell.layer: WlrLayer.Overlay
 				WlrLayershell.keyboardFocus: themePicker.expanded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 				color: "transparent"
-				visible: themePicker.onPickerScreen && (SendaTheme.pickerOpen || themePicker.height > 0.01)
+				visible: themePicker.onPickerScreen && (ZendaTheme.pickerOpen || themePicker.height > 0.01)
 				// While open the whole window takes input (backdrop); while folding, only the popup.
 				mask: Region { item: themePicker.expanded ? backdrop : themePicker }
 
@@ -67,7 +67,7 @@ Variants {
 					id: backdrop
 					anchors.fill: parent
 					enabled: themePicker.expanded
-					onPressed: SendaTheme.closePicker()
+					onPressed: ZendaTheme.closePicker()
 				}
 
 				// Swallows clicks on empty parts of the popup so they do not reach the backdrop.
@@ -85,8 +85,8 @@ Variants {
 					x: Math.round((themeWindow.width - width) / 2)
 					y: -collapseLift
 					maximumHeight: Math.max(0, themeWindow.height - themePicker.shadowSpace)
-					onPickerScreen: SendaTheme.pickerScreen === topbar.screenName
-						|| (SendaTheme.pickerScreen === "" && topbar.modelData === Quickshell.screens[0])
+					onPickerScreen: ZendaTheme.pickerScreen === topbar.screenName
+						|| (ZendaTheme.pickerScreen === "" && topbar.modelData === Quickshell.screens[0])
 				}
 			}
 		}
@@ -102,7 +102,7 @@ Variants {
 
 		Process {
 			id: launcherProc
-			command: [Quickshell.env("SENDA_BIN") || "senda", "launcher", "toggle", "--screen", topbar.screenName]
+			command: [Quickshell.env("ZENDA_BIN") || "zenda", "launcher", "toggle", "--screen", topbar.screenName]
 			onExited: exitCode => { if (exitCode !== 0) console.warn("Launcher command failed:", exitCode); }
 		}
 
@@ -128,8 +128,8 @@ Variants {
 					}
 				}
 
-				// Senda symbol drawn with the active theme. Same geometry as
-				// assets/senda-logo.svg (120×120): top bar secondary, outer face
+				// Zenda symbol drawn with the active theme. Same geometry as
+				// assets/zenda-logo.svg (120×120): top bar secondary, outer face
 				// white, inner fold accent darkened towards base, bottom bar primary.
 				Shape {
 					anchors.centerIn: parent
@@ -212,7 +212,7 @@ Variants {
 				id: nowPlaying
 				Layout.preferredHeight: parent.height * 0.8
 				Layout.alignment: Qt.AlignVCenter
-				active: SendaSettings.configLoaded && SendaSettings.values.SENDA_WIDGET_SPOTIFY !== "false"
+				active: ZendaSettings.configLoaded && ZendaSettings.values.ZENDA_WIDGET_SPOTIFY !== "false"
 				visible: active && (item?.hasTrack ?? false)
 				sourceComponent: NowPlaying {}
 			}
@@ -221,7 +221,7 @@ Variants {
 				id: discordVoice
 				Layout.preferredHeight: parent.height * 0.8
 				Layout.alignment: Qt.AlignVCenter
-				active: SendaSettings.configLoaded && SendaSettings.values.SENDA_WIDGET_DISCORD !== "false"
+				active: ZendaSettings.configLoaded && ZendaSettings.values.ZENDA_WIDGET_DISCORD !== "false"
 				visible: active && (item?.voiceState.authenticated || (item?.voiceState.connected && item?.voiceState.auth_required))
 				sourceComponent: DiscordVoice {}
 			}

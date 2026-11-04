@@ -65,8 +65,8 @@ func TestReloadFailsOnConfigErrors(t *testing.T) {
 }
 
 func TestBindLua(t *testing.T) {
-	got := BindLua("ALT + ntilde", DspExec("senda stt toggle"), BindOptions{Description: "d", Universal: true})
-	want := `hl.bind("ALT + ntilde", hl.dsp.exec_cmd("senda stt toggle"), { submap_universal = true, description = "d" })`
+	got := BindLua("ALT + ntilde", DspExec("zenda stt toggle"), BindOptions{Description: "d", Universal: true})
+	want := `hl.bind("ALT + ntilde", hl.dsp.exec_cmd("zenda stt toggle"), { submap_universal = true, description = "d" })`
 	if got != want {
 		t.Fatalf("got %s", got)
 	}

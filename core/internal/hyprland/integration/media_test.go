@@ -9,7 +9,7 @@ import (
 
 func TestMediaModuleBindsEveryKey(t *testing.T) {
 	generatedHome(t)
-	out, err := renderMediaModule(moduleInput{Command: "'/bin/senda'"})
+	out, err := renderMediaModule(moduleInput{Command: "'/bin/zenda'"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,8 +19,8 @@ func TestMediaModuleBindsEveryKey(t *testing.T) {
 	for _, want := range []string{
 		`hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true, `,
 		`hl.bind("XF86AudioMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), { locked = true, description`,
-		`hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("'/bin/senda' brightness up"), { locked = true, repeating = true, `,
-		`hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("'/bin/senda' media play-pause"), { locked = true, description`,
+		`hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("'/bin/zenda' brightness up"), { locked = true, repeating = true, `,
+		`hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("'/bin/zenda' media play-pause"), { locked = true, description`,
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %s\n%s", want, out)
@@ -50,7 +50,7 @@ hl.bind(' + xf86audioprev', x)
 	if err := os.WriteFile(filepath.Join(hypr, "mine.lua"), []byte(mine), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	out, err := renderMediaModule(moduleInput{Command: "senda"})
+	out, err := renderMediaModule(moduleInput{Command: "zenda"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +76,7 @@ func TestMediaModuleLeavesConfKeys(t *testing.T) {
 	if err := os.WriteFile(main, []byte(config), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	out, err := renderMediaModule(moduleInput{Command: "senda"})
+	out, err := renderMediaModule(moduleInput{Command: "zenda"})
 	if err != nil {
 		t.Fatal(err)
 	}

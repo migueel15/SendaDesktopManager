@@ -59,7 +59,7 @@ func TestDownloadRejectsNon200(t *testing.T) {
 
 func TestVerifyChecksum(t *testing.T) {
 	dir := t.TempDir()
-	asset := filepath.Join(dir, "senda-v1.0.0-linux-amd64")
+	asset := filepath.Join(dir, "zenda-v1.0.0-linux-amd64")
 	content := []byte("binary contents")
 	if err := os.WriteFile(asset, content, 0o600); err != nil {
 		t.Fatal(err)
@@ -70,25 +70,25 @@ func TestVerifyChecksum(t *testing.T) {
 	checksums := filepath.Join(dir, "checksums.txt")
 	other := strings.Repeat("0", 64)
 	writeChecksums(t, checksums,
-		other+"  senda-quickshell-v1.0.0.tar.gz\n"+
-			hash+"  senda-v1.0.0-linux-amd64\n")
+		other+"  zenda-quickshell-v1.0.0.tar.gz\n"+
+			hash+"  zenda-v1.0.0-linux-amd64\n")
 
-	if err := VerifyChecksum(checksums, "senda-v1.0.0-linux-amd64", asset); err != nil {
+	if err := VerifyChecksum(checksums, "zenda-v1.0.0-linux-amd64", asset); err != nil {
 		t.Fatalf("VerifyChecksum() match error = %v", err)
 	}
 
 	// Uppercase digests and the sha256sum binary-mode '*' marker are accepted.
-	writeChecksums(t, checksums, strings.ToUpper(hash)+" *senda-v1.0.0-linux-amd64\n")
-	if err := VerifyChecksum(checksums, "senda-v1.0.0-linux-amd64", asset); err != nil {
+	writeChecksums(t, checksums, strings.ToUpper(hash)+" *zenda-v1.0.0-linux-amd64\n")
+	if err := VerifyChecksum(checksums, "zenda-v1.0.0-linux-amd64", asset); err != nil {
 		t.Fatalf("VerifyChecksum() uppercase/binary-marker error = %v", err)
 	}
 
-	writeChecksums(t, checksums, other+"  senda-v1.0.0-linux-amd64\n")
-	if err := VerifyChecksum(checksums, "senda-v1.0.0-linux-amd64", asset); err == nil {
+	writeChecksums(t, checksums, other+"  zenda-v1.0.0-linux-amd64\n")
+	if err := VerifyChecksum(checksums, "zenda-v1.0.0-linux-amd64", asset); err == nil {
 		t.Fatal("VerifyChecksum() accepted a mismatched digest")
 	}
 
-	if err := VerifyChecksum(checksums, "senda-v9.9.9-linux-amd64", asset); err == nil {
+	if err := VerifyChecksum(checksums, "zenda-v9.9.9-linux-amd64", asset); err == nil {
 		t.Fatal("VerifyChecksum() accepted an asset missing from checksums.txt")
 	}
 }
@@ -203,7 +203,7 @@ func TestExtractDataTarballRejectsUnsafeEntries(t *testing.T) {
 			{name: "quickshell/hard", typeflag: tar.TypeLink, linkname: "version"},
 		},
 		"unknown prefix": {
-			{name: "bin/senda", typeflag: tar.TypeReg, body: "x"},
+			{name: "bin/zenda", typeflag: tar.TypeReg, body: "x"},
 		},
 		"version as directory": {
 			{name: "version/", typeflag: tar.TypeDir},
@@ -227,7 +227,7 @@ func TestExtractDataTarballRejectsUnsafeEntries(t *testing.T) {
 func TestReplaceFileAtomic(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "new")
-	dst := filepath.Join(dir, "senda")
+	dst := filepath.Join(dir, "zenda")
 	if err := os.WriteFile(src, []byte("new binary"), 0o600); err != nil {
 		t.Fatal(err)
 	}

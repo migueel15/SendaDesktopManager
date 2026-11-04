@@ -23,24 +23,24 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Localidad"
-                description: SendaSettings.values.SENDA_WEATHER_LOCATION
-                    || (SendaSettings.defaultWeatherLocation ? `${SendaSettings.defaultWeatherLocation} (según tu zona horaria)` : "Sin elegir")
+                description: ZendaSettings.values.ZENDA_WEATHER_LOCATION
+                    || (ZendaSettings.defaultWeatherLocation ? `${ZendaSettings.defaultWeatherLocation} (según tu zona horaria)` : "Sin elegir")
                 SettingsField {
                     id: searchField
                     Layout.fillWidth: true
                     Layout.preferredWidth: 140
                     placeholder: "Busca tu localidad"
-                    enabled: !SendaSettings.busy
-                    onAccepted: if (!SendaSettings.busy) SendaSettings.searchPlaces(text)
+                    enabled: !ZendaSettings.busy
+                    onAccepted: if (!ZendaSettings.busy) ZendaSettings.searchPlaces(text)
                 }
                 SettingsButton {
                     label: "Buscar"
-                    enabled: !SendaSettings.busy && searchField.text.trim().length >= 2
-                    onClicked: SendaSettings.searchPlaces(searchField.text)
+                    enabled: !ZendaSettings.busy && searchField.text.trim().length >= 2
+                    onClicked: ZendaSettings.searchPlaces(searchField.text)
                 }
             }
             Repeater {
-                model: SendaSettings.places
+                model: ZendaSettings.places
                 delegate: SettingsRow {
                     searchable: false
                     id: placeRow
@@ -49,8 +49,8 @@ Flickable {
                     description: [modelData.admin, modelData.country].filter(part => part).join(", ")
                     SettingsButton {
                         label: "Elegir"
-                        enabled: !SendaSettings.busy
-                        onClicked: SendaSettings.saveLocation(placeRow.modelData)
+                        enabled: !ZendaSettings.busy
+                        onClicked: ZendaSettings.saveLocation(placeRow.modelData)
                     }
                 }
             }

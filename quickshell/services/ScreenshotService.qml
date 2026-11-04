@@ -6,7 +6,7 @@ import Quickshell.Io
 
 Singleton {
     id: root
-    readonly property string binary: SendaManager.binaryPath
+    readonly property string binary: ZendaManager.binaryPath
     property bool busy: false
     property bool frozen: false
     property var frames: []

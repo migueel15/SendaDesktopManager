@@ -48,14 +48,14 @@ func TestPaths(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("HOME", root)
 	for _, tc := range []struct{ name, xdg, override, data string }{
-		{"fallback", "", "", filepath.Join(root, ".local", "share", "senda")},
-		{"relative-xdg", "relative", "", filepath.Join(root, ".local", "share", "senda")},
-		{"xdg", filepath.Join(root, "data"), "", filepath.Join(root, "data", "senda")},
+		{"fallback", "", "", filepath.Join(root, ".local", "share", "zenda")},
+		{"relative-xdg", "relative", "", filepath.Join(root, ".local", "share", "zenda")},
+		{"xdg", filepath.Join(root, "data"), "", filepath.Join(root, "data", "zenda")},
 		{"override", filepath.Join(root, "data"), filepath.Join(root, "checkout"), filepath.Join(root, "checkout")},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Setenv("XDG_DATA_HOME", tc.xdg)
-			t.Setenv("SENDA_HOME", tc.override)
+			t.Setenv("ZENDA_HOME", tc.override)
 			want := filepath.Join(tc.data, "stt")
 			if Dir() != want || ModelsDir() != filepath.Join(want, "models") || RuntimeDir() != filepath.Join(want, "venv") {
 				t.Fatalf("paths = %q, %q, %q", Dir(), ModelsDir(), RuntimeDir())
@@ -112,7 +112,7 @@ func TestEventWireFormat(t *testing.T) {
 }
 
 func TestExecRunner(t *testing.T) {
-	t.Setenv("SENDA_STT_RUNNER_HELPER", "1")
+	t.Setenv("ZENDA_STT_RUNNER_HELPER", "1")
 	args := []string{"-test.run=^TestRunnerHelper$", "--", "copy"}
 	data, err := ExecRunner(context.Background(), strings.NewReader("hola\n"), os.Args[0], args...)
 	if err != nil || string(data) != "hola\n" {
@@ -138,7 +138,7 @@ func TestExecRunner(t *testing.T) {
 }
 
 func TestRunnerHelper(t *testing.T) {
-	if os.Getenv("SENDA_STT_RUNNER_HELPER") != "1" {
+	if os.Getenv("ZENDA_STT_RUNNER_HELPER") != "1" {
 		return
 	}
 	if os.Args[len(os.Args)-1] == "fail" {

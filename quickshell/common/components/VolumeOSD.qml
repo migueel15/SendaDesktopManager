@@ -45,7 +45,7 @@ Scope {
         PanelWindow {
             // Since the panel's screen is unset, it will be picked by the compositor
             // when the window is shown. Most compositors pick the current active monitor.
-            WlrLayershell.namespace: "senda-volume-osd"
+            WlrLayershell.namespace: "zenda-volume-osd"
 
             // Center horizontally, just below the top bar.
             anchors.top: true

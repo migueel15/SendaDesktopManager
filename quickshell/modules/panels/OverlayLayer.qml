@@ -20,7 +20,7 @@ PanelWindow {
     screen: modelData
     readonly property string screenName: modelData.name
 
-    WlrLayershell.namespace: "Senda:OverlayLayer"
+    WlrLayershell.namespace: "Zenda:OverlayLayer"
 
     anchors {
         top: true
@@ -112,7 +112,7 @@ PanelWindow {
             sourceComponent: Component {
                 Item {
                     readonly property bool shown: panelContent.shown
-                    SendaPanel {
+                    ZendaPanel {
                         id: panelContent
                         names: ["dashboard"]
                         screenName: overlayLayer.screenName

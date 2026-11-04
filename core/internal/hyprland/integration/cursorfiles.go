@@ -12,7 +12,7 @@ import (
 )
 
 // cursorLine is one setting in a file. It only rewrites lines that already
-// exist, so Senda never adds a setting the user did not have there.
+// exist, so Zenda never adds a setting the user did not have there.
 type cursorLine struct {
 	pattern *regexp.Regexp
 	render  func(theme string, size int) string
@@ -112,7 +112,7 @@ func syncCursorFile(path string, lines []cursorLine, theme string, size int) (bo
 	if err != nil {
 		return false, err
 	}
-	temp, err := os.CreateTemp(filepath.Dir(target), ".senda-cursor-*")
+	temp, err := os.CreateTemp(filepath.Dir(target), ".zenda-cursor-*")
 	if err != nil {
 		return false, err
 	}

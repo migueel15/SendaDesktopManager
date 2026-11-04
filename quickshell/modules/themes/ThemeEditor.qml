@@ -19,7 +19,7 @@ Item {
         "surfaceVariant", "surfaceRaised", "surfaceRaisedBorder", "overlay",
         "textMuted", "white", "primary", "secondary", "accent", "accentDeep",
         "selection", "focus", "success", "warning", "error", "info", "text"]
-    readonly property var validThemes: SendaTheme.themes.filter(theme => theme.valid === true)
+    readonly property var validThemes: ZendaTheme.themes.filter(theme => theme.valid === true)
     property var draftColors: ({})
     property string draftName: ""
     property string draftWallpaper: ""
@@ -34,7 +34,7 @@ Item {
     readonly property bool wallpaperValid: draftWallpaper.startsWith("/")
         && /\.(png|jpe?g|gif)$/i.test(draftWallpaper) && thumbnail.status === Image.Ready
     readonly property bool canSave: nameValid && colorsValid && wallpaperValid
-        && !SendaTheme.busy && !pendingSave
+        && !ZendaTheme.busy && !pendingSave
 
     function copyBase(theme) {
         const colors = {};
@@ -45,7 +45,7 @@ Item {
         errorMessage = "";
     }
     function initialize() {
-        copyBase(baseTheme || SendaTheme.active || validThemes[0]);
+        copyBase(baseTheme || ZendaTheme.active || validThemes[0]);
         draftName = editing && baseTheme ? baseTheme.name : "";
     }
     function updateColor(key, value) {
@@ -66,7 +66,7 @@ Item {
             return;
         errorMessage = "";
         pendingSave = true;
-        SendaTheme.save({name: draftName, colors: Object.assign({}, draftColors),
+        ZendaTheme.save({name: draftName, colors: Object.assign({}, draftColors),
             wallpaper: draftWallpaper, original: editing && baseTheme ? baseTheme.name : ""});
     }
     onBaseThemeChanged: { if (initialized) initialize(); }
@@ -74,7 +74,7 @@ Item {
     Component.onCompleted: { initialize(); initialized = true; }
 
     Connections {
-        target: SendaTheme
+        target: ZendaTheme
         function onSaved(info) {
             if (!root.pendingSave) return;
             root.pendingSave = false;
@@ -151,7 +151,7 @@ Item {
                     model: root.validThemes
                     textRole: "name"
                     currentIndex: root.validThemes.findIndex(theme =>
-                        theme.name === (root.baseTheme || SendaTheme.active || {}).name)
+                        theme.name === (root.baseTheme || ZendaTheme.active || {}).name)
                     onActivated: index => root.copyBase(root.validThemes[index])
                     font: Theme.font.body
                     contentItem: Text {
@@ -224,7 +224,7 @@ Item {
                             implicitHeight: 28
                             radius: Theme.rounding.small
                             color: root.previewColor("background")
-                            Text { anchors.centerIn: parent; text: "Senda · Vista previa"; font: Theme.font.body; color: root.previewColor("primary") }
+                            Text { anchors.centerIn: parent; text: "Zenda · Vista previa"; font: Theme.font.body; color: root.previewColor("primary") }
                         }
                         Rectangle {
                             Layout.fillWidth: true

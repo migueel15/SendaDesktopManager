@@ -10,7 +10,7 @@ Scope {
         return players.find(item => item.playbackState === MprisPlaybackState.Playing) ?? players[0] ?? null;
     }
 
-    // `senda media` calls these from the media keys.
+    // `zenda media` calls these from the media keys.
     IpcHandler {
         target: "media"
 

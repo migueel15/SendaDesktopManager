@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 )
 
 type Backend struct {

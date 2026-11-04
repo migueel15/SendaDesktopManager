@@ -10,10 +10,10 @@ Flickable {
     readonly property bool retainWhenHidden: clientIdField.text !== "" || clientSecretField.text !== ""
     // Selection follows confirmed configuration, including after a failed save.
     readonly property var selectedCalendars: {
-        const configured = (SendaSettings.values.SENDA_GOOGLE_CALENDARS ?? "")
+        const configured = (ZendaSettings.values.ZENDA_GOOGLE_CALENDARS ?? "")
             .split(",").map(id => id.trim()).filter(id => id !== "");
         return configured.length > 0 ? configured
-            : SendaSettings.calendars.filter(calendar => calendar.selected).map(calendar => calendar.id);
+            : ZendaSettings.calendars.filter(calendar => calendar.selected).map(calendar => calendar.id);
     }
     property bool showOwnClient: false
     contentHeight: column.implicitHeight
@@ -25,8 +25,8 @@ Flickable {
         root.showOwnClient = true;
     }
     function confirmClient() {
-        if (SendaSettings.busy || clientIdField.text.trim() === "") return;
-        SendaSettings.saveGoogleClient(clientIdField.text, clientSecretField.text);
+        if (ZendaSettings.busy || clientIdField.text.trim() === "") return;
+        ZendaSettings.saveGoogleClient(clientIdField.text, clientSecretField.text);
         clientSecretField.text = "";
     }
     function toggleCalendar(id) {
@@ -34,7 +34,7 @@ Flickable {
             ? root.selectedCalendars.filter(item => item !== id)
             : [...root.selectedCalendars, id];
         if (next.length === 0) return;
-        SendaSettings.saveCalendars(next);
+        ZendaSettings.saveCalendars(next);
     }
 
     ColumnLayout {
@@ -45,18 +45,18 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Cuenta de Google"
-                description: SendaSettings.connected ? "Cuenta conectada" : "Cuenta no conectada"
+                description: ZendaSettings.connected ? "Cuenta conectada" : "Cuenta no conectada"
                 SettingsButton {
-                    label: SendaSettings.connected ? "Desconectar" : "Conectar con Google"
-                    primary: !SendaSettings.connected
-                    enabled: !SendaSettings.busy
-                    onClicked: SendaSettings.connected ? SendaSettings.disconnectGoogle() : SendaSettings.connectGoogle()
+                    label: ZendaSettings.connected ? "Desconectar" : "Conectar con Google"
+                    primary: !ZendaSettings.connected
+                    enabled: !ZendaSettings.busy
+                    onClicked: ZendaSettings.connected ? ZendaSettings.disconnectGoogle() : ZendaSettings.connectGoogle()
                 }
             }
             SettingsRow {
                 visible: !root.showOwnClient
                 label: "Cliente OAuth propio"
-                description: "Opcional si tu versión incluye las credenciales de Senda."
+                description: "Opcional si tu versión incluye las credenciales de Zenda."
                 SettingsButton {
                     label: "Crear credenciales"
                     onClicked: root.openOwnClient()
@@ -70,7 +70,7 @@ Flickable {
                     id: clientIdField
                     Layout.preferredWidth: 220
                     Layout.fillWidth: true
-                    enabled: !SendaSettings.busy
+                    enabled: !ZendaSettings.busy
                     placeholder: "ID de cliente"
                     onAccepted: clientSecretField.focusInput()
                 }
@@ -78,12 +78,12 @@ Flickable {
             SettingsRow {
                 visible: root.showOwnClient
                 label: "Secreto del cliente"
-                description: SendaSettings.secretConfigured ? "Ya hay un secreto guardado; déjalo vacío para conservarlo." : "El secreto no se vuelve a mostrar."
+                description: ZendaSettings.secretConfigured ? "Ya hay un secreto guardado; déjalo vacío para conservarlo." : "El secreto no se vuelve a mostrar."
                 SettingsField {
                     id: clientSecretField
                     Layout.preferredWidth: 220
                     Layout.fillWidth: true
-                    enabled: !SendaSettings.busy
+                    enabled: !ZendaSettings.busy
                     secret: true
                     placeholder: "Secreto del cliente"
                     onAccepted: root.confirmClient()
@@ -94,19 +94,19 @@ Flickable {
                 Layout.alignment: Qt.AlignRight
                 label: "Guardar credenciales"
                 primary: true
-                enabled: !SendaSettings.busy && clientIdField.text.trim() !== ""
+                enabled: !ZendaSettings.busy && clientIdField.text.trim() !== ""
                 onClicked: root.confirmClient()
             }
         }
         SettingsGroup {
-            visible: SendaSettings.connected && SendaSettings.calendars.length > 0
+            visible: ZendaSettings.connected && ZendaSettings.calendars.length > 0
             SettingsRow {
                 separator: false
                 label: "Calendarios a mostrar"
                 description: "Cada cambio se guarda al instante. Debe quedar al menos un calendario seleccionado."
             }
             Repeater {
-                model: SendaSettings.connected ? SendaSettings.calendars : []
+                model: ZendaSettings.connected ? ZendaSettings.calendars : []
                 delegate: SettingsRow {
                     searchable: false
                     id: calendarRow
@@ -114,7 +114,7 @@ Flickable {
                     label: modelData.summary || modelData.id
                     SettingsSwitch {
                         checkedValue: root.selectedCalendars.includes(calendarRow.modelData.id)
-                        enabled: !SendaSettings.busy && (!checkedValue || root.selectedCalendars.length > 1)
+                        enabled: !ZendaSettings.busy && (!checkedValue || root.selectedCalendars.length > 1)
                         Accessible.name: calendarRow.label
                         onToggledValue: root.toggleCalendar(calendarRow.modelData.id)
                     }

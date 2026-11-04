@@ -1,4 +1,4 @@
-// Package config reads Senda's KEY=VALUE settings file.
+// Package config reads Zenda's KEY=VALUE settings file.
 package config
 
 import (

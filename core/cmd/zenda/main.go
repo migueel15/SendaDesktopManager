@@ -1,0 +1,53 @@
+package main
+
+import (
+	"os"
+
+	"github.com/migueel15/Zenda/core/internal/legacy"
+
+	"github.com/spf13/cobra"
+)
+
+func main() {
+	legacy.Apply()
+	rootCmd := &cobra.Command{
+		Use:   "zenda",
+		Short: "zenda desktop manager",
+	}
+
+	rootCmd.AddCommand(NewWallpaperCmd())
+	rootCmd.AddCommand(shellCmd)
+	rootCmd.AddCommand(streamAudioCmd)
+	rootCmd.AddCommand(userCmd)
+	rootCmd.AddCommand(brightnessCmd)
+	rootCmd.AddCommand(mediaCmd)
+	rootCmd.AddCommand(discordCmd())
+	rootCmd.AddCommand(calendarCmd())
+	rootCmd.AddCommand(configCmd())
+	rootCmd.AddCommand(weatherCmd())
+	rootCmd.AddCommand(settingsCmd())
+	rootCmd.AddCommand(windowCmd())
+	rootCmd.AddCommand(notificationsCmd)
+	rootCmd.AddCommand(newLauncherCmd())
+	rootCmd.AddCommand(keyboardCmd())
+	rootCmd.AddCommand(lockCmd())
+	rootCmd.AddCommand(screenshotCmd())
+	rootCmd.AddCommand(hyprlandCmd())
+	rootCmd.AddCommand(displayCmd())
+	rootCmd.AddCommand(inputCmd())
+	rootCmd.AddCommand(startupCmd())
+	rootCmd.AddCommand(bluetoothCmd())
+	rootCmd.AddCommand(usbCmd())
+	rootCmd.AddCommand(clipboardCmd())
+	rootCmd.AddCommand(themeCmd())
+	rootCmd.AddCommand(sttCmd())
+	rootCmd.AddCommand(versionCmd())
+	rootCmd.AddCommand(updateCmd())
+	rootCmd.AddCommand(setupCmd())
+	rootCmd.AddCommand(uninstallCmd())
+
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
+
+}

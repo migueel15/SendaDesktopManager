@@ -5,11 +5,11 @@ La sección **Teclado y ratón** de Ajustes define la distribución de teclado, 
 ## Comandos
 
 ```sh
-senda input show [--json]
-senda input set --layout us,es --sensitivity 0.2 --tap-to-click true --natural-scroll false --cursor-theme Bibata-Modern-Ice --cursor-size 26 \
+zenda input show [--json]
+zenda input set --layout us,es --sensitivity 0.2 --tap-to-click true --natural-scroll false --cursor-theme Bibata-Modern-Ice --cursor-size 26 \
   --accel-profile flat --follow-mouse 1 --disable-while-typing true --scroll-factor 0.4
-senda input cursor-themes
-senda input sync
+zenda input cursor-themes
+zenda input sync
 ```
 
 Un valor vacío (`--layout=`) devuelve ese campo a su valor por defecto.
@@ -22,17 +22,17 @@ Cada ajuste cambiado muestra en Ajustes un icono para restablecerlo a su valor p
 
 ## Convivencia con tu configuración
 
-Senda solo escribe en `~/.config/senda/config` y en su módulo generado `senda/`; fuera de archivos, solo cambia el cursor GTK con `gsettings`. Sigue los `require` y `source` desde `hyprland.lua` o `hyprland.conf`, sin contar comentarios, archivos no cargados ni bloques de dispositivo, y busca:
+Zenda solo escribe en `~/.config/zenda/config` y en su módulo generado `zenda/`; fuera de archivos, solo cambia el cursor GTK con `gsettings`. Sigue los `require` y `source` desde `hyprland.lua` o `hyprland.conf`, sin contar comentarios, archivos no cargados ni bloques de dispositivo, y busca:
 
 - `kb_layout`, `sensitivity`, `accel_profile`, `follow_mouse`, `tap_to_click`, `natural_scroll`, `disable_while_typing` y `scroll_factor` en `input`.
 - `XCURSOR_THEME`, `HYPRCURSOR_THEME`, `XCURSOR_SIZE` o `HYPRCURSOR_SIZE` con `hl.env` o `env =`, `hyprctl setcursor`, `gsettings set org.gnome.desktop.interface cursor…`, y esas variables en `uwsm/env*` y `environment.d`.
 
-Lo que definas tú gana: Senda no lo genera, aunque tenga un valor guardado, y lo muestra como gestionado por el usuario, con el control desactivado. `senda input set` rechaza esos campos. Los campos que nadie define no muestran ninguna indicación y usan los valores por defecto. Si quitas tu definición, vuelve a aplicarse el valor guardado en Senda.
+Lo que definas tú gana: Zenda no lo genera, aunque tenga un valor guardado, y lo muestra como gestionado por el usuario, con el control desactivado. `zenda input set` rechaza esos campos. Los campos que nadie define no muestran ninguna indicación y usan los valores por defecto. Si quitas tu definición, vuelve a aplicarse el valor guardado en Zenda.
 
-`senda input sync` regenera el módulo si tu configuración cambió. Se ejecuta al iniciar Hyprland y al abrir Ajustes.
+`zenda input sync` regenera el módulo si tu configuración cambió. Se ejecuta al iniciar Hyprland y al abrir Ajustes.
 
 ## Límites
 
 - Los `hl.device` y `tablet` no se controlan desde Ajustes. Un `hl.device` con `sensitivity` o `accel_profile` manda sobre el ajuste global para ese ratón.
 - Los `require` construidos en tiempo de ejecución no se siguen.
-- El tema se aplica con `hyprctl setcursor`, por entorno a las aplicaciones nuevas y con `gsettings` a las GTK. El cambio en `gsettings` se queda aunque quites el tema de Senda.
+- El tema se aplica con `hyprctl setcursor`, por entorno a las aplicaciones nuevas y con `gsettings` a las GTK. El cambio en `gsettings` se queda aunque quites el tema de Zenda.

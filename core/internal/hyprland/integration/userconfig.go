@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/paths"
 )
 
 // UserSetting says that the user's own configuration defines a value. Value is
@@ -18,7 +18,7 @@ type UserSetting struct {
 
 // UserConfig holds the text of the files Hyprland really loads from the user's
 // configuration: comments are removed and files that nothing requires, or
-// whose require is commented out, are not included. Senda's folder is skipped.
+// whose require is commented out, are not included. Zenda's folder is skipped.
 type UserConfig map[string]string
 
 var (
@@ -62,7 +62,7 @@ func LoadUserConfig() UserConfig {
 			visit(target)
 		}
 	}
-	// A symlinked configuration folder must still match Senda's module.
+	// A symlinked configuration folder must still match Zenda's module.
 	if real, err := filepath.EvalSymlinks(skip); err == nil {
 		skip = real
 	}

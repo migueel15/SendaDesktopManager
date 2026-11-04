@@ -10,9 +10,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
-	"github.com/migueel15/SendaDesktopManager/core/internal/service"
+	"github.com/migueel15/Zenda/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/service"
 )
 
 // UserStartup is the opt-in list exposed by the user's running Lua config.
@@ -25,7 +25,7 @@ type UserStartup struct {
 // This expression only reads data. Never invoke startup callbacks to discover
 // commands: they may launch applications or have other side effects.
 const userStartupExpression = `(function()
-    local entries = senda_user_startup
+    local entries = zenda_user_startup
     if entries == nil then return "missing" end
     if type(entries) ~= "table" then return "invalid" end
     local function hex(value)
@@ -53,7 +53,7 @@ func ReadUserStartup(ctx context.Context, run hyprctl.Runner) (UserStartup, erro
 	}
 	lines := strings.Split(text, "\n")
 	if lines[0] != "ready" {
-		return result, fmt.Errorf("la tabla senda_user_startup no tiene un formato válido")
+		return result, fmt.Errorf("la tabla zenda_user_startup no tiene un formato válido")
 	}
 	for _, line := range lines[1:] {
 		nameHex, commandHex, ok := strings.Cut(line, ":")
@@ -73,7 +73,7 @@ func ReadUserStartup(ctx context.Context, run hyprctl.Runner) (UserStartup, erro
 }
 
 // KeyStartup holds the startup entries as JSON.
-const KeyStartup = "SENDA_STARTUP_APPS"
+const KeyStartup = "ZENDA_STARTUP_APPS"
 
 // Startup entry kinds.
 const (
@@ -83,7 +83,7 @@ const (
 	StartupFile    = "file"
 )
 
-// StartupEntry is something Senda runs when Hyprland starts. Target identifies
+// StartupEntry is something Zenda runs when Hyprland starts. Target identifies
 // it: a shell command for an app or command, a path for a script or a file.
 type StartupEntry struct {
 	Kind    string `json:"kind"`
@@ -192,7 +192,7 @@ func ParseStartup(value string) ([]StartupEntry, error) {
 	return entries, nil
 }
 
-// SaveStartup stores the entries in the Senda configuration.
+// SaveStartup stores the entries in the Zenda configuration.
 func SaveStartup(path string, entries []StartupEntry) error {
 	if len(entries) == 0 {
 		return config.Set(path, map[string]string{KeyStartup: ""})

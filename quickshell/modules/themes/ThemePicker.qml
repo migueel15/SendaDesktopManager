@@ -13,13 +13,13 @@ BarComponents.BarExtension {
     property var pendingDelete: null
     readonly property bool editing: editor.source.toString() !== ""
     readonly property real listHeight: Theme.scaled(560)
-    expanded: onPickerScreen && SendaTheme.pickerOpen
+    expanded: onPickerScreen && ZendaTheme.pickerOpen
     expandedHeight: Math.min(maximumHeight, editing
         ? (editor.item?.implicitHeight || listHeight) + Theme.spacing.lg * 2 : listHeight)
     resizeDuration: Theme.motion.slow
     autoHideOnPointerExit: false
     conflictGroup: "tray-popups"
-    onCloseRequested: SendaTheme.closePicker()
+    onCloseRequested: ZendaTheme.closePicker()
 
     function showList() {
         editor.source = "";
@@ -33,16 +33,16 @@ BarComponents.BarExtension {
         });
     }
     function openPendingDuplicate() {
-        if (!expanded || !SendaTheme.duplicatePending || !SendaTheme.active)
+        if (!expanded || !ZendaTheme.duplicatePending || !ZendaTheme.active)
             return;
-        SendaTheme.duplicatePending = false;
-        editTheme(SendaTheme.active, false, true);
+        ZendaTheme.duplicatePending = false;
+        editTheme(ZendaTheme.active, false, true);
     }
     function prepareOpen() {
         if (!root.viewReady) return;
         if (expanded) {
             if (!editing) showList();
-            SendaTheme.refresh();
+            ZendaTheme.refresh();
             Qt.callLater(() => content.forceActiveFocus());
             openPendingDuplicate();
         }
@@ -53,7 +53,7 @@ BarComponents.BarExtension {
         prepareOpen();
     }
     Connections {
-        target: SendaTheme
+        target: ZendaTheme
         function onDuplicatePendingChanged() { root.openPendingDuplicate(); }
     }
 
@@ -63,7 +63,7 @@ BarComponents.BarExtension {
         anchors.margins: Theme.spacing.lg
         Keys.onEscapePressed: event => {
             if (root.editing || root.pendingDelete) root.showList();
-            else SendaTheme.closePicker();
+            else ZendaTheme.closePicker();
             event.accepted = true;
         }
 
@@ -99,18 +99,18 @@ BarComponents.BarExtension {
                 }
                 ActionButton {
                     text: "Nuevo tema"
-                    enabled: !!SendaTheme.active && !SendaTheme.busy
-                    onClicked: root.editTheme(SendaTheme.active, false)
+                    enabled: !!ZendaTheme.active && !ZendaTheme.busy
+                    onClicked: root.editTheme(ZendaTheme.active, false)
                 }
                 ActionButton {
                     text: "Cerrar"
-                    onClicked: SendaTheme.closePicker()
+                    onClicked: ZendaTheme.closePicker()
                 }
             }
             Text {
                 Layout.fillWidth: true
                 visible: text !== ""
-                text: SendaTheme.lastError
+                text: ZendaTheme.lastError
                 font: Theme.font.caption
                 color: Theme.colors.error
                 wrapMode: Text.Wrap
@@ -149,10 +149,10 @@ BarComponents.BarExtension {
                         ActionButton {
                             text: "Borrar tema"
                             destructive: true
-                            enabled: !SendaTheme.busy
+                            enabled: !ZendaTheme.busy
                             onClicked: {
                                 if (root.pendingDelete?.builtin === false)
-                                    SendaTheme.remove(root.pendingDelete.name);
+                                    ZendaTheme.remove(root.pendingDelete.name);
                                 root.pendingDelete = null;
                             }
                         }
@@ -166,7 +166,7 @@ BarComponents.BarExtension {
                 clip: true
                 cellWidth: width / Math.max(1, Math.floor(width / Theme.scaled(210)))
                 cellHeight: Theme.scaled(220) + Theme.spacing.sm
-                model: SendaTheme.themes
+                model: ZendaTheme.themes
                 // The list steps back while a deletion waits for confirmation.
                 enabled: root.pendingDelete === null
                 opacity: enabled ? 1 : 0.35

@@ -12,7 +12,7 @@ QtObject {
 	readonly property var locale: Qt.locale("es_ES")
 
 	// Interface text scale. 1.0 is the default size; the settings panel changes
-	// it through SENDA_UI_FONT_SCALE.
+	// it through ZENDA_UI_FONT_SCALE.
 	property real fontScale: 1.0
 
 	// Scales a font size in pixels by the interface scale.
@@ -47,7 +47,7 @@ QtObject {
 	readonly property Workspaces workspaces: Workspaces {}
 	readonly property Notifications notifications: Notifications {}
 
-	// Senda palette. Neutrals: Noche, Grafito, Pizarra, Humo, Bruma.
+	// Zenda palette. Neutrals: Noche, Grafito, Pizarra, Humo, Bruma.
 	// Accent: Abismo, Cobalto, Hielo, Escarcha.
 	component Colors: QtObject {
 		// Desktop background, darker than bars and panels.

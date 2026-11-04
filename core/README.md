@@ -1,6 +1,6 @@
-# Senda
+# Zenda
 
-Senda is a simple and modular desktop manager for Linux Wayland.
+Zenda is a simple and modular desktop manager for Linux Wayland.
 
 The project is currently in an early stage. Quickshell renders wallpapers for each screen.
 
@@ -22,5 +22,5 @@ The wallpaper backend sends requests to Quickshell. See [wallpaper](../docs/wall
 
 ## Instalación
 
-- [Instalación](../docs/installation.md): instalador, `senda update` y estado de `senda setup`.
+- [Instalación](../docs/installation.md): instalador, `zenda update` y estado de `zenda setup`.
 - [Configuración](../docs/configuration.md): archivo `KEY=VALUE`, ubicación y claves que se leen.

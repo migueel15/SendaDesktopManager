@@ -1,0 +1,67 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/migueel15/Zenda/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/hyprland/binds"
+	"github.com/migueel15/Zenda/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt/control"
+	"github.com/migueel15/Zenda/core/internal/stt/deliver"
+	"github.com/migueel15/Zenda/core/internal/stt/engine"
+	"github.com/migueel15/Zenda/core/internal/stt/models"
+	"github.com/migueel15/Zenda/core/internal/stt/session"
+	"github.com/spf13/cobra"
+)
+
+func sttSessionCmd() *cobra.Command {
+	return newSTTSessionCmd(func() (session.Deps, error) {
+		values, err := config.Load(paths.ConfigFile())
+		if err != nil {
+			return session.Deps{}, fmt.Errorf("no se pudo leer la configuración del dictado: %w", err)
+		}
+		settings := stt.LoadSettings(values)
+		command, err := os.Executable()
+		if err != nil {
+			command = "zenda"
+		}
+		modelDir := models.NewStore(stt.ModelsDir()).ModelDir(settings.ModelID)
+		var stopTimeout time.Duration
+		if m, err := stt.ReadManifest(modelDir); err == nil && m.Kind == stt.KindOffline {
+			stopTimeout = 5 * time.Minute // Whole-recording decode grows with its length.
+		}
+		return session.Deps{
+			StopTimeout: stopTimeout,
+			Engine:      engine.New(), Deliverer: deliver.New(stt.ExecRunner),
+			DuckAudio:   control.DuckAudio(stt.ExecRunner, settings),
+			MuteDiscord: control.MuteDiscord(stt.ExecRunner, command),
+			Submap:      binds.NewSubmap(stt.ExecRunner), Notifier: control.NewNotifier(),
+			Settings: settings, ModelDir: modelDir,
+		}, nil
+	})
+}
+
+func newSTTSessionCmd(load func() (session.Deps, error)) *cobra.Command {
+	var standby bool
+	cmd := &cobra.Command{
+		Use: "session", Short: "Ejecutar una sesión con órdenes por stdin y eventos JSON por stdout", Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cmd.SilenceUsage = true
+			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+			deps, err := load()
+			if err != nil {
+				return err
+			}
+			deps.Standby = standby
+			return session.Run(ctx, deps, cmd.InOrStdin(), cmd.OutOrStdout())
+		},
+	}
+	cmd.Flags().BoolVar(&standby, "standby", false, "Precargar el motor sin abrir el micrófono")
+	return cmd
+}

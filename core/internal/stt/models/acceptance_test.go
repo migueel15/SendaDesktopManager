@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 // testArchive is a tiny .tar.bz2 (Go cannot create bzip2) with a top-level

@@ -21,7 +21,7 @@ Pendiente de validación en varios monitores (F6).
 
 ## Estado local
 
-La lista se guarda en `$XDG_STATE_HOME/senda/tray-pinned.json`. Si `XDG_STATE_HOME` no está definido o está vacío, la ruta es `~/.local/state/senda/tray-pinned.json`. El archivo JSON tiene este formato:
+La lista se guarda en `$XDG_STATE_HOME/zenda/tray-pinned.json`. Si `XDG_STATE_HOME` no está definido o está vacío, la ruta es `~/.local/state/zenda/tray-pinned.json`. El archivo JSON tiene este formato:
 
 ```json
 {
@@ -34,11 +34,11 @@ Cada entrada de `pinned` es el `id` de StatusNotifierItem de una aplicación. Pu
 
 ## Aplicaciones que arrancan con la sesión
 
-`senda.service` es de tipo `dbus`: `systemctl --user start senda.service` no vuelve hasta que Quickshell posee `org.kde.StatusNotifierWatcher`. Las aplicaciones con icono de bandeja que se lanzan al iniciar sesión (Discord y otras basadas en Electron) registran su icono una única vez; si el vigilante aún no existe, el icono no aparece ni en la bandeja ni en los anclados. Lánzalas después de arrancar la shell. Ejemplo con un auxiliar en Lua para Hyprland:
+`zenda.service` es de tipo `dbus`: `systemctl --user start zenda.service` no vuelve hasta que Quickshell posee `org.kde.StatusNotifierWatcher`. Las aplicaciones con icono de bandeja que se lanzan al iniciar sesión (Discord y otras basadas en Electron) registran su icono una única vez; si el vigilante aún no existe, el icono no aparece ni en la bandeja ni en los anclados. Lánzalas después de arrancar la shell. Ejemplo con un auxiliar en Lua para Hyprland:
 
 ```lua
 local function after_shell(cmd)
-	hl.exec_cmd("systemctl --user start senda.service; " .. cmd)
+	hl.exec_cmd("systemctl --user start zenda.service; " .. cmd)
 end
 after_shell(apps.discord)
 ```

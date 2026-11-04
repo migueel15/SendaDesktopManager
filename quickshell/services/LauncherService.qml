@@ -6,7 +6,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 // State shared by the launcher panels of every monitor: recent applications,
-// launching and the IPC target used by `senda launcher toggle`.
+// launching and the IPC target used by `zenda launcher toggle`.
 Singleton {
     id: root
 
@@ -16,7 +16,7 @@ Singleton {
     // Search text the next opening starts with; the panel consumes it.
     property string initialQuery: ""
     property bool historyWritable: true
-    readonly property string historyDirectory: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/senda"
+    readonly property string historyDirectory: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/zenda"
 
     function toggleWithQuery(name, query) {
         if (OverlayService.isOpen("launcher")) { root.close(); return; }

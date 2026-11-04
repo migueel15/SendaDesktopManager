@@ -3,7 +3,7 @@ package themeexport
 // catppuccinAccents lists Catppuccin's accent names in palette order.
 var catppuccinAccents = []string{"rosewater", "flamingo", "pink", "mauve", "red", "maroon", "peach", "yellow", "green", "teal", "sky", "sapphire", "blue", "lavender"}
 
-// deriveCatppuccin maps each Catppuccin color name onto the Senda variable
+// deriveCatppuccin maps each Catppuccin color name onto the Zenda variable
 // that plays the same role, so a syntax group always uses the same variable
 // and only its value changes between themes. t holds the terminal colors
 // derived in Derive.

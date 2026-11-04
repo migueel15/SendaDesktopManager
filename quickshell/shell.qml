@@ -26,7 +26,7 @@ ShellRoot {
 
 	// IPC endpoints must exist even before their first view is constructed.
 	readonly property var launcherService: LauncherService
-	Component.onCompleted: SendaTheme.start()
+	Component.onCompleted: ZendaTheme.start()
 
 	Material.theme: Material.Dark
 	Material.accent: Material.Purple

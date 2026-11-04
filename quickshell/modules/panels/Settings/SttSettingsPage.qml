@@ -29,21 +29,21 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Motor"
-                description: SendaSttSettings.runtime.installed
-                    ? `Instalado${SendaSttSettings.runtime.provider ? ` · ${SendaSttSettings.runtime.provider}` : ""}`
+                description: ZendaSttSettings.runtime.installed
+                    ? `Instalado${ZendaSttSettings.runtime.provider ? ` · ${ZendaSttSettings.runtime.provider}` : ""}`
                     : "No instalado · la descarga ocupa aproximadamente 1 GB"
                 SettingsButton {
-                    visible: !SendaSttSettings.runtime.installed
+                    visible: !ZendaSttSettings.runtime.installed
                     label: "Instalar motor"
                     primary: true
-                    enabled: !SendaSttSettings.busy
-                    onClicked: SendaSttSettings.installRuntime()
+                    enabled: !ZendaSttSettings.busy
+                    onClicked: ZendaSttSettings.installRuntime()
                 }
             }
         }
         Text { text: "Modelos"; color: Theme.colors.primary; font: Theme.font.heading }
         Repeater {
-            model: SendaSttSettings.models
+            model: ZendaSttSettings.models
 
             delegate: SettingsGroup {
                 id: modelCard
@@ -72,11 +72,11 @@ Flickable {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 5
-                        visible: SendaSttSettings.operation === "installModel" && SendaSttSettings.installingId === modelCard.modelData.id
+                        visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
                         radius: Theme.rounding.full
                         color: Theme.colors.surfaceVariant
                         Rectangle {
-                            width: parent.width * SendaSttSettings.progress
+                            width: parent.width * ZendaSttSettings.progress
                             height: parent.height
                             radius: parent.radius
                             color: Theme.colors.accent
@@ -90,26 +90,26 @@ Flickable {
                             visible: !modelCard.modelData.installed
                             label: "Instalar"
                             primary: true
-                            enabled: !SendaSttSettings.busy
-                            onClicked: SendaSttSettings.installModel(modelCard.modelData.id)
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.installModel(modelCard.modelData.id)
                         }
                         SettingsButton {
                             visible: modelCard.modelData.installed && !modelCard.modelData.active
                             label: "Activar"
-                            enabled: !SendaSttSettings.busy
-                            onClicked: SendaSttSettings.useModel(modelCard.modelData.id)
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.useModel(modelCard.modelData.id)
                         }
                         SettingsButton {
                             visible: modelCard.modelData.installed
                             label: "Borrar"
-                            enabled: !SendaSttSettings.busy
-                            onClicked: SendaSttSettings.removeModel(modelCard.modelData.id)
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.removeModel(modelCard.modelData.id)
                         }
                         SettingsButton {
-                            visible: SendaSttSettings.operation === "installModel" && SendaSttSettings.installingId === modelCard.modelData.id
+                            visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
                             label: "Cancelar"
-                            enabled: !SendaSttSettings.cancelRequested
-                            onClicked: SendaSttSettings.cancelInstall()
+                            enabled: !ZendaSttSettings.cancelRequested
+                            onClicked: ZendaSttSettings.cancelInstall()
                         }
                     }
                 }
@@ -120,51 +120,51 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Atenuar volumen durante el dictado"
-                modified: !SendaSttSettings.audioDuckingEnabled
-                onResetRequested: SendaSettings.save({ SENDA_STT_AUDIO_DUCKING: "" }, "Atenuación restablecida")
+                modified: !ZendaSttSettings.audioDuckingEnabled
+                onResetRequested: ZendaSettings.save({ ZENDA_STT_AUDIO_DUCKING: "" }, "Atenuación restablecida")
                 description: "Al terminar o cancelar se recupera el volumen anterior. Se aplica al siguiente dictado."
                 SettingsSwitch {
-                    checkedValue: SendaSttSettings.audioDuckingEnabled
-                    enabled: !SendaSettings.busy && !SendaSttSettings.busy
+                    checkedValue: ZendaSttSettings.audioDuckingEnabled
+                    enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
                     Accessible.name: "Atenuar volumen durante el dictado"
-                    onToggledValue: value => SendaSttSettings.setAudioDucking(value)
+                    onToggledValue: value => ZendaSttSettings.setAudioDucking(value)
                 }
             }
             SettingsRow {
-                visible: SendaSttSettings.audioDuckingEnabled
+                visible: ZendaSttSettings.audioDuckingEnabled
                 label: "Volumen durante el dictado"
-                modified: SendaSttSettings.audioVolume !== 10
-                onResetRequested: { dictationVolumeField.text = "10"; SendaSettings.save({ SENDA_STT_AUDIO_VOLUME: "" }, "Volumen restablecido"); }
+                modified: ZendaSttSettings.audioVolume !== 10
+                onResetRequested: { dictationVolumeField.text = "10"; ZendaSettings.save({ ZENDA_STT_AUDIO_VOLUME: "" }, "Volumen restablecido"); }
                 description: "Porcentaje entre 0 y 100. Solo se baja si el volumen actual es mayor y no está silenciado."
                 SettingsField {
                     id: dictationVolumeField
                     Layout.preferredWidth: 90
-                    text: String(SendaSttSettings.audioVolume)
-                    enabled: !SendaSettings.busy && !SendaSttSettings.busy
+                    text: String(ZendaSttSettings.audioVolume)
+                    enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
                     placeholder: "0–100"
                     onCommitted: {
                         const value = text.trim();
                         if (/^\d{1,3}$/.test(value) && Number(value) <= 100)
-                            SendaSttSettings.setAudioVolume(Number(value));
+                            ZendaSttSettings.setAudioVolume(Number(value));
                         else {
-                            SendaSettings.noticeIsError = true;
-                            SendaSettings.notice = "El volumen debe ser un entero entre 0 y 100";
+                            ZendaSettings.noticeIsError = true;
+                            ZendaSettings.notice = "El volumen debe ser un entero entre 0 y 100";
                         }
                     }
                 }
             }
             SettingsRow {
                 label: "Precargar modelo"
-                modified: SendaSttSettings.preloadEnabled
-                onResetRequested: SendaSettings.save({ SENDA_STT_PRELOAD: "" }, "Precarga restablecida")
-                description: SendaSttSettings.preloadState === "preparing" ? "Preparando el modelo…"
-                    : SendaSttSettings.preloadState === "ready" ? "Listo"
-                    : SendaSttSettings.preloadState === "error" ? `Error: ${SendaSttSettings.preloadError}` : "Inactivo"
+                modified: ZendaSttSettings.preloadEnabled
+                onResetRequested: ZendaSettings.save({ ZENDA_STT_PRELOAD: "" }, "Precarga restablecida")
+                description: ZendaSttSettings.preloadState === "preparing" ? "Preparando el modelo…"
+                    : ZendaSttSettings.preloadState === "ready" ? "Listo"
+                    : ZendaSttSettings.preloadState === "error" ? `Error: ${ZendaSttSettings.preloadError}` : "Inactivo"
                 SettingsSwitch {
-                    checkedValue: SendaSttSettings.preloadEnabled
-                    enabled: !SendaSettings.busy && !SendaSttSettings.busy
+                    checkedValue: ZendaSttSettings.preloadEnabled
+                    enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
                     Accessible.name: "Precargar modelo"
-                    onToggledValue: value => SendaSttSettings.setPreload(value)
+                    onToggledValue: value => ZendaSttSettings.setPreload(value)
                 }
             }
         }
@@ -172,14 +172,14 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Idioma"
-                modified: (SendaSettings.values.SENDA_STT_LANGUAGE || "es") !== "es"
-                onResetRequested: { languageField.text = "es"; SendaSettings.save({ SENDA_STT_LANGUAGE: "" }, "Idioma restablecido"); }
+                modified: (ZendaSettings.values.ZENDA_STT_LANGUAGE || "es") !== "es"
+                onResetRequested: { languageField.text = "es"; ZendaSettings.save({ ZENDA_STT_LANGUAGE: "" }, "Idioma restablecido"); }
                 description: "Español o detección automática. También puedes introducir un código."
                 SettingsSegments {
-                    value: SendaSettings.values.SENDA_STT_LANGUAGE || "es"
+                    value: ZendaSettings.values.ZENDA_STT_LANGUAGE || "es"
                     options: [{ label: "Español", value: "es" }, { label: "Detectar", value: "auto" }]
-                    enabled: !SendaSettings.busy
-                    onChosen: value => SendaSettings.save({ SENDA_STT_LANGUAGE: value }, "Idioma guardado")
+                    enabled: !ZendaSettings.busy
+                    onChosen: value => ZendaSettings.save({ ZENDA_STT_LANGUAGE: value }, "Idioma guardado")
                 }
             }
             SettingsRow {
@@ -188,37 +188,37 @@ Flickable {
                 SettingsField {
                     id: languageField
                     Layout.preferredWidth: 120
-                    text: SendaSettings.values.SENDA_STT_LANGUAGE || "es"
-                    enabled: !SendaSettings.busy
+                    text: ZendaSettings.values.ZENDA_STT_LANGUAGE || "es"
+                    enabled: !ZendaSettings.busy
                     onCommitted: {
-                        if (text.trim()) SendaSettings.save({ SENDA_STT_LANGUAGE: text.trim() }, "Idioma guardado");
+                        if (text.trim()) ZendaSettings.save({ ZENDA_STT_LANGUAGE: text.trim() }, "Idioma guardado");
                     }
                 }
             }
             SettingsRow {
                 label: "Al dictar"
-                modified: (SendaSettings.values.SENDA_STT_PASTE_MODE || "paste") !== "paste"
-                onResetRequested: SendaSettings.save({ SENDA_STT_PASTE_MODE: "" }, "Modo de pegado restablecido")
+                modified: (ZendaSettings.values.ZENDA_STT_PASTE_MODE || "paste") !== "paste"
+                onResetRequested: ZendaSettings.save({ ZENDA_STT_PASTE_MODE: "" }, "Modo de pegado restablecido")
                 SettingsSegments {
-                    value: SendaSettings.values.SENDA_STT_PASTE_MODE || "paste"
+                    value: ZendaSettings.values.ZENDA_STT_PASTE_MODE || "paste"
                     options: [{ label: "Pegar directamente", value: "paste" }, { label: "Solo portapapeles", value: "clipboard" }]
-                    enabled: !SendaSettings.busy
-                    onChosen: value => SendaSettings.save({ SENDA_STT_PASTE_MODE: value }, "Modo de pegado guardado")
+                    enabled: !ZendaSettings.busy
+                    onChosen: value => ZendaSettings.save({ ZENDA_STT_PASTE_MODE: value }, "Modo de pegado guardado")
                 }
             }
             SettingsRow {
                 label: "Terminales"
-                modified: (SendaSettings.values.SENDA_STT_TERMINALS || "") !== ""
-                onResetRequested: { terminalsField.text = "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty"; SendaSettings.save({ SENDA_STT_TERMINALS: "" }, "Terminales restablecidas"); }
+                modified: (ZendaSettings.values.ZENDA_STT_TERMINALS || "") !== ""
+                onResetRequested: { terminalsField.text = "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty"; ZendaSettings.save({ ZENDA_STT_TERMINALS: "" }, "Terminales restablecidas"); }
                 description: "Clases de ventana separadas por comas."
                 SettingsField {
                     id: terminalsField
                     Layout.preferredWidth: 220
                     Layout.fillWidth: true
                     placeholder: "kitty, foot, Alacritty"
-                    text: SendaSettings.values.SENDA_STT_TERMINALS || "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty"
-                    enabled: !SendaSettings.busy
-                    onCommitted: SendaSettings.save({ SENDA_STT_TERMINALS: text.trim() }, "Terminales guardadas")
+                    text: ZendaSettings.values.ZENDA_STT_TERMINALS || "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty"
+                    enabled: !ZendaSettings.busy
+                    onCommitted: ZendaSettings.save({ ZENDA_STT_TERMINALS: text.trim() }, "Terminales guardadas")
                 }
             }
         }
@@ -226,8 +226,8 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Atajo de dictado"
-                description: SendaHyprlandSettings.loaded ? SendaHyprlandSettings.values.dictationShortcut
-                    : SendaHyprlandSettings.busy ? "Consultando ajustes del sistema…" : "No se pudo consultar el atajo"
+                description: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.dictationShortcut
+                    : ZendaHyprlandSettings.busy ? "Consultando ajustes del sistema…" : "No se pudo consultar el atajo"
                 SettingsButton {
                     label: "Abrir Sistema"
                     onClicked: root.openSystemRequested()

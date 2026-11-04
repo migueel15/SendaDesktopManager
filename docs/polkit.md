@@ -4,4 +4,4 @@ La shell incluye un agente polkit. Cuando una aplicación pide permisos de admin
 
 Polkit no indica al diálogo qué proceso hizo la petición, así que se muestra el mensaje y la acción que aporta.
 
-Solo puede haber un agente por sesión. Si otro ya está registrado, como `hyprpolkitagent`, Senda no muestra nada y sigue funcionando el del usuario. Para usar el de Senda, deja de iniciar ese agente y reinicia la shell con `systemctl --user restart senda`.
+Solo puede haber un agente por sesión. Si otro ya está registrado, como `hyprpolkitagent`, Zenda no muestra nada y sigue funcionando el del usuario. Para usar el de Zenda, deja de iniciar ese agente y reinicia la shell con `systemctl --user restart zenda`.

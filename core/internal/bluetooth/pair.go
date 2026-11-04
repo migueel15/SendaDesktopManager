@@ -1,4 +1,4 @@
-// Package bluetooth handles pairing requests initiated by Senda's interface.
+// Package bluetooth handles pairing requests initiated by Zenda's interface.
 package bluetooth
 
 import (
@@ -15,7 +15,7 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
-const agentPath dbus.ObjectPath = "/net/dorlab/Senda/BluetoothAgent"
+const agentPath dbus.ObjectPath = "/net/dorlab/Zenda/BluetoothAgent"
 
 var devicePath = regexp.MustCompile(`^/org/bluez/hci[0-9]+/dev_(?:[0-9A-Fa-f]{2}_){5}[0-9A-Fa-f]{2}$`)
 var passkeyPattern = regexp.MustCompile(`^[0-9]{1,6}$`)

@@ -1,4 +1,4 @@
-// Package setup performs the first-time installation of Senda on a system:
+// Package setup performs the first-time installation of Zenda on a system:
 // it checks the platform, installs missing Arch packages, creates the user
 // configuration and installs the Quickshell files from the latest release.
 package setup
@@ -7,7 +7,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 	"io"
 	"strings"
 )
@@ -16,7 +16,7 @@ import (
 // home directories and must not leave root-owned files there.
 func CheckNotRoot(euid int) error {
 	if euid == 0 {
-		return errors.New("no ejecutes senda setup como root")
+		return errors.New("no ejecutes zenda setup como root")
 	}
 	return nil
 }
@@ -57,5 +57,5 @@ func CheckCompositor(getenv func(string) string) error {
 	if strings.Contains(desktop, "hyprland") || hyprctl.InSessionEnv(getenv) {
 		return nil
 	}
-	return errors.New("solo se soporta Hyprland; ejecuta senda setup dentro de una sesión de Hyprland")
+	return errors.New("solo se soporta Hyprland; ejecuta zenda setup dentro de una sesión de Hyprland")
 }

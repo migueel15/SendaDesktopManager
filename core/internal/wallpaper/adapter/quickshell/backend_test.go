@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper"
+	"github.com/migueel15/Zenda/core/internal/wallpaper"
 )
 
 func TestSetIPCContract(t *testing.T) {

@@ -15,19 +15,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
-// Run with SENDA_STT_TEST_MODEL and SENDA_STT_TEST_PYTHON pointing to a model
+// Run with ZENDA_STT_TEST_MODEL and ZENDA_STT_TEST_PYTHON pointing to a model
 // with manifest.json and a Python venv with sherpa-onnx. No microphone required.
 func TestManualSpanishWAV(t *testing.T) {
-	dir, python := os.Getenv("SENDA_STT_TEST_MODEL"), os.Getenv("SENDA_STT_TEST_PYTHON")
+	dir, python := os.Getenv("ZENDA_STT_TEST_MODEL"), os.Getenv("ZENDA_STT_TEST_PYTHON")
 	if dir == "" || python == "" {
-		t.Skip("set SENDA_STT_TEST_MODEL and SENDA_STT_TEST_PYTHON")
+		t.Skip("set ZENDA_STT_TEST_MODEL and ZENDA_STT_TEST_PYTHON")
 	}
 	m, err := stt.ReadManifest(dir)
 	if errors.Is(err, os.ErrNotExist) {
-		// The downloaded default-model archive does not ship Senda's manifest.
+		// The downloaded default-model archive does not ship Zenda's manifest.
 		m = stt.Manifest{Kind: "transducer", Encoder: "encoder.int8.onnx", Decoder: "decoder.int8.onnx", Joiner: "joiner.int8.onnx", Tokens: "tokens.txt", LanguageOption: true}
 		if err := stt.WriteManifest(dir, m); err != nil {
 			t.Fatal(err)
@@ -74,9 +74,9 @@ func TestManualSpanishWAV(t *testing.T) {
 }
 
 func TestAC7F002ManualStandbyDoesNotRecordBeforeStart(t *testing.T) {
-	dir, python := os.Getenv("SENDA_STT_TEST_MODEL"), os.Getenv("SENDA_STT_TEST_PYTHON")
+	dir, python := os.Getenv("ZENDA_STT_TEST_MODEL"), os.Getenv("ZENDA_STT_TEST_PYTHON")
 	if dir == "" || python == "" {
-		t.Skip("set SENDA_STT_TEST_MODEL and SENDA_STT_TEST_PYTHON")
+		t.Skip("set ZENDA_STT_TEST_MODEL and ZENDA_STT_TEST_PYTHON")
 	}
 	m, err := stt.ReadManifest(dir)
 	if err != nil {

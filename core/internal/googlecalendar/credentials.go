@@ -1,6 +1,6 @@
 package googlecalendar
 
-// The OAuth client Senda ships with. Release builds set both values at link
+// The OAuth client Zenda ships with. Release builds set both values at link
 // time with -ldflags -X from GitHub Actions secrets, so they never live in the
 // repository. Source builds leave them empty and need the user's own client.
 var (
@@ -19,7 +19,7 @@ func ResolveCredentials(configuredID, configuredSecret string) Credentials {
 	return Credentials{ClientID: embeddedClientID, ClientSecret: embeddedClientSecret}
 }
 
-// HasEmbeddedCredentials reports whether this build includes Senda's client.
+// HasEmbeddedCredentials reports whether this build includes Zenda's client.
 func HasEmbeddedCredentials() bool {
 	return embeddedClientID != "" && embeddedClientSecret != ""
 }

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="senda"
-ENTRY="./cmd/senda"
+APP_NAME="zenda"
+ENTRY="./cmd/zenda"
 DIST_DIR="dist"
 VERSION="${VERSION:-dev}"
-VERSION_PKG="github.com/migueel15/SendaDesktopManager/core/internal/version"
+VERSION_PKG="github.com/migueel15/Zenda/core/internal/version"
 
 mkdir -p "$DIST_DIR"
 

@@ -20,7 +20,7 @@ func InstallData(tarPath string, dataDir string) error {
 		return fmt.Errorf("crear %s: %w", dataDir, err)
 	}
 
-	stage, err := os.MkdirTemp(filepath.Dir(dataDir), ".senda-install-")
+	stage, err := os.MkdirTemp(filepath.Dir(dataDir), ".zenda-install-")
 	if err != nil {
 		return fmt.Errorf("crear directorio de preparación: %w", err)
 	}

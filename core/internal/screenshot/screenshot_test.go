@@ -85,7 +85,7 @@ func TestPrivateCacheRetentionAndCleanupBoundary(t *testing.T) {
 	if err := Cleanup(base); err == nil {
 		t.Fatal("accepted arbitrary cleanup")
 	}
-	if err := Cleanup(filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "senda", "screenshots", "capture-safe")); err != nil {
+	if err := Cleanup(filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "zenda", "screenshots", "capture-safe")); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -114,7 +114,7 @@ func TestFreezeFailureRemovesSession(t *testing.T) {
 	if _, err := Freeze(context.Background(), []string{"fake-output"}); err == nil {
 		t.Fatal("expected missing grim")
 	}
-	entries, err := os.ReadDir(filepath.Join(runtime, "senda", "screenshots"))
+	entries, err := os.ReadDir(filepath.Join(runtime, "zenda", "screenshots"))
 	if err != nil || len(entries) != 0 {
 		t.Fatalf("left private frames: %v %v", entries, err)
 	}

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
-// fakeDiscord answers `senda discord status` with states in order, and records every call.
+// fakeDiscord answers `zenda discord status` with states in order, and records every call.
 type fakeDiscord struct {
 	states []string
 	fail   string
@@ -20,7 +20,7 @@ type fakeDiscord struct {
 
 func (f *fakeDiscord) runner() stt.Runner {
 	return func(_ context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
-		if name != "senda" || len(args) != 2 || args[0] != "discord" {
+		if name != "zenda" || len(args) != 2 || args[0] != "discord" {
 			return nil, errors.New("unexpected command")
 		}
 		f.calls = append(f.calls, args[1])
@@ -46,7 +46,7 @@ const (
 
 func TestMuteDiscordMutesOpenMicAndRestoresIt(t *testing.T) {
 	f := &fakeDiscord{states: []string{openMic, mutedMic}}
-	restore := MuteDiscord(f.runner(), "senda")(context.Background())
+	restore := MuteDiscord(f.runner(), "zenda")(context.Background())
 	if restore == nil {
 		t.Fatal("expected a restoration for an open microphone")
 	}
@@ -62,7 +62,7 @@ func TestMuteDiscordMutesOpenMicAndRestoresIt(t *testing.T) {
 func TestMuteDiscordLeavesMicAsFoundWhenMutedOrDeafened(t *testing.T) {
 	for _, state := range []string{mutedMic, deafenedMic} {
 		f := &fakeDiscord{states: []string{state}}
-		if restore := MuteDiscord(f.runner(), "senda")(context.Background()); restore != nil {
+		if restore := MuteDiscord(f.runner(), "zenda")(context.Background()); restore != nil {
 			t.Fatalf("state %s: expected no restoration", state)
 		}
 		if want := []string{"status"}; !reflect.DeepEqual(f.calls, want) {
@@ -74,7 +74,7 @@ func TestMuteDiscordLeavesMicAsFoundWhenMutedOrDeafened(t *testing.T) {
 func TestMuteDiscordDoesNothingWithoutAuthorizationOrBridge(t *testing.T) {
 	for _, state := range []string{`{"authenticated": false, "mute": false, "deaf": false}`, `not json`} {
 		f := &fakeDiscord{states: []string{state}}
-		if restore := MuteDiscord(f.runner(), "senda")(context.Background()); restore != nil {
+		if restore := MuteDiscord(f.runner(), "zenda")(context.Background()); restore != nil {
 			t.Fatalf("state %s: expected no restoration", state)
 		}
 		if want := []string{"status"}; !reflect.DeepEqual(f.calls, want) {
@@ -82,14 +82,14 @@ func TestMuteDiscordDoesNothingWithoutAuthorizationOrBridge(t *testing.T) {
 		}
 	}
 	f := &fakeDiscord{fail: "status"}
-	if restore := MuteDiscord(f.runner(), "senda")(context.Background()); restore != nil {
+	if restore := MuteDiscord(f.runner(), "zenda")(context.Background()); restore != nil {
 		t.Fatal("expected no restoration when status fails")
 	}
 }
 
 func TestMuteDiscordDoesNotUnmuteWhenDeafenedDuringDictation(t *testing.T) {
 	f := &fakeDiscord{states: []string{openMic, deafenedMic}}
-	restore := MuteDiscord(f.runner(), "senda")(context.Background())
+	restore := MuteDiscord(f.runner(), "zenda")(context.Background())
 	if err := restore(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestMuteDiscordDoesNotUnmuteWhenDeafenedDuringDictation(t *testing.T) {
 
 func TestMuteDiscordDoesNotUnmuteWhenUserUnmutedDuringDictation(t *testing.T) {
 	f := &fakeDiscord{states: []string{openMic, openMic}}
-	restore := MuteDiscord(f.runner(), "senda")(context.Background())
+	restore := MuteDiscord(f.runner(), "zenda")(context.Background())
 	if err := restore(context.Background()); err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestMuteDiscordDoesNotUnmuteWhenUserUnmutedDuringDictation(t *testing.T) {
 
 func TestMuteDiscordReportsFailedMuteWithoutUnmuting(t *testing.T) {
 	f := &fakeDiscord{states: []string{openMic}, fail: "mute"}
-	restore := MuteDiscord(f.runner(), "senda")(context.Background())
+	restore := MuteDiscord(f.runner(), "zenda")(context.Background())
 	if restore == nil {
 		t.Fatal("expected the failure to be reported")
 	}
@@ -125,7 +125,7 @@ func TestMuteDiscordReportsFailedMuteWithoutUnmuting(t *testing.T) {
 
 func TestMuteDiscordNeverDeafens(t *testing.T) {
 	f := &fakeDiscord{states: []string{openMic, mutedMic}}
-	restore := MuteDiscord(f.runner(), "senda")(context.Background())
+	restore := MuteDiscord(f.runner(), "zenda")(context.Background())
 	_ = restore(context.Background())
 	for _, call := range f.calls {
 		if strings.Contains(call, "deaf") {

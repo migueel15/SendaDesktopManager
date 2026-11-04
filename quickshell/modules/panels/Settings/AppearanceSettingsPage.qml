@@ -19,13 +19,13 @@ Flickable {
     function changeTo(percent) {
         const clamped = Math.max(root.minPercent, Math.min(root.maxPercent, percent));
         // 100% is stored as no value, so the file keeps only deliberate changes.
-        SendaSettings.save(
-            { SENDA_UI_FONT_SCALE: clamped === 100 ? "" : String(clamped) },
+        ZendaSettings.save(
+            { ZENDA_UI_FONT_SCALE: clamped === 100 ? "" : String(clamped) },
             "Tamaño de letra guardado"
         );
     }
 
-    Component.onCompleted: SendaTheme.refresh()
+    Component.onCompleted: ZendaTheme.refresh()
 
     ColumnLayout {
         id: column
@@ -35,18 +35,18 @@ Flickable {
                 separator: false
                 label: "Tema"
                 modified: Theme.currentTheme !== "zenda-ice"
-                onResetRequested: SendaTheme.apply("zenda-ice")
-                description: SendaTheme.lastError !== "" ? SendaTheme.lastError : "Colores y fondo de todo el escritorio."
+                onResetRequested: ZendaTheme.apply("zenda-ice")
+                description: ZendaTheme.lastError !== "" ? ZendaTheme.lastError : "Colores y fondo de todo el escritorio."
             }
             Repeater {
-                model: SendaTheme.themes.filter(theme => theme.valid)
+                model: ZendaTheme.themes.filter(theme => theme.valid)
                 delegate: SettingsButton {
                     required property var modelData
                     Layout.fillWidth: true
                     label: modelData.name
                     primary: modelData.name === Theme.currentTheme
-                    enabled: !SendaTheme.busy
-                    onClicked: SendaTheme.apply(modelData.name)
+                    enabled: !ZendaTheme.busy
+                    onClicked: ZendaTheme.apply(modelData.name)
                 }
             }
         }
@@ -59,7 +59,7 @@ Flickable {
                 description: "Escala toda la interfaz entre 80 y 150 %."
                 SettingsSlider {
                     value: root.currentPercent
-                    enabled: !SendaSettings.busy
+                    enabled: !ZendaSettings.busy
                     onCommitted: value => root.changeTo(value)
                 }
             }

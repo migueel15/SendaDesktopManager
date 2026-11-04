@@ -1,20 +1,20 @@
-// Package service manages senda.service, the systemd user unit that runs
-// Senda in the background for the whole graphical session.
+// Package service manages zenda.service, the systemd user unit that runs
+// Zenda in the background for the whole graphical session.
 package service
 
 import (
 	"errors"
 	"fmt"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
 
-// Name is the systemd unit name. It covers everything Senda runs in the
+// Name is the systemd unit name. It covers everything Zenda runs in the
 // background, not only Quickshell.
-const Name = "senda.service"
+const Name = "zenda.service"
 
 // sessionEnv are the variables Quickshell needs to reach the compositor.
 // Hyprland exports them to the systemd user manager when it starts.
@@ -49,7 +49,7 @@ func UnitPath() string {
 // name fails the start instead of blocking the caller forever.
 func Unit(exe string) string {
 	return fmt.Sprintf(`[Unit]
-Description=Senda desktop shell
+Description=Zenda desktop shell
 StartLimitIntervalSec=0
 
 [Service]
@@ -81,7 +81,7 @@ func Installed() bool {
 	return err == nil
 }
 
-// RunningUnderSystemd reports whether this process runs inside senda.service.
+// RunningUnderSystemd reports whether this process runs inside zenda.service.
 // INVOCATION_ID is not enough: any program started from another unit, such as
 // a terminal, inherits it. The cgroup names the unit that owns the process.
 func RunningUnderSystemd() bool {
@@ -93,7 +93,7 @@ func RunningUnderSystemd() bool {
 }
 
 // inUnitCgroup reports whether a /proc/<pid>/cgroup listing places the
-// process in senda.service.
+// process in zenda.service.
 func inUnitCgroup(cgroup string) bool {
 	for _, line := range strings.Split(cgroup, "\n") {
 		if strings.HasSuffix(strings.TrimSpace(line), "/"+Name) {
@@ -106,6 +106,7 @@ func inUnitCgroup(cgroup string) bool {
 // Install writes the unit for exe, enables it and (re)starts it so the
 // current session gets the freshly installed files.
 func Install(exe string) error {
+	removeLegacy()
 	path := UnitPath()
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("crear %s: %w", filepath.Dir(path), err)
@@ -174,4 +175,16 @@ func systemctl(args ...string) error {
 		return fmt.Errorf("systemctl --user %s: %w: %s", strings.Join(args, " "), err, strings.TrimSpace(string(out)))
 	}
 	return nil
+}
+
+// removeLegacy stops, disables and deletes the unit from when Zenda was named
+// Senda. Failures are ignored: the new unit must install regardless.
+func removeLegacy() {
+	const old = "senda.service"
+	path := filepath.Join(filepath.Dir(UnitPath()), old)
+	if _, err := os.Stat(path); err != nil {
+		return
+	}
+	_ = systemctl("disable", "--now", old)
+	_ = os.Remove(path)
 }

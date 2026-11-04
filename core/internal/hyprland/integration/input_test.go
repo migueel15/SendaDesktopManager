@@ -12,7 +12,7 @@ func detected(t *testing.T, files map[string]string) map[string]UserSetting {
 	t.Helper()
 	root := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", root)
-	t.Setenv("SENDA_HOME", "")
+	t.Setenv("ZENDA_HOME", "")
 	for name, text := range files {
 		path := filepath.Join(root, "hypr", name)
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -41,9 +41,9 @@ func TestDetectFollowsRequiresAndVariables(t *testing.T) {
 
 func TestDetectFindsNothingForCleanUsers(t *testing.T) {
 	got := detected(t, map[string]string{
-		"hyprland.lua":    "-- hl.config({ input = { kb_layout = \"es\" } })\n--require(\"modules.old\")\nhl.device({ name = \"m\", sensitivity = 0.5 })\nhl.config({ input = { tablet = { sensitivity = 1 } } })\nrequire(\"senda.init\")\n",
+		"hyprland.lua":    "-- hl.config({ input = { kb_layout = \"es\" } })\n--require(\"modules.old\")\nhl.device({ name = \"m\", sensitivity = 0.5 })\nhl.config({ input = { tablet = { sensitivity = 1 } } })\nrequire(\"zenda.init\")\n",
 		"modules/old.lua": "hl.env(\"XCURSOR_THEME\", \"x\")\n",
-		"senda/init.lua":  "hl.config({ input = { kb_layout = \"us\" } })\n",
+		"zenda/init.lua":  "hl.config({ input = { kb_layout = \"us\" } })\n",
 		"orphan.lua":      "hl.config({ input = { kb_layout = \"fr\" } })\n",
 	})
 	if len(got) != 0 {

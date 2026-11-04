@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 type Checks struct {
@@ -22,8 +22,8 @@ type Checks struct {
 	Microphone       func(ctx context.Context) error
 }
 
-var ErrNoModel = errors.New("No hay ningún modelo de dictado instalado. Instálalo en Ajustes → Dictado o con senda stt models install <id>.")
-var ErrNoRuntime = errors.New("El motor de dictado no está instalado. Instálalo con senda stt runtime install.")
+var ErrNoModel = errors.New("No hay ningún modelo de dictado instalado. Instálalo en Ajustes → Dictado o con zenda stt models install <id>.")
+var ErrNoRuntime = errors.New("El motor de dictado no está instalado. Instálalo con zenda stt runtime install.")
 var ErrNoMicrophone = errors.New("No hay ningún micrófono disponible. Conecta uno y comprueba la entrada de audio.")
 
 func Preflight(ctx context.Context, settings stt.Settings, checks Checks) error {
@@ -127,7 +127,7 @@ func (*notifier) Notify(ctx context.Context, summary, body string) error {
 	var id uint32
 	call := conn.Object("org.freedesktop.Notifications", "/org/freedesktop/Notifications").CallWithContext(
 		ctx, "org.freedesktop.Notifications.Notify", 0,
-		"Senda", uint32(0), "", summary, body, []string{}, map[string]dbus.Variant{}, int32(5000),
+		"Zenda", uint32(0), "", summary, body, []string{}, map[string]dbus.Variant{}, int32(5000),
 	)
 	if err := call.Store(&id); err != nil {
 		return fmt.Errorf("enviar notificación: %w", err)

@@ -1,4 +1,4 @@
-// Package integration renders Senda's Hyprland and idle configuration.
+// Package integration renders Zenda's Hyprland and idle configuration.
 package integration
 
 import (
@@ -8,26 +8,26 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/hyprland/binds"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 )
 
 // ProbeFunction is the global Lua function the module defines. Its presence in
-// the running Hyprland is how Senda knows that the module is loaded.
-const ProbeFunction = "senda_module_version"
+// the running Hyprland is how Zenda knows that the module is loaded.
+const ProbeFunction = "zenda_module_version"
 
 // CaptureSubmap has no binds besides Escape, so Hyprland lets every other key
-// combination reach Senda while a shortcut is being recorded.
-const CaptureSubmap = "senda_capture"
+// combination reach Zenda while a shortcut is being recorded.
+const CaptureSubmap = "zenda_capture"
 
 // SettingsWindowTitle is the title of the settings window.
-const SettingsWindowTitle = "Ajustes de Senda"
+const SettingsWindowTitle = "Ajustes de Zenda"
 
 // SettingsWindowRule opens the settings window floating and centred on the
-// focused monitor. The module carries it and `senda settings` registers it
+// focused monitor. The module carries it and `zenda settings` registers it
 // again before opening, so it applies without regenerating the module.
 func SettingsWindowRule() hyprctl.WindowRule {
-	return hyprctl.WindowRule{Name: "Senda settings", MatchTitle: "^" + regexp.QuoteMeta(SettingsWindowTitle) + "$", Float: true, Center: true}
+	return hyprctl.WindowRule{Name: "Zenda settings", MatchTitle: "^" + regexp.QuoteMeta(SettingsWindowTitle) + "$", Float: true, Center: true}
 }
 
 type Settings struct {
@@ -36,11 +36,11 @@ type Settings struct {
 	DictationShortcut  string
 	IdleSeconds        int
 	Blur               bool
-	// IdleMode is IdleModeSenda, IdleModeUser or empty when undecided.
+	// IdleMode is IdleModeZenda, IdleModeUser or empty when undecided.
 	IdleMode string
 	// Displays are the monitor rules to generate, without those the user owns.
 	Displays []DisplayRule
-	// Input is what Senda generates, without the fields the user defines.
+	// Input is what Zenda generates, without the fields the user defines.
 	Input InputSettings
 	// Startup is what runs when Hyprland starts.
 	Startup []StartupEntry
@@ -74,7 +74,7 @@ func Render(settings Settings, executable string) (Generated, error) {
 	if shortcutIdentity(lock) == shortcutIdentity(dictation) {
 		return nil, fmt.Errorf("los atajos de bloqueo y dictado deben ser distintos")
 	}
-	if settings.IdleMode != "" && settings.IdleMode != IdleModeSenda && settings.IdleMode != IdleModeUser {
+	if settings.IdleMode != "" && settings.IdleMode != IdleModeZenda && settings.IdleMode != IdleModeUser {
 		return nil, fmt.Errorf("modo de hypridle inválido: %q", settings.IdleMode)
 	}
 	if settings.IdleSeconds < 0 || settings.IdleSeconds > 86400 {
@@ -90,7 +90,7 @@ func Render(settings Settings, executable string) (Generated, error) {
 		}
 		files = append(files, GeneratedFile{module.Name + ".lua", []byte(fileHeader + text)})
 	}
-	idleText := fmt.Sprintf(`# Generado por Senda. No modificar manualmente.
+	idleText := fmt.Sprintf(`# Generado por Zenda. No modificar manualmente.
 general {
     lock_cmd = %s lock
     before_sleep_cmd = loginctl lock-session

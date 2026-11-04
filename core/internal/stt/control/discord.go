@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
-// discordCallTimeout bounds each `senda discord` call so a stalled bridge never holds up dictation.
+// discordCallTimeout bounds each `zenda discord` call so a stalled bridge never holds up dictation.
 const discordCallTimeout = time.Second
 
-// discordState is the part of `senda discord status` the dictation session reads.
+// discordState is the part of `zenda discord status` the dictation session reads.
 type discordState struct {
 	Authenticated bool `json:"authenticated"`
 	Mute          bool `json:"mute"`
@@ -21,10 +21,10 @@ type discordState struct {
 }
 
 // MuteDiscord mutes the Discord microphone when it is open at the start of a dictation.
-// It returns the restoration only when Senda muted the microphone, so the cleanup
+// It returns the restoration only when Zenda muted the microphone, so the cleanup
 // never reopens a microphone the user had closed. It never changes deafen, and an
 // unavailable bridge leaves the dictation running without muting. command is the
-// senda executable, which runs its own `discord` subcommands.
+// zenda executable, which runs its own `discord` subcommands.
 func MuteDiscord(run stt.Runner, command string) func(context.Context) func(context.Context) error {
 	if run == nil {
 		run = stt.ExecRunner

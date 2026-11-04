@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/config"
 )
 
 type fakeEntry struct {
@@ -63,12 +63,12 @@ func writeConfig(t *testing.T, text string) string {
 func TestMigrateMovesSecretsToKeyring(t *testing.T) {
 	keyring, broken := map[string]string{}, false
 	store := testStore(t, keyring, &broken)
-	path := writeConfig(t, "# mío\nDORLAB_API_KEY=abc\nSENDA_THEME=x\nSENDA_GOOGLE_CLIENT_SECRET=\n")
+	path := writeConfig(t, "# mío\nDORLAB_API_KEY=abc\nZENDA_THEME=x\nZENDA_GOOGLE_CLIENT_SECRET=\n")
 	if err := store.Migrate(path); err != nil {
 		t.Fatal(err)
 	}
 	data, _ := os.ReadFile(path)
-	if string(data) != "# mío\nSENDA_THEME=x\n" {
+	if string(data) != "# mío\nZENDA_THEME=x\n" {
 		t.Fatalf("config = %q", data)
 	}
 	if keyring[DorlabAPIKey] != "abc" {

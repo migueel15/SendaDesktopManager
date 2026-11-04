@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
-	"github.com/migueel15/SendaDesktopManager/core/internal/secrets"
+	"github.com/migueel15/Zenda/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/secrets"
 )
 
-const appName = "senda"
+const appName = "zenda"
 
 // configErrorOnce ensures a broken config file is reported once per process,
 // because Setting is called from several places.
@@ -21,11 +21,11 @@ func ConfigDir() string {
 	return filepath.Join(xdgDir("XDG_CONFIG_HOME", ".config"), appName)
 }
 
-// DataDir holds the files Senda needs to run but that are not user settings.
-// SENDA_HOME overrides it, which is how a development checkout is used. It is
+// DataDir holds the files Zenda needs to run but that are not user settings.
+// ZENDA_HOME overrides it, which is how a development checkout is used. It is
 // read only from the environment, never from the config file.
 func DataDir() string {
-	if home := os.Getenv("SENDA_HOME"); home != "" {
+	if home := os.Getenv("ZENDA_HOME"); home != "" {
 		return home
 	}
 	return filepath.Join(xdgDir("XDG_DATA_HOME", ".local/share"), appName)
@@ -43,7 +43,7 @@ func GoogleCalendarTokenFile() string {
 	return filepath.Join(StateDir(), "google-calendar.json")
 }
 
-// QuickshellDir is the Quickshell project that `senda shell run` starts.
+// QuickshellDir is the Quickshell project that `zenda shell run` starts.
 func QuickshellDir() string {
 	return filepath.Join(DataDir(), "quickshell")
 }

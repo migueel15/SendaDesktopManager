@@ -30,9 +30,9 @@ func (f *fakeHyprland) run(_ context.Context, _ io.Reader, name string, args ...
 }
 
 func TestProbe(t *testing.T) {
-	f := &fakeHyprland{reloaded: true, source: "/cfg/senda/init.lua"}
+	f := &fakeHyprland{reloaded: true, source: "/cfg/zenda/init.lua"}
 	link, err := Probe(context.Background(), f.run)
-	if err != nil || !link.Loaded || link.Version != "1.0" || link.Source != "/cfg/senda/init.lua" {
+	if err != nil || !link.Loaded || link.Version != "1.0" || link.Source != "/cfg/zenda/init.lua" {
 		t.Fatalf("got %+v %v", link, err)
 	}
 	f.reloaded = false
@@ -97,6 +97,6 @@ func TestLocateFollowsMovedModule(t *testing.T) {
 	}
 	Locate(Link{Loaded: true, Source: user})
 	if ModulePath() == user {
-		t.Fatal("followed a file without Senda's header")
+		t.Fatal("followed a file without Zenda's header")
 	}
 }

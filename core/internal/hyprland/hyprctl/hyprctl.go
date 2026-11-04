@@ -1,4 +1,4 @@
-// Package hyprctl is the only place where Senda talks to Hyprland. Every
+// Package hyprctl is the only place where Zenda talks to Hyprland. Every
 // hyprctl invocation, dispatcher expression, JSON reply format and the event
 // socket live here, so a change in Hyprland's API is fixed in one package.
 package hyprctl

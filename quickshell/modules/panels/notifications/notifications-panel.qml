@@ -8,7 +8,7 @@ import qs.common
 import qs.common.components
 import qs.services
 
-SendaPanel {
+ZendaPanel {
     id: root
 
     name: "notifications"

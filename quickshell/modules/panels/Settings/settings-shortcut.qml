@@ -9,11 +9,11 @@ import qs.common
 import qs.services
 
 // Records a shortcut by pressing it. While recording, Hyprland is switched to
-// Senda's empty capture submap so that existing binds do not fire.
+// Zenda's empty capture submap so that existing binds do not fire.
 ColumnLayout {
     id: root
 
-    // "lock", "dictation" or "screenshot": the Senda shortcut this control edits.
+    // "lock", "dictation" or "screenshot": the Zenda shortcut this control edits.
     property string target: "lock"
     property string value: ""
     property string defaultValue: ""
@@ -70,10 +70,10 @@ ColumnLayout {
     }
 
     function startRecording() {
-        if (root.phase !== "idle" || SendaHyprlandSettings.busy || SendaHyprlandSettings.recording) return;
+        if (root.phase !== "idle" || ZendaHyprlandSettings.busy || ZendaHyprlandSettings.recording) return;
         root.message = "";
         root.phase = "starting";
-        SendaHyprlandSettings.recording = true;
+        ZendaHyprlandSettings.recording = true;
         captureStart.running = true;
     }
 
@@ -83,7 +83,7 @@ ColumnLayout {
             captureStop.running = true;
         }
         timeout.stop();
-        SendaHyprlandSettings.recording = false;
+        ZendaHyprlandSettings.recording = false;
         if (!keepState) root.phase = "idle";
     }
 
@@ -91,14 +91,14 @@ ColumnLayout {
         root.stopRecording(true);
         root.candidate = shortcut;
         root.phase = "checking";
-        check.command = [SendaHyprlandSettings.binaryPath, "hyprland", "check", "--for", root.target, "--shortcut", shortcut];
+        check.command = [ZendaHyprlandSettings.binaryPath, "hyprland", "check", "--for", root.target, "--shortcut", shortcut];
         check.running = true;
     }
 
     function save(shortcut) {
         root.phase = "idle";
         root.conflicts = [];
-        if (shortcut !== root.value) SendaHyprlandSettings.save(root.flag, shortcut);
+        if (shortcut !== root.value) ZendaHyprlandSettings.save(root.flag, shortcut);
     }
 
     Component.onDestruction: if (root.phase === "recording" || root.phase === "starting") captureStop.running = true
@@ -148,7 +148,7 @@ ColumnLayout {
             MouseArea {
                 id: fieldMouse
                 anchors.fill: parent
-                enabled: root.enabled && root.phase === "idle" && !SendaHyprlandSettings.recording
+                enabled: root.enabled && root.phase === "idle" && !ZendaHyprlandSettings.recording
                 hoverEnabled: true
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: root.startRecording()
@@ -174,7 +174,7 @@ ColumnLayout {
                 NumberAnimation { target: savedMark; property: "opacity"; to: 0; duration: 400 }
             }
             Connections {
-                target: SendaHyprlandSettings
+                target: ZendaHyprlandSettings
                 function onSaved(flag) { if (flag === root.flag) savedPulse.restart(); }
             }
 
@@ -218,7 +218,7 @@ ColumnLayout {
         Controls.AbstractButton {
             id: resetButton
             visible: root.phase === "idle" && root.defaultValue !== "" && root.value !== root.defaultValue
-            enabled: root.enabled && !SendaHyprlandSettings.recording
+            enabled: root.enabled && !ZendaHyprlandSettings.recording
             implicitWidth: shortcutDisplay.implicitHeight
             implicitHeight: shortcutDisplay.implicitHeight
             opacity: enabled ? 1 : 0.4
@@ -287,13 +287,13 @@ ColumnLayout {
     }
 
     // Escape is bound in the capture submap, so Hyprland may leave it before
-    // the key reaches Senda; follow the submap change.
+    // the key reaches Zenda; follow the submap change.
     Connections {
         target: Hyprland
         function onRawEvent(event) {
             if (event.name === "submap" && event.data === "" && root.phase === "recording") {
                 timeout.stop();
-                SendaHyprlandSettings.recording = false;
+                ZendaHyprlandSettings.recording = false;
                 root.phase = "idle";
             }
         }
@@ -301,7 +301,7 @@ ColumnLayout {
 
     Process {
         id: captureStart
-        command: [SendaHyprlandSettings.binaryPath, "hyprland", "capture", "start"]
+        command: [ZendaHyprlandSettings.binaryPath, "hyprland", "capture", "start"]
         stderr: StdioCollector { id: captureErrors }
         onExited: exitCode => {
             if (root.phase !== "starting") {
@@ -310,7 +310,7 @@ ColumnLayout {
                 return;
             }
             if (exitCode !== 0) {
-                SendaHyprlandSettings.recording = false;
+                ZendaHyprlandSettings.recording = false;
                 root.phase = "idle";
                 root.message = "No se pudo iniciar la grabación: " + (captureErrors.text.trim() || "error desconocido");
                 return;
@@ -323,7 +323,7 @@ ColumnLayout {
 
     Process {
         id: captureStop
-        command: [SendaHyprlandSettings.binaryPath, "hyprland", "capture", "stop"]
+        command: [ZendaHyprlandSettings.binaryPath, "hyprland", "capture", "stop"]
     }
 
     Process {
@@ -344,10 +344,10 @@ ColumnLayout {
                 root.message = "No se pudo comprobar el atajo.";
                 return;
             }
-            const own = result.conflicts.filter(c => c.startsWith("Senda:"));
+            const own = result.conflicts.filter(c => c.startsWith("Zenda:"));
             if (own.length > 0) {
                 root.phase = "idle";
-                root.message = "Ese atajo ya lo usa Senda (" + own.join(", ").replace(/Senda: /g, "") + ").";
+                root.message = "Ese atajo ya lo usa Zenda (" + own.join(", ").replace(/Zenda: /g, "") + ").";
                 return;
             }
             root.candidate = result.shortcut;

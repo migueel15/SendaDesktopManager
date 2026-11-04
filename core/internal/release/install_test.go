@@ -14,7 +14,7 @@ import (
 // files. The managed directories are always added so the archive is valid.
 func installTarball(t *testing.T, files map[string]string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "senda-quickshell.tar.gz")
+	path := filepath.Join(t.TempDir(), "zenda-quickshell.tar.gz")
 	f, err := os.Create(path)
 	if err != nil {
 		t.Fatal(err)
@@ -63,7 +63,7 @@ func listDir(t *testing.T, dir string) []string {
 
 func TestInstallDataReplacesPreviousInstall(t *testing.T) {
 	parent := t.TempDir()
-	dataDir := filepath.Join(parent, "senda")
+	dataDir := filepath.Join(parent, "zenda")
 
 	first := installTarball(t, map[string]string{
 		"version":                 "v1.0.0\n",
@@ -96,8 +96,8 @@ func TestInstallDataReplacesPreviousInstall(t *testing.T) {
 		t.Fatalf("file from the first install survived: %v", err)
 	}
 
-	if got := listDir(t, parent); !reflect.DeepEqual(got, []string{"senda"}) {
-		t.Errorf("parent entries = %v, want only senda (no staging or .old left)", got)
+	if got := listDir(t, parent); !reflect.DeepEqual(got, []string{"zenda"}) {
+		t.Errorf("parent entries = %v, want only zenda (no staging or .old left)", got)
 	}
 	if got := listDir(t, dataDir); !reflect.DeepEqual(got, []string{"quickshell", "scripts", "version"}) {
 		t.Errorf("data entries = %v, want the managed entries only", got)
@@ -106,7 +106,7 @@ func TestInstallDataReplacesPreviousInstall(t *testing.T) {
 
 func TestInstallDataRejectsMissingEntryAndKeepsPreviousInstall(t *testing.T) {
 	parent := t.TempDir()
-	dataDir := filepath.Join(parent, "senda")
+	dataDir := filepath.Join(parent, "zenda")
 
 	good := installTarball(t, map[string]string{
 		"version":              "v1.0.0\n",
@@ -128,7 +128,7 @@ func TestInstallDataRejectsMissingEntryAndKeepsPreviousInstall(t *testing.T) {
 	if err != nil || string(shell) != "good" {
 		t.Fatalf("previous install changed: %q, %v", shell, err)
 	}
-	if got := listDir(t, parent); !reflect.DeepEqual(got, []string{"senda"}) {
-		t.Errorf("parent entries = %v, want only senda", got)
+	if got := listDir(t, parent); !reflect.DeepEqual(got, []string{"zenda"}) {
+		t.Errorf("parent entries = %v, want only zenda", got)
 	}
 }

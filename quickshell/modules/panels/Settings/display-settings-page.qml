@@ -9,9 +9,9 @@ Item {
     id: root
 
     property string selectedName: ""
-    readonly property var displays: SendaDisplaySettings.view
+    readonly property var displays: ZendaDisplaySettings.view
     readonly property var selected: displays.find(d => d.name === selectedName) ?? displays[0] ?? null
-    readonly property bool editable: !!selected && selected.managedBy !== "user" && !SendaDisplaySettings.busy
+    readonly property bool editable: !!selected && selected.managedBy !== "user" && !ZendaDisplaySettings.busy
     // Mirrored and disabled monitors take no place in the layout.
     readonly property var placed: displays.filter(d => d.enabled && root.mirrorName(d) === "")
     readonly property var modes: selected ? selected.modes.map(root.splitMode) : []
@@ -75,7 +75,7 @@ Item {
 
         Text {
             Layout.fillWidth: true
-            visible: !SendaDisplaySettings.loaded
+            visible: !ZendaDisplaySettings.loaded
             text: "No se han podido cargar las pantallas."
             color: Theme.colors.overlay
             font: Theme.font.caption
@@ -129,7 +129,7 @@ Item {
                         id: drag
                         anchors.fill: parent
                         cursorShape: tile.locked ? Qt.PointingHandCursor : Qt.SizeAllCursor
-                        drag.target: tile.locked || SendaDisplaySettings.busy ? null : tile
+                        drag.target: tile.locked || ZendaDisplaySettings.busy ? null : tile
                         onPressed: root.selectedName = tile.modelData.name
                         onReleased: {
                             if (tile.locked) return;
@@ -140,7 +140,7 @@ Item {
                             tile.x = Qt.binding(() => canvas.originX + (tile.modelData.x - canvas.minX) * canvas.ratio);
                             tile.y = Qt.binding(() => canvas.originY + (tile.modelData.y - canvas.minY) * canvas.ratio);
                             if (place.x !== d.x || place.y !== d.y)
-                                SendaDisplaySettings.stage(d.name, { x: place.x, y: place.y });
+                                ZendaDisplaySettings.stage(d.name, { x: place.x, y: place.y });
                         }
                     }
                 }
@@ -165,7 +165,7 @@ Item {
                     enabled: root.editable
                     checkedValue: !!root.selected && root.selected.enabled
                     Accessible.name: "Encendida"
-                    onToggledValue: value => SendaDisplaySettings.stage(root.selected.name, { enabled: value })
+                    onToggledValue: value => ZendaDisplaySettings.stage(root.selected.name, { enabled: value })
                 }
             }
             SettingsRow {
@@ -176,7 +176,7 @@ Item {
                     value: root.currentSize
                     onChosen: value => {
                         const size = value.split("x").map(Number);
-                        SendaDisplaySettings.stage(root.selected.name, { width: size[0], height: size[1], refreshRate: root.closestRate(value, root.selected.refreshRate) });
+                        ZendaDisplaySettings.stage(root.selected.name, { width: size[0], height: size[1], refreshRate: root.closestRate(value, root.selected.refreshRate) });
                     }
                 }
             }
@@ -186,7 +186,7 @@ Item {
                     enabled: root.editable
                     options: root.rates.map(rate => rate + " Hz")
                     value: root.selected ? root.closestRate(root.currentSize, root.selected.refreshRate) + " Hz" : ""
-                    onChosen: value => SendaDisplaySettings.stage(root.selected.name, { width: root.selected.width, height: root.selected.height, refreshRate: value.replace(" Hz", "") })
+                    onChosen: value => ZendaDisplaySettings.stage(root.selected.name, { width: root.selected.width, height: root.selected.height, refreshRate: value.replace(" Hz", "") })
                 }
             }
             SettingsRow {
@@ -195,7 +195,7 @@ Item {
                     enabled: root.editable
                     options: root.scales.map(v => ({ label: Math.round(Number(v) * 100) + " %", value: v }))
                     value: root.currentScale
-                    onChosen: value => SendaDisplaySettings.stage(root.selected.name, { scale: Number(value) })
+                    onChosen: value => ZendaDisplaySettings.stage(root.selected.name, { scale: Number(value) })
                 }
             }
             SettingsRow {
@@ -204,7 +204,7 @@ Item {
                     enabled: root.editable
                     options: ["0", "1", "2", "3"].map(v => ({ label: Number(v) * 90 + "°", value: v }))
                     value: root.selected ? String(root.selected.transform) : ""
-                    onChosen: value => SendaDisplaySettings.stage(root.selected.name, { transform: Number(value) })
+                    onChosen: value => ZendaDisplaySettings.stage(root.selected.name, { transform: Number(value) })
                 }
             }
             SettingsRow {
@@ -217,28 +217,28 @@ Item {
                         .filter(d => root.selected && d.name !== root.selected.name && d.enabled && root.mirrorName(d) === "")
                         .map(d => ({ label: d.name, value: d.name })))
                     value: root.selected ? (root.mirrorName(root.selected) || "none") : ""
-                    onChosen: value => SendaDisplaySettings.stage(root.selected.name, { mirrorOf: value })
+                    onChosen: value => ZendaDisplaySettings.stage(root.selected.name, { mirrorOf: value })
                 }
             }
             SettingsRow {
-                visible: !!root.selected && root.selected.managedBy === "senda"
+                visible: !!root.selected && root.selected.managedBy === "zenda"
                 label: "Restablecer"
-                description: "Quita los ajustes de Senda de esta pantalla."
+                description: "Quita los ajustes de Zenda de esta pantalla."
                 SettingsButton {
                     label: "Restablecer"
                     enabled: root.editable
-                    onClicked: SendaDisplaySettings.run(["reset", root.selected.name])
+                    onClicked: ZendaDisplaySettings.run(["reset", root.selected.name])
                 }
             }
         }
 
         // Only exists for those who define monitors in their own configuration.
         SettingsGroup {
-            visible: SendaDisplaySettings.hasUserManaged
+            visible: ZendaDisplaySettings.hasUserManaged
             SettingsRow {
                 separator: false
                 label: "Gestionado por tu configuración"
-                description: "Senda no modifica estas pantallas. Cámbialas en tu configuración de Hyprland."
+                description: "Zenda no modifica estas pantallas. Cámbialas en tu configuración de Hyprland."
             }
             Repeater {
                 model: root.displays.filter(d => d.managedBy === "user")
@@ -257,7 +257,7 @@ Item {
     Rectangle {
         id: applyBar
         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-        visible: SendaDisplaySettings.dirty
+        visible: ZendaDisplaySettings.dirty
         implicitHeight: barRow.implicitHeight + 2 * Theme.spacing.md
         radius: Theme.rounding.normal
         color: Theme.colors.selection
@@ -276,14 +276,14 @@ Item {
             }
             SettingsButton {
                 label: "Cancelar"
-                enabled: !SendaDisplaySettings.busy
-                onClicked: SendaDisplaySettings.discard()
+                enabled: !ZendaDisplaySettings.busy
+                onClicked: ZendaDisplaySettings.discard()
             }
             SettingsButton {
                 label: "Aplicar cambios"
                 primary: true
-                enabled: !SendaDisplaySettings.busy
-                onClicked: SendaDisplaySettings.apply()
+                enabled: !ZendaDisplaySettings.busy
+                onClicked: ZendaDisplaySettings.apply()
             }
         }
     }

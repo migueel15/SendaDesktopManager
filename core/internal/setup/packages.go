@@ -1,6 +1,6 @@
 package setup
 
-// Requirement maps something Senda uses to the Arch package providing it.
+// Requirement maps something Zenda uses to the Arch package providing it.
 // Command is checked on PATH; when it is empty, the package itself is checked
 // with pacman, for fonts, themes, and daemons that have no command.
 type Requirement struct {
@@ -8,7 +8,7 @@ type Requirement struct {
 	Package string
 }
 
-// Requirements lists everything Senda needs, in the order it is reported.
+// Requirements lists everything Zenda needs, in the order it is reported.
 var Requirements = []Requirement{
 	{Command: "qs", Package: "quickshell"},
 	{Command: "hyprctl", Package: "hyprland"},

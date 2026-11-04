@@ -19,11 +19,11 @@ func SocketPath() string {
 	if runtime == "" {
 		runtime = fmt.Sprintf("/run/user/%d", os.Getuid())
 	}
-	return filepath.Join(runtime, "senda-discord.sock")
+	return filepath.Join(runtime, "zenda-discord.sock")
 }
 
 // Stop terminates the bridge listening on socket, whatever script started it,
-// so the next `senda discord connect` starts the installed one. The process is
+// so the next `zenda discord connect` starts the installed one. The process is
 // found through the socket's peer credentials, because an older bridge may not
 // understand the shutdown action. It returns nil when no bridge is running.
 func Stop(socket string, timeout time.Duration) error {

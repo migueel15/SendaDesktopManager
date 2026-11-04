@@ -146,7 +146,7 @@ Item {
             // Canvas has its own image cache. A local-file query forces a new
             // read without changing the filesystem path or any SNI provider URL.
             loadedSource = source.startsWith("file:")
-                ? source + (source.indexOf("?") === -1 ? "?" : "&") + "sendaTrayReload=" + root.loadGeneration
+                ? source + (source.indexOf("?") === -1 ? "?" : "&") + "zendaTrayReload=" + root.loadGeneration
                 : source;
             if (loadedSource !== "") {
                 // Ask for a good raster before cropping; small originals still upscale.

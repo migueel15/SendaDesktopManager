@@ -11,7 +11,7 @@ import (
 
 func TestIdleProcessesClassifiesConfig(t *testing.T) {
 	proc := t.TempDir()
-	path := "/home/user/.config/senda/hypridle.conf"
+	path := "/home/user/.config/zenda/hypridle.conf"
 	for _, tc := range []struct{ pid, comm, cmd string }{{"101", "hypridle", "hypridle\x00-c\x00" + path + "\x00"}, {"102", "hypridle", "hypridle\x00-c\x00/home/user/other.conf\x00"}, {"103", "hypridle", "hypridle\x00"}, {"104", "other", "other\x00"}} {
 		dir := filepath.Join(proc, tc.pid)
 		if err := os.Mkdir(dir, 0700); err != nil {
@@ -38,9 +38,9 @@ func TestStatusReportsExternalShortcutConflict(t *testing.T) {
 			t.Fatalf("unexpected command %s", name)
 		}
 		if len(args) > 0 && args[0] == "repl" {
-			return []byte("dev\t@/elsewhere/senda/init.lua\n"), nil
+			return []byte("dev\t@/elsewhere/zenda/init.lua\n"), nil
 		}
-		return []byte(`[{"modmask":68,"key":"l","description":"Otra acción"},{"modmask":8,"key":"ntilde","description":"Senda STT toggle"}]`), nil
+		return []byte(`[{"modmask":68,"key":"l","description":"Otra acción"},{"modmask":8,"key":"ntilde","description":"Zenda STT toggle"}]`), nil
 	}
 	status := Inspect(context.Background(), DefaultSettings(), run)
 	if !status.ModuleActive {

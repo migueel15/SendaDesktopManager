@@ -45,14 +45,14 @@ func TestRunContinuesAfterRuntimeDeclined(t *testing.T) {
 	if err := os.WriteFile(osRelease, []byte("ID=arch\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	dataDir := filepath.Join(home, "data", "senda")
+	dataDir := filepath.Join(home, "data", "zenda")
 	if err := os.MkdirAll(filepath.Join(dataDir, "quickshell"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(dataDir, "version"), []byte("v1.2.3\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	exe := filepath.Join(home, "senda")
+	exe := filepath.Join(home, "zenda")
 	if err := os.WriteFile(exe, []byte("binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}

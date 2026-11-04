@@ -1,5 +1,5 @@
-APP_NAME=senda
-ENTRY=./cmd/senda
+APP_NAME=zenda
+ENTRY=./cmd/zenda
 
 build:
 	./scripts/build.sh

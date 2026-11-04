@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 func fixedRunner(out string, err error) stt.Runner {
@@ -34,18 +34,18 @@ func TestAC7NormalizeShortcutRejectsInvalid(t *testing.T) {
 }
 
 func TestAC4F002RenderToggleWithoutEscape(t *testing.T) {
-	out, err := Render("ALT + ntilde", "senda")
+	out, err := Render("ALT + ntilde", "zenda")
 	if err != nil {
 		t.Fatalf("Render = %v", err)
 	}
 	text := string(out)
-	if !strings.Contains(text, `hl.bind("ALT + ntilde", hl.dsp.exec_cmd("senda stt toggle")`) {
+	if !strings.Contains(text, `hl.bind("ALT + ntilde", hl.dsp.exec_cmd("zenda stt toggle")`) {
 		t.Errorf("missing toggle bind:\n%s", text)
 	}
 	if !strings.Contains(text, "submap_universal = true") {
 		t.Errorf("missing submap_universal:\n%s", text)
 	}
-	for _, forbidden := range []string{"hl.define_submap", "senda_stt", "senda stt cancel", `hl.bind("escape"`} {
+	for _, forbidden := range []string{"hl.define_submap", "zenda_stt", "zenda stt cancel", `hl.bind("escape"`} {
 		if strings.Contains(text, forbidden) {
 			t.Errorf("static module contains %q:\n%s", forbidden, text)
 		}
@@ -53,13 +53,13 @@ func TestAC4F002RenderToggleWithoutEscape(t *testing.T) {
 }
 
 func TestAC7RenderRejectsInvalidShortcut(t *testing.T) {
-	if _, err := Render("alt + ; bad", "senda"); err == nil {
+	if _, err := Render("alt + ; bad", "zenda"); err == nil {
 		t.Fatal("Render accepted an invalid shortcut")
 	}
 }
 
 func TestAC7WriteCreatesDirectory(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "hypr", "modules", "senda_binds.lua")
+	path := filepath.Join(t.TempDir(), "hypr", "modules", "zenda_binds.lua")
 	if err := Write(path, []byte("-- x\n")); err != nil {
 		t.Fatalf("Write = %v", err)
 	}
@@ -81,7 +81,7 @@ func TestAC7Loaded(t *testing.T) {
 
 const bindsJSON = `[
  {"locked":false,"mouse":false,"release":false,"repeat":false,"non_consuming":false,"modmask":8,"submap":"","key":"ntilde","keycode":0,"catch_all":false,"description":"","dispatcher":"exec","arg":"foreign-tool"},
- {"locked":false,"mouse":false,"release":false,"repeat":false,"non_consuming":false,"modmask":8,"submap":"","key":"ntilde","keycode":0,"catch_all":false,"description":"","dispatcher":"exec","arg":"senda stt toggle"},
+ {"locked":false,"mouse":false,"release":false,"repeat":false,"non_consuming":false,"modmask":8,"submap":"","key":"ntilde","keycode":0,"catch_all":false,"description":"","dispatcher":"exec","arg":"zenda stt toggle"},
  {"locked":false,"mouse":false,"release":false,"repeat":false,"non_consuming":false,"modmask":64,"submap":"","key":"q","keycode":0,"catch_all":false,"description":"","dispatcher":"killactive","arg":""}
 ]`
 
@@ -96,8 +96,8 @@ func TestAC7ConflictsReturnsForeignBinds(t *testing.T) {
 }
 
 func TestAC7EnsureDefault(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "modules", "senda_binds.lua")
-	created, err := EnsureDefault(path, "senda")
+	path := filepath.Join(t.TempDir(), "modules", "zenda_binds.lua")
+	created, err := EnsureDefault(path, "zenda")
 	if err != nil || !created {
 		t.Fatalf("EnsureDefault = %v, %v", created, err)
 	}
@@ -107,7 +107,7 @@ func TestAC7EnsureDefault(t *testing.T) {
 	if err := os.WriteFile(path, []byte("-- custom\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	created, err = EnsureDefault(path, "senda")
+	created, err = EnsureDefault(path, "zenda")
 	if err != nil || created {
 		t.Fatalf("second EnsureDefault = %v, %v", created, err)
 	}

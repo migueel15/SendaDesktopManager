@@ -25,18 +25,18 @@ Flickable {
         if (root.kind === "app") {
             const entry = root.apps.find(app => app.name === root.appName);
             if (!entry) return;
-            SendaStartupSettings.add("app", entry.name, root.shellCommand(entry.command));
+            ZendaStartupSettings.add("app", entry.name, root.shellCommand(entry.command));
             root.appName = "";
             return;
         }
         if (root.kind === "command") {
             if (commandField.text.trim() === "") return;
-            SendaStartupSettings.add("command", "", commandField.text.trim());
+            ZendaStartupSettings.add("command", "", commandField.text.trim());
             commandField.text = "";
             return;
         }
         if (pathField.text.trim() === "") return;
-        SendaStartupSettings.add(root.kind, "", pathField.text.trim());
+        ZendaStartupSettings.add(root.kind, "", pathField.text.trim());
         pathField.text = "";
     }
 
@@ -92,24 +92,24 @@ Flickable {
         }
 
         SettingsGroup {
-            visible: SendaStartupSettings.entries.length > 0
+            visible: ZendaStartupSettings.entries.length > 0
             Repeater {
-                model: SendaStartupSettings.entries
+                model: ZendaStartupSettings.entries
                 delegate: SettingsRow {
                     id: row
                     required property var modelData
                     required property int index
                     searchable: false
-                    separator: index < SendaStartupSettings.entries.length - 1
+                    separator: index < ZendaStartupSettings.entries.length - 1
                     label: modelData.name
                     description: modelData.target
                     SettingsSwitch {
                         checkedValue: row.modelData.enabled
-                        onToggledValue: value => SendaStartupSettings.setEnabled(row.modelData.target, value)
+                        onToggledValue: value => ZendaStartupSettings.setEnabled(row.modelData.target, value)
                     }
                     SettingsButton {
                         label: "Eliminar"
-                        onClicked: SendaStartupSettings.remove(row.modelData.target)
+                        onClicked: ZendaStartupSettings.remove(row.modelData.target)
                     }
                 }
             }
@@ -117,8 +117,8 @@ Flickable {
 
         Text {
             Layout.fillWidth: true
-            visible: SendaStartupSettings.entries.length === 0
-            text: "Aún no hay aplicaciones de inicio gestionadas por Senda."
+            visible: ZendaStartupSettings.entries.length === 0
+            text: "Aún no hay aplicaciones de inicio gestionadas por Zenda."
             color: Theme.colors.overlay
             font: Theme.font.caption
             wrapMode: Text.WordWrap
@@ -133,14 +133,14 @@ Flickable {
         }
 
         SettingsGroup {
-            visible: SendaStartupSettings.externalEntries.length > 0
+            visible: ZendaStartupSettings.externalEntries.length > 0
             Repeater {
-                model: SendaStartupSettings.externalEntries
+                model: ZendaStartupSettings.externalEntries
                 delegate: SettingsRow {
                     required property var modelData
                     required property int index
                     searchable: false
-                    separator: index < SendaStartupSettings.externalEntries.length - 1
+                    separator: index < ZendaStartupSettings.externalEntries.length - 1
                     label: modelData.name
                     description: modelData.target
                 }
@@ -149,8 +149,8 @@ Flickable {
 
         Text {
             Layout.fillWidth: true
-            visible: SendaStartupSettings.externalNotice !== ""
-            text: SendaStartupSettings.externalNotice
+            visible: ZendaStartupSettings.externalNotice !== ""
+            text: ZendaStartupSettings.externalNotice
             color: Theme.colors.overlay
             font: Theme.font.caption
             wrapMode: Text.WordWrap

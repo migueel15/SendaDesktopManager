@@ -7,10 +7,10 @@ import qs.services
 import "search.js" as Search
 import "emojis.js" as Emojis
 
-// Launcher for applications, Senda actions, arithmetic, shell commands (">"),
+// Launcher for applications, Zenda actions, arithmetic, shell commands (">"),
 // emoji (":") and the clipboard history ("#"). It unfolds from the bar like the other overlay panels;
 // history, launching and IPC live in LauncherService.
-SendaPanel {
+ZendaPanel {
     id: root
     property bool viewReady: false
 
@@ -44,7 +44,7 @@ SendaPanel {
     // Copies the emoji and pastes it into the focused window, with
     // Ctrl+Shift+V in the terminals configured for dictation.
     function paste(text) {
-        const terminals = (SendaSettings.values.SENDA_STT_TERMINALS || "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty")
+        const terminals = (ZendaSettings.values.ZENDA_STT_TERMINALS || "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty")
             .split(",").map(t => t.trim().toLowerCase());
         const windowClass = (Hyprland.activeToplevel?.lastIpcObject?.class || "").toLowerCase();
         const mods = terminals.includes(windowClass) ? "CTRL SHIFT" : "CTRL";
@@ -56,7 +56,7 @@ SendaPanel {
     }
 
     // ":" searches emoji, ">" runs a shell command, arithmetic shows its result
-    // and any other text searches applications and Senda actions together.
+    // and any other text searches applications and Zenda actions together.
     function refresh() {
         const text = search.text.trim();
         let results;
@@ -65,10 +65,10 @@ SendaPanel {
                 ({ kind: "emoji", name: keywords.split(" ").slice(0, 3).join(" "), detail: "Pegar y copiar al portapapeles", glyph: emoji, run: () => root.paste(emoji) }));
         } else if (text.startsWith("#")) {
             const query = text.slice(1).trim().toLocaleLowerCase();
-            results = SendaClipboard.entries.filter(entry => entry.text.toLocaleLowerCase().includes(query)).map(entry =>
+            results = ZendaClipboard.entries.filter(entry => entry.text.toLocaleLowerCase().includes(query)).map(entry =>
                 ({ kind: "clipboard", name: entry.text.trim().replace(/\s+/g, " ").slice(0, 200), detail: "Restaurar al portapapeles", glyph: "󰅌", run: () => {
                             LauncherService.close();
-                            SendaClipboard.restore(entry.id);
+                            ZendaClipboard.restore(entry.id);
                 } }));
         } else if (text.startsWith(">")) {
             const command = text.slice(1).trim();
@@ -98,7 +98,7 @@ SendaPanel {
         if (!root.open) return;
         search.text = LauncherService.initialQuery;
         LauncherService.initialQuery = "";
-        SendaClipboard.refresh();
+        ZendaClipboard.refresh();
         root.refresh();
         Qt.callLater(() => { if (root.open) search.forceActiveFocus(); });
     }
@@ -112,7 +112,7 @@ SendaPanel {
         function onValuesChanged() { root.refresh(); }
     }
     Connections {
-        target: SendaClipboard
+        target: ZendaClipboard
         function onEntriesChanged() { if (search.text.trim().startsWith("#")) root.refresh(); }
     }
     Connections {

@@ -10,19 +10,19 @@ Flickable {
     contentHeight: column.implicitHeight
     clip: true
 
-    readonly property bool accelFlat: SendaInputSettings.current.accelProfile === "flat"
+    readonly property bool accelFlat: ZendaInputSettings.current.accelProfile === "flat"
 
-    function managed(field) { return SendaInputSettings.user[field] !== undefined; }
+    function managed(field) { return ZendaInputSettings.user[field] !== undefined; }
     // A saved value that differs from the default; the user's own never does.
     function modified_(field) {
-        const saved = SendaInputSettings.saved[field] || "";
+        const saved = ZendaInputSettings.saved[field] || "";
         if (root.managed(field) || saved === "") return false;
-        const fallback = SendaInputSettings.defaults[field] || "";
+        const fallback = ZendaInputSettings.defaults[field] || "";
         return isNaN(Number(saved)) ? saved !== fallback : Number(saved) !== Number(fallback === "" ? NaN : fallback);
     }
     // The notice exists only for fields the user's configuration defines.
     function note(field, text) {
-        const user = SendaInputSettings.user[field];
+        const user = ZendaInputSettings.user[field];
         if (!user) return text;
         return "Gestionado por el usuario en " + user.file.split("/").pop();
     }
@@ -37,14 +37,14 @@ Flickable {
                 separator: false
                 label: "Distribución de teclado"
                 modified: root.modified_("layout")
-                onResetRequested: { layoutField.text = SendaInputSettings.defaults.layout || ""; SendaInputSettings.set("layout", ""); }
+                onResetRequested: { layoutField.text = ZendaInputSettings.defaults.layout || ""; ZendaInputSettings.set("layout", ""); }
                 description: root.note("layout", "Código XKB; varias separadas por comas, p. ej. us,es")
                 SettingsField {
                     id: layoutField
                     implicitWidth: Theme.scaled(160)
                     enabled: !root.managed("layout")
-                    text: SendaInputSettings.current.layout || ""
-                    onCommitted: SendaInputSettings.set("layout", text.trim())
+                    text: ZendaInputSettings.current.layout || ""
+                    onCommitted: ZendaInputSettings.set("layout", text.trim())
                 }
             }
         }
@@ -54,28 +54,28 @@ Flickable {
                 separator: false
                 label: "Velocidad del ratón"
                 modified: root.modified_("sensitivity")
-                onResetRequested: SendaInputSettings.set("sensitivity", "")
+                onResetRequested: ZendaInputSettings.set("sensitivity", "")
                 description: root.note("sensitivity", "50 % es la velocidad normal")
                 SettingsSlider {
                     implicitWidth: Theme.scaled(200)
                     enabled: !root.managed("sensitivity")
                     from: 0; to: 100; stepSize: 5
                     // Hyprland uses -1 to 1; the interface shows a percentage.
-                    value: Math.round((Number(SendaInputSettings.current.sensitivity || 0) + 1) * 50)
-                    onCommitted: value => SendaInputSettings.set("sensitivity", (value / 50 - 1).toFixed(2))
+                    value: Math.round((Number(ZendaInputSettings.current.sensitivity || 0) + 1) * 50)
+                    onCommitted: value => ZendaInputSettings.set("sensitivity", (value / 50 - 1).toFixed(2))
                 }
             }
             SettingsRow {
                 label: "Aceleración del ratón"
                 modified: root.modified_("accelProfile")
-                onResetRequested: SendaInputSettings.set("accel-profile", "")
+                onResetRequested: ZendaInputSettings.set("accel-profile", "")
                 description: root.note("accelProfile", root.accelFlat ? "Plana: el cursor recorre siempre lo mismo que la mano" : "Adaptativa: si mueves rápido, el cursor llega más lejos")
                 SettingsSegments {
                     implicitWidth: Theme.scaled(200)
                     enabled: !root.managed("accelProfile")
                     options: [{ value: "adaptive", label: "Adaptativa" }, { value: "flat", label: "Plana" }]
                     value: root.accelFlat ? "flat" : "adaptive"
-                    onChosen: value => SendaInputSettings.set("accel-profile", value)
+                    onChosen: value => ZendaInputSettings.set("accel-profile", value)
                 }
             }
             // Sketch of how far the cursor goes for each hand speed.
@@ -117,14 +117,14 @@ Flickable {
             SettingsRow {
                 label: "Foco con el ratón"
                 modified: root.modified_("followMouse")
-                onResetRequested: SendaInputSettings.set("follow-mouse", "")
-                description: root.note("followMouse", ["El foco no sigue al cursor", "La ventana bajo el cursor recibe el foco", "Cursor y teclado separados; el clic da el foco", "Cursor y teclado totalmente separados"][Number(SendaInputSettings.current.followMouse || 1)] || "")
+                onResetRequested: ZendaInputSettings.set("follow-mouse", "")
+                description: root.note("followMouse", ["El foco no sigue al cursor", "La ventana bajo el cursor recibe el foco", "Cursor y teclado separados; el clic da el foco", "Cursor y teclado totalmente separados"][Number(ZendaInputSettings.current.followMouse || 1)] || "")
                 SettingsSegments {
                     implicitWidth: Theme.scaled(260)
                     enabled: !root.managed("followMouse")
                     options: [{ value: "0", label: "No" }, { value: "1", label: "Sigue" }, { value: "2", label: "Clic" }, { value: "3", label: "Aparte" }]
-                    value: SendaInputSettings.current.followMouse || "1"
-                    onChosen: value => SendaInputSettings.set("follow-mouse", value)
+                    value: ZendaInputSettings.current.followMouse || "1"
+                    onChosen: value => ZendaInputSettings.set("follow-mouse", value)
                 }
             }
         }
@@ -134,23 +134,23 @@ Flickable {
                 separator: false
                 label: "Tocar para hacer clic"
                 modified: root.modified_("tapToClick")
-                onResetRequested: SendaInputSettings.set("tap-to-click", "")
+                onResetRequested: ZendaInputSettings.set("tap-to-click", "")
                 description: root.note("tapToClick", "En el touchpad")
                 SettingsSwitch {
                     enabled: !root.managed("tapToClick")
-                    checkedValue: SendaInputSettings.current.tapToClick === "true"
-                    onToggledValue: value => SendaInputSettings.set("tap-to-click", value)
+                    checkedValue: ZendaInputSettings.current.tapToClick === "true"
+                    onToggledValue: value => ZendaInputSettings.set("tap-to-click", value)
                 }
             }
             SettingsRow {
                 label: "Desplazamiento natural"
                 modified: root.modified_("naturalScroll")
-                onResetRequested: SendaInputSettings.set("natural-scroll", "")
+                onResetRequested: ZendaInputSettings.set("natural-scroll", "")
                 description: root.note("naturalScroll", "En el touchpad")
                 SettingsSwitch {
                     enabled: !root.managed("naturalScroll")
-                    checkedValue: SendaInputSettings.current.naturalScroll === "true"
-                    onToggledValue: value => SendaInputSettings.set("natural-scroll", value)
+                    checkedValue: ZendaInputSettings.current.naturalScroll === "true"
+                    onToggledValue: value => ZendaInputSettings.set("natural-scroll", value)
                 }
             }
         }
@@ -160,25 +160,25 @@ Flickable {
                 separator: false
                 label: "Desactivar touchpad al escribir"
                 modified: root.modified_("disableWhileTyping")
-                onResetRequested: SendaInputSettings.set("disable-while-typing", "")
+                onResetRequested: ZendaInputSettings.set("disable-while-typing", "")
                 description: root.note("disableWhileTyping", "Evita toques accidentales con la palma")
                 SettingsSwitch {
                     enabled: !root.managed("disableWhileTyping")
-                    checkedValue: SendaInputSettings.current.disableWhileTyping === "true"
-                    onToggledValue: value => SendaInputSettings.set("disable-while-typing", value)
+                    checkedValue: ZendaInputSettings.current.disableWhileTyping === "true"
+                    onToggledValue: value => ZendaInputSettings.set("disable-while-typing", value)
                 }
             }
             SettingsRow {
                 label: "Velocidad de desplazamiento"
                 modified: root.modified_("scrollFactor")
-                onResetRequested: SendaInputSettings.set("scroll-factor", "")
+                onResetRequested: ZendaInputSettings.set("scroll-factor", "")
                 description: root.note("scrollFactor", "En el touchpad; 100 % es lo normal")
                 SettingsSlider {
                     implicitWidth: Theme.scaled(200)
                     enabled: !root.managed("scrollFactor")
                     from: 10; to: 300; stepSize: 10
-                    value: Math.round(Number(SendaInputSettings.current.scrollFactor || 1) * 100)
-                    onCommitted: value => SendaInputSettings.set("scroll-factor", (value / 100).toFixed(2))
+                    value: Math.round(Number(ZendaInputSettings.current.scrollFactor || 1) * 100)
+                    onCommitted: value => ZendaInputSettings.set("scroll-factor", (value / 100).toFixed(2))
                 }
             }
         }
@@ -188,27 +188,27 @@ Flickable {
                 separator: false
                 label: "Tema de cursor"
                 modified: root.modified_("cursorTheme")
-                onResetRequested: SendaInputSettings.set("cursor-theme", "")
+                onResetRequested: ZendaInputSettings.set("cursor-theme", "")
                 description: root.note("cursorTheme", "Se aplica al momento")
                 SettingsSelect {
                     enabled: !root.managed("cursorTheme")
-                    options: SendaInputSettings.cursorThemes
-                    value: SendaInputSettings.current.cursorTheme || ""
-                    onChosen: value => SendaInputSettings.set("cursor-theme", value)
+                    options: ZendaInputSettings.cursorThemes
+                    value: ZendaInputSettings.current.cursorTheme || ""
+                    onChosen: value => ZendaInputSettings.set("cursor-theme", value)
                 }
             }
             SettingsRow {
                 label: "Tamaño del cursor"
                 modified: root.modified_("cursorSize")
-                onResetRequested: SendaInputSettings.set("cursor-size", "")
+                onResetRequested: ZendaInputSettings.set("cursor-size", "")
                 description: root.note("cursorSize", "Se aplica al momento")
                 SettingsSlider {
                     implicitWidth: Theme.scaled(200)
                     enabled: !root.managed("cursorSize")
                     from: 16; to: 64; stepSize: 2
                     suffix: " px"
-                    value: Number(SendaInputSettings.current.cursorSize || 24)
-                    onCommitted: value => SendaInputSettings.set("cursor-size", Math.round(value))
+                    value: Number(ZendaInputSettings.current.cursorSize || 24)
+                    onCommitted: value => ZendaInputSettings.set("cursor-size", Math.round(value))
                 }
             }
         }
@@ -216,7 +216,7 @@ Flickable {
         SettingsStatus {
             Layout.fillWidth: true
             error: true
-            message: SendaInputSettings.error
+            message: ZendaInputSettings.error
         }
     }
 }

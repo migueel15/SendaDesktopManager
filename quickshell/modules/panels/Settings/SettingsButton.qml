@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import qs.common
 
-// Native button behavior with Senda's tokens, including keyboard focus.
+// Native button behavior with Zenda's tokens, including keyboard focus.
 Controls.AbstractButton {
     id: root
     property string label: ""
