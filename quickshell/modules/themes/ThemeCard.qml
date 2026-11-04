@@ -8,7 +8,7 @@ Rectangle {
     id: root
     required property var themeInfo
     readonly property bool valid: themeInfo.valid === true
-    readonly property bool selected: SendaTheme.active?.name === themeInfo.name
+    readonly property bool selected: ZendaTheme.active?.name === themeInfo.name
     signal editRequested(var info)
     signal duplicateRequested(var info)
     signal deleteRequested(var info)
@@ -22,9 +22,9 @@ Rectangle {
     // Declared before the layout so the action buttons receive clicks first.
     MouseArea {
         anchors.fill: parent
-        enabled: root.valid && !SendaTheme.busy
+        enabled: root.valid && !ZendaTheme.busy
         cursorShape: Qt.PointingHandCursor
-        onClicked: SendaTheme.apply(root.themeInfo.name)
+        onClicked: ZendaTheme.apply(root.themeInfo.name)
     }
 
     ColumnLayout {
@@ -84,20 +84,20 @@ Rectangle {
                 text: "Editar"
                 font: Theme.font.caption
                 visible: root.themeInfo.builtin === false
-                enabled: !SendaTheme.busy
+                enabled: !ZendaTheme.busy
                 onClicked: root.editRequested(root.themeInfo)
             }
             CardButton {
                 text: "Duplicar"
                 font: Theme.font.caption
-                enabled: root.valid && !SendaTheme.busy
+                enabled: root.valid && !ZendaTheme.busy
                 onClicked: root.duplicateRequested(root.themeInfo)
             }
             CardButton {
                 text: "Borrar"
                 font: Theme.font.caption
                 visible: root.themeInfo.builtin === false
-                enabled: !SendaTheme.busy
+                enabled: !ZendaTheme.busy
                 onClicked: root.deleteRequested(root.themeInfo)
             }
         }

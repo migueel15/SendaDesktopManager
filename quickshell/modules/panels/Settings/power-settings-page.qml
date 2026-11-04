@@ -11,9 +11,9 @@ Flickable {
     clip: true
 
     Connections {
-        target: SendaHyprlandSettings
+        target: ZendaHyprlandSettings
         function onValuesChanged() {
-            idleField.text = String(SendaHyprlandSettings.values.idleSeconds);
+            idleField.text = String(ZendaHyprlandSettings.values.idleSeconds);
         }
     }
 
@@ -29,14 +29,14 @@ Flickable {
                 label: "Aviso de batería baja"
                 description: "Avisa una vez al bajar de este nivel, sin cargador. Vuelve a avisar tras recuperar carga."
                 modified: Battery.warningPercent !== Battery.defaultWarningPercent
-                onResetRequested: SendaSettings.save({ SENDA_BATTERY_WARNING: "" }, "Aviso de batería restablecido")
+                onResetRequested: ZendaSettings.save({ ZENDA_BATTERY_WARNING: "" }, "Aviso de batería restablecido")
                 SettingsSlider {
                     from: 5
                     to: 95
                     stepSize: 5
                     value: Battery.warningPercent
-                    enabled: SendaSettings.configLoaded
-                    onCommitted: value => SendaSettings.save({ SENDA_BATTERY_WARNING: String(value) }, "Aviso de batería guardado")
+                    enabled: ZendaSettings.configLoaded
+                    onCommitted: value => ZendaSettings.save({ ZENDA_BATTERY_WARNING: String(value) }, "Aviso de batería guardado")
                 }
             }
         }
@@ -44,17 +44,17 @@ Flickable {
             SettingsRow {
                 separator: false
                 label: "Tiempo de inactividad"
-                modified: SendaHyprlandSettings.loaded && SendaHyprlandSettings.values.idleSeconds !== 600
-                onResetRequested: { idleField.text = "600"; SendaHyprlandSettings.save("--idle-seconds", 600); }
+                modified: ZendaHyprlandSettings.loaded && ZendaHyprlandSettings.values.idleSeconds !== 600
+                onResetRequested: { idleField.text = "600"; ZendaHyprlandSettings.save("--idle-seconds", 600); }
                 description: "Segundos, de 0 a 86400. 0 desactiva el bloqueo automático."
                 SettingsSavedMark { flag: "--idle-seconds" }
                 SettingsField {
                     id: idleField
                     Layout.preferredWidth: 100
-                    enabled: SendaHyprlandSettings.loaded
-                    text: SendaHyprlandSettings.loaded ? String(SendaHyprlandSettings.values.idleSeconds) : ""
+                    enabled: ZendaHyprlandSettings.loaded
+                    text: ZendaHyprlandSettings.loaded ? String(ZendaHyprlandSettings.values.idleSeconds) : ""
                     placeholder: "Segundos"
-                    onCommitted: if (!SendaHyprlandSettings.save("--idle-seconds", text.trim())) text = String(SendaHyprlandSettings.values.idleSeconds)
+                    onCommitted: if (!ZendaHyprlandSettings.save("--idle-seconds", text.trim())) text = String(ZendaHyprlandSettings.values.idleSeconds)
                 }
             }
         }

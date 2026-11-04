@@ -9,9 +9,9 @@ import (
 )
 
 // configTemplate is written to a new config file. Secrets never go here.
-const configTemplate = `# Configuración de Senda.
+const configTemplate = `# Configuración de Zenda.
 # Solo guarda preferencias: se puede compartir entre equipos.
-# Las claves se guardan con "senda config secret", nunca aquí.
+# Las claves se guardan con "zenda config secret", nunca aquí.
 `
 
 // ensureConfig creates configDir with mode 0700 when missing, and creates

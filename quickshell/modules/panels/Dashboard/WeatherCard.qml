@@ -8,8 +8,8 @@ import qs.services
 Rectangle {
     id: root
 
-    readonly property var current: SendaWeather.current
-    readonly property string placeName: SendaWeather.location.split(",")[0]
+    readonly property var current: ZendaWeather.current
+    readonly property string placeName: ZendaWeather.location.split(",")[0]
 
     function conditionIcon(condition) {
         switch (condition) {
@@ -60,7 +60,7 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         OverlayService.closeCurrentPanel();
-                        SendaTheme.openPicker(OverlayService.currentScreen);
+                        ZendaTheme.openPicker(OverlayService.currentScreen);
                     }
                 }
             }
@@ -74,7 +74,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: -6
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: SendaSettings.openWindow()
+                    onClicked: ZendaSettings.openWindow()
                 }
             }
         }
@@ -83,7 +83,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             spacing: 12
-            visible: SendaWeather.status === "ready" && root.current !== null
+            visible: ZendaWeather.status === "ready" && root.current !== null
 
             Text {
                 text: root.conditionIcon(root.current?.condition)
@@ -116,7 +116,7 @@ Rectangle {
 
         Text {
             Layout.fillWidth: true
-            visible: SendaWeather.status === "ready" && root.current !== null
+            visible: ZendaWeather.status === "ready" && root.current !== null
             text: `Máx ${Math.round(root.current?.max ?? 0)}°  ·  Mín ${Math.round(root.current?.min ?? 0)}°  ·  ${root.placeName}`
             color: Theme.colors.overlay
             font.family: Theme.font.overlay.family
@@ -127,23 +127,23 @@ Rectangle {
         Text {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            visible: SendaWeather.status !== "ready"
+            visible: ZendaWeather.status !== "ready"
             verticalAlignment: Text.AlignVCenter
             text: {
-                if (SendaWeather.status === "loading") return "Cargando el tiempo…";
-                if (SendaWeather.status === "unconfigured") return "Elige tu localidad en la configuración para ver el tiempo.";
-                return SendaWeather.message;
+                if (ZendaWeather.status === "loading") return "Cargando el tiempo…";
+                if (ZendaWeather.status === "unconfigured") return "Elige tu localidad en la configuración para ver el tiempo.";
+                return ZendaWeather.message;
             }
-            color: SendaWeather.status === "error" ? Theme.colors.warning : Theme.colors.overlay
+            color: ZendaWeather.status === "error" ? Theme.colors.warning : Theme.colors.overlay
             font.family: Theme.font.overlay.family
             font.pixelSize: Theme.scaled(11)
             wrapMode: Text.WordWrap
 
             MouseArea {
                 anchors.fill: parent
-                enabled: SendaWeather.status === "unconfigured"
+                enabled: ZendaWeather.status === "unconfigured"
                 cursorShape: Qt.PointingHandCursor
-                onClicked: SendaSettings.openWindow()
+                onClicked: ZendaSettings.openWindow()
             }
         }
     }

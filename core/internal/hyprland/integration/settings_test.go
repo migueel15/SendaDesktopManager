@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 func TestSettingsDefaultsAndExistingShortcut(t *testing.T) {

@@ -11,20 +11,20 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 const (
-	KeyDisplays         = "SENDA_DISPLAYS"
-	KeyDisplaysPrevious = "SENDA_DISPLAYS_PREVIOUS"
+	KeyDisplays         = "ZENDA_DISPLAYS"
+	KeyDisplaysPrevious = "ZENDA_DISPLAYS_PREVIOUS"
 )
 
 // MonitorSelector finds the monitors the user defines.
 var MonitorSelector = Selector{LuaCall: "hl.monitor", Field: "output", ConfKeyword: "monitor"}
 
-// DisplayRule is a monitor configured from Senda.
+// DisplayRule is a monitor configured from Zenda.
 type DisplayRule struct {
 	Name        string  `json:"name"`
 	Description string  `json:"description,omitempty"`
@@ -217,7 +217,7 @@ func LockDisplayWatch() (func(), error) {
 
 // lockFile takes the named per-user lock.
 func lockFile(name string, how int) (func(), error) {
-	path := filepath.Join(os.TempDir(), fmt.Sprintf("senda-%s-%d.lock", name, os.Getuid()))
+	path := filepath.Join(os.TempDir(), fmt.Sprintf("zenda-%s-%d.lock", name, os.Getuid()))
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
 		return nil, err
@@ -267,13 +267,13 @@ type Display struct {
 	Enabled     bool     `json:"enabled"`
 	MirrorOf    string   `json:"mirrorOf"`
 	Modes       []string `json:"modes"`
-	// ManagedBy is user, senda, or empty when nobody configured the monitor.
+	// ManagedBy is user, zenda, or empty when nobody configured the monitor.
 	ManagedBy string `json:"managedBy"`
 	// Source is where the user defines it, when ManagedBy is user.
 	Source string `json:"source,omitempty"`
 }
 
-// DisplayState is what `senda display show` reports.
+// DisplayState is what `zenda display show` reports.
 type DisplayState struct {
 	Displays []Display `json:"displays"`
 	CanUndo  bool      `json:"canUndo"`
@@ -298,7 +298,7 @@ func InspectDisplays(ctx context.Context, run stt.Runner, rules []DisplayRule, c
 		if claim := claimedBy(defs, m.Name, m.Description); claim != nil {
 			d.ManagedBy, d.Source = "user", claim.Source()
 		} else if findRule(rules, m) >= 0 {
-			d.ManagedBy = "senda"
+			d.ManagedBy = "zenda"
 		}
 		state.Displays = append(state.Displays, d)
 	}
@@ -457,12 +457,12 @@ func ResetDisplay(ctx context.Context, run stt.Runner, rules []DisplayRule, name
 	}
 	i := findRule(rules, target)
 	if i < 0 {
-		return nil, fmt.Errorf("Senda no gestiona %s", name)
+		return nil, fmt.Errorf("Zenda no gestiona %s", name)
 	}
 	return append(append([]DisplayRule(nil), rules[:i]...), rules[i+1:]...), nil
 }
 
-// liveDisplay finds a monitor Senda may change: the user always wins.
+// liveDisplay finds a monitor Zenda may change: the user always wins.
 func liveDisplay(ctx context.Context, run stt.Runner, name string) ([]hyprctl.Monitor, hyprctl.Monitor, error) {
 	monitors, err := hyprctl.New(run).Monitors(ctx)
 	if err != nil {

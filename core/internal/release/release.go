@@ -1,4 +1,4 @@
-// Package release downloads and verifies Senda release assets from GitHub and
+// Package release downloads and verifies Zenda release assets from GitHub and
 // installs the Quickshell data they contain.
 package release
 

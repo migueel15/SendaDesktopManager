@@ -9,14 +9,14 @@ import qs.services
 
 // Asks on every screen, because a change may have left some of them black.
 Variants {
-    model: SendaDisplaySettings.confirming ? Quickshell.screens : []
+    model: ZendaDisplaySettings.confirming ? Quickshell.screens : []
 
     PanelWindow {
         id: dialog
         required property var modelData
         screen: modelData
         WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "senda-display-confirm"
+        WlrLayershell.namespace: "zenda-display-confirm"
         exclusionMode: ExclusionMode.Ignore
         color: "transparent"
         anchors { top: true; bottom: true; left: true; right: true }
@@ -52,7 +52,7 @@ Variants {
                 }
                 Text {
                     Layout.fillWidth: true
-                    text: "Se revertirán en " + SendaDisplaySettings.confirmLeft + " s."
+                    text: "Se revertirán en " + ZendaDisplaySettings.confirmLeft + " s."
                     color: Theme.colors.overlay
                     font.family: Theme.textFamily
                     font.pixelSize: Theme.scaled(15)
@@ -60,8 +60,8 @@ Variants {
                 RowLayout {
                     Layout.alignment: Qt.AlignRight
                     spacing: Theme.spacing.sm
-                    SettingsButton { label: "Revertir"; onClicked: SendaDisplaySettings.revert() }
-                    SettingsButton { label: "Mantener"; primary: true; onClicked: SendaDisplaySettings.keep() }
+                    SettingsButton { label: "Revertir"; onClicked: ZendaDisplaySettings.revert() }
+                    SettingsButton { label: "Mantener"; primary: true; onClicked: ZendaDisplaySettings.keep() }
                 }
             }
         }

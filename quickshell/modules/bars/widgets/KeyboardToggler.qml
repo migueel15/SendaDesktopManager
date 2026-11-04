@@ -31,7 +31,7 @@ Rectangle {
 		id: textIcon
     anchors.centerIn: parent
 
-		text : SendaManager.keyboardEnabled ? "󰌌": "󰌐"
+		text : ZendaManager.keyboardEnabled ? "󰌌": "󰌐"
 
 		font : Theme.font.base
 		color: Theme.colors.text
@@ -45,6 +45,6 @@ Rectangle {
 		hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
 
-		onClicked: SendaManager.toggleKeyboard()
+		onClicked: ZendaManager.toggleKeyboard()
 	}
 }

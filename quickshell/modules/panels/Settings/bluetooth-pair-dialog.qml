@@ -17,7 +17,7 @@ PanelWindow {
     screen: Quickshell.screens.find(screen => screen.name === OverlayService.currentScreen) ?? Quickshell.screens[0]
     visible: dialog.request !== null
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.namespace: "senda-bluetooth-pair"
+    WlrLayershell.namespace: "zenda-bluetooth-pair"
     WlrLayershell.keyboardFocus: visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"

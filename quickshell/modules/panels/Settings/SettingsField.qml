@@ -2,7 +2,7 @@ import QtQuick
 
 import qs.common
 
-// Single-line text input in the Senda style. Set secret to hide the text.
+// Single-line text input in the Zenda style. Set secret to hide the text.
 Rectangle {
     id: root
 

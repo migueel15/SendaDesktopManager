@@ -89,7 +89,7 @@ Singleton {
             if (root.pairing) return;
             root.pairingError = "";
             root.pairingDevice = device;
-            pairProcess.command = [Quickshell.env("SENDA_BIN") || "senda", "bluetooth", "pair", device.dbusPath];
+            pairProcess.command = [Quickshell.env("ZENDA_BIN") || "zenda", "bluetooth", "pair", device.dbusPath];
             pairProcess.running = true;
         } else {
             device.connect();

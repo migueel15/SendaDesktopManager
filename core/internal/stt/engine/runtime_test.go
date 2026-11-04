@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 func TestRuntimeInstall(t *testing.T) {
@@ -30,7 +30,7 @@ func TestRuntimeInstall(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			root := t.TempDir()
 			t.Setenv("XDG_DATA_HOME", root)
-			t.Setenv("SENDA_HOME", "")
+			t.Setenv("ZENDA_HOME", "")
 			var calls []string
 			lastWheel := ""
 			runtimeRunner = func(_ context.Context, _ io.Reader, name string, args ...string) ([]byte, error) {
@@ -120,7 +120,7 @@ func TestRuntimeInstall(t *testing.T) {
 func TestRuntimeInstallPreservesPreviousOnFailure(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("XDG_DATA_HOME", root)
-	t.Setenv("SENDA_HOME", "")
+	t.Setenv("ZENDA_HOME", "")
 	dir := stt.RuntimeDir()
 	if err := os.MkdirAll(filepath.Join(dir, "bin"), 0o755); err != nil {
 		t.Fatal(err)
@@ -157,7 +157,7 @@ func TestRuntimeInstallPreservesPreviousOnFailure(t *testing.T) {
 func TestRuntimeInstalledRequiresManifestAndInterpreter(t *testing.T) {
 	root := t.TempDir()
 	t.Setenv("XDG_DATA_HOME", root)
-	t.Setenv("SENDA_HOME", "")
+	t.Setenv("ZENDA_HOME", "")
 	dir := stt.RuntimeDir()
 	if err := os.MkdirAll(filepath.Join(dir, "bin"), 0o755); err != nil {
 		t.Fatal(err)

@@ -7,7 +7,7 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property string stateDirectory: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/senda"
+    readonly property string stateDirectory: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/zenda"
     readonly property string filePath: stateDirectory + "/tray-pinned.json"
     readonly property bool ready: state.ready
     readonly property var pinnedIds: state.ids

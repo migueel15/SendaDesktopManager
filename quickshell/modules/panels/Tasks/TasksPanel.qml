@@ -3,7 +3,7 @@ import qs.common.components
 import QtQuick
 import qs.modules.panels.Tasks
 
-SendaPanel {
+ZendaPanel {
     id: root
     name: "tasks"
 

@@ -4,7 +4,7 @@ La sección **Energía** de Ajustes reúne el aviso de batería baja y el tiempo
 
 ## Aviso de batería baja
 
-Senda envía una notificación crítica, mediante `notify-send`, cuando la batería está descargándose y su nivel llega al umbral `SENDA_BATTERY_WARNING` (de 5 a 95 %; 20 % por defecto). Avisa una sola vez hasta que la carga vuelve a superar el umbral. El umbral se guarda en `~/.config/senda/config`.
+Zenda envía una notificación crítica, mediante `notify-send`, cuando la batería está descargándose y su nivel llega al umbral `ZENDA_BATTERY_WARNING` (de 5 a 95 %; 20 % por defecto). Avisa una sola vez hasta que la carga vuelve a superar el umbral. El umbral se guarda en `~/.config/zenda/config`.
 
 ## Tiempo de inactividad
 

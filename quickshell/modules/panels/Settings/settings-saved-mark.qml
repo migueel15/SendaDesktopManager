@@ -14,7 +14,7 @@ Text {
     opacity: 0
     Accessible.ignored: true
     Connections {
-        target: SendaHyprlandSettings
+        target: ZendaHyprlandSettings
         function onSaved(flag) { if (flag === mark.flag) pulse.restart(); }
     }
     SequentialAnimation {

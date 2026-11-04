@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 type failingShell struct{ calls []string }

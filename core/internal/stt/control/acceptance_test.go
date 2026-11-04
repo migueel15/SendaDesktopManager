@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 func okChecks() Checks {

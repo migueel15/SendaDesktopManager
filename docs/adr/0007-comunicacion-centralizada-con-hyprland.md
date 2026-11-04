@@ -6,7 +6,7 @@ Aceptada.
 
 ## Contexto
 
-Hyprland cambió su configuración a Lua y, con ello, la sintaxis de `hyprctl dispatch` y de los binds. Senda llamaba a `hyprctl` desde muchos paquetes, cada uno con sus propias cadenas, formatos JSON y comprobaciones de respuesta, de modo que un cambio de API obligaba a tocar decenas de sitios.
+Hyprland cambió su configuración a Lua y, con ello, la sintaxis de `hyprctl dispatch` y de los binds. Zenda llamaba a `hyprctl` desde muchos paquetes, cada uno con sus propias cadenas, formatos JSON y comprobaciones de respuesta, de modo que un cambio de API obligaba a tocar decenas de sitios.
 
 ## Decisión
 
@@ -17,7 +17,7 @@ El paquete `core/internal/hyprland/hyprctl` es el único que se comunica con Hyp
 - `events.go` gestiona el socket de eventos.
 - `SignatureEnv` nombra la variable de la instancia de Hyprland, e `InSession` / `InSessionEnv` son la única comprobación de sesión; el servicio de usuario y `setup` también los usan.
 
-El resto de paquetes llama a operaciones con nombre (`ActiveWindow`, `SendShortcut`, `FocusWindow`, `SetDeviceEnabled`, `Reload`…). Quickshell y los scripts no invocan `hyprctl`; usan subcomandos de `senda`, como `senda hyprland exit`.
+El resto de paquetes llama a operaciones con nombre (`ActiveWindow`, `SendShortcut`, `FocusWindow`, `SetDeviceEnabled`, `Reload`…). Quickshell y los scripts no invocan `hyprctl`; usan subcomandos de `zenda`, como `zenda hyprland exit`.
 
 El pegado del dictado usa `SendShortcut` (dispatcher `send_shortcut`) en lugar de `wtype`: el teclado virtual de `wtype` perdía pulsaciones en Firefox y Electron, y `wtype` deja de ser una dependencia.
 

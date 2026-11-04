@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/wallpaper"
+	"github.com/migueel15/Zenda/core/internal/wallpaper"
 )
 
 type Call func(target, function string, args ...string) (string, error)

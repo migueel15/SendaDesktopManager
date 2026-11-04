@@ -4,7 +4,7 @@ package notify
 import "github.com/godbus/dbus/v5"
 
 func arguments(summary, body string) []interface{} {
-	return []interface{}{"Senda", uint32(0), "", summary, body, []string{}, map[string]dbus.Variant{}, int32(-1)}
+	return []interface{}{"Zenda", uint32(0), "", summary, body, []string{}, map[string]dbus.Variant{}, int32(-1)}
 }
 
 func Send(summary, body string) error {

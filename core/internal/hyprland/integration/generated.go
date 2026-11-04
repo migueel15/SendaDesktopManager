@@ -8,10 +8,10 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
-	"github.com/migueel15/SendaDesktopManager/core/internal/version"
+	"github.com/migueel15/Zenda/core/internal/hyprland/binds"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/version"
 )
 
 // generatedModule is one area of the generated folder. To add a module, append
@@ -29,7 +29,7 @@ type generatedModule struct {
 type moduleInput struct {
 	Settings                    Settings
 	Lock, Dictation, Screenshot string
-	// Command is the Senda executable, quoted for a shell.
+	// Command is the Zenda executable, quoted for a shell.
 	Command string
 }
 
@@ -47,12 +47,12 @@ var generatedModules = []generatedModule{
 
 func renderLockModule(in moduleInput) (string, error) {
 	return hyprctl.SessionLockConfig(in.Settings.Blur, in.Settings.Blur) + "\n" +
-		hyprctl.BindLua(in.Lock, hyprctl.DspExec("loginctl lock-session"), hyprctl.BindOptions{Description: "Senda lock"}) + "\n", nil
+		hyprctl.BindLua(in.Lock, hyprctl.DspExec("loginctl lock-session"), hyprctl.BindOptions{Description: "Zenda lock"}) + "\n", nil
 }
 
 func renderBindsModule(in moduleInput) (string, error) {
 	return hyprctl.BindLua(in.Dictation, hyprctl.DspExec(in.Command+" stt toggle"), hyprctl.BindOptions{Description: binds.DictationDescription, Universal: true}) + "\n" +
-		hyprctl.BindLua(in.Screenshot, hyprctl.DspExec(in.Command+" screenshot"), hyprctl.BindOptions{Description: "Senda screenshot"}) + "\n", nil
+		hyprctl.BindLua(in.Screenshot, hyprctl.DspExec(in.Command+" screenshot"), hyprctl.BindOptions{Description: "Zenda screenshot"}) + "\n", nil
 }
 
 func renderRulesModule(moduleInput) (string, error) {
@@ -90,7 +90,7 @@ func renderStartupModule(in moduleInput) (string, error) {
 // renderIdleModule derives the path from the folder that was loaded, so moving
 // the folder cannot leave the login without hypridle.
 func renderIdleModule(in moduleInput) (string, error) {
-	if in.Settings.IdleMode != IdleModeSenda {
+	if in.Settings.IdleMode != IdleModeZenda {
 		return "", nil
 	}
 	expr := fmt.Sprintf(`"hypridle -c '" .. dir:gsub("'", "'\\''") .. "/%s'"`, idleFile)
@@ -100,8 +100,8 @@ func renderIdleModule(in moduleInput) (string, error) {
 const (
 	initFile   = "init.lua"
 	idleFile   = "hypridle.conf"
-	folderName = "senda"
-	idleHeader = "# Generado por Senda."
+	folderName = "zenda"
+	idleHeader = "# Generado por Zenda."
 	fileHeader = moduleHeader + " No modificar manualmente.\n"
 )
 
@@ -133,12 +133,12 @@ local dir = debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$")
 for _, name in ipairs({ %s }) do
 	assert(loadfile(dir .. "/" .. name .. ".lua"))(dir)
 end
--- Marca de detección: Senda la consulta con hyprctl para localizar esta carpeta.
+-- Marca de detección: Zenda la consulta con hyprctl para localizar esta carpeta.
 function %s() return %s end
 `, fileHeader, strings.Join(names, ", "), ProbeFunction, strconv.Quote(version.Version))
 }
 
-// generatedTargets is every name in the folder with the headers proving Senda
+// generatedTargets is every name in the folder with the headers proving Zenda
 // owns it. It must stay independent from Render so uninstall needs no settings.
 func generatedTargets() map[string][]string {
 	targets := map[string][]string{
@@ -152,7 +152,7 @@ func generatedTargets() map[string][]string {
 	return targets
 }
 
-// DefaultDir is hypr/senda, used when no loaded configuration points elsewhere.
+// DefaultDir is hypr/zenda, used when no loaded configuration points elsewhere.
 func DefaultDir() string {
 	return filepath.Join(filepath.Dir(paths.ConfigDir()), "hypr", folderName)
 }
@@ -212,7 +212,7 @@ func configuredDir() string {
 	return visit(hyprConfigFile())
 }
 
-// CheckTargets refuses to replace any file Senda does not own.
+// CheckTargets refuses to replace any file Zenda does not own.
 func CheckTargets() error {
 	dir := Dir()
 	for name, headers := range generatedTargets() {

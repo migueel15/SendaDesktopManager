@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 	"os"
 	"path/filepath"
 	"sort"
@@ -25,7 +25,7 @@ type Controller struct {
 }
 
 func DefaultController(locked func() (bool, error)) Controller {
-	return Controller{Directory: filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "senda"), Locked: locked,
+	return Controller{Directory: filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "zenda"), Locked: locked,
 		Detect: func() ([]Device, error) {
 			names, e := hyprctl.New(nil).Keyboards(context.Background())
 			if e != nil {
@@ -43,7 +43,7 @@ func DefaultController(locked func() (bool, error)) Controller {
 }
 
 func (c Controller) withLock(fn func() (State, error)) (State, error) {
-	if c.Directory == "senda" || c.Directory == "" {
+	if c.Directory == "zenda" || c.Directory == "" {
 		return State{}, errors.New("XDG_RUNTIME_DIR no definido")
 	}
 	if err := os.MkdirAll(c.Directory, 0700); err != nil {

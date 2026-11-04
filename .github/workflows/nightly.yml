@@ -40,8 +40,8 @@ jobs:
       - name: Package nightly assets
         env:
           TAG: ${{ steps.tag.outputs.tag }}
-          SENDA_GOOGLE_CLIENT_ID: ${{ secrets.SENDA_GOOGLE_CLIENT_ID }}
-          SENDA_GOOGLE_CLIENT_SECRET: ${{ secrets.SENDA_GOOGLE_CLIENT_SECRET }}
+          ZENDA_GOOGLE_CLIENT_ID: ${{ secrets.ZENDA_GOOGLE_CLIENT_ID }}
+          ZENDA_GOOGLE_CLIENT_SECRET: ${{ secrets.ZENDA_GOOGLE_CLIENT_SECRET }}
         run: |
           core/scripts/package-release.sh "$TAG" "$RUNNER_TEMP/release"
 
@@ -53,8 +53,8 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           assets="$RUNNER_TEMP/release"
           gh release create "$TAG" \
-            "$assets/senda-$TAG-linux-amd64" \
-            "$assets/senda-quickshell-$TAG.tar.gz" \
+            "$assets/zenda-$TAG-linux-amd64" \
+            "$assets/zenda-quickshell-$TAG.tar.gz" \
             "$assets/checksums.txt" \
             --target "$GITHUB_SHA" \
             --prerelease \
@@ -70,7 +70,7 @@ jobs:
           # pre-release, so checking for updates never uses the GitHub API.
           manifest="$RUNNER_TEMP/latest.json"
           core/scripts/release-manifest.sh "$TAG" \
-            "https://github.com/migueel15/SendaDesktopManager/releases/download/nightly/latest.json" "$manifest"
+            "https://github.com/migueel15/Zenda/releases/download/nightly/latest.json" "$manifest"
           if ! gh release view nightly >/dev/null 2>&1; then
             gh release create nightly --prerelease --target "$GITHUB_SHA" \
               --title "Nightly (última)" \

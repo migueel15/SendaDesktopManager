@@ -1,5 +1,5 @@
 // Package clipboard keeps a local history of copied text. A `wl-paste --watch`
-// process hands every change to `senda clipboard store`, one process per copy,
+// process hands every change to `zenda clipboard store`, one process per copy,
 // so the history file is locked around each change.
 package clipboard
 
@@ -20,17 +20,17 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/instance"
+	"github.com/migueel15/Zenda/core/internal/instance"
 )
 
 const (
-	KeyEnabled = "SENDA_CLIPBOARD_ENABLED"
-	KeyMax     = "SENDA_CLIPBOARD_MAX"
+	KeyEnabled = "ZENDA_CLIPBOARD_ENABLED"
+	KeyMax     = "ZENDA_CLIPBOARD_MAX"
 	DefaultMax = 100
 	LimitMax   = 1000
 	// MaxTextBytes leaves out huge selections, which would slow every search.
 	MaxTextBytes = 1 << 20
-	instanceName = "net.dorlab.Senda.ClipboardWatcher"
+	instanceName = "net.dorlab.Zenda.ClipboardWatcher"
 )
 
 // ErrNotFound means the id is not in the history.

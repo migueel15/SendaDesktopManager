@@ -5,13 +5,14 @@ package secrets
 
 import (
 	"errors"
+	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/config"
 )
 
 const (
 	DorlabAPIKey       = "DORLAB_API_KEY"
-	GoogleClientSecret = "SENDA_GOOGLE_CLIENT_SECRET"
+	GoogleClientSecret = "ZENDA_GOOGLE_CLIENT_SECRET"
 )
 
 // Names lists every setting that must never stay in the config file.
@@ -45,8 +46,8 @@ func (s Store) entry(name string) entry {
 		return s.keyring(name)
 	}
 	return Keyring{
-		Label:      "Senda " + name,
-		Attributes: []string{"application", "senda", "type", "setting", "name", name},
+		Label:      "Zenda " + name,
+		Attributes: []string{"application", "zenda", "type", "setting", "name", name},
 	}
 }
 
@@ -56,6 +57,16 @@ func (s Store) Get(name string) (string, error) {
 	value, err := s.entry(name).Load()
 	if err == nil {
 		return value, nil
+	}
+	if errors.Is(err, ErrNotFound) && s.keyring == nil {
+		// Entry saved under the previous name (Senda): move it over.
+		old := Keyring{Attributes: []string{"application", "senda", "type", "setting", "name", legacyName(name)}}
+		if value, e := old.Load(); e == nil && value != "" {
+			if s.Set(name, value) == nil {
+				_ = old.Delete()
+			}
+			return value, nil
+		}
 	}
 	saved, fileErr := config.Load(s.FallbackFile)
 	if fileErr != nil {
@@ -121,4 +132,12 @@ func (s Store) Migrate(configFile string) error {
 		return nil
 	}
 	return config.Set(configFile, remove)
+}
+
+// legacyName is the setting name used before the rename to Zenda.
+func legacyName(name string) string {
+	if rest, ok := strings.CutPrefix(name, "ZENDA_"); ok {
+		return "SENDA_" + rest
+	}
+	return name
 }

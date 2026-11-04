@@ -11,7 +11,7 @@ Singleton {
     property string errorMessage: ""
     property string pendingPassword: ""
     readonly property bool authenticating: pam.active
-    readonly property string marker: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/senda/session-locked"
+    readonly property string marker: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/zenda/session-locked"
 
     function lock() {
         if (locked || preparing) return;
@@ -61,7 +61,7 @@ Singleton {
     }
     Process {
         id: prepare
-        command: ["sh", "-c", "mkdir -p -- \"$1\" && touch -- \"$2\" || echo \"No se pudo guardar el marcador de recuperación\" >&2; \"$3\" keyboard on", "senda-lock", (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/senda", root.marker, SendaManager.binaryPath]
+        command: ["sh", "-c", "mkdir -p -- \"$1\" && touch -- \"$2\" || echo \"No se pudo guardar el marcador de recuperación\" >&2; \"$3\" keyboard on", "zenda-lock", (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/zenda", root.marker, ZendaManager.binaryPath]
         stderr: StdioCollector { onStreamFinished: if (text) console.warn("LockService:", text) }
         onExited: function(code) {
             if (code !== 0) console.warn("LockService: no se pudo reactivar el teclado:", code);

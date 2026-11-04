@@ -27,7 +27,7 @@ func generatedHome(t *testing.T) string {
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", home)
-	t.Setenv("SENDA_HOME", filepath.Join(home, "senda"))
+	t.Setenv("ZENDA_HOME", filepath.Join(home, "zenda"))
 	t.Setenv("HYPRLAND_INSTANCE_SIGNATURE", "")
 	moduleOverride = ""
 	t.Cleanup(func() { moduleOverride = "" })
@@ -40,8 +40,8 @@ func generatedHome(t *testing.T) string {
 func TestFolderHasOneFilePerModuleAndIgnoresEverything(t *testing.T) {
 	generatedHome(t)
 	s := DefaultSettings()
-	s.IdleMode = IdleModeSenda
-	if err := WriteFiles(s, "/usr/bin/senda"); err != nil {
+	s.IdleMode = IdleModeZenda
+	if err := WriteFiles(s, "/usr/bin/zenda"); err != nil {
 		t.Fatal(err)
 	}
 	for _, m := range generatedModules {
@@ -63,7 +63,7 @@ func TestStaleModulesGoButUserFilesStay(t *testing.T) {
 	stale, user := filepath.Join(Dir(), "old.lua"), filepath.Join(Dir(), "mine.lua")
 	put(t, stale, moduleHeader+"\n")
 	put(t, user, "user()\n")
-	if err := WriteFiles(DefaultSettings(), "/usr/bin/senda"); err != nil {
+	if err := WriteFiles(DefaultSettings(), "/usr/bin/zenda"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(stale); !os.IsNotExist(err) {
@@ -76,9 +76,9 @@ func TestStaleModulesGoButUserFilesStay(t *testing.T) {
 
 func TestMovedFolderIsFollowedWithoutSession(t *testing.T) {
 	root := generatedHome(t)
-	moved := filepath.Join(root, "hypr", "modules", "senda")
+	moved := filepath.Join(root, "hypr", "modules", "zenda")
 	put(t, filepath.Join(moved, "init.lua"), moduleHeader+"\n")
-	put(t, filepath.Join(root, "hypr", "hyprland.lua"), "require(\"modules.senda.init\")\n")
+	put(t, filepath.Join(root, "hypr", "hyprland.lua"), "require(\"modules.zenda.init\")\n")
 	if Dir() != moved {
 		t.Fatalf("got %s", Dir())
 	}
@@ -99,7 +99,7 @@ func TestLocateFollowsLoadedFolder(t *testing.T) {
 		t.Fatalf("deleted: got %s", ModulePath())
 	}
 	// A legacy module is not a location.
-	legacy := filepath.Join(root, "hypr", "modules", "senda.lua")
+	legacy := filepath.Join(root, "hypr", "modules", "zenda.lua")
 	put(t, legacy, moduleHeader+"\n")
 	Locate(Link{Loaded: true, Source: legacy})
 	if ModulePath() != filepath.Join(DefaultDir(), "init.lua") {
@@ -110,12 +110,12 @@ func TestLocateFollowsLoadedFolder(t *testing.T) {
 func TestMigrateFromSingleModuleKeepsOneReference(t *testing.T) {
 	root := generatedHome(t)
 	main := filepath.Join(root, "hypr", "hyprland.lua")
-	legacy := filepath.Join(root, "hypr", "modules", "senda.lua")
-	idle := filepath.Join(root, "senda", "hypridle.conf")
+	legacy := filepath.Join(root, "hypr", "modules", "zenda.lua")
+	idle := filepath.Join(root, "zenda", "hypridle.conf")
 	put(t, main, "user()\n"+legacyManagedReference+"\n")
 	put(t, legacy, moduleHeader+"\n")
-	put(t, idle, "# Generado por Senda.\n")
-	if err := WriteFiles(DefaultSettings(), "/usr/bin/senda"); err != nil {
+	put(t, idle, "# Generado por Zenda.\n")
+	if err := WriteFiles(DefaultSettings(), "/usr/bin/zenda"); err != nil {
 		t.Fatal(err)
 	}
 	warnings, err := Migrate()
@@ -134,9 +134,9 @@ func TestMigrateFromSingleModuleKeepsOneReference(t *testing.T) {
 
 func TestReferencedLegacyModuleIsEmptied(t *testing.T) {
 	root := generatedHome(t)
-	legacy := filepath.Join(root, "hypr", "modules", "senda.lua")
+	legacy := filepath.Join(root, "hypr", "modules", "zenda.lua")
 	put(t, filepath.Join(root, "hypr", "hyprland.lua"), legacyRequireLine+"\n")
-	put(t, filepath.Join(root, "hypr", "modules", "x.lua"), "local s = require(\"modules.senda\")\n")
+	put(t, filepath.Join(root, "hypr", "modules", "x.lua"), "local s = require(\"modules.zenda\")\n")
 	put(t, legacy, moduleHeader+"\nhl.bind(\"a\")\n")
 	warnings, err := Migrate()
 	if err != nil || len(warnings) != 1 {
@@ -152,7 +152,7 @@ func TestEnsureLinkedAddsImportWhenLegacyLoaded(t *testing.T) {
 	main := filepath.Join(root, "hypr", "hyprland.lua")
 	put(t, main, "user()\n")
 	t.Setenv("HYPRLAND_INSTANCE_SIGNATURE", "x")
-	f := &fakeHyprland{source: filepath.Join(root, "hypr", "modules", "senda.lua"), reloaded: true}
+	f := &fakeHyprland{source: filepath.Join(root, "hypr", "modules", "zenda.lua"), reloaded: true}
 	if _, err := EnsureLinked(context.Background(), f.run); err != nil {
 		t.Fatal(err)
 	}
@@ -169,12 +169,12 @@ func TestInitLoadsModulesWhereverItIs(t *testing.T) {
 	}
 	root := generatedHome(t)
 	s := DefaultSettings()
-	s.IdleMode = IdleModeSenda
-	files, err := Render(s, "/usr/bin/senda")
+	s.IdleMode = IdleModeZenda
+	files, err := Render(s, "/usr/bin/zenda")
 	if err != nil {
 		t.Fatal(err)
 	}
-	dir := filepath.Join(root, "it's moved", "senda")
+	dir := filepath.Join(root, "it's moved", "zenda")
 	for _, f := range files {
 		put(t, filepath.Join(dir, f.Name), string(f.Content))
 	}
@@ -182,7 +182,7 @@ func TestInitLoadsModulesWhereverItIs(t *testing.T) {
 hl = setmetatable({ on = function(_, f) f() end, exec_cmd = function(c) print(c) end }, { __index = function() return any end })
 `
 	entry := filepath.Join(root, "run.lua")
-	put(t, entry, stub+"dofile(arg[1])\nprint(senda_module_version())\n")
+	put(t, entry, stub+"dofile(arg[1])\nprint(zenda_module_version())\n")
 	out, err := exec.Command(lua, entry, filepath.Join(dir, "init.lua")).CombinedOutput()
 	if err != nil {
 		t.Fatalf("%v: %s", err, out)

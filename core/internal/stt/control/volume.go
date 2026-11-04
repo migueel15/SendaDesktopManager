@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 // DuckAudio lowers the current output to the configured percentage and returns a restoration action.

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Builds the release assets for a Senda tag:
-#   senda-<tag>-linux-amd64           static Linux binary
-#   senda-quickshell-<tag>.tar.gz     Quickshell UI, Discord bridge and version file
+# Builds the release assets for a Zenda tag:
+#   zenda-<tag>-linux-amd64           static Linux binary
+#   zenda-quickshell-<tag>.tar.gz     Quickshell UI, Discord bridge and version file
 #   checksums.txt                     sha256 checksums of both files above
 #
 # Usage: package-release.sh <tag> <output-dir>
 #   <tag> must look like vX.Y.Z (for example v0.1.0) or, for nightly builds,
 #   nightly-<yyyymmddhhmmss>-<short sha>.
 #
-# Requires SENDA_GOOGLE_CLIENT_ID and SENDA_GOOGLE_CLIENT_SECRET. They are
+# Requires ZENDA_GOOGLE_CLIENT_ID and ZENDA_GOOGLE_CLIENT_SECRET. They are
 # compiled into the binary so the release works without each user creating a
 # Google Cloud project. Never print them.
 set -euo pipefail
@@ -34,25 +34,25 @@ REPO_ROOT="$(cd "$CORE_DIR/.." && pwd)"
 mkdir -p "$OUTPUT_ARG"
 OUT_DIR="$(cd "$OUTPUT_ARG" && pwd)"
 
-: "${SENDA_GOOGLE_CLIENT_ID:?SENDA_GOOGLE_CLIENT_ID must be set to build a release}"
-: "${SENDA_GOOGLE_CLIENT_SECRET:?SENDA_GOOGLE_CLIENT_SECRET must be set to build a release}"
+: "${ZENDA_GOOGLE_CLIENT_ID:?ZENDA_GOOGLE_CLIENT_ID must be set to build a release}"
+: "${ZENDA_GOOGLE_CLIENT_SECRET:?ZENDA_GOOGLE_CLIENT_SECRET must be set to build a release}"
 
-BINARY_NAME="senda-$TAG-linux-amd64"
-TARBALL_NAME="senda-quickshell-$TAG.tar.gz"
+BINARY_NAME="zenda-$TAG-linux-amd64"
+TARBALL_NAME="zenda-quickshell-$TAG.tar.gz"
 
 STAGE_DIR="$(mktemp -d)"
 trap 'rm -rf "$STAGE_DIR"' EXIT
 
 # 1. Static binary. The version and the Google OAuth client are injected at
 #    link time.
-GOOGLE_PKG="github.com/migueel15/SendaDesktopManager/core/internal/googlecalendar"
+GOOGLE_PKG="github.com/migueel15/Zenda/core/internal/googlecalendar"
 echo "Building $BINARY_NAME..."
 (
   cd "$CORE_DIR"
   CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
-    -ldflags "-X github.com/migueel15/SendaDesktopManager/core/internal/version.Version=$TAG -X ${GOOGLE_PKG}.embeddedClientID=$SENDA_GOOGLE_CLIENT_ID -X ${GOOGLE_PKG}.embeddedClientSecret=$SENDA_GOOGLE_CLIENT_SECRET" \
+    -ldflags "-X github.com/migueel15/Zenda/core/internal/version.Version=$TAG -X ${GOOGLE_PKG}.embeddedClientID=$ZENDA_GOOGLE_CLIENT_ID -X ${GOOGLE_PKG}.embeddedClientSecret=$ZENDA_GOOGLE_CLIENT_SECRET" \
     -o "$OUT_DIR/$BINARY_NAME" \
-    ./cmd/senda
+    ./cmd/zenda
 )
 
 # 2. Quickshell tarball, assembled in a staging directory so the repo is never

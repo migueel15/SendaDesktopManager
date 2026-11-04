@@ -158,7 +158,7 @@ func TestRequirementsHavePackages(t *testing.T) {
 }
 
 func TestEnsureConfigCreatesTemplateWithOwnerMode(t *testing.T) {
-	dir := filepath.Join(t.TempDir(), "senda")
+	dir := filepath.Join(t.TempDir(), "zenda")
 	file := filepath.Join(dir, "config")
 
 	if err := ensureConfig(dir, file, &strings.Builder{}); err != nil {
@@ -280,7 +280,7 @@ func TestRunStopsAtFirstFailedPrerequisite(t *testing.T) {
 	}
 }
 
-func TestRunRefusesSendaHomeBeforeDownloading(t *testing.T) {
+func TestRunRefusesZendaHomeBeforeDownloading(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, "config"))
@@ -293,7 +293,7 @@ func TestRunRefusesSendaHomeBeforeDownloading(t *testing.T) {
 	opts := Options{
 		In:            strings.NewReader(""),
 		Out:           &strings.Builder{},
-		Getenv:        envFunc(map[string]string{"XDG_CURRENT_DESKTOP": "Hyprland", "SENDA_HOME": "/tmp/dev"}),
+		Getenv:        envFunc(map[string]string{"XDG_CURRENT_DESKTOP": "Hyprland", "ZENDA_HOME": "/tmp/dev"}),
 		Euid:          1000,
 		OSReleasePath: osRelease,
 		LookPath:      lookPathFound("qs", "jq", "nmcli", "wpctl", "python3"),
@@ -302,7 +302,7 @@ func TestRunRefusesSendaHomeBeforeDownloading(t *testing.T) {
 	}
 
 	err := Run(context.Background(), opts)
-	if err == nil || err.Error() != "SENDA_HOME está definido; setup solo instala releases" {
+	if err == nil || err.Error() != "ZENDA_HOME está definido; setup solo instala releases" {
 		t.Fatalf("Run() error = %v", err)
 	}
 }

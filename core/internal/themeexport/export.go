@@ -1,4 +1,4 @@
-// Package themeexport renders the active Senda theme into configuration
+// Package themeexport renders the active Zenda theme into configuration
 // files for other applications (terminals, GTK, Qt, Hyprland, Neovim).
 package themeexport
 
@@ -9,7 +9,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -19,7 +19,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/paths"
 )
 
 //go:embed all:templates
@@ -178,7 +178,7 @@ func Reload(run Runner) {
 		})
 		_ = hypr.Reload(ctx)
 	}
-	// Only Neovim instances already using the senda colorscheme reload it.
+	// Only Neovim instances already using the zenda colorscheme reload it.
 	runtime := os.Getenv("XDG_RUNTIME_DIR")
 	if runtime == "" {
 		return
@@ -186,6 +186,6 @@ func Reload(run Runner) {
 	sockets, _ := filepath.Glob(filepath.Join(runtime, "nvim.*"))
 	for _, socket := range sockets {
 		_ = run(ctx, "nvim", "--server", socket, "--remote-expr",
-			`execute('if get(g:, "colors_name", "") ==# "senda" | colorscheme senda | endif')`)
+			`execute('if get(g:, "colors_name", "") ==# "zenda" | colorscheme zenda | endif')`)
 	}
 }

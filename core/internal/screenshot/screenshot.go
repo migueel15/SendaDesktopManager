@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-const KeyDirectory = "SENDA_SCREENSHOT_DIR"
+const KeyDirectory = "ZENDA_SCREENSHOT_DIR"
 
 func Name(now time.Time) string { return "captura-" + now.Format("2006-01-02-150405") + ".png" }
 
@@ -83,7 +83,7 @@ func CacheDir() (string, error) {
 		}
 		base = filepath.Join(home, ".cache")
 	}
-	return privateDir(filepath.Join(base, "senda", "screenshots"))
+	return privateDir(filepath.Join(base, "zenda", "screenshots"))
 }
 
 // Freeze completes every grim invocation before returning paths to the UI.
@@ -93,7 +93,7 @@ func Freeze(ctx context.Context, outputs []string) (paths []string, err error) {
 	if !filepath.IsAbs(base) {
 		return nil, fmt.Errorf("XDG_RUNTIME_DIR debe ser una ruta absoluta")
 	}
-	root, err := privateDir(filepath.Join(base, "senda", "screenshots"))
+	root, err := privateDir(filepath.Join(base, "zenda", "screenshots"))
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func Cleanup(path string) error {
 	if !filepath.IsAbs(base) {
 		return fmt.Errorf("XDG_RUNTIME_DIR inválido")
 	}
-	root := filepath.Join(base, "senda", "screenshots")
+	root := filepath.Join(base, "zenda", "screenshots")
 	dir := filepath.Clean(path)
 	if filepath.Dir(dir) != root || !strings.HasPrefix(filepath.Base(dir), "capture-") {
 		return fmt.Errorf("sesión temporal inválida")

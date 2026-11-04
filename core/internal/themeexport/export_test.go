@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/theme"
+	"github.com/migueel15/Zenda/core/internal/theme"
 )
 
 func builtinThemes(t *testing.T) []theme.Theme {
@@ -48,7 +48,7 @@ func TestDeriveGivesSixteenDistinctColors(t *testing.T) {
 }
 
 func TestRenderBuiltinTemplates(t *testing.T) {
-	want := []string{"kitty/senda.conf", "gtk-3.0/gtk.css", "gtk-4.0/gtk.css", "qt/senda.conf", "hyprland/colors.conf", "nvim/colors/senda.lua", "nvim/lua/lualine/themes/senda.lua", "kde/senda.colors", "t3code/senda.json"}
+	want := []string{"kitty/zenda.conf", "gtk-3.0/gtk.css", "gtk-4.0/gtk.css", "qt/zenda.conf", "hyprland/colors.conf", "nvim/colors/zenda.lua", "nvim/lua/lualine/themes/zenda.lua", "kde/zenda.colors", "t3code/zenda.json"}
 	for _, value := range builtinThemes(t) {
 		rendered, err := Render(Derive(value.Name, value.Colors), "")
 		if err != nil {
@@ -59,16 +59,16 @@ func TestRenderBuiltinTemplates(t *testing.T) {
 			if content == "" || strings.Contains(content, "{{") || strings.Contains(content, "<no value>") {
 				t.Fatalf("%s %s:\n%s", value.Name, path, content)
 			}
-			if path != "t3code/senda.json" && !strings.Contains(content, value.Name) {
+			if path != "t3code/zenda.json" && !strings.Contains(content, value.Name) {
 				t.Fatalf("%s %s: missing theme name", value.Name, path)
 			}
 		}
-		qt := string(rendered[filepath.FromSlash("qt/senda.conf")])
+		qt := string(rendered[filepath.FromSlash("qt/zenda.conf")])
 		var t3 struct {
 			Name, Appearance, Canvas, Accent string
 			Colors                           map[string]string
 		}
-		if err := json.Unmarshal(rendered[filepath.FromSlash("t3code/senda.json")], &t3); err != nil || t3.Name != "Senda" || t3.Appearance != "dark" || t3.Canvas != value.Colors["background"] || t3.Accent != value.Colors["primary"] || t3.Colors["error"] != value.Colors["error"] {
+		if err := json.Unmarshal(rendered[filepath.FromSlash("t3code/zenda.json")], &t3); err != nil || t3.Name != "Zenda" || t3.Appearance != "dark" || t3.Canvas != value.Colors["background"] || t3.Accent != value.Colors["primary"] || t3.Colors["error"] != value.Colors["error"] {
 			t.Fatalf("%s: invalid T3 theme: %+v, %v", value.Name, t3, err)
 		}
 		for _, line := range strings.Split(qt, "\n") {
@@ -92,7 +92,7 @@ func TestExportUserTemplatesOverrideAndExtend(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	write("kitty/senda.conf", "background {{.C.base}}\n")
+	write("kitty/zenda.conf", "background {{.C.base}}\n")
 	write("rofi/colors.rasi", "* { bg: {{.C.background}}; red: {{.T.red}}; }\n")
 	written, err := Export(value.Name, value.Colors, dirs)
 	if err != nil {
@@ -101,7 +101,7 @@ func TestExportUserTemplatesOverrideAndExtend(t *testing.T) {
 	if len(written) != 10 {
 		t.Fatal(written)
 	}
-	kitty, _ := os.ReadFile(filepath.Join(dirs.Output, "kitty", "senda.conf"))
+	kitty, _ := os.ReadFile(filepath.Join(dirs.Output, "kitty", "zenda.conf"))
 	if string(kitty) != "background "+value.Colors["base"]+"\n" {
 		t.Fatalf("override ignored: %s", kitty)
 	}
@@ -126,12 +126,12 @@ func TestT3ThemeExportThroughLinkedDirectory(t *testing.T) {
 	if _, err := Export(name, value.Colors, Dirs{Output: output}); err != nil {
 		t.Fatal(err)
 	}
-	data, err := os.ReadFile(filepath.Join(themes, "senda.json"))
+	data, err := os.ReadFile(filepath.Join(themes, "zenda.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	var theme struct{ Name string }
-	if err := json.Unmarshal(data, &theme); err != nil || theme.Name != "Senda" {
+	if err := json.Unmarshal(data, &theme); err != nil || theme.Name != "Zenda" {
 		t.Fatalf("invalid theme %s: %v", data, err)
 	}
 }

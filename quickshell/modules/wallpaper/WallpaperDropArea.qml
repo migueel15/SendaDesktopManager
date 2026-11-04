@@ -13,7 +13,7 @@ DropArea {
         const path = drop.hasUrls && drop.urls.length > 0 ? String(drop.urls[0]) : drop.text;
         const x = Math.round(drop.x);
         const y = Math.round(dropArea.height - drop.y);
-        SendaManager.setWallpaper(screen, path, x, y);
+        ZendaManager.setWallpaper(screen, path, x, y);
         drop.accept();
     }
 }

@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/migueel15/SendaDesktopManager/core/internal/instance"
-	"github.com/migueel15/SendaDesktopManager/core/internal/notify"
+	"github.com/migueel15/Zenda/core/internal/instance"
+	"github.com/migueel15/Zenda/core/internal/notify"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 	alreadyMounted  = "org.freedesktop.UDisks2.Error.AlreadyMounted"
 	propertiesGet   = "org.freedesktop.DBus.Properties.GetAll"
 	objectManager   = "org.freedesktop.DBus.ObjectManager"
-	instanceName    = "net.dorlab.Senda.UsbWatcher"
+	instanceName    = "net.dorlab.Zenda.UsbWatcher"
 	settleDelay     = 500 * time.Millisecond
 	managerPath     = dbus.ObjectPath("/org/freedesktop/UDisks2")
 	signalInterface = objectManager + ".InterfacesAdded"

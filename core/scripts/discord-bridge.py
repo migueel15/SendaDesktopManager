@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local Discord voice bridge for Senda (Python standard library only)."""
+"""Local Discord voice bridge for Zenda (Python standard library only)."""
 from __future__ import annotations
 
 import argparse
@@ -28,9 +28,9 @@ CHANNEL_EVENTS = ("SPEAKING_START", "SPEAKING_STOP", "VOICE_STATE_CREATE", "VOIC
                   "VOICE_STATE_DELETE")
 INOTIFY_MASK = IN_CREATE | IN_MOVED_TO | IN_DELETE | IN_MOVED_FROM
 RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
-SOCKET = RUNTIME / "senda-discord.sock"
-LOCK = RUNTIME / "senda-discord.lock"
-DATA = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "senda/discord"
+SOCKET = RUNTIME / "zenda-discord.sock"
+LOCK = RUNTIME / "zenda-discord.lock"
+DATA = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "zenda/discord"
 TOKEN = DATA / "token.json"
 
 
@@ -296,7 +296,7 @@ class Bridge:
                     code = data.get("code")
                     if code:
                         req = urllib.request.Request(EXCHANGE, data=json.dumps({"code": code}).encode(),
-                            headers={"Content-Type": "application/json", "User-Agent": "Senda/1.0"}, method="POST")
+                            headers={"Content-Type": "application/json", "User-Agent": "Zenda/1.0"}, method="POST")
                         with urllib.request.urlopen(req, timeout=10) as response:
                             token = json.loads(response.read()).get("access_token")
                         if token:
@@ -404,7 +404,7 @@ class Bridge:
                 await self.connect_discord(authorize=True)
             elif action == "leave":
                 if not self.state["authenticated"]:
-                    raise RuntimeError("Discord no está autorizado; ejecuta senda discord authorize")
+                    raise RuntimeError("Discord no está autorizado; ejecuta zenda discord authorize")
                 if not self.state["channel"]:
                     raise RuntimeError("No estás en un canal de voz")
                 self.state["error"] = ""
@@ -416,7 +416,7 @@ class Bridge:
                     raise RuntimeError(self.state["error"] or "Discord no confirmó la salida del canal")
             elif action in ("set-user-volume", "set-user-mute"):
                 if not self.state["authenticated"]:
-                    raise RuntimeError("Discord no está autorizado; ejecuta senda discord authorize")
+                    raise RuntimeError("Discord no está autorizado; ejecuta zenda discord authorize")
                 if not self.state["channel"]:
                     raise RuntimeError("No estás en un canal de voz")
                 user_id = str(req.get("args", {}).get("user_id") or "")
@@ -435,7 +435,7 @@ class Bridge:
                         "user_id": user_id, "mute": bool(req["args"]["mute"])})
             elif action in ("mute", "unmute", "toggle-mute", "deafen", "undeafen", "toggle-deafen"):
                 if not self.state["authenticated"]:
-                    raise RuntimeError("Discord no está autorizado; ejecuta senda discord authorize")
+                    raise RuntimeError("Discord no está autorizado; ejecuta zenda discord authorize")
                 if action in ("mute", "unmute", "toggle-mute"):
                     field = "mute"
                     desired = not self.state["mute"] if action == "toggle-mute" else action == "mute"
@@ -490,7 +490,7 @@ def rpc(action, parameters=None):
             request = {"action": action}
             if parameters is not None:
                 request["args"] = parameters
-            sock.sendall((json.dumps(request) + "\n").encode())
+            sock.zendall((json.dumps(request) + "\n").encode())
             chunks = b""
             while not chunks.endswith(b"\n"):
                 chunks += sock.recv(65536)

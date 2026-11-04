@@ -9,7 +9,7 @@ import qs.common.components.icons
 import qs.modules.panels.ControlCenter.components
 import qs.services
 
-SendaPanel {
+ZendaPanel {
     id: root
     name: "controlCenter"
     // The cards animate their own height, so the background follows them at once.

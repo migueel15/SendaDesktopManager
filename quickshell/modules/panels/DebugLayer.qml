@@ -11,7 +11,7 @@ PanelWindow {
 
     property string screenName: Debug.debugScreenName
 
-    WlrLayershell.namespace: "Senda:DebugLayer"
+    WlrLayershell.namespace: "Zenda:DebugLayer"
 
     screen: Quickshell.screens.find(s => s.name === root.screenName)
 

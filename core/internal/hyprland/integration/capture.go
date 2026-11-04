@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 // StartCapture enters the empty capture submap so that Hyprland does not
@@ -24,7 +24,7 @@ func StartCapture(ctx context.Context, run stt.Runner) error {
 
 // captureSubmapLua defines the capture submap: only Escape, which leaves it.
 var captureSubmapLua = hyprctl.DefineSubmap(CaptureSubmap,
-	hyprctl.BindLua("Escape", hyprctl.DspSubmap("reset"), hyprctl.BindOptions{Description: "Senda: cancelar grabación de atajo"}))
+	hyprctl.BindLua("Escape", hyprctl.DspSubmap("reset"), hyprctl.BindOptions{Description: "Zenda: cancelar grabación de atajo"}))
 
 // StopCapture returns to the default submap. It is safe to call repeatedly.
 func StopCapture(ctx context.Context, run stt.Runner) error {

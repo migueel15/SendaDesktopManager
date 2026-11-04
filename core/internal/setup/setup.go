@@ -10,11 +10,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
-	"github.com/migueel15/SendaDesktopManager/core/internal/release"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt/engine"
-	"github.com/migueel15/SendaDesktopManager/core/internal/version"
+	"github.com/migueel15/Zenda/core/internal/hyprland/integration"
+	"github.com/migueel15/Zenda/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/release"
+	"github.com/migueel15/Zenda/core/internal/stt/engine"
+	"github.com/migueel15/Zenda/core/internal/version"
 )
 
 // Pacman is the package manager boundary used by the dependency step.
@@ -51,7 +51,7 @@ const checksumsAsset = "checksums.txt"
 
 // Run performs the setup steps in order and stops at the first failed
 // prerequisite. It preserves existing Hyprland configuration; autostart is
-// handled by the senda.service user unit.
+// handled by the zenda.service user unit.
 func Run(ctx context.Context, opts Options) error {
 	if opts.In == nil {
 		opts.In = strings.NewReader("")
@@ -96,10 +96,10 @@ func Run(ctx context.Context, opts Options) error {
 		return fmt.Errorf("preparar integración de bloqueo: %w", err)
 	}
 	if err := opts.StartShell(exe); err != nil {
-		return fmt.Errorf("instalar el servicio de Senda: %w", err)
+		return fmt.Errorf("instalar el servicio de Zenda: %w", err)
 	}
-	fmt.Fprintln(opts.Out, "Servicio senda.service instalado y activo; Senda arrancará en cada inicio de sesión")
-	fmt.Fprintln(opts.Out, "Si tu configuración de Hyprland lanza 'senda shell run', quita esa línea")
+	fmt.Fprintln(opts.Out, "Servicio zenda.service instalado y activo; Zenda arrancará en cada inicio de sesión")
+	fmt.Fprintln(opts.Out, "Si tu configuración de Hyprland lanza 'zenda shell run', quita esa línea")
 	return nil
 }
 
@@ -115,7 +115,7 @@ func ensureRuntime(ctx context.Context, opts Options, in *bufio.Reader) error {
 	fmt.Fprint(opts.Out, "¿Instalar el motor de dictado? [s/N] ")
 	line, _ := in.ReadString('\n')
 	if !strings.EqualFold(strings.TrimSpace(line), "s") {
-		fmt.Fprintln(opts.Out, "El dictado no funcionará hasta instalar el motor con `senda stt runtime install`")
+		fmt.Fprintln(opts.Out, "El dictado no funcionará hasta instalar el motor con `zenda stt runtime install`")
 		return nil
 	}
 	install := opts.InstallRuntime
@@ -199,8 +199,8 @@ func confirmInstall(in *bufio.Reader, out io.Writer) bool {
 // it and installs it into DataDir. It is skipped when that release is already
 // installed.
 func installQuickshell(ctx context.Context, opts Options) error {
-	if opts.Getenv("SENDA_HOME") != "" {
-		return errors.New("SENDA_HOME está definido; setup solo instala releases")
+	if opts.Getenv("ZENDA_HOME") != "" {
+		return errors.New("ZENDA_HOME está definido; setup solo instala releases")
 	}
 
 	tag, err := release.LatestTagForChannel(ctx, opts.ReleasesURL, version.IsNightly())
@@ -212,13 +212,13 @@ func installQuickshell(ctx context.Context, opts Options) error {
 		return nil
 	}
 
-	tmp, err := os.MkdirTemp("", "senda-setup-")
+	tmp, err := os.MkdirTemp("", "zenda-setup-")
 	if err != nil {
 		return fmt.Errorf("crear directorio temporal: %w", err)
 	}
 	defer os.RemoveAll(tmp)
 
-	tarballAsset := fmt.Sprintf("senda-quickshell-%s.tar.gz", tag)
+	tarballAsset := fmt.Sprintf("zenda-quickshell-%s.tar.gz", tag)
 	checksums := filepath.Join(tmp, checksumsAsset)
 	tarPath := filepath.Join(tmp, tarballAsset)
 

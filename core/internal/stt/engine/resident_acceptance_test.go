@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 // This process double implements the resident wire protocol independently of

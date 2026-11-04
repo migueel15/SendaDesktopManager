@@ -3,7 +3,7 @@ pragma Singleton
 import Quickshell
 
 // Starts user applications in their own systemd scope. Anything left in the
-// senda.service cgroup dies whenever that unit restarts, so applications must
+// zenda.service cgroup dies whenever that unit restarts, so applications must
 // never be started directly from the shell.
 Singleton {
     readonly property string terminal: Quickshell.env("TERMINAL") || "kitty"

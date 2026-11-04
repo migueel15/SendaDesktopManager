@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/config"
+	"github.com/migueel15/Zenda/core/internal/config"
 )
 
 func TestReadUserStartup(t *testing.T) {
@@ -105,7 +105,7 @@ func TestStartupValidation(t *testing.T) {
 }
 
 func TestStartupModuleSkipsDisabledEntries(t *testing.T) {
-	got, err := renderStartupModule(moduleInput{Command: "senda", Settings: Settings{Startup: []StartupEntry{
+	got, err := renderStartupModule(moduleInput{Command: "zenda", Settings: Settings{Startup: []StartupEntry{
 		{Kind: StartupApp, Target: "firefox", Enabled: true},
 		{Kind: StartupApp, Target: "discord"},
 	}}})
@@ -122,10 +122,10 @@ func TestStartupWaitsForActiveService(t *testing.T) {
 		name, startExit, activeExit, command, wantOutput, wantCalls string
 		wantError                                                   bool
 	}{
-		{"start fails", "1", "0", "printf first; printf second", "", "--user start senda.service\n", true},
-		{"inactive", "0", "3", "false || printf fallback; printf second", "", "--user start senda.service\n--user is-active --quiet senda.service\n", true},
-		{"active", "0", "0", "printf first; printf second", "firstsecond", "--user start senda.service\n--user is-active --quiet senda.service\n", false},
-		{"quoting", "0", "0", `printf '%s' "it's ready" # trailing comment`, "it's ready", "--user start senda.service\n--user is-active --quiet senda.service\n", false},
+		{"start fails", "1", "0", "printf first; printf second", "", "--user start zenda.service\n", true},
+		{"inactive", "0", "3", "false || printf fallback; printf second", "", "--user start zenda.service\n--user is-active --quiet zenda.service\n", true},
+		{"active", "0", "0", "printf first; printf second", "firstsecond", "--user start zenda.service\n--user is-active --quiet zenda.service\n", false},
+		{"quoting", "0", "0", `printf '%s' "it's ready" # trailing comment`, "it's ready", "--user start zenda.service\n--user is-active --quiet zenda.service\n", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			dir := t.TempDir()

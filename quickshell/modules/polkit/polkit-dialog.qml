@@ -22,7 +22,7 @@ Scope {
     LazyLoader {
         active: root.open || (item?.visible ?? false)
         PanelWindow {
-            WlrLayershell.namespace: "senda-polkit"
+            WlrLayershell.namespace: "zenda-polkit"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 

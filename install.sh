@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Installs the latest Senda release (Linux amd64) into a user-local bin directory.
+# Installs the latest Zenda release (Linux amd64) into a user-local bin directory.
 # Use --nightly to install the newest nightly build (built from main) instead.
 # Never requires root and never uses sudo.
 set -euo pipefail
 
-REPO="migueel15/SendaDesktopManager"
+REPO="migueel15/Zenda"
 # latest.json names the latest release of each channel. It is read from the
 # download URLs, which are not subject to the GitHub API rate limit.
 STABLE_MANIFEST_URL="https://github.com/${REPO}/releases/latest/download/latest.json"
@@ -33,10 +33,10 @@ fi
 
 # 2. Check platform.
 if [ "$(uname -s)" != "Linux" ]; then
-  die "sistema operativo no soportado: $(uname -s). Senda solo tiene binarios para Linux."
+  die "sistema operativo no soportado: $(uname -s). Zenda solo tiene binarios para Linux."
 fi
 if [ "$(uname -m)" != "x86_64" ]; then
-  die "arquitectura no soportada: $(uname -m). Senda solo tiene binarios para x86_64."
+  die "arquitectura no soportada: $(uname -m). Zenda solo tiene binarios para x86_64."
 fi
 
 # 3. Check required tools.
@@ -66,7 +66,7 @@ if [[ ! "$tag" =~ $tag_regex ]]; then
   die "la etiqueta de la última versión no es válida: '${tag}'."
 fi
 
-asset="senda-${tag}-linux-amd64"
+asset="zenda-${tag}-linux-amd64"
 
 # 5. Temporary workspace, removed on exit (including the install temp file).
 tmp_dir=$(mktemp -d) || die "no se pudo crear el directorio temporal."
@@ -74,7 +74,7 @@ tmp_target=""
 trap 'rm -rf "$tmp_dir"; rm -f "${tmp_target:-}"' EXIT
 
 # 6. Download the binary and the checksums file.
-echo "Descargando Senda ${tag} (${channel})..."
+echo "Descargando Zenda ${tag} (${channel})..."
 curl --proto '=https' --tlsv1.2 -fsSL -o "$tmp_dir/$asset" \
   "$DOWNLOAD_BASE/$tag/$asset" \
   || die "no se pudo descargar el binario ${asset}."
@@ -96,15 +96,18 @@ if ! (cd "$tmp_dir" && sha256sum -c binary.sha256); then
 fi
 
 # 8. Install atomically: copy to a temp file in the target directory, then rename.
-target_dir="${SENDA_BIN_DIR:-$HOME/.local/bin}"
+target_dir="${ZENDA_BIN_DIR:-$HOME/.local/bin}"
 mkdir -p "$target_dir"
-tmp_target=$(mktemp "$target_dir/.senda.XXXXXX")
+tmp_target=$(mktemp "$target_dir/.zenda.XXXXXX")
 cp "$tmp_dir/$asset" "$tmp_target"
 chmod 755 "$tmp_target"
-mv -f "$tmp_target" "$target_dir/senda"
+mv -f "$tmp_target" "$target_dir/zenda"
+
+# Remove the binary from when the project was called Senda.
+rm -f "$target_dir/senda"
 
 # 9. Report the result.
-echo "Senda ${tag} instalada en ${target_dir}/senda"
+echo "Zenda ${tag} instalada en ${target_dir}/zenda"
 
 case ":${PATH}:" in
   *":${target_dir}:"*) ;;
@@ -114,4 +117,4 @@ case ":${PATH}:" in
     ;;
 esac
 
-echo "Ejecuta: senda setup"
+echo "Ejecuta: zenda setup"

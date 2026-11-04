@@ -1,4 +1,4 @@
-// Package googlecalendar connects Senda to Google Calendar. It owns the OAuth
+// Package googlecalendar connects Zenda to Google Calendar. It owns the OAuth
 // flow and secret storage; callers receive only short-lived access tokens.
 package googlecalendar
 
@@ -12,10 +12,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/secrets"
+	"github.com/migueel15/Zenda/core/internal/secrets"
 )
 
-var ErrNotConnected = errors.New("google calendar is not connected; run `senda calendar login`")
+var ErrNotConnected = errors.New("google calendar is not connected; run `zenda calendar login`")
 
 type storedToken struct {
 	RefreshToken string `json:"refresh_token"`
@@ -113,8 +113,8 @@ type secretService struct{ account string }
 
 func (s secretService) entry() secrets.Keyring {
 	return secrets.Keyring{
-		Label:      "Senda Google Calendar",
-		Attributes: []string{"application", "senda", "account", s.account, "type", "google-calendar-refresh-token"},
+		Label:      "Zenda Google Calendar",
+		Attributes: []string{"application", "zenda", "account", s.account, "type", "google-calendar-refresh-token"},
 	}
 }
 

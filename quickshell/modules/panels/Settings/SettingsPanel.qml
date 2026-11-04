@@ -8,23 +8,23 @@ import qs.services
 import "../../../common/components/lazy/lifetime.js" as Lifetime
 
 // Settings content with a sidebar of sections. Configuration goes through the
-// senda CLI; tray pins use TrayPins. SettingsWindow hosts it; it opens with
-// `senda settings` or from the dashboard.
+// zenda CLI; tray pins use TrayPins. SettingsWindow hosts it; it opens with
+// `zenda settings` or from the dashboard.
 Item {
     id: root
 
     // Sidebar entries, shared with the launcher. Each one needs a page in the
     // StackLayout below, in the same position.
-    readonly property var sections: SendaSettings.sections
-    property int currentSection: SendaSettings.currentSection
-    onCurrentSectionChanged: SendaSettings.currentSection = currentSection
+    readonly property var sections: ZendaSettings.sections
+    property int currentSection: ZendaSettings.currentSection
+    onCurrentSectionChanged: ZendaSettings.currentSection = currentSection
     readonly property var pageLoaders: [page0, page1, page2, page3, page4, page5, page6, page7, page8, page9, page10, page11]
     readonly property bool retainWhenHidden: pageLoaders.some(loader => loader.retained)
 
     component SettingsPageLoader: Loader {
         required property int sectionIndex
         readonly property bool retained: Lifetime.hasDraft(item)
-        active: (SendaSettings.windowOpen && (root.searching || root.currentSection === sectionIndex)) || retained
+        active: (ZendaSettings.windowOpen && (root.searching || root.currentSection === sectionIndex)) || retained
         Layout.fillWidth: true
         Layout.fillHeight: true
         onLoaded: root.refreshSection(sectionIndex)
@@ -36,31 +36,31 @@ Item {
     }
 
     function refreshSection(index) {
-        if (index === 5) SendaSttSettings.refresh();
-        if (index === 5 || index === 9 || index === 10) SendaHyprlandSettings.refresh();
-        if (index === 6) SendaDisplaySettings.refresh();
-        if (index === 7) SendaInputSettings.refresh();
-        if (index === 8) SendaStartupSettings.refresh();
+        if (index === 5) ZendaSttSettings.refresh();
+        if (index === 5 || index === 9 || index === 10) ZendaHyprlandSettings.refresh();
+        if (index === 6) ZendaDisplaySettings.refresh();
+        if (index === 7) ZendaInputSettings.refresh();
+        if (index === 8) ZendaStartupSettings.refresh();
     }
 
     Connections {
-        target: SendaSettings
+        target: ZendaSettings
         function onWindowOpenChanged() {
-            if (SendaSettings.windowOpen) root.refreshSection(root.currentSection);
+            if (ZendaSettings.windowOpen) root.refreshSection(root.currentSection);
         }
     }
 
-    // The launcher asks for a section through SendaSettings.openSection.
+    // The launcher asks for a section through ZendaSettings.openSection.
     function applyRequestedSection() {
-        const index = root.sections.findIndex(section => section.label === SendaSettings.requestedSection);
+        const index = root.sections.findIndex(section => section.label === ZendaSettings.requestedSection);
         if (index !== -1) root.currentSection = index;
-        SendaSettings.requestedSection = "";
+        ZendaSettings.requestedSection = "";
     }
     Component.onCompleted: applyRequestedSection()
 
     // The update notice in the bar opens this panel on the update section.
     Connections {
-        target: SendaUpdate
+        target: ZendaUpdate
 
         function onOpenRequested() {
             root.currentSection = root.sections.findIndex(section => section.label === "Actualización");
@@ -68,32 +68,32 @@ Item {
     }
 
     Connections {
-        target: SendaSettings
-        function onRequestedSectionChanged() { if (SendaSettings.requestedSection) root.applyRequestedSection(); }
-        function onNoticeChanged() { feedback.show(SendaSettings.notice, SendaSettings.noticeIsError); }
-        function onNoticeIsErrorChanged() { feedback.show(SendaSettings.notice, SendaSettings.noticeIsError); }
+        target: ZendaSettings
+        function onRequestedSectionChanged() { if (ZendaSettings.requestedSection) root.applyRequestedSection(); }
+        function onNoticeChanged() { feedback.show(ZendaSettings.notice, ZendaSettings.noticeIsError); }
+        function onNoticeIsErrorChanged() { feedback.show(ZendaSettings.notice, ZendaSettings.noticeIsError); }
     }
     Connections {
-        target: SendaSttSettings
-        function onNoticeChanged() { feedback.show(SendaSttSettings.notice, SendaSttSettings.noticeIsError); }
-        function onNoticeIsErrorChanged() { feedback.show(SendaSttSettings.notice, SendaSttSettings.noticeIsError); }
-    }
-
-    Connections {
-        target: SendaHyprlandSettings
-        function onNoticeChanged() { feedback.show(SendaHyprlandSettings.notice, SendaHyprlandSettings.noticeIsError); }
-        function onNoticeIsErrorChanged() { feedback.show(SendaHyprlandSettings.notice, SendaHyprlandSettings.noticeIsError); }
+        target: ZendaSttSettings
+        function onNoticeChanged() { feedback.show(ZendaSttSettings.notice, ZendaSttSettings.noticeIsError); }
+        function onNoticeIsErrorChanged() { feedback.show(ZendaSttSettings.notice, ZendaSttSettings.noticeIsError); }
     }
 
     Connections {
-        target: SendaDisplaySettings
-        function onNoticeChanged() { feedback.show(SendaDisplaySettings.notice, SendaDisplaySettings.noticeIsError); }
-        function onNoticeIsErrorChanged() { feedback.show(SendaDisplaySettings.notice, SendaDisplaySettings.noticeIsError); }
+        target: ZendaHyprlandSettings
+        function onNoticeChanged() { feedback.show(ZendaHyprlandSettings.notice, ZendaHyprlandSettings.noticeIsError); }
+        function onNoticeIsErrorChanged() { feedback.show(ZendaHyprlandSettings.notice, ZendaHyprlandSettings.noticeIsError); }
     }
 
     Connections {
-        target: SendaStartupSettings
-        function onNoticeChanged() { feedback.show(SendaStartupSettings.notice, SendaStartupSettings.noticeIsError); }
+        target: ZendaDisplaySettings
+        function onNoticeChanged() { feedback.show(ZendaDisplaySettings.notice, ZendaDisplaySettings.noticeIsError); }
+        function onNoticeIsErrorChanged() { feedback.show(ZendaDisplaySettings.notice, ZendaDisplaySettings.noticeIsError); }
+    }
+
+    Connections {
+        target: ZendaStartupSettings
+        function onNoticeChanged() { feedback.show(ZendaStartupSettings.notice, ZendaStartupSettings.noticeIsError); }
     }
 
     // Same card style as the dashboard and the control center.
@@ -304,7 +304,7 @@ Item {
                 SettingsButton {
                     Layout.fillWidth: true
                     label: "Cerrar"
-                    onClicked: SendaSettings.closeWindow()
+                    onClicked: ZendaSettings.closeWindow()
                 }
             }
         }

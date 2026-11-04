@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/hyprland/binds"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
-// Link describes whether the running Hyprland has loaded Senda's module.
+// Link describes whether the running Hyprland has loaded Zenda's module.
 type Link struct {
 	Loaded  bool
 	Version string
@@ -50,11 +50,11 @@ func Probe(ctx context.Context, run stt.Runner) (Link, error) {
 }
 
 // moduleOverride is the init.lua reported by a loaded module, so that
-// regeneration follows the user if they moved Senda's folder.
+// regeneration follows the user if they moved Zenda's folder.
 var moduleOverride string
 
 // Locate makes Dir follow the folder Hyprland loaded. A deleted folder keeps
-// its location, because the import still points there; a file Senda does not
+// its location, because the import still points there; a file Zenda does not
 // own, or a legacy module, leaves the default.
 func Locate(link Link) {
 	moduleOverride = ""
@@ -121,7 +121,7 @@ func EnsureLinked(ctx context.Context, run stt.Runner) (string, error) {
 		return "", err
 	}
 	if !link.Current() {
-		return fmt.Sprintf("Hyprland no ha cargado el módulo de Senda; comprueba que %s llega a ejecutar %s.", main, RequireLine), nil
+		return fmt.Sprintf("Hyprland no ha cargado el módulo de Zenda; comprueba que %s llega a ejecutar %s.", main, RequireLine), nil
 	}
 	return "", nil
 }

@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/integration"
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/hyprland/integration"
+	"github.com/migueel15/Zenda/core/internal/paths"
 )
 
-// ensureLockIntegration writes Senda's Hyprland module, loads it in Hyprland
+// ensureLockIntegration writes Zenda's Hyprland module, loads it in Hyprland
 // when it is not already loaded and sets up hypridle.
 func ensureLockIntegration(ctx context.Context, executable string, in *bufio.Reader, out io.Writer) error {
 	s, err := integration.ReadSettings()
@@ -27,9 +27,9 @@ func ensureLockIntegration(ctx context.Context, executable string, in *bufio.Rea
 			fmt.Fprintln(out, "Aviso: no se pudo comprobar la integración con Hyprland:", err)
 		case link.Loaded:
 			integration.Locate(link)
-			fmt.Fprintf(out, "Senda ya está vinculado a Hyprland (versión %s, %s)\n", link.Version, integration.ModulePath())
+			fmt.Fprintf(out, "Zenda ya está vinculado a Hyprland (versión %s, %s)\n", link.Version, integration.ModulePath())
 		default:
-			fmt.Fprintln(out, "Senda no está vinculado a Hyprland; se añade su módulo")
+			fmt.Fprintln(out, "Zenda no está vinculado a Hyprland; se añade su módulo")
 		}
 	}
 	chosen := false
@@ -60,8 +60,8 @@ func ensureLockIntegration(ctx context.Context, executable string, in *bufio.Rea
 	if warning != "" {
 		warnings = append(warnings, warning)
 	}
-	fmt.Fprintln(out, "Módulo de Senda:", integration.ModulePath())
-	if s.IdleMode == integration.IdleModeSenda && integration.InSession() {
+	fmt.Fprintln(out, "Módulo de Zenda:", integration.ModulePath())
+	if s.IdleMode == integration.IdleModeZenda && integration.InSession() {
 		if chosen {
 			if w := integration.StopExternalIdle(); w != "" {
 				warnings = append(warnings, w)
@@ -92,7 +92,7 @@ func userIdleConfig() string {
 	return ""
 }
 
-// chooseIdleMode uses Senda's hypridle configuration when the user has none,
+// chooseIdleMode uses Zenda's hypridle configuration when the user has none,
 // and otherwise asks. Without an answer the user's configuration is kept.
 func chooseIdleMode(in *bufio.Reader, out io.Writer) string {
 	own := userIdleConfig()
@@ -101,22 +101,22 @@ func chooseIdleMode(in *bufio.Reader, out io.Writer) string {
 		external = procs.External
 	}
 	if own == "" && external == 0 {
-		fmt.Fprintln(out, "No hay configuración de hypridle; se usará la de Senda")
-		return integration.IdleModeSenda
+		fmt.Fprintln(out, "No hay configuración de hypridle; se usará la de Zenda")
+		return integration.IdleModeZenda
 	}
 	if own != "" {
 		fmt.Fprintln(out, "Ya tienes una configuración de hypridle:", own)
 	} else {
 		fmt.Fprintln(out, "Ya hay un hypridle en ejecución con tu propia configuración")
 	}
-	fmt.Fprintf(out, "Senda puede gestionar la inactividad, el bloqueo y la suspensión con su configuración (%s).\n", integration.IdlePath())
-	fmt.Fprint(out, "¿Usar la configuración de Senda en lugar de la tuya? [s/N] ")
+	fmt.Fprintf(out, "Zenda puede gestionar la inactividad, el bloqueo y la suspensión con su configuración (%s).\n", integration.IdlePath())
+	fmt.Fprint(out, "¿Usar la configuración de Zenda en lugar de la tuya? [s/N] ")
 	line, _ := in.ReadString('\n')
 	if strings.EqualFold(strings.TrimSpace(line), "s") {
-		fmt.Fprintln(out, "Se usará la configuración de hypridle de Senda; Senda lo inicia al arrancar Hyprland.")
+		fmt.Fprintln(out, "Se usará la configuración de hypridle de Zenda; Zenda lo inicia al arrancar Hyprland.")
 		fmt.Fprintln(out, "Quita el arranque de tu hypridle de la configuración de Hyprland para no ejecutar dos instancias.")
-		return integration.IdleModeSenda
+		return integration.IdleModeZenda
 	}
-	fmt.Fprintln(out, "Se conserva tu configuración de hypridle; puedes cambiarlo con `senda hyprland set --idle-mode senda`.")
+	fmt.Fprintln(out, "Se conserva tu configuración de hypridle; puedes cambiarlo con `zenda hyprland set --idle-mode zenda`.")
 	return integration.IdleModeUser
 }

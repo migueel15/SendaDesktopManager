@@ -27,9 +27,9 @@ func TestLoadMissingFileIsEmpty(t *testing.T) {
 
 func TestLoadParsesKeyValues(t *testing.T) {
 	path := writeConfig(t, `# comentario
-SENDA_HOME=/opt/senda
+ZENDA_HOME=/opt/zenda
 export DORLAB_API_KEY='secret value'
-SENDA_DISCORD_BRIDGE="/tmp/bridge.py" # nota
+ZENDA_DISCORD_BRIDGE="/tmp/bridge.py" # nota
 `)
 
 	values, err := Load(path)
@@ -38,9 +38,9 @@ SENDA_DISCORD_BRIDGE="/tmp/bridge.py" # nota
 	}
 
 	want := map[string]string{
-		"SENDA_HOME":           "/opt/senda",
+		"ZENDA_HOME":           "/opt/zenda",
 		"DORLAB_API_KEY":       "secret value",
-		"SENDA_DISCORD_BRIDGE": "/tmp/bridge.py",
+		"ZENDA_DISCORD_BRIDGE": "/tmp/bridge.py",
 	}
 	for key, value := range want {
 		if values[key] != value {
@@ -50,7 +50,7 @@ SENDA_DISCORD_BRIDGE="/tmp/bridge.py" # nota
 }
 
 func TestLoadRejectsLineWithoutEquals(t *testing.T) {
-	path := writeConfig(t, "SENDA_HOME /opt/senda\n")
+	path := writeConfig(t, "ZENDA_HOME /opt/zenda\n")
 
 	if _, err := Load(path); err == nil {
 		t.Fatal("Load() error = nil, want error for a line without '='")

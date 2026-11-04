@@ -9,7 +9,7 @@ import qs.services
 FloatingWindow {
     id: root
     visible: ScreenshotService.editorPath !== ""
-    title: "Editor de captura — Senda"
+    title: "Editor de captura — Zenda"
     implicitWidth: 960
     implicitHeight: 680
     color: Theme.colors.background

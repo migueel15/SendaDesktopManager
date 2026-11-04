@@ -24,12 +24,12 @@ El panel y el pop-up leen el mismo registro persistido y delegan sus interaccion
 Los comandos operan sobre la instancia de QuickShell activa mediante IPC. No acceden directamente al almacenamiento.
 
 ```sh
-senda notifications list
-senda notifications dismiss <id>
-senda notifications clear
+zenda notifications list
+zenda notifications dismiss <id>
+zenda notifications clear
 ```
 
-`list` muestra únicamente los identificadores, sin el contenido privado de las notificaciones. Si Senda/QuickShell no está en ejecución, el comando informa de que debe iniciarse con `senda shell run`.
+`list` muestra únicamente los identificadores, sin el contenido privado de las notificaciones. Si Zenda/QuickShell no está en ejecución, el comando informa de que debe iniciarse con `zenda shell run`.
 
 ## Datos locales y privacidad
 
@@ -41,7 +41,7 @@ El almacén se actualiza con escrituras atómicas que terminan antes de continua
 
 QuickShell y SwayNC implementan el servicio D-Bus `org.freedesktop.Notifications`; solo uno debe estar activo para recibir notificaciones. El inicio de SwayNC debe retirarse de la sesión cuando se active esta versión del gestor. La ruta de inicio local observada es `~/.config/hypr/modules/startup.lua`; esa configuración no forma parte de este repositorio.
 
-## Capturas de Senda
+## Capturas de Zenda
 
 El servicio de capturas crea directamente una notificación «Captura de pantalla
 tomada», con su vista previa y una acción local que abre el editor. No pasa por

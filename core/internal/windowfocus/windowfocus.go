@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
-	"github.com/migueel15/SendaDesktopManager/core/internal/windowfocus/adapter/hyprland"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/windowfocus/adapter/hyprland"
 )
 
 type Backend interface {

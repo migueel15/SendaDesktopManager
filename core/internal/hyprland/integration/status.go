@@ -9,9 +9,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/binds"
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
-	"github.com/migueel15/SendaDesktopManager/core/internal/version"
+	"github.com/migueel15/Zenda/core/internal/hyprland/binds"
+	"github.com/migueel15/Zenda/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/version"
 )
 
 type Status struct {
@@ -54,7 +54,7 @@ func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
 				continue
 			}
 			for _, conflict := range conflicts {
-				if (pair.label == "bloqueo" && conflict == "Senda lock") || (pair.label == "captura" && conflict == "Senda screenshot") {
+				if (pair.label == "bloqueo" && conflict == "Zenda lock") || (pair.label == "captura" && conflict == "Zenda screenshot") {
 					continue
 				}
 				status.Warnings = append(status.Warnings, fmt.Sprintf("Conflicto de %s (%s): %s", pair.label, pair.shortcut, conflict))
@@ -63,14 +63,14 @@ func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
 	} else {
 		status.Warnings = append(status.Warnings, "No hay una sesión de Hyprland detectada; no se han comprobado los atajos activos.")
 	}
-	if os.Getenv("SENDA_HOME") != "" || version.Version == "dev" {
+	if os.Getenv("ZENDA_HOME") != "" || version.Version == "dev" {
 		status.Warnings = append(status.Warnings, "Se ha detectado un entorno de desarrollo; comprueba que el ejecutable generado sea persistente.")
 	}
 	if !status.ModuleActive {
 		status.Warnings = append(status.Warnings, "Activa el módulo en hyprland.lua con "+RequireLine)
 	}
 	if s.IdleMode == IdleModeUser {
-		status.Warnings = append(status.Warnings, "La inactividad la gestiona tu propia configuración de hypridle; el tiempo de inactividad de Senda no se aplica.")
+		status.Warnings = append(status.Warnings, "La inactividad la gestiona tu propia configuración de hypridle; el tiempo de inactividad de Zenda no se aplica.")
 		return status
 	}
 	idle, err := IdleProcesses("/proc", os.Getuid(), IdlePath())
@@ -79,7 +79,7 @@ func Inspect(ctx context.Context, s Settings, run stt.Runner) Status {
 	} else if idle.External > 0 {
 		status.Warnings = append(status.Warnings, fmt.Sprintf("Hay %d instancia(s) de hypridle con otra configuración o configuración desconocida; no se modifican. Quita su arranque de tu configuración para no ejecutar dos instancias junto a hypridle -c %q", idle.External, IdlePath()))
 	} else if idle.Own == 0 {
-		status.Warnings = append(status.Warnings, fmt.Sprintf("hypridle de Senda no está activo; inicia una única instancia con hypridle -c %q", IdlePath()))
+		status.Warnings = append(status.Warnings, fmt.Sprintf("hypridle de Zenda no está activo; inicia una única instancia con hypridle -c %q", IdlePath()))
 	}
 	return status
 }

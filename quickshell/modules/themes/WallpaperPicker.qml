@@ -19,7 +19,7 @@ PanelWindow {
     readonly property bool onPickerScreen: WallpaperService.pickerScreen === modelData.name
         || (WallpaperService.pickerScreen === "" && modelData === Quickshell.screens[0])
     readonly property bool open: onPickerScreen && WallpaperService.pickerOpen
-    readonly property bool builtinTheme: SendaTheme.active?.builtin !== false
+    readonly property bool builtinTheme: ZendaTheme.active?.builtin !== false
     readonly property string selectedPath: list.currentItem?.filePath ?? ""
     readonly property real panelHeight: Math.min(Theme.scaled(340), height - extension.shadowSpace)
     readonly property bool retainWhenHidden: naming || importProcess.running || pendingCopy !== ""
@@ -47,24 +47,24 @@ PanelWindow {
     function saveToTheme() {
         if (builtinTheme) {
             naming = true;
-            nameField.text = SendaTheme.active.name + "-copia";
+            nameField.text = ZendaTheme.active.name + "-copia";
             nameField.forceActiveFocus();
         } else {
-            const name = SendaTheme.active.name;
+            const name = ZendaTheme.active.name;
             pendingCopy = "";
-            SendaTheme.save({name: name, original: name, colors: SendaTheme.active.colors, wallpaper: selectedPath});
+            ZendaTheme.save({name: name, original: name, colors: ZendaTheme.active.colors, wallpaper: selectedPath});
         }
     }
     function saveCopy() {
         pendingCopy = nameField.text;
-        SendaTheme.save({name: pendingCopy, colors: SendaTheme.active.colors, wallpaper: selectedPath});
+        ZendaTheme.save({name: pendingCopy, colors: ZendaTheme.active.colors, wallpaper: selectedPath});
     }
 
     screen: modelData
     anchors { top: true; bottom: true; left: true; right: true }
     exclusionMode: ExclusionMode.Normal
     exclusiveZone: 0
-    WlrLayershell.namespace: "Senda:WallpaperPicker"
+    WlrLayershell.namespace: "Zenda:WallpaperPicker"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     color: "transparent"
@@ -78,7 +78,7 @@ PanelWindow {
         browsing = false;
         message = "";
         folderProcess.running = true;
-        SendaTheme.refresh();
+        ZendaTheme.refresh();
         Qt.callLater(() => content.forceActiveFocus());
     }
 
@@ -110,14 +110,14 @@ PanelWindow {
     }
 
     Connections {
-        target: SendaTheme
+        target: ZendaTheme
         function onSaved(info) {
             if (!root.open)
                 return;
             if (root.pendingCopy === info.name) {
                 root.pendingCopy = "";
                 // The save process is still finishing.
-                Qt.callLater(() => SendaTheme.apply(info.name));
+                Qt.callLater(() => ZendaTheme.apply(info.name));
             }
             root.close();
         }
@@ -206,7 +206,7 @@ PanelWindow {
                             onPicked: path => {
                                 root.browsing = false;
                                 root.message = "";
-                                importProcess.command = [SendaManager.binaryPath, "wallpaper", "import", path];
+                                importProcess.command = [ZendaManager.binaryPath, "wallpaper", "import", path];
                                 importProcess.running = true;
                             }
                         }
@@ -273,7 +273,7 @@ PanelWindow {
                 Text {
                     Layout.fillWidth: true
                     visible: text !== ""
-                    text: root.message || SendaTheme.lastError
+                    text: root.message || ZendaTheme.lastError
                     font: Theme.font.caption
                     color: Theme.colors.error
                     wrapMode: Text.Wrap
@@ -298,7 +298,7 @@ PanelWindow {
                     ActionButton {
                         id: copyButton
                         text: "Crear copia"
-                        enabled: nameField.acceptableInput && nameField.length <= 40 && !SendaTheme.busy
+                        enabled: nameField.acceptableInput && nameField.length <= 40 && !ZendaTheme.busy
                         onClicked: root.saveCopy()
                     }
                     ActionButton {
@@ -323,7 +323,7 @@ PanelWindow {
                     }
                     ActionButton {
                         text: "Guardar en el tema"
-                        enabled: root.selectedPath !== "" && !!SendaTheme.active && !SendaTheme.busy
+                        enabled: root.selectedPath !== "" && !!ZendaTheme.active && !ZendaTheme.busy
                         onClicked: root.saveToTheme()
                     }
                     ActionButton {

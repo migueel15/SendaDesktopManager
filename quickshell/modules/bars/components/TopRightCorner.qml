@@ -27,7 +27,7 @@ Variants {
 		focusable: false
 		aboveWindows: true
 
-		WlrLayershell.namespace: "Senda:EdgeCorner"
+		WlrLayershell.namespace: "Zenda:EdgeCorner"
 		WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 		mask: Region {}
 

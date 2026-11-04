@@ -9,7 +9,7 @@ import qs.common.components
 import qs.modules.panels.Dashboard
 import qs.services
 
-// Dashboard content. The overlay hosts it in a SendaPanel.
+// Dashboard content. The overlay hosts it in a ZendaPanel.
 Item {
     id: root
 
@@ -49,7 +49,7 @@ Item {
     }
 
     function focusSpotify() {
-        Quickshell.execDetached([SendaManager.binaryPath, "window", "focus", "spotify"]);
+        Quickshell.execDetached([ZendaManager.binaryPath, "window", "focus", "spotify"]);
     }
 
     function formatTrackTime(seconds) {

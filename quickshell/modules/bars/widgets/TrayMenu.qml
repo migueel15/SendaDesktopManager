@@ -7,7 +7,7 @@ import Quickshell.Hyprland
 import Quickshell.Widgets
 import qs.common
 
-// Context menu of a tray item, drawn with the Senda theme instead of the
+// Context menu of a tray item, drawn with the Zenda theme instead of the
 // native Qt menu. Submenus open in place, with a back entry on top.
 PopupWindow {
     id: root

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Writes the latest.json manifest of a release: its tag and, newest first, the
-# commit subjects of the recent releases of the same channel. Senda reads it
+# commit subjects of the recent releases of the same channel. Zenda reads it
 # from the release download URLs, which avoid the GitHub API rate limit.
 #
 # Usage: release-manifest.sh <tag> <previous-manifest-url> <output-file>

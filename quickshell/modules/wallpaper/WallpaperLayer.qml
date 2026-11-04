@@ -11,7 +11,7 @@ Variants {
     delegate: PanelWindow {
         id: wallpaperLayer
 
-        WlrLayershell.namespace: "Senda:Static:WallpaperLayer"
+        WlrLayershell.namespace: "Zenda:Static:WallpaperLayer"
 
         required property var modelData
         screen: modelData

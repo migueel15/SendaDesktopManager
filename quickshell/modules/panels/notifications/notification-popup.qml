@@ -18,7 +18,7 @@ Variants {
         required property var modelData
         screen: modelData
 
-        WlrLayershell.namespace: "Senda:NotificationPopup:" + modelData.name
+        WlrLayershell.namespace: "Zenda:NotificationPopup:" + modelData.name
         anchors {
             top: true
             right: true

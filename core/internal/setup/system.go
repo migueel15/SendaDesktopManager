@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/discordbridge"
-	"github.com/migueel15/SendaDesktopManager/core/internal/service"
+	"github.com/migueel15/Zenda/core/internal/discordbridge"
+	"github.com/migueel15/Zenda/core/internal/service"
 )
 
 // SystemPacman is the Pacman implementation that runs the real pacman and sudo.
@@ -46,7 +46,7 @@ func (SystemPacman) Install(pkgs []string) error {
 
 // StartShell stops any Quickshell instance already running, and the Discord
 // bridge, so the freshly installed files are loaded, then installs and
-// (re)starts senda.service, which runs `exe shell run` at every login.
+// (re)starts zenda.service, which runs `exe shell run` at every login.
 // Quickshell starts the installed bridge again.
 func StartShell(exe string) error {
 	if err := exec.Command(exe, "shell", "kill").Run(); err != nil {

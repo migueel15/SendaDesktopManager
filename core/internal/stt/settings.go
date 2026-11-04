@@ -6,18 +6,18 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/paths"
+	"github.com/migueel15/Zenda/core/internal/paths"
 )
 
 const (
-	KeyAudioDucking = "SENDA_STT_AUDIO_DUCKING"
-	KeyAudioVolume  = "SENDA_STT_AUDIO_VOLUME"
-	KeyPreload      = "SENDA_STT_PRELOAD"
-	KeyModel        = "SENDA_STT_MODEL"
-	KeyLanguage     = "SENDA_STT_LANGUAGE"
-	KeyPasteMode    = "SENDA_STT_PASTE_MODE"
-	KeyShortcut     = "SENDA_STT_SHORTCUT"
-	KeyTerminals    = "SENDA_STT_TERMINALS"
+	KeyAudioDucking = "ZENDA_STT_AUDIO_DUCKING"
+	KeyAudioVolume  = "ZENDA_STT_AUDIO_VOLUME"
+	KeyPreload      = "ZENDA_STT_PRELOAD"
+	KeyModel        = "ZENDA_STT_MODEL"
+	KeyLanguage     = "ZENDA_STT_LANGUAGE"
+	KeyPasteMode    = "ZENDA_STT_PASTE_MODE"
+	KeyShortcut     = "ZENDA_STT_SHORTCUT"
+	KeyTerminals    = "ZENDA_STT_TERMINALS"
 	DefaultModelID  = "nemotron-3.5-streaming-0.6b-int8"
 	DefaultLanguage = "es"
 	DefaultShortcut = "ALT + ntilde"

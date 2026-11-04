@@ -22,31 +22,31 @@ Flickable {
 
             SettingsRow {
                 separator: false
-                label: SendaUpdate.available
-                    ? `${SendaUpdate.current} → ${SendaUpdate.latest}`
-                    : `Versión ${SendaUpdate.current || "sin comprobar"}`
-                description: SendaUpdate.message
+                label: ZendaUpdate.available
+                    ? `${ZendaUpdate.current} → ${ZendaUpdate.latest}`
+                    : `Versión ${ZendaUpdate.current || "sin comprobar"}`
+                description: ZendaUpdate.message
                 SettingsButton {
                     label: "Comprobar"
-                    enabled: !SendaUpdate.busy && !SendaUpdate.installing
-                    onClicked: SendaUpdate.check()
+                    enabled: !ZendaUpdate.busy && !ZendaUpdate.installing
+                    onClicked: ZendaUpdate.check()
                 }
                 SettingsButton {
-                    label: SendaUpdate.installing ? "Actualizando y reiniciando…" : "Actualizar"
+                    label: ZendaUpdate.installing ? "Actualizando y reiniciando…" : "Actualizar"
                     primary: true
-                    busy: SendaUpdate.installing
-                    enabled: SendaUpdate.available && !SendaUpdate.installing
-                    onClicked: SendaUpdate.install()
+                    busy: ZendaUpdate.installing
+                    enabled: ZendaUpdate.available && !ZendaUpdate.installing
+                    onClicked: ZendaUpdate.install()
                 }
             }
         }
 
         SettingsGroup {
-            visible: SendaUpdate.available && SendaUpdate.changes.length > 0
+            visible: ZendaUpdate.available && ZendaUpdate.changes.length > 0
 
             Text {
                 Layout.fillWidth: true
-                text: `Novedades de ${SendaUpdate.latest}`
+                text: `Novedades de ${ZendaUpdate.latest}`
                 color: Theme.colors.text
                 font: Theme.font.title
             }
@@ -61,7 +61,7 @@ Flickable {
                 ColumnLayout {
                     id: section
                     required property var modelData
-                    readonly property var items: SendaUpdate.changes.filter(change => change.type === section.modelData.type)
+                    readonly property var items: ZendaUpdate.changes.filter(change => change.type === section.modelData.type)
                     Layout.fillWidth: true
                     visible: items.length > 0
                     spacing: Theme.spacing.xs

@@ -11,7 +11,7 @@ func TestNotificationArguments(t *testing.T) {
 	if signature := dbus.SignatureOf(args...).String(); signature != "susssasa{sv}i" {
 		t.Fatal(signature)
 	}
-	if args[0] != "Senda" || args[3] != "Summary" || args[4] != "Body" || args[7] != int32(-1) {
+	if args[0] != "Zenda" || args[3] != "Summary" || args[4] != "Body" || args[7] != int32(-1) {
 		t.Fatal(args)
 	}
 }

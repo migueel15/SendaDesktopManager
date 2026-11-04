@@ -5,15 +5,15 @@
 
 ## Contexto
 
-`~/.config/senda` debe poder compartirse entre equipos, pero `config` guardaba `DORLAB_API_KEY` y `SENDA_GOOGLE_CLIENT_SECRET`.
+`~/.config/zenda` debe poder compartirse entre equipos, pero `config` guardaba `DORLAB_API_KEY` y `ZENDA_GOOGLE_CLIENT_SECRET`.
 
 ## Decisión
 
-Los dos valores se guardan en Secret Service. `SENDA_GOOGLE_CLIENT_ID` sigue siendo una preferencia: identifica el cliente, no autentica, y conviene que viaje con la configuración.
+Los dos valores se guardan en Secret Service. `ZENDA_GOOGLE_CLIENT_ID` sigue siendo una preferencia: identifica el cliente, no autentica, y conviene que viaje con la configuración.
 
-Sin keyring disponible, esos dos valores van a `$XDG_STATE_HOME/senda/secrets` con permisos `0600`, fuera de la carpeta compartida, y nunca a `config`. Pasan al keyring en cuanto vuelve a responder. Es una excepción acotada a la regla de no usar texto plano: el refresh token de Google, de larga duración, sigue solo en el keyring según el ADR 0005.
+Sin keyring disponible, esos dos valores van a `$XDG_STATE_HOME/zenda/secrets` con permisos `0600`, fuera de la carpeta compartida, y nunca a `config`. Pasan al keyring en cuanto vuelve a responder. Es una excepción acotada a la regla de no usar texto plano: el refresh token de Google, de larga duración, sigue solo en el keyring según el ADR 0005.
 
-La migración ocurre al leer un secreto. Una clave sale de `config` solo después de confirmar su guardado, y su valor sustituye al almacenado porque es el último que escribió el usuario. Las variables de entorno mantienen la prioridad. `senda config secret` escribe secretos por stdin.
+La migración ocurre al leer un secreto. Una clave sale de `config` solo después de confirmar su guardado, y su valor sustituye al almacenado porque es el último que escribió el usuario. Las variables de entorno mantienen la prioridad. `zenda config secret` escribe secretos por stdin.
 
 ## Consecuencias
 

@@ -20,7 +20,7 @@ DropdownCard {
     Process {
         id: logoutProcess
         running: false
-        command: [Quickshell.env("SENDA_BIN") || "senda", "hyprland", "exit"]
+        command: [Quickshell.env("ZENDA_BIN") || "zenda", "hyprland", "exit"]
     }
 
     Process {

@@ -31,7 +31,7 @@ func ApplyIdle() string {
 	if !ok || int(st.Uid) != os.Getuid() {
 		return "hypridle no se ha iniciado: el directorio de ejecución no pertenece al usuario."
 	}
-	dir := filepath.Join(runtime, "senda")
+	dir := filepath.Join(runtime, "zenda")
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "No se pudo preparar hypridle: " + err.Error()
 	}
@@ -49,7 +49,7 @@ func ApplyIdle() string {
 		return "No se pudo inspeccionar hypridle: " + err.Error()
 	}
 	if processes.External > 0 {
-		return "Existe un hypridle independiente; se conserva y debe integrarse manualmente antes de activar el de Senda."
+		return "Existe un hypridle independiente; se conserva y debe integrarse manualmente antes de activar el de Zenda."
 	}
 	marker := filepath.Join(dir, "hypridle.pid")
 	data, _ := os.ReadFile(marker)
@@ -63,24 +63,24 @@ func ApplyIdle() string {
 		}
 	}
 	if processes.Own > 0 && (!managed || processes.Own != 1) {
-		return "Existe un hypridle con la configuración de Senda que no está gestionado por este proceso; reinícialo manualmente para aplicar los cambios."
+		return "Existe un hypridle con la configuración de Zenda que no está gestionado por este proceso; reinícialo manualmente para aplicar los cambios."
 	}
 	if managed {
 		fd, err := unix.PidfdOpen(pid, 0)
 		if err != nil {
-			return "No se pudo comprobar la instancia de hypridle de Senda: " + err.Error()
+			return "No se pudo comprobar la instancia de hypridle de Zenda: " + err.Error()
 		}
 		defer unix.Close(fd)
 		if processStart(pid) != fields[1] || !processUsesIdle(pid, IdlePath()) {
 			return "La instancia de hypridle ha cambiado; no se ha reiniciado."
 		}
 		if err = unix.PidfdSendSignal(fd, unix.SIGTERM, nil, 0); err != nil {
-			return "No se pudo detener hypridle de Senda: " + err.Error()
+			return "No se pudo detener hypridle de Zenda: " + err.Error()
 		}
 		poll := []unix.PollFd{{Fd: int32(fd), Events: unix.POLLIN}}
 		n, err := unix.Poll(poll, 3000)
 		if err != nil || n == 0 {
-			return "hypridle de Senda no terminó; no se ha iniciado otra instancia."
+			return "hypridle de Zenda no terminó; no se ha iniciado otra instancia."
 		}
 	}
 	cmd := exec.Command("hypridle", "-c", IdlePath())
@@ -88,7 +88,7 @@ func ApplyIdle() string {
 	cmd.Stdout = nil
 	cmd.Stderr = nil
 	if err = cmd.Start(); err != nil {
-		return "No se pudo iniciar hypridle de Senda: " + err.Error()
+		return "No se pudo iniciar hypridle de Zenda: " + err.Error()
 	}
 	pid = cmd.Process.Pid
 	start := processStart(pid)
@@ -97,11 +97,11 @@ func ApplyIdle() string {
 		return "No se pudo identificar la instancia de hypridle iniciada; comprueba su estado manualmente."
 	}
 	if err = writePreservingMode(marker, []byte(fmt.Sprintf("%d %s\n", pid, start)), 0600); err != nil {
-		return "No se pudo registrar hypridle de Senda; comprueba su estado manualmente: " + err.Error()
+		return "No se pudo registrar hypridle de Zenda; comprueba su estado manualmente: " + err.Error()
 	}
 	time.Sleep(50 * time.Millisecond)
 	if processStart(pid) != start {
-		return "hypridle de Senda terminó al arrancar; comprueba su configuración y sus registros."
+		return "hypridle de Zenda terminó al arrancar; comprueba su configuración y sus registros."
 	}
 	return ""
 }
@@ -138,20 +138,20 @@ func processUsesIdle(pid int, path string) bool {
 	return false
 }
 
-// StopIdle stops only the instance previously started and recorded by Senda.
+// StopIdle stops only the instance previously started and recorded by Zenda.
 func StopIdle() string {
 	runtime := os.Getenv("XDG_RUNTIME_DIR")
 	if !filepath.IsAbs(runtime) {
 		return ""
 	}
-	dir := filepath.Join(runtime, "senda")
+	dir := filepath.Join(runtime, "zenda")
 	marker := filepath.Join(dir, "hypridle.pid")
 	lock, err := os.OpenFile(filepath.Join(dir, "hypridle.lock"), os.O_RDWR, 0600)
 	if os.IsNotExist(err) {
 		return ""
 	}
 	if err != nil {
-		return "No se pudo comprobar hypridle de Senda: " + err.Error()
+		return "No se pudo comprobar hypridle de Zenda: " + err.Error()
 	}
 	defer lock.Close()
 	if err = unix.Flock(int(lock.Fd()), unix.LOCK_EX); err != nil {
@@ -178,19 +178,19 @@ func StopIdle() string {
 	}
 	fd, err := unix.PidfdOpen(pid, 0)
 	if err != nil {
-		return "No se pudo comprobar hypridle de Senda: " + err.Error()
+		return "No se pudo comprobar hypridle de Zenda: " + err.Error()
 	}
 	defer unix.Close(fd)
 	if processStart(pid) != fields[1] || !processUsesIdle(pid, IdlePath()) {
 		return "La instancia de hypridle ha cambiado; no se ha detenido."
 	}
 	if err = unix.PidfdSendSignal(fd, unix.SIGTERM, nil, 0); err != nil {
-		return "No se pudo detener hypridle de Senda: " + err.Error()
+		return "No se pudo detener hypridle de Zenda: " + err.Error()
 	}
 	poll := []unix.PollFd{{Fd: int32(fd), Events: unix.POLLIN}}
 	n, err := unix.Poll(poll, 3000)
 	if err != nil || n == 0 {
-		return "hypridle de Senda no terminó; comprueba su estado manualmente."
+		return "hypridle de Zenda no terminó; comprueba su estado manualmente."
 	}
 	_ = os.Remove(marker)
 	return ""
@@ -233,8 +233,8 @@ func stopIdleUsing(path string) string {
 	return ""
 }
 
-// StopExternalIdle stops same-user hypridle instances that do not use Senda's
-// configuration. Call it only after the user chose Senda's configuration.
+// StopExternalIdle stops same-user hypridle instances that do not use Zenda's
+// configuration. Call it only after the user chose Zenda's configuration.
 func StopExternalIdle() string {
 	entries, err := os.ReadDir("/proc")
 	if err != nil {

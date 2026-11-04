@@ -26,7 +26,7 @@ type Selector struct {
 
 // RuntimeMarker on the line before a call says it adjusts a setting at runtime,
 // as a plugin does, and defines nothing.
-const RuntimeMarker = "-- senda: runtime"
+const RuntimeMarker = "-- zenda: runtime"
 
 // Definition is one place where the user's configuration defines a setting.
 type Definition struct {
@@ -43,7 +43,7 @@ func (d Definition) Source() string { return fmt.Sprintf("%s:%d", d.File, d.Line
 
 // UserDefinitions scans the files Hyprland actually loads, starting at its main
 // file and following literal require, dofile and source references. Files that
-// nothing loads are ignored, and so are the files Senda generates.
+// nothing loads are ignored, and so are the files Zenda generates.
 func UserDefinitions(sel Selector) ([]Definition, error) {
 	main := hyprConfigFile()
 	if _, err := os.Stat(main); errors.Is(err, os.ErrNotExist) {

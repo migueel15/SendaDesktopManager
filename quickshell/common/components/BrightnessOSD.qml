@@ -12,7 +12,7 @@ Scope {
 
     property real percent: 0
 
-    // `senda brightness` calls this only on machines with a backlight.
+    // `zenda brightness` calls this only on machines with a backlight.
     IpcHandler {
         target: "brightness"
 
@@ -36,7 +36,7 @@ Scope {
         PanelWindow {
             // Since the panel's screen is unset, it will be picked by the compositor
             // when the window is shown. Most compositors pick the current active monitor.
-            WlrLayershell.namespace: "senda-brightness-osd"
+            WlrLayershell.namespace: "zenda-brightness-osd"
 
             // Center horizontally, just below the top bar.
             anchors.top: true

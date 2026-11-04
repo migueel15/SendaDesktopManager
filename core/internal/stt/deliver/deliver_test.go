@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/stt"
+	"github.com/migueel15/Zenda/core/internal/stt"
 )
 
 func TestClipboardFailureStopsDelivery(t *testing.T) {
@@ -66,7 +66,7 @@ func TestInvalidActiveWindowFallsBackAndTracesSteps(t *testing.T) {
 }
 
 func TestDetachedRunnerReportsCommandFailure(t *testing.T) {
-	for _, command := range []string{"exit 7", "command-that-does-not-exist-senda"} {
+	for _, command := range []string{"exit 7", "command-that-does-not-exist-zenda"} {
 		if _, err := stt.DetachedRunner(context.Background(), nil, "sh", "-c", command); err == nil {
 			t.Fatalf("DetachedRunner(%q) succeeded", command)
 		}
@@ -90,14 +90,14 @@ func TestProductionRunnerCapturesActiveWindow(t *testing.T) {
 	argsPath := filepath.Join(dir, "paste-args")
 	for name, body := range map[string]string{
 		"wl-copy": "cat >/dev/null",
-		"hyprctl": `if [ "$1" = dispatch ]; then printf '%s\n' "$@" > "$SENDA_TEST_PASTE_ARGS"; echo ok; else printf '%s' '{"class":"kitty"}'; fi`,
+		"hyprctl": `if [ "$1" = dispatch ]; then printf '%s\n' "$@" > "$ZENDA_TEST_PASTE_ARGS"; echo ok; else printf '%s' '{"class":"kitty"}'; fi`,
 	} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte("#!/bin/sh\n"+body+"\n"), 0700); err != nil {
 			t.Fatal(err)
 		}
 	}
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("SENDA_TEST_PASTE_ARGS", argsPath)
+	t.Setenv("ZENDA_TEST_PASTE_ARGS", argsPath)
 	if err := New(stt.ExecRunner).Deliver(context.Background(), "hola", settings(stt.PasteDirect)); err != nil {
 		t.Fatal(err)
 	}

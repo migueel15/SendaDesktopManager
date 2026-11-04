@@ -57,7 +57,7 @@ Rectangle {
 
     function invoke(action) {
         if (commandProc.running) return;
-        commandProc.command = [SendaManager.binaryPath, "discord", action];
+        commandProc.command = [ZendaManager.binaryPath, "discord", action];
         commandProc.running = true;
     }
 
@@ -112,7 +112,7 @@ Rectangle {
 
     Socket {
         id: watchSocket
-        path: `${Quickshell.env("XDG_RUNTIME_DIR")}/senda-discord.sock`
+        path: `${Quickshell.env("XDG_RUNTIME_DIR")}/zenda-discord.sock`
         connected: false
 
         onConnectedChanged: {
@@ -136,7 +136,7 @@ Rectangle {
     Process {
         id: statusProc
         running: false
-        command: [SendaManager.binaryPath, "discord", "status"]
+        command: [ZendaManager.binaryPath, "discord", "status"]
 
         stdout: StdioCollector {
             onStreamFinished: {
@@ -597,7 +597,7 @@ Rectangle {
                                                     cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                                                     onClicked: {
                                                         participantSettingProc.command = [
-                                                            SendaManager.binaryPath,
+                                                            ZendaManager.binaryPath,
                                                             "discord",
                                                             "reset-user",
                                                             String(participantRow.modelData.id)
@@ -647,7 +647,7 @@ Rectangle {
                                                     cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                                                     onClicked: {
                                                         participantSettingProc.command = [
-                                                            SendaManager.binaryPath,
+                                                            ZendaManager.binaryPath,
                                                             "discord",
                                                             "set-user-mute",
                                                             String(participantRow.modelData.id),
@@ -712,7 +712,7 @@ Rectangle {
                                                 onReleased: mouse => {
                                                     updatePreview(mouse.x);
                                                     participantSettingProc.command = [
-                                                        SendaManager.binaryPath,
+                                                        ZendaManager.binaryPath,
                                                         "discord",
                                                         "set-user-volume",
                                                         String(participantRow.modelData.id),

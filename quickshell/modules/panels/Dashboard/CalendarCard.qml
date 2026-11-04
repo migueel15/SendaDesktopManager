@@ -16,7 +16,7 @@ Rectangle {
     property date selectedDay: root.today
 
     readonly property date gridStart: new Date(root.shownMonth.getFullYear(), root.shownMonth.getMonth(), 1 - ((root.shownMonth.getDay() + 6) % 7))
-    readonly property var selectedEvents: SendaCalendar.eventsOn(root.selectedDay)
+    readonly property var selectedEvents: ZendaCalendar.eventsOn(root.selectedDay)
 
     radius: Theme.rounding.normal
     color: Theme.colors.surface
@@ -45,7 +45,7 @@ Rectangle {
     function requestVisibleMonths() {
         const year = root.shownMonth.getFullYear();
         const month = root.shownMonth.getMonth();
-        SendaCalendar.requestMonths([
+        ZendaCalendar.requestMonths([
             new Date(year, month - 1, 1),
             root.shownMonth,
             new Date(year, month + 1, 1)
@@ -169,7 +169,7 @@ Rectangle {
                         readonly property bool inMonth: cell.day.getMonth() === root.shownMonth.getMonth()
                         readonly property bool isToday: root.sameDay(cell.day, root.today)
                         readonly property bool isSelected: root.sameDay(cell.day, root.selectedDay)
-                        readonly property bool hasEvents: SendaCalendar.eventsOn(cell.day).length > 0
+                        readonly property bool hasEvents: ZendaCalendar.eventsOn(cell.day).length > 0
 
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -240,28 +240,28 @@ Rectangle {
 
             Text {
                 Layout.fillWidth: true
-                visible: SendaCalendar.status !== "ready" || !SendaCalendar.isLoaded(root.selectedDay)
+                visible: ZendaCalendar.status !== "ready" || !ZendaCalendar.isLoaded(root.selectedDay)
                 text: {
-                    if (SendaCalendar.status === "disconnected") return "Conecta tu cuenta de Google para ver tus eventos.";
-                    if (SendaCalendar.status === "error") return SendaCalendar.message;
+                    if (ZendaCalendar.status === "disconnected") return "Conecta tu cuenta de Google para ver tus eventos.";
+                    if (ZendaCalendar.status === "error") return ZendaCalendar.message;
                     return "Cargando eventos…";
                 }
-                color: SendaCalendar.status === "error" ? Theme.colors.warning : Theme.colors.overlay
+                color: ZendaCalendar.status === "error" ? Theme.colors.warning : Theme.colors.overlay
                 font.family: Theme.font.overlay.family
                 font.pixelSize: Theme.scaled(11)
                 wrapMode: Text.WordWrap
 
                 MouseArea {
                     anchors.fill: parent
-                    enabled: SendaCalendar.status === "disconnected"
+                    enabled: ZendaCalendar.status === "disconnected"
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: SendaSettings.openWindow()
+                    onClicked: ZendaSettings.openWindow()
                 }
             }
 
             Text {
                 Layout.fillWidth: true
-                visible: SendaCalendar.status === "ready" && SendaCalendar.isLoaded(root.selectedDay) && root.selectedEvents.length === 0
+                visible: ZendaCalendar.status === "ready" && ZendaCalendar.isLoaded(root.selectedDay) && root.selectedEvents.length === 0
                 text: "Sin eventos este día"
                 color: Theme.colors.overlay
                 font.family: Theme.font.overlay.family
@@ -303,7 +303,7 @@ Rectangle {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: SendaCalendar.openEvent(eventItem.modelData)
+                        onClicked: ZendaCalendar.openEvent(eventItem.modelData)
                     }
                 }
             }

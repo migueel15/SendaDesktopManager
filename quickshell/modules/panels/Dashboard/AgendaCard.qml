@@ -9,7 +9,7 @@ import qs.services
 Rectangle {
     id: root
 
-    readonly property var upcoming: SendaCalendar.upcomingEvents(20)
+    readonly property var upcoming: ZendaCalendar.upcomingEvents(20)
 
     function startOfDay(date) {
         return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -66,28 +66,28 @@ Rectangle {
 
         Text {
             Layout.fillWidth: true
-            visible: SendaCalendar.status !== "ready"
+            visible: ZendaCalendar.status !== "ready"
             text: {
-                if (SendaCalendar.status === "disconnected") return "Conecta tu cuenta de Google para ver tus eventos.";
-                if (SendaCalendar.status === "error") return SendaCalendar.message;
+                if (ZendaCalendar.status === "disconnected") return "Conecta tu cuenta de Google para ver tus eventos.";
+                if (ZendaCalendar.status === "error") return ZendaCalendar.message;
                 return "Cargando eventos…";
             }
-            color: SendaCalendar.status === "error" ? Theme.colors.warning : Theme.colors.overlay
+            color: ZendaCalendar.status === "error" ? Theme.colors.warning : Theme.colors.overlay
             font.family: Theme.font.overlay.family
             font.pixelSize: Theme.scaled(11)
             wrapMode: Text.WordWrap
 
             MouseArea {
                 anchors.fill: parent
-                enabled: SendaCalendar.status === "disconnected"
+                enabled: ZendaCalendar.status === "disconnected"
                 cursorShape: Qt.PointingHandCursor
-                onClicked: SendaSettings.openWindow()
+                onClicked: ZendaSettings.openWindow()
             }
         }
 
         Text {
             Layout.fillWidth: true
-            visible: SendaCalendar.status === "ready" && root.upcoming.length === 0
+            visible: ZendaCalendar.status === "ready" && root.upcoming.length === 0
             text: "No hay eventos próximos"
             color: Theme.colors.overlay
             font.family: Theme.font.overlay.family
@@ -160,7 +160,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: SendaCalendar.openEvent(modelData)
+                    onClicked: ZendaCalendar.openEvent(modelData)
                 }
             }
         }

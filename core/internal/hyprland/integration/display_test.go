@@ -8,14 +8,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/migueel15/SendaDesktopManager/core/internal/hyprland/hyprctl"
+	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 )
 
 func hyprDir(t *testing.T, files map[string]string) {
 	t.Helper()
 	root := t.TempDir()
 	t.Setenv("XDG_CONFIG_HOME", root)
-	t.Setenv("SENDA_HOME", "")
+	t.Setenv("ZENDA_HOME", "")
 	for name, text := range files {
 		path := filepath.Join(root, "hypr", name)
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -29,7 +29,7 @@ func hyprDir(t *testing.T, files map[string]string) {
 
 func TestUserDefinitionsFollowsLoadedFiles(t *testing.T) {
 	hyprDir(t, map[string]string{
-		"hyprland.lua": "require(\"modules.monitors\")\nrequire(\"senda.init\")\n-- require(\"modules.commented\")\n",
+		"hyprland.lua": "require(\"modules.monitors\")\nrequire(\"zenda.init\")\n-- require(\"modules.commented\")\n",
 		"modules/monitors.lua": `local c = require("modules.config")
 hl.monitor({
 	-- output = "HDMI-A-9",
@@ -43,7 +43,7 @@ hl.monitor({ output = c.name })
 		"modules/config.lua":    "return {}\n",
 		"modules/commented.lua": `hl.monitor({ output = "DP-8" })`,
 		"modules/unused.lua":    `hl.monitor({ output = "DP-7" })`,
-		"senda/init.lua":        "-- Generado por Senda.\nhl.monitor({ output = \"DP-6\" })\n",
+		"zenda/init.lua":        "-- Generado por Zenda.\nhl.monitor({ output = \"DP-6\" })\n",
 	})
 	defs, err := UserDefinitions(MonitorSelector)
 	if err != nil {
@@ -90,7 +90,7 @@ func TestClaims(t *testing.T) {
 func TestRenderSkipsNothingButValidates(t *testing.T) {
 	s := DefaultSettings()
 	s.Displays = []DisplayRule{{Name: "DP-1", Description: "Foo", Mode: "1920x1080@60", Position: "-1920x0", Scale: 1.25}}
-	lua, _, err := renderParts(s, "/usr/bin/senda")
+	lua, _, err := renderParts(s, "/usr/bin/zenda")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +99,7 @@ func TestRenderSkipsNothingButValidates(t *testing.T) {
 		t.Fatalf("módulo: %s", DisplayLines(lua))
 	}
 	s.Displays[0].Mode = `x"})`
-	if _, _, err := renderParts(s, "/usr/bin/senda"); err == nil {
+	if _, _, err := renderParts(s, "/usr/bin/zenda"); err == nil {
 		t.Fatal("modo inválido aceptado")
 	}
 }
@@ -134,7 +134,7 @@ func TestChangeDisplay(t *testing.T) {
 		t.Fatalf("reglas = %+v, %v", rules, err)
 	}
 	state, err := InspectDisplays(ctx, monitorsRun, rules, true)
-	if err != nil || state.Displays[0].ManagedBy != "senda" || state.Displays[1].ManagedBy != "user" || state.Displays[1].Source == "" {
+	if err != nil || state.Displays[0].ManagedBy != "zenda" || state.Displays[1].ManagedBy != "user" || state.Displays[1].Source == "" {
 		t.Fatalf("estado = %+v, %v", state, err)
 	}
 	if rules, err = ResetDisplay(ctx, monitorsRun, rules, "DP-1"); err != nil || len(rules) != 0 {
@@ -145,11 +145,11 @@ func TestChangeDisplay(t *testing.T) {
 func TestReadSettingsHidesClaimedRules(t *testing.T) {
 	hyprDir(t, map[string]string{"hyprland.lua": `hl.monitor({ output = "DP-1" })`})
 	root := os.Getenv("XDG_CONFIG_HOME")
-	if err := os.MkdirAll(filepath.Join(root, "senda"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, "zenda"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	stored := `[{"name":"DP-1","mode":"preferred","position":"0x0","scale":1},{"name":"DP-2","mode":"preferred","position":"0x0","scale":1}]`
-	if err := StoreDisplays(filepath.Join(root, "senda", "config"), mustParse(t, stored), nil); err != nil {
+	if err := StoreDisplays(filepath.Join(root, "zenda", "config"), mustParse(t, stored), nil); err != nil {
 		t.Fatal(err)
 	}
 	s, err := ReadSettings()
@@ -168,7 +168,7 @@ func mustParse(t *testing.T, value string) []DisplayRule {
 }
 
 func TestRuntimeMarkerIsNotADefinition(t *testing.T) {
-	hyprDir(t, map[string]string{"hyprland.lua": "-- senda: runtime\nhl.monitor({ output = m.name })\n"})
+	hyprDir(t, map[string]string{"hyprland.lua": "-- zenda: runtime\nhl.monitor({ output = m.name })\n"})
 	if defs, err := UserDefinitions(MonitorSelector); err != nil || len(defs) != 0 {
 		t.Fatalf("definiciones = %+v, %v", defs, err)
 	}

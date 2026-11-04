@@ -15,3 +15,4 @@
 - [013: Ciclo de vida lazy de las interfaces](adr-013-lazy-interface-lifecycle.md)
 - [014: Postprocesamiento local conservador del dictado](adr-014-postprocesamiento-local-conservador.md)
 - [015: Preparación de la corrección desde Ajustes](adr-015-preparacion-de-correccion-desde-ajustes.md)
+- [017: Renombrado de Senda a Zenda](adr-017-renombrado-a-zenda.md)

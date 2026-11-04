@@ -16,14 +16,14 @@ Item {
     readonly property real dayStart: root.today.getTime()
     readonly property real dayEnd: new Date(root.today.getFullYear(), root.today.getMonth(), root.today.getDate() + 1).getTime()
 
-    readonly property bool sunKnown: !!SendaWeather.current && !!SendaWeather.current.sunrise && !!SendaWeather.current.sunset
-    readonly property real sunriseTime: root.sunKnown ? new Date(SendaWeather.current.sunrise).getTime() : root.dayStart
-    readonly property real sunsetTime: root.sunKnown ? new Date(SendaWeather.current.sunset).getTime() : root.dayStart
+    readonly property bool sunKnown: !!ZendaWeather.current && !!ZendaWeather.current.sunrise && !!ZendaWeather.current.sunset
+    readonly property real sunriseTime: root.sunKnown ? new Date(ZendaWeather.current.sunrise).getTime() : root.dayStart
+    readonly property real sunsetTime: root.sunKnown ? new Date(ZendaWeather.current.sunset).getTime() : root.dayStart
 
     readonly property int arcHeight: 18
     readonly property var arcSteps: [...Array(31).keys()]
 
-    readonly property var timedEvents: SendaCalendar.eventsOn(root.today).filter(event => !event.allDay)
+    readonly property var timedEvents: ZendaCalendar.eventsOn(root.today).filter(event => !event.allDay)
 
     // Clamps to the day, so an event or the marker never leaves the line.
     function positionOf(time) {
@@ -234,7 +234,7 @@ Item {
         onExited: root.hoveredEvent = null
         onClicked: {
             if (root.hoveredEvent) {
-                SendaCalendar.openEvent(root.hoveredEvent);
+                ZendaCalendar.openEvent(root.hoveredEvent);
             }
         }
     }
