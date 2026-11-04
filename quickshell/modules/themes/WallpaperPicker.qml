@@ -259,7 +259,8 @@ PanelWindow {
                     orientation: ListView.Horizontal
                     spacing: Theme.spacing.md
                     // Room for the selection ring, which sits outside the card.
-                    leftMargin: 4; rightMargin: 4; topMargin: 4; bottomMargin: 4
+                    readonly property real ringRoom: Theme.spacing.md
+                    leftMargin: ringRoom; rightMargin: ringRoom
                     clip: true
                     model: folderModel
                     currentIndex: 0
@@ -274,7 +275,9 @@ PanelWindow {
                         required property url fileUrl
                         readonly property bool current: ListView.isCurrentItem
                         width: Theme.scaled(300)
-                        height: ListView.view.height
+                        // Inset so the ring is never clipped at the top or bottom.
+                        y: list.ringRoom
+                        height: ListView.view.height - 2 * list.ringRoom
                         opacity: current ? 1 : hover.hovered ? 0.85 : 0.6
                         scale: current ? 1 : 0.92
                         Behavior on scale { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.OutQuint } }
