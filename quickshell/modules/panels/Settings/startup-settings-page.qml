@@ -95,17 +95,25 @@ Flickable {
         ZendaGroup {
             visible: ZendaStartupSettings.entries.length > 0
             Repeater {
-                model: ZendaStartupSettings.entries
+                // ScriptModel applies only the differences, so toggling or
+                // removing one entry keeps the other rows instead of rebuilding.
+                model: ScriptModel {
+                    values: ZendaStartupSettings.entries
+                    objectProp: "target"
+                }
                 delegate: ZendaRow {
                     id: row
                     required property var modelData
                     required property int index
                     searchable: false
                     separator: index < ZendaStartupSettings.entries.length - 1
-                    label: modelData.name
-                    description: modelData.target
+                    // Live entry for this target: ScriptModel keeps the delegate,
+                    // so read changes such as enabled from the service.
+                    readonly property var entry: ZendaStartupSettings.entries.find(e => e.target === row.modelData.target) ?? row.modelData
+                    label: entry.name
+                    description: entry.target
                     ZendaSwitch {
-                        checkedValue: row.modelData.enabled
+                        checkedValue: row.entry.enabled
                         onToggledValue: value => ZendaStartupSettings.setEnabled(row.modelData.target, value)
                     }
                     ZendaButton {
