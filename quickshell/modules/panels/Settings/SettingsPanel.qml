@@ -158,31 +158,49 @@ Item {
         anchors.fill: parent
         spacing: Theme.spacing.md
 
-        SettingsCard {
+        // Material 3 navigation drawer: tonal surface, large corners, no border.
+        Rectangle {
             // Reserve room for the longest label at the active text scale.
-            Layout.preferredWidth: Math.max(root.width * 0.24, Theme.scaled(145))
-            Layout.minimumWidth: Math.max(root.width * 0.24, Theme.scaled(145))
-            Layout.maximumWidth: Math.max(root.width * 0.24, Theme.scaled(145))
+            Layout.preferredWidth: Math.max(root.width * 0.24, Theme.scaled(170))
+            Layout.minimumWidth: Math.max(root.width * 0.24, Theme.scaled(170))
+            Layout.maximumWidth: Math.max(root.width * 0.24, Theme.scaled(170))
             Layout.fillHeight: true
+            radius: Theme.rounding.large
+            color: Theme.colors.surface
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Theme.spacing.md
-                spacing: 4
+                spacing: Theme.spacing.xs
 
-                Text {
-                    Layout.bottomMargin: 10
-                    text: "Ajustes"
-                    color: Theme.colors.text
-                    font.family: Theme.font.title.family
-                    font.pixelSize: Theme.scaled(18)
-                    font.weight: Font.Bold
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.bottomMargin: Theme.spacing.sm
+                    spacing: Theme.spacing.sm
+
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Theme.spacing.sm
+                        text: "Ajustes"
+                        color: Theme.colors.text
+                        elide: Text.ElideRight
+                        font.family: Theme.font.title.family
+                        font.pixelSize: Theme.scaled(18)
+                        font.weight: Font.Bold
+                    }
+
+                    ZendaIconButton {
+                        icon: "󰅖"
+                        accessibleLabel: "Cerrar"
+                        onClicked: ZendaSettings.closeWindow()
+                    }
                 }
 
                 ZendaField {
                     id: searchField
                     Layout.fillWidth: true
                     Layout.bottomMargin: Theme.spacing.sm
+                    radius: Theme.rounding.full
                     placeholder: "Buscar ajustes"
                     onTextChanged: {
                         root.query = text;
@@ -198,6 +216,7 @@ Item {
                 // While searching, results take the place of the sections.
                 Text {
                     Layout.fillWidth: true
+                    Layout.leftMargin: Theme.spacing.sm
                     visible: root.searching && root.results.length === 0
                     text: "Sin resultados"
                     color: Theme.colors.overlay
@@ -212,100 +231,41 @@ Item {
                     clip: true
                     spacing: Theme.spacing.xs
                     model: root.results
-                    delegate: Rectangle {
+                    delegate: ZendaListItem {
                         id: resultEntry
                         required property var modelData
                         required property int index
-                        readonly property bool current: root.resultIndex === index
-                        width: ListView.view.width
-                        height: resultColumn.implicitHeight + 2 * Theme.spacing.sm
-                        radius: Theme.rounding.small
-                        color: current ? Theme.colors.selection : resultArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-                        ColumnLayout {
-                            id: resultColumn
-                            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }
-                            spacing: Theme.spacing.xxs
-                            Text {
-                                Layout.fillWidth: true
-                                text: resultEntry.modelData.title
-                                color: Theme.colors.text
-                                font: Theme.font.body
-                                wrapMode: Text.WordWrap
-                            }
-                            Text {
-                                Layout.fillWidth: true
-                                text: resultEntry.modelData.section
-                                color: Theme.colors.overlay
-                                font: Theme.font.caption
-                                elide: Text.ElideRight
-                            }
-                        }
-                        MouseArea {
-                            id: resultArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.openResult(resultEntry.modelData)
-                        }
+                        implicitHeight: Theme.scaled(56)
+                        text: modelData.title
+                        supportingText: modelData.section
+                        trailingIcon: ""
+                        selected: root.resultIndex === index
+                        onClicked: root.openResult(modelData)
                     }
                 }
 
                 Repeater {
                     model: root.sections
 
-                    delegate: Rectangle {
+                    delegate: ZendaListItem {
                         id: sectionEntry
                         required property var modelData
                         required property int index
 
-                        readonly property bool selected: root.currentSection === index
                         visible: !root.searching
-
                         Layout.fillWidth: true
-                        implicitHeight: Theme.scaled(24) + Theme.spacing.md
-                        radius: Theme.rounding.small
-                        color: selected ? Theme.colors.selection
-                            : sectionMouse.containsMouse ? Theme.colors.surfaceVariant : Theme.colors.surface
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 12
-                            text: sectionEntry.modelData.icon
-                            font: Theme.font.icon
-                            color: parent.selected ? Theme.colors.primary : Theme.colors.overlay
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: Theme.spacing.xl + Theme.spacing.md
-                            text: sectionEntry.modelData.label
-                            color: parent.selected ? Theme.colors.white : Theme.colors.text
-                            font.family: Theme.font.base.family
-                            font.pixelSize: Theme.scaled(13)
-                            font.weight: parent.selected ? Font.Bold : Font.Normal
-                        }
-
-                        MouseArea {
-                            id: sectionMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.currentSection = sectionEntry.index
-                        }
+                        implicitHeight: Theme.scaled(48)
+                        leadingIcon: modelData.icon
+                        text: modelData.label
+                        trailingIcon: ""
+                        selected: root.currentSection === index
+                        onClicked: root.currentSection = index
                     }
                 }
 
                 Item {
                     Layout.fillHeight: true
                     visible: !root.searching
-                }
-
-                ZendaButton {
-                    Layout.fillWidth: true
-                    label: "Cerrar"
-                    onClicked: ZendaSettings.closeWindow()
                 }
             }
         }
