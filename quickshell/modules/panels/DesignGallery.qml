@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import Quickshell
 
@@ -250,16 +251,22 @@ FloatingWindow {
         Text { anchors { right: parent.right; rightMargin: Theme.spacing.md; verticalCenter: parent.verticalCenter }
             text: "▾"; color: Theme.colors.textMuted; font: Theme.font.body
             rotation: sel.open ? 180 : 0; Behavior on rotation { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } } }
-        Rectangle {   // popup list that unfolds with scale and fade
-            y: parent.height + 6; width: parent.width; radius: 16
-            height: list.implicitHeight + 12
-            color: Theme.colors.surfaceVariant
-            transformOrigin: Item.Top
-            scale: sel.open ? 1 : 0.9; opacity: sel.open ? 1 : 0; visible: opacity > 0
-            Behavior on scale { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
-            Behavior on opacity { NumberAnimation { duration: Theme.motion.fast } }
-            Column {
-                id: list; x: 6; y: 6; width: parent.width - 12
+        // Controls.Popup draws in the window overlay, above every sibling.
+        Controls.Popup {
+            y: sel.height + 6; width: sel.width; padding: 6
+            visible: sel.open
+            onClosed: sel.open = false
+            closePolicy: Controls.Popup.CloseOnEscape | Controls.Popup.CloseOnPressOutsideParent
+            background: Rectangle { radius: 16; color: Theme.colors.surfaceVariant }
+            enter: Transition { ParallelAnimation {
+                NumberAnimation { property: "scale"; from: 0.9; to: 1; duration: Theme.motion.normal; easing.type: Easing.OutBack }
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast } } }
+            exit: Transition { ParallelAnimation {
+                NumberAnimation { property: "scale"; to: 0.95; duration: Theme.motion.fast }
+                NumberAnimation { property: "opacity"; to: 0; duration: Theme.motion.fast } } }
+            transformOrigin: Controls.Popup.Top
+            contentItem: Column {
+                id: list; width: sel.width - 12
                 Repeater {
                     model: sel.options
                     Rectangle {
