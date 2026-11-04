@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Item {
@@ -147,30 +148,30 @@ Item {
             }
         }
 
-        SettingsGroup {
+        ZendaGroup {
             visible: !!root.selected
-            SettingsRow {
+            ZendaRow {
                 separator: false
                 label: "Pantalla"
                 description: root.selected ? root.selected.description : ""
-                SettingsSegments {
+                ZendaSegments {
                     options: root.displays.map(d => ({ label: d.name, value: d.name }))
                     value: root.selected ? root.selected.name : ""
                     onChosen: value => root.selectedName = value
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Encendida"
-                SettingsSwitch {
+                ZendaSwitch {
                     enabled: root.editable
                     checkedValue: !!root.selected && root.selected.enabled
                     Accessible.name: "Encendida"
                     onToggledValue: value => ZendaDisplaySettings.stage(root.selected.name, { enabled: value })
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Resolución"
-                SettingsSelect {
+                ZendaSelect {
                     enabled: root.editable
                     options: root.sizes
                     value: root.currentSize
@@ -180,38 +181,38 @@ Item {
                     }
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Frecuencia"
-                SettingsSelect {
+                ZendaSelect {
                     enabled: root.editable
                     options: root.rates.map(rate => rate + " Hz")
                     value: root.selected ? root.closestRate(root.currentSize, root.selected.refreshRate) + " Hz" : ""
                     onChosen: value => ZendaDisplaySettings.stage(root.selected.name, { width: root.selected.width, height: root.selected.height, refreshRate: value.replace(" Hz", "") })
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Escala"
-                SettingsSegments {
+                ZendaSegments {
                     enabled: root.editable
                     options: root.scales.map(v => ({ label: Math.round(Number(v) * 100) + " %", value: v }))
                     value: root.currentScale
                     onChosen: value => ZendaDisplaySettings.stage(root.selected.name, { scale: Number(value) })
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Rotación"
-                SettingsSegments {
+                ZendaSegments {
                     enabled: root.editable
                     options: ["0", "1", "2", "3"].map(v => ({ label: Number(v) * 90 + "°", value: v }))
                     value: root.selected ? String(root.selected.transform) : ""
                     onChosen: value => ZendaDisplaySettings.stage(root.selected.name, { transform: Number(value) })
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 visible: root.displays.length > 1
                 label: "Duplicar"
                 description: "Muestra aquí lo mismo que en otra pantalla."
-                SettingsSegments {
+                ZendaSegments {
                     enabled: root.editable
                     options: [{ label: "No", value: "none" }].concat(root.displays
                         .filter(d => root.selected && d.name !== root.selected.name && d.enabled && root.mirrorName(d) === "")
@@ -220,11 +221,11 @@ Item {
                     onChosen: value => ZendaDisplaySettings.stage(root.selected.name, { mirrorOf: value })
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 visible: !!root.selected && root.selected.managedBy === "zenda"
                 label: "Restablecer"
                 description: "Quita los ajustes de Zenda de esta pantalla."
-                SettingsButton {
+                ZendaButton {
                     label: "Restablecer"
                     enabled: root.editable
                     onClicked: ZendaDisplaySettings.run(["reset", root.selected.name])
@@ -233,16 +234,16 @@ Item {
         }
 
         // Only exists for those who define monitors in their own configuration.
-        SettingsGroup {
+        ZendaGroup {
             visible: ZendaDisplaySettings.hasUserManaged
-            SettingsRow {
+            ZendaRow {
                 separator: false
                 label: "Gestionado por tu configuración"
                 description: "Zenda no modifica estas pantallas. Cámbialas en tu configuración de Hyprland."
             }
             Repeater {
                 model: root.displays.filter(d => d.managedBy === "user")
-                delegate: SettingsRow {
+                delegate: ZendaRow {
                     searchable: false
                     required property var modelData
                     label: modelData.name
@@ -274,12 +275,12 @@ Item {
                 font.weight: Font.Bold
                 wrapMode: Text.WordWrap
             }
-            SettingsButton {
+            ZendaButton {
                 label: "Cancelar"
                 enabled: !ZendaDisplaySettings.busy
                 onClicked: ZendaDisplaySettings.discard()
             }
-            SettingsButton {
+            ZendaButton {
                 label: "Aplicar cambios"
                 primary: true
                 enabled: !ZendaDisplaySettings.busy

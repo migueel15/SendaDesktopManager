@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 // Asks on every screen, because a change may have left some of them black.
@@ -60,8 +61,8 @@ Variants {
                 RowLayout {
                     Layout.alignment: Qt.AlignRight
                     spacing: Theme.spacing.sm
-                    SettingsButton { label: "Revertir"; onClicked: ZendaDisplaySettings.revert() }
-                    SettingsButton { label: "Mantener"; primary: true; onClicked: ZendaDisplaySettings.keep() }
+                    ZendaButton { label: "Revertir"; onClicked: ZendaDisplaySettings.revert() }
+                    ZendaButton { label: "Mantener"; primary: true; onClicked: ZendaDisplaySettings.keep() }
                 }
             }
         }

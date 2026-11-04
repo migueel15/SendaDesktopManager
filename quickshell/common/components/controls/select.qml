@@ -5,7 +5,7 @@ import QtQuick.Controls as Controls
 import Quickshell
 import qs.common
 
-// Reusable dropdown for lists too long for SettingsSegments. Give it options
+// Reusable dropdown for lists too long for ZendaSegments. Give it options
 // (strings) and value, and handle chosen(value). It works in any settings page.
 Rectangle {
     id: root
@@ -97,7 +97,7 @@ Rectangle {
             color: Theme.colors.surface
             border { width: 1; color: Theme.colors.border }
             radius: Theme.rounding.normal
-            SettingsField {
+            ZendaField {
                 id: search
                 visible: root.searchable
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spacing.xs + 1 }

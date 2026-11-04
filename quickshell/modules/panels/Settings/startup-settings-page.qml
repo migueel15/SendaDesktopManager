@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Flickable {
@@ -45,11 +46,11 @@ Flickable {
         width: root.width
         spacing: Theme.spacing.md
 
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 label: "Tipo"
                 description: "Qué quieres abrir al iniciar Hyprland"
-                SettingsSegments {
+                ZendaSegments {
                     implicitWidth: Theme.scaled(350)
                     Layout.fillWidth: false
                     value: root.kind
@@ -57,11 +58,11 @@ Flickable {
                     onChosen: value => root.kind = value
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 separator: false
                 label: "Añadir"
                 description: root.kind === "app" ? "Aplicaciones instaladas" : root.kind === "command" ? "Comando completo con sus argumentos" : "Ruta absoluta o que empiece por ~/"
-                SettingsSelect {
+                ZendaSelect {
                     visible: root.kind === "app"
                     options: root.apps.map(app => app.name)
                     value: root.appName
@@ -70,20 +71,20 @@ Flickable {
                     searchPlaceholder: "Buscar aplicación…"
                     onChosen: value => root.appName = value
                 }
-                SettingsField {
+                ZendaField {
                     id: commandField
                     visible: root.kind === "command"
                     implicitWidth: Theme.scaled(300)
                     placeholder: "openrgb --startminimized -p purple"
                     onAccepted: root.add()
                 }
-                SettingsField {
+                ZendaField {
                     id: pathField
                     visible: root.kind === "script" || root.kind === "file"
                     implicitWidth: Theme.scaled(220)
                     placeholder: "~/scripts/inicio.sh"
                 }
-                SettingsButton {
+                ZendaButton {
                     label: "Añadir"
                     primary: true
                     onClicked: root.add()
@@ -91,11 +92,11 @@ Flickable {
             }
         }
 
-        SettingsGroup {
+        ZendaGroup {
             visible: ZendaStartupSettings.entries.length > 0
             Repeater {
                 model: ZendaStartupSettings.entries
-                delegate: SettingsRow {
+                delegate: ZendaRow {
                     id: row
                     required property var modelData
                     required property int index
@@ -103,11 +104,11 @@ Flickable {
                     separator: index < ZendaStartupSettings.entries.length - 1
                     label: modelData.name
                     description: modelData.target
-                    SettingsSwitch {
+                    ZendaSwitch {
                         checkedValue: row.modelData.enabled
                         onToggledValue: value => ZendaStartupSettings.setEnabled(row.modelData.target, value)
                     }
-                    SettingsButton {
+                    ZendaButton {
                         label: "Eliminar"
                         onClicked: ZendaStartupSettings.remove(row.modelData.target)
                     }
@@ -132,11 +133,11 @@ Flickable {
             wrapMode: Text.WordWrap
         }
 
-        SettingsGroup {
+        ZendaGroup {
             visible: ZendaStartupSettings.externalEntries.length > 0
             Repeater {
                 model: ZendaStartupSettings.externalEntries
-                delegate: SettingsRow {
+                delegate: ZendaRow {
                     required property var modelData
                     required property int index
                     searchable: false

@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 PanelWindow {
@@ -96,7 +97,7 @@ PanelWindow {
                 font: Theme.font.body
                 wrapMode: Text.Wrap
             }
-            SettingsField {
+            ZendaField {
                 id: codeInput
                 Layout.fillWidth: true
                 visible: dialog.needsInput
@@ -107,8 +108,8 @@ PanelWindow {
             RowLayout {
                 Layout.alignment: Qt.AlignRight
                 spacing: Theme.spacing.sm
-                SettingsButton { label: "Cancelar"; onClicked: Bluetooth.answerPairing(false, "") }
-                SettingsButton {
+                ZendaButton { label: "Cancelar"; onClicked: Bluetooth.answerPairing(false, "") }
+                ZendaButton {
                     label: "Confirmar"
                     primary: true
                     visible: dialog.kind !== "display"

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 // Appearance settings: the theme and the size of the interface text.
@@ -30,8 +31,8 @@ Flickable {
     ColumnLayout {
         id: column
         width: root.width
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Tema"
                 modified: Theme.currentTheme !== "zenda-ice"
@@ -40,7 +41,7 @@ Flickable {
             }
             Repeater {
                 model: ZendaTheme.themes.filter(theme => theme.valid)
-                delegate: SettingsButton {
+                delegate: ZendaButton {
                     required property var modelData
                     Layout.fillWidth: true
                     label: modelData.name
@@ -50,14 +51,14 @@ Flickable {
                 }
             }
         }
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Tamaño de la letra"
                 modified: root.currentPercent !== 100
                 onResetRequested: root.changeTo(100)
                 description: "Escala toda la interfaz entre 80 y 150 %."
-                SettingsSlider {
+                ZendaSlider {
                     value: root.currentPercent
                     enabled: !ZendaSettings.busy
                     onCommitted: value => root.changeTo(value)

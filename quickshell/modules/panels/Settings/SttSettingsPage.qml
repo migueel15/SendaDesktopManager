@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 // Dictation runtime, model catalog and settings.
@@ -25,14 +26,14 @@ Flickable {
         id: column
         width: root.width
         spacing: Theme.spacing.md
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Motor"
                 description: ZendaSttSettings.runtime.installed
                     ? `Instalado${ZendaSttSettings.runtime.provider ? ` · ${ZendaSttSettings.runtime.provider}` : ""}`
                     : "No instalado · la descarga ocupa aproximadamente 1 GB"
-                SettingsButton {
+                ZendaButton {
                     visible: !ZendaSttSettings.runtime.installed
                     label: "Instalar motor"
                     primary: true
@@ -45,7 +46,7 @@ Flickable {
         Repeater {
             model: ZendaSttSettings.models
 
-            delegate: SettingsGroup {
+            delegate: ZendaGroup {
                 id: modelCard
                 required property var modelData
                 Layout.fillWidth: true
@@ -55,7 +56,7 @@ Flickable {
                     Layout.fillWidth: true
                     spacing: Theme.spacing.sm
 
-                    SettingsRow {
+                    ZendaRow {
                         separator: false
                         label: modelCard.modelData.name
                         description: `${(modelCard.modelData.languages || []).join(", ")} · ${modelCard.modelData.streaming ? "Streaming · texto en vivo" : "Sin streaming · texto al terminar"} · ${root.formatSize(modelCard.modelData.sizeBytes)} · ${modelCard.modelData.installed ? "Instalado" : "No instalado"}${modelCard.modelData.active ? " · Activo" : ""}`
@@ -86,26 +87,26 @@ Flickable {
                         Layout.fillWidth: true
                         spacing: Theme.spacing.sm
                         Item { Layout.fillWidth: true }
-                        SettingsButton {
+                        ZendaButton {
                             visible: !modelCard.modelData.installed
                             label: "Instalar"
                             primary: true
                             enabled: !ZendaSttSettings.busy
                             onClicked: ZendaSttSettings.installModel(modelCard.modelData.id)
                         }
-                        SettingsButton {
+                        ZendaButton {
                             visible: modelCard.modelData.installed && !modelCard.modelData.active
                             label: "Activar"
                             enabled: !ZendaSttSettings.busy
                             onClicked: ZendaSttSettings.useModel(modelCard.modelData.id)
                         }
-                        SettingsButton {
+                        ZendaButton {
                             visible: modelCard.modelData.installed
                             label: "Borrar"
                             enabled: !ZendaSttSettings.busy
                             onClicked: ZendaSttSettings.removeModel(modelCard.modelData.id)
                         }
-                        SettingsButton {
+                        ZendaButton {
                             visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
                             label: "Cancelar"
                             enabled: !ZendaSttSettings.cancelRequested
@@ -116,27 +117,27 @@ Flickable {
             }
         }
 
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Atenuar volumen durante el dictado"
                 modified: !ZendaSttSettings.audioDuckingEnabled
                 onResetRequested: ZendaSettings.save({ ZENDA_STT_AUDIO_DUCKING: "" }, "Atenuación restablecida")
                 description: "Al terminar o cancelar se recupera el volumen anterior. Se aplica al siguiente dictado."
-                SettingsSwitch {
+                ZendaSwitch {
                     checkedValue: ZendaSttSettings.audioDuckingEnabled
                     enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
                     Accessible.name: "Atenuar volumen durante el dictado"
                     onToggledValue: value => ZendaSttSettings.setAudioDucking(value)
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 visible: ZendaSttSettings.audioDuckingEnabled
                 label: "Volumen durante el dictado"
                 modified: ZendaSttSettings.audioVolume !== 10
                 onResetRequested: { dictationVolumeField.text = "10"; ZendaSettings.save({ ZENDA_STT_AUDIO_VOLUME: "" }, "Volumen restablecido"); }
                 description: "Porcentaje entre 0 y 100. Solo se baja si el volumen actual es mayor y no está silenciado."
-                SettingsField {
+                ZendaField {
                     id: dictationVolumeField
                     Layout.preferredWidth: 90
                     text: String(ZendaSttSettings.audioVolume)
@@ -153,14 +154,14 @@ Flickable {
                     }
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Precargar modelo"
                 modified: ZendaSttSettings.preloadEnabled
                 onResetRequested: ZendaSettings.save({ ZENDA_STT_PRELOAD: "" }, "Precarga restablecida")
                 description: ZendaSttSettings.preloadState === "preparing" ? "Preparando el modelo…"
                     : ZendaSttSettings.preloadState === "ready" ? "Listo"
                     : ZendaSttSettings.preloadState === "error" ? `Error: ${ZendaSttSettings.preloadError}` : "Inactivo"
-                SettingsSwitch {
+                ZendaSwitch {
                     checkedValue: ZendaSttSettings.preloadEnabled
                     enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
                     Accessible.name: "Precargar modelo"
@@ -168,24 +169,24 @@ Flickable {
                 }
             }
         }
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Idioma"
                 modified: (ZendaSettings.values.ZENDA_STT_LANGUAGE || "es") !== "es"
                 onResetRequested: { languageField.text = "es"; ZendaSettings.save({ ZENDA_STT_LANGUAGE: "" }, "Idioma restablecido"); }
                 description: "Español o detección automática. También puedes introducir un código."
-                SettingsSegments {
+                ZendaSegments {
                     value: ZendaSettings.values.ZENDA_STT_LANGUAGE || "es"
                     options: [{ label: "Español", value: "es" }, { label: "Detectar", value: "auto" }]
                     enabled: !ZendaSettings.busy
                     onChosen: value => ZendaSettings.save({ ZENDA_STT_LANGUAGE: value }, "Idioma guardado")
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Código de idioma"
                 description: "Por ejemplo, en."
-                SettingsField {
+                ZendaField {
                     id: languageField
                     Layout.preferredWidth: 120
                     text: ZendaSettings.values.ZENDA_STT_LANGUAGE || "es"
@@ -195,23 +196,23 @@ Flickable {
                     }
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Al dictar"
                 modified: (ZendaSettings.values.ZENDA_STT_PASTE_MODE || "paste") !== "paste"
                 onResetRequested: ZendaSettings.save({ ZENDA_STT_PASTE_MODE: "" }, "Modo de pegado restablecido")
-                SettingsSegments {
+                ZendaSegments {
                     value: ZendaSettings.values.ZENDA_STT_PASTE_MODE || "paste"
                     options: [{ label: "Pegar directamente", value: "paste" }, { label: "Solo portapapeles", value: "clipboard" }]
                     enabled: !ZendaSettings.busy
                     onChosen: value => ZendaSettings.save({ ZENDA_STT_PASTE_MODE: value }, "Modo de pegado guardado")
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Terminales"
                 modified: (ZendaSettings.values.ZENDA_STT_TERMINALS || "") !== ""
                 onResetRequested: { terminalsField.text = "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty"; ZendaSettings.save({ ZENDA_STT_TERMINALS: "" }, "Terminales restablecidas"); }
                 description: "Clases de ventana separadas por comas."
-                SettingsField {
+                ZendaField {
                     id: terminalsField
                     Layout.preferredWidth: 220
                     Layout.fillWidth: true
@@ -222,13 +223,13 @@ Flickable {
                 }
             }
         }
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Atajo de dictado"
                 description: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.dictationShortcut
                     : ZendaHyprlandSettings.busy ? "Consultando ajustes del sistema…" : "No se pudo consultar el atajo"
-                SettingsButton {
+                ZendaButton {
                     label: "Abrir Sistema"
                     onClicked: root.openSystemRequested()
                 }

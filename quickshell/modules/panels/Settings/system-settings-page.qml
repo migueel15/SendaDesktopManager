@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Io
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Flickable {
@@ -35,31 +36,31 @@ Flickable {
             font: Theme.font.caption
             wrapMode: Text.WordWrap
         }
-        SettingsButton {
+        ZendaButton {
             visible: !ZendaHyprlandSettings.loaded && !ZendaHyprlandSettings.busy
             label: "Reintentar"
             onClicked: ZendaHyprlandSettings.refresh()
         }
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Historial del portapapeles"
                 description: "Guarda en este equipo el texto copiado. No guarda imágenes ni lo que los gestores de contraseñas marcan como sensible."
                 modified: ZendaSettings.values.ZENDA_CLIPBOARD_ENABLED === "false"
                 onResetRequested: ZendaSettings.save({ ZENDA_CLIPBOARD_ENABLED: "" }, "Historial del portapapeles restablecido")
-                SettingsSwitch {
+                ZendaSwitch {
                     checkedValue: ZendaSettings.values.ZENDA_CLIPBOARD_ENABLED !== "false"
                     enabled: !ZendaSettings.busy
                     Accessible.name: "Historial del portapapeles"
                     onToggledValue: value => ZendaSettings.save({ ZENDA_CLIPBOARD_ENABLED: String(value) }, "Historial del portapapeles guardado")
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Máximo de entradas"
                 description: "De 1 a 1000. Se eliminan las más antiguas."
                 modified: (ZendaSettings.values.ZENDA_CLIPBOARD_MAX || "") !== ""
                 onResetRequested: { clipboardMaxField.text = ""; ZendaSettings.save({ ZENDA_CLIPBOARD_MAX: "" }, "Máximo de entradas restablecido"); }
-                SettingsField {
+                ZendaField {
                     id: clipboardMaxField
                     Layout.preferredWidth: 100
                     enabled: ZendaSettings.configLoaded
@@ -68,66 +69,66 @@ Flickable {
                     onCommitted: ZendaSettings.save({ ZENDA_CLIPBOARD_MAX: text.trim() }, "Máximo de entradas guardado")
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Vaciar el historial"
-                SettingsButton {
+                ZendaButton {
                     label: "Vaciar"
                     onClicked: ZendaClipboard.clear()
                 }
             }
         }
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Atajo de bloqueo"
-                SettingsShortcut {
+                ZendaShortcut {
                     target: "lock"
                     enabled: ZendaHyprlandSettings.loaded
                     value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.lockShortcut : ""
                     defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultLockShortcut : ""
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Atajo de dictado"
-                SettingsShortcut {
+                ZendaShortcut {
                     target: "dictation"
                     enabled: ZendaHyprlandSettings.loaded
                     value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.dictationShortcut : ""
                     defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultDictationShortcut : ""
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Atajo de captura"
-                SettingsShortcut {
+                ZendaShortcut {
                     target: "screenshot"
                     enabled: ZendaHyprlandSettings.loaded
                     value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.screenshotShortcut : ""
                     defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultScreenshotShortcut : ""
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Atajo del launcher"
-                SettingsShortcut {
+                ZendaShortcut {
                     target: "launcher"
                     enabled: ZendaHyprlandSettings.loaded
                     value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.launcherShortcut : ""
                     defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultLauncherShortcut : ""
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Atajo de emojis"
-                SettingsShortcut {
+                ZendaShortcut {
                     target: "emoji"
                     enabled: ZendaHyprlandSettings.loaded
                     value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.emojiShortcut : ""
                     defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultEmojiShortcut : ""
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Carpeta de capturas"
                 modified: (ZendaSettings.values.ZENDA_SCREENSHOT_DIR || "") !== ""
                 onResetRequested: { screenshotDirField.text = ""; ZendaSettings.save({ ZENDA_SCREENSHOT_DIR: "" }, "Carpeta de capturas restablecida"); }
-                SettingsField {
+                ZendaField {
                     id: screenshotDirField
                     Layout.preferredWidth: 230
                     enabled: ZendaSettings.configLoaded
@@ -136,12 +137,12 @@ Flickable {
                     onCommitted: ZendaSettings.save({ ZENDA_SCREENSHOT_DIR: text.trim() }, "Carpeta de capturas guardada")
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Desenfocar pantalla de bloqueo"
                 modified: ZendaHyprlandSettings.loaded && !ZendaHyprlandSettings.values.blur
                 onResetRequested: ZendaHyprlandSettings.save("--blur", true)
-                SettingsSavedMark { flag: "--blur" }
-                SettingsSwitch {
+                ZendaSavedMark { flag: "--blur" }
+                ZendaSwitch {
                     checkedValue: ZendaHyprlandSettings.loaded && ZendaHyprlandSettings.values.blur
                     enabled: ZendaHyprlandSettings.loaded
                     Accessible.name: "Desenfocar pantalla de bloqueo"

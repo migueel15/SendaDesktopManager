@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Flickable {
@@ -32,14 +33,14 @@ Flickable {
         width: root.width
         spacing: Theme.spacing.md
 
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Distribución de teclado"
                 modified: root.modified_("layout")
                 onResetRequested: { layoutField.text = ZendaInputSettings.defaults.layout || ""; ZendaInputSettings.set("layout", ""); }
                 description: root.note("layout", "Código XKB; varias separadas por comas, p. ej. us,es")
-                SettingsField {
+                ZendaField {
                     id: layoutField
                     implicitWidth: Theme.scaled(160)
                     enabled: !root.managed("layout")
@@ -49,14 +50,14 @@ Flickable {
             }
         }
 
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Velocidad del ratón"
                 modified: root.modified_("sensitivity")
                 onResetRequested: ZendaInputSettings.set("sensitivity", "")
                 description: root.note("sensitivity", "50 % es la velocidad normal")
-                SettingsSlider {
+                ZendaSlider {
                     implicitWidth: Theme.scaled(200)
                     enabled: !root.managed("sensitivity")
                     from: 0; to: 100; stepSize: 5
@@ -65,12 +66,12 @@ Flickable {
                     onCommitted: value => ZendaInputSettings.set("sensitivity", (value / 50 - 1).toFixed(2))
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Aceleración del ratón"
                 modified: root.modified_("accelProfile")
                 onResetRequested: ZendaInputSettings.set("accel-profile", "")
                 description: root.note("accelProfile", root.accelFlat ? "Plana: el cursor recorre siempre lo mismo que la mano" : "Adaptativa: si mueves rápido, el cursor llega más lejos")
-                SettingsSegments {
+                ZendaSegments {
                     implicitWidth: Theme.scaled(200)
                     enabled: !root.managed("accelProfile")
                     options: [{ value: "adaptive", label: "Adaptativa" }, { value: "flat", label: "Plana" }]
@@ -114,12 +115,12 @@ Flickable {
                     ctx.fillText("velocidad de la mano", m + w, m + h + 12);
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Foco con el ratón"
                 modified: root.modified_("followMouse")
                 onResetRequested: ZendaInputSettings.set("follow-mouse", "")
                 description: root.note("followMouse", ["El foco no sigue al cursor", "La ventana bajo el cursor recibe el foco", "Cursor y teclado separados; el clic da el foco", "Cursor y teclado totalmente separados"][Number(ZendaInputSettings.current.followMouse || 1)] || "")
-                SettingsSegments {
+                ZendaSegments {
                     implicitWidth: Theme.scaled(260)
                     enabled: !root.managed("followMouse")
                     options: [{ value: "0", label: "No" }, { value: "1", label: "Sigue" }, { value: "2", label: "Clic" }, { value: "3", label: "Aparte" }]
@@ -129,25 +130,25 @@ Flickable {
             }
         }
 
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Tocar para hacer clic"
                 modified: root.modified_("tapToClick")
                 onResetRequested: ZendaInputSettings.set("tap-to-click", "")
                 description: root.note("tapToClick", "En el touchpad")
-                SettingsSwitch {
+                ZendaSwitch {
                     enabled: !root.managed("tapToClick")
                     checkedValue: ZendaInputSettings.current.tapToClick === "true"
                     onToggledValue: value => ZendaInputSettings.set("tap-to-click", value)
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Desplazamiento natural"
                 modified: root.modified_("naturalScroll")
                 onResetRequested: ZendaInputSettings.set("natural-scroll", "")
                 description: root.note("naturalScroll", "En el touchpad")
-                SettingsSwitch {
+                ZendaSwitch {
                     enabled: !root.managed("naturalScroll")
                     checkedValue: ZendaInputSettings.current.naturalScroll === "true"
                     onToggledValue: value => ZendaInputSettings.set("natural-scroll", value)
@@ -155,25 +156,25 @@ Flickable {
             }
         }
 
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Desactivar touchpad al escribir"
                 modified: root.modified_("disableWhileTyping")
                 onResetRequested: ZendaInputSettings.set("disable-while-typing", "")
                 description: root.note("disableWhileTyping", "Evita toques accidentales con la palma")
-                SettingsSwitch {
+                ZendaSwitch {
                     enabled: !root.managed("disableWhileTyping")
                     checkedValue: ZendaInputSettings.current.disableWhileTyping === "true"
                     onToggledValue: value => ZendaInputSettings.set("disable-while-typing", value)
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Velocidad de desplazamiento"
                 modified: root.modified_("scrollFactor")
                 onResetRequested: ZendaInputSettings.set("scroll-factor", "")
                 description: root.note("scrollFactor", "En el touchpad; 100 % es lo normal")
-                SettingsSlider {
+                ZendaSlider {
                     implicitWidth: Theme.scaled(200)
                     enabled: !root.managed("scrollFactor")
                     from: 10; to: 300; stepSize: 10
@@ -183,26 +184,26 @@ Flickable {
             }
         }
 
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Tema de cursor"
                 modified: root.modified_("cursorTheme")
                 onResetRequested: ZendaInputSettings.set("cursor-theme", "")
                 description: root.note("cursorTheme", "Se aplica al momento")
-                SettingsSelect {
+                ZendaSelect {
                     enabled: !root.managed("cursorTheme")
                     options: ZendaInputSettings.cursorThemes
                     value: ZendaInputSettings.current.cursorTheme || ""
                     onChosen: value => ZendaInputSettings.set("cursor-theme", value)
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 label: "Tamaño del cursor"
                 modified: root.modified_("cursorSize")
                 onResetRequested: ZendaInputSettings.set("cursor-size", "")
                 description: root.note("cursorSize", "Se aplica al momento")
-                SettingsSlider {
+                ZendaSlider {
                     implicitWidth: Theme.scaled(200)
                     enabled: !root.managed("cursorSize")
                     from: 16; to: 64; stepSize: 2
@@ -213,7 +214,7 @@ Flickable {
             }
         }
 
-        SettingsStatus {
+        ZendaStatus {
             Layout.fillWidth: true
             error: true
             message: ZendaInputSettings.error

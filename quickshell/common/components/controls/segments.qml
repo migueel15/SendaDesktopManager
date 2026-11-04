@@ -23,7 +23,7 @@ Rectangle {
         spacing: Theme.spacing.xs
         Repeater {
             model: root.options
-            delegate: SettingsButton {
+            delegate: ZendaButton {
                 id: segment
                 required property var modelData
                 Layout.fillWidth: true

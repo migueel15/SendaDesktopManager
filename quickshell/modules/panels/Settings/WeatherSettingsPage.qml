@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.services
+import qs.common
+import qs.common.components.controls
 
 // Weather settings: the location used by "EL TIEMPO", chosen by searching.
 Flickable {
@@ -18,14 +20,14 @@ Flickable {
         width: root.width
         spacing: 12
 
-        SettingsGroup {
+        ZendaGroup {
 
-            SettingsRow {
+            ZendaRow {
                 separator: false
                 label: "Localidad"
                 description: ZendaSettings.values.ZENDA_WEATHER_LOCATION
                     || (ZendaSettings.defaultWeatherLocation ? `${ZendaSettings.defaultWeatherLocation} (según tu zona horaria)` : "Sin elegir")
-                SettingsField {
+                ZendaField {
                     id: searchField
                     Layout.fillWidth: true
                     Layout.preferredWidth: 140
@@ -33,7 +35,7 @@ Flickable {
                     enabled: !ZendaSettings.busy
                     onAccepted: if (!ZendaSettings.busy) ZendaSettings.searchPlaces(text)
                 }
-                SettingsButton {
+                ZendaButton {
                     label: "Buscar"
                     enabled: !ZendaSettings.busy && searchField.text.trim().length >= 2
                     onClicked: ZendaSettings.searchPlaces(searchField.text)
@@ -41,13 +43,13 @@ Flickable {
             }
             Repeater {
                 model: ZendaSettings.places
-                delegate: SettingsRow {
+                delegate: ZendaRow {
                     searchable: false
                     id: placeRow
                     required property var modelData
                     label: modelData.name
                     description: [modelData.admin, modelData.country].filter(part => part).join(", ")
-                    SettingsButton {
+                    ZendaButton {
                         label: "Elegir"
                         enabled: !ZendaSettings.busy
                         onClicked: ZendaSettings.saveLocation(placeRow.modelData)
