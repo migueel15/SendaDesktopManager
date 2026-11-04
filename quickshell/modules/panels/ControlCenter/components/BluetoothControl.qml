@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.common.components.icons
 import qs.services
 
@@ -27,9 +28,6 @@ Item {
             width: parent.width
             height: 92
             radius: Theme.card.radius
-            // Square while its selector is attached below.
-            bottomLeftRadius: devicesDropdown.attached ? 0 : Theme.card.radius
-            bottomRightRadius: devicesDropdown.attached ? 0 : Theme.card.radius
             color: Theme.card.fill
             border.width: Theme.card.borderWidth
             border.color: Theme.card.borderColor
@@ -68,29 +66,10 @@ Item {
                         }
                     }
 
-                    Rectangle {
+                    ZendaSwitch {
                         Layout.leftMargin: 8
-                        width: 38
-                        height: 22
-                        radius: Theme.rounding.full
-                        color: Bluetooth.enabled ? Theme.colors.primary : Theme.colors.surfaceVariant
-
-                        Rectangle {
-                            width: 16
-                            height: 16
-                            y: 3
-                            x: Bluetooth.enabled ? parent.width - width - 3 : 3
-                            radius: Theme.rounding.full
-                            color: Theme.colors.background
-
-                            Behavior on x { NumberAnimation { duration: 120 } }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Bluetooth.toggleEnabled()
-                        }
+                        checkedValue: Bluetooth.enabled
+                        onToggledValue: Bluetooth.toggleEnabled()
                     }
                 }
 
@@ -125,7 +104,7 @@ Item {
             }
         }
 
-        DropdownCard {
+        ZendaExpandPanel {
             id: devicesDropdown
             expanded: root.devicesExpanded
             contentHeight: devicesColumn.implicitHeight + 20
@@ -159,48 +138,21 @@ Item {
                 Repeater {
                     model: Bluetooth.namedDevices
 
-                    delegate: Rectangle {
+                    delegate: ZendaListItem {
                         required property var modelData
-                        readonly property bool activeDevice: Bluetooth.activeDevice?.address === modelData.address
-
                         width: devicesColumn.width
-                        height: 38
-                        radius: Theme.rounding.normal
-                        color: activeDevice || deviceMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 10
-                            spacing: 8
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: Bluetooth.getDisplayName(modelData)
-                                color: activeDevice ? Theme.colors.primary : Theme.colors.text
-                                font: Theme.font.overlay
-                                elide: Text.ElideRight
-                            }
-
-                            Text {
-                                text: modelData.pairing || Bluetooth.pairing && Bluetooth.pairingDevice === modelData ? "Emparejando…" : modelData.connected ? (Bluetooth.getBatteryLabel(modelData) || "Conectado") : (modelData.paired ? "Desconectado" : "Sin emparejar")
-                                color: modelData.connected ? Theme.colors.success : Theme.colors.overlay
-                                font: Theme.font.overlay
-                            }
-                        }
-
-                        MouseArea {
-                            id: deviceMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: !Bluetooth.pairing
-                            onClicked: {
-                                const wasPaired = modelData.paired;
-                                if (modelData.connected) Bluetooth.disconnectDevice(modelData);
-                                else Bluetooth.connectDevice(modelData);
-                                if (wasPaired) root.devicesExpanded = false;
-                            }
+                        interactive: !Bluetooth.pairing
+                        selected: Bluetooth.activeDevice?.address === modelData.address
+                        leadingIcon: modelData.icon?.includes("headset") || modelData.icon?.includes("audio") ? "󰋋" : "󰂯"
+                        text: Bluetooth.getDisplayName(modelData)
+                        trailingIcon: ""
+                        trailingText: modelData.pairing || Bluetooth.pairing && Bluetooth.pairingDevice === modelData ? "Emparejando…" : modelData.connected ? (Bluetooth.getBatteryLabel(modelData) || "Conectado") : (modelData.paired ? "Desconectado" : "Sin emparejar")
+                        trailingColor: modelData.connected ? Theme.colors.success : Theme.colors.overlay
+                        onClicked: {
+                            const wasPaired = modelData.paired;
+                            if (modelData.connected) Bluetooth.disconnectDevice(modelData);
+                            else Bluetooth.connectDevice(modelData);
+                            if (wasPaired) root.devicesExpanded = false;
                         }
                     }
                 }

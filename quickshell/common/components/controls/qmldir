@@ -1,6 +1,8 @@
 ZendaButton 1.0 button.qml
+ZendaExpandPanel 1.0 expand-panel.qml
 ZendaField 1.0 field.qml
 ZendaGroup 1.0 group.qml
+ZendaListItem 1.0 list-item.qml
 ZendaRow 1.0 row.qml
 ZendaSavedMark 1.0 saved-mark.qml
 ZendaSegments 1.0 segments.qml
