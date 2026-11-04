@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtCore
 import Qt.labs.folderlistmodel
 import qs.common
+import qs.common.components.controls
 
 // Image browser drawn inside the picker popup. A FileDialog is not native in a
 // Quickshell layer: it renders inside this window and fights for its focus.
@@ -30,9 +31,8 @@ Rectangle {
         folderModel.folder = "file://" + (dir || "/");
     }
 
-    color: Theme.colors.background
-    radius: Theme.rounding.small
-    border.color: Theme.colors.surfaceVariant
+    color: Theme.card.fill
+    radius: Theme.card.radius
     implicitHeight: 260
     Component.onCompleted: open()
 
@@ -48,23 +48,17 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: Theme.spacing.sm
+        anchors.margins: Theme.spacing.md
         spacing: Theme.spacing.sm
 
         RowLayout {
             Layout.fillWidth: true
             spacing: Theme.spacing.sm
-            Text {
-                text: "↑"
-                font: Theme.font.heading
-                color: upArea.containsMouse ? Theme.colors.primary : Theme.colors.text
-                MouseArea {
-                    id: upArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: folderModel.folder = folderModel.parentFolder
-                }
+            ZendaIconButton {
+                size: Theme.scaled(28)
+                icon: "\uf062"
+                accessibleLabel: "Carpeta superior"
+                onClicked: folderModel.folder = folderModel.parentFolder
             }
             Text {
                 Layout.fillWidth: true
@@ -73,18 +67,7 @@ Rectangle {
                 font: Theme.font.caption
                 color: Theme.colors.textMuted
             }
-            Text {
-                text: "Cerrar"
-                font: Theme.font.body
-                color: closeArea.containsMouse ? Theme.colors.primary : Theme.colors.text
-                MouseArea {
-                    id: closeArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.cancelled()
-                }
-            }
+
         }
 
         ListView {
@@ -92,31 +75,18 @@ Rectangle {
             Layout.fillHeight: true
             clip: true
             model: folderModel
-            delegate: Rectangle {
+            spacing: 2
+            delegate: ZendaListItem {
                 required property string fileName
                 required property url fileUrl
                 required property bool fileIsDir
                 width: ListView.view.width
-                height: 28
-                radius: Theme.rounding.small
-                color: rowArea.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: Theme.spacing.sm
-                    text: (parent.fileIsDir ? "▸ " : "") + parent.fileName
-                    font: Theme.font.body
-                    color: Theme.colors.text
-                }
-                MouseArea {
-                    id: rowArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (parent.fileIsDir) folderModel.folder = parent.fileUrl;
-                        else root.picked(root.pathOf(parent.fileUrl));
-                    }
+                leadingIcon: fileIsDir ? "\uf07b" : "\uf03e"
+                text: fileName
+                trailingIcon: fileIsDir ? "\uf054" : ""
+                onClicked: {
+                    if (fileIsDir) folderModel.folder = fileUrl;
+                    else root.picked(root.pathOf(fileUrl));
                 }
             }
             Text {

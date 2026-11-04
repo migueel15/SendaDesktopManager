@@ -8,6 +8,6 @@ Singleton {
 
     property bool enabled: true
     property string debugScreenName: "DP-4"
-    // controlCenter, dashboard or themes.
-    property string panel: "themes"
+    // controlCenter, dashboard, themes or wallpapers.
+    property string panel: "wallpapers"
 }
