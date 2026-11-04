@@ -12,6 +12,11 @@ Rectangle {
     property var options: []
     property string value: ""
     signal chosen(string value)
+    // Animate only changes the user makes: values that arrive when a page is
+    // created or data loads snap into place instead of sliding.
+    property bool animating: false
+    function animateChange() { root.animating = true; settle.restart(); }
+    Timer { id: settle; interval: 700; onTriggered: root.animating = false }
 
     readonly property int count: Math.max(1, options.length)
     readonly property int currentIndex: options.findIndex(option => option.value === root.value)
@@ -37,7 +42,7 @@ Rectangle {
         height: root.height - 2 * root.inset
         radius: Theme.rounding.full
         color: Theme.colors.primary
-        Behavior on x { SpringAnimation { spring: Theme.motion.spring; damping: Theme.motion.damping } }
+        Behavior on x { enabled: root.animating; SpringAnimation { spring: Theme.motion.spring; damping: Theme.motion.damping } }
     }
 
     Row {
@@ -73,11 +78,11 @@ Rectangle {
                     font.family: Theme.textFamily
                     font.pixelSize: Theme.scaled(12)
                     font.weight: Font.Bold
-                    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+                    Behavior on color { enabled: root.animating; ColorAnimation { duration: Theme.motion.normal } }
                     Component.onCompleted: root.widestLabel = Math.max(root.widestLabel, implicitWidth)
                 }
                 HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }
-                TapHandler { enabled: root.enabled; onTapped: root.chosen(segment.modelData.value) }
+                TapHandler { enabled: root.enabled; onTapped: { root.animateChange(); root.chosen(segment.modelData.value); } }
             }
         }
     }
