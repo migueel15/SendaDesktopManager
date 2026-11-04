@@ -124,10 +124,10 @@ Variants {
 
         Rectangle {
             anchors.fill: parent
-            radius: Theme.rounding.normal
+            radius: Theme.card.radius
             color: Theme.colors.background
             border.width: 1
-            border.color: Theme.colors.border
+            border.color: Theme.colors.surfaceVariant
         }
 
         // Remaining lifetime of the popup. Full while hovered, since hovering
@@ -237,9 +237,7 @@ Variants {
                     Layout.preferredWidth: 22
                     Layout.preferredHeight: 22
                     radius: Theme.rounding.small
-                    color: Theme.colors.surface
-                    border.width: 1
-                    border.color: Theme.colors.border
+                    color: Theme.colors.surfaceVariant
 
                     IconImage {
                         asynchronous: true

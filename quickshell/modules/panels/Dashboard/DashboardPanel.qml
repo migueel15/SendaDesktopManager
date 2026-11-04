@@ -82,10 +82,10 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 166
-            radius: Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
+            radius: Theme.card.radius
+            color: Theme.card.fill
+            border.width: Theme.card.borderWidth
+            border.color: Theme.card.borderColor
 
             RowLayout {
                 anchors.fill: parent
@@ -160,10 +160,10 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: false
                     Layout.preferredHeight: 154
-                    radius: Theme.rounding.normal
-                    color: Theme.colors.surface
-                    border.width: 1
-                    border.color: Theme.colors.surfaceVariant
+                    radius: Theme.card.radius
+                    color: Theme.card.fill
+                    border.width: Theme.card.borderWidth
+                    border.color: Theme.card.borderColor
 
                     ColumnLayout {
                         anchors.fill: parent

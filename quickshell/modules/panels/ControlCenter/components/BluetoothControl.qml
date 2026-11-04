@@ -26,13 +26,13 @@ Item {
         Rectangle {
             width: parent.width
             height: 92
-            radius: Theme.rounding.normal
+            radius: Theme.card.radius
             // Square while its selector is attached below.
-            bottomLeftRadius: devicesDropdown.attached ? 0 : Theme.rounding.normal
-            bottomRightRadius: devicesDropdown.attached ? 0 : Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
+            bottomLeftRadius: devicesDropdown.attached ? 0 : Theme.card.radius
+            bottomRightRadius: devicesDropdown.attached ? 0 : Theme.card.radius
+            color: Theme.card.fill
+            border.width: Theme.card.borderWidth
+            border.color: Theme.card.borderColor
 
             ColumnLayout {
                 anchors.fill: parent

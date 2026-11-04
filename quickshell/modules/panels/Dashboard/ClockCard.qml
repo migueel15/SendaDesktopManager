@@ -9,11 +9,11 @@ Rectangle {
     width: 100
     height: 175
 
-    color: Theme.colors.surface
-    radius: Theme.rounding.normal
+    color: Theme.card.fill
+    radius: Theme.card.radius
 
-    border.width: 1
-    border.color: Theme.colors.surfaceVariant
+    border.width: Theme.card.borderWidth
+    border.color: Theme.card.borderColor
 
     Column {
         anchors.centerIn: parent

@@ -24,13 +24,13 @@ Item {
         Rectangle {
             width: parent.width
             height: outputColumn.implicitHeight + 24
-            radius: Theme.rounding.normal
+            radius: Theme.card.radius
             // Square while its selector is attached below.
-            bottomLeftRadius: outputDropdown.attached ? 0 : Theme.rounding.normal
-            bottomRightRadius: outputDropdown.attached ? 0 : Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
+            bottomLeftRadius: outputDropdown.attached ? 0 : Theme.card.radius
+            bottomRightRadius: outputDropdown.attached ? 0 : Theme.card.radius
+            color: Theme.card.fill
+            border.width: Theme.card.borderWidth
+            border.color: Theme.card.borderColor
 
             Column {
                 id: outputColumn
@@ -212,13 +212,13 @@ Item {
         Rectangle {
             width: parent.width
             height: 64
-            radius: Theme.rounding.normal
+            radius: Theme.card.radius
             // Square while its selector is attached below.
-            bottomLeftRadius: inputDropdown.attached ? 0 : Theme.rounding.normal
-            bottomRightRadius: inputDropdown.attached ? 0 : Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
+            bottomLeftRadius: inputDropdown.attached ? 0 : Theme.card.radius
+            bottomRightRadius: inputDropdown.attached ? 0 : Theme.card.radius
+            color: Theme.card.fill
+            border.width: Theme.card.borderWidth
+            border.color: Theme.card.borderColor
 
             RowLayout {
                 anchors.fill: parent

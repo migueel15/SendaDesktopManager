@@ -47,6 +47,16 @@ QtObject {
 	readonly property Workspaces workspaces: Workspaces {}
 	readonly property Notifications notifications: Notifications {}
 
+	// Style B cards: every card, group and tile in panels uses these, so a
+	// change here restyles Settings, Dashboard, Control Center and the rest.
+	readonly property QtObject card: QtObject {
+		readonly property color fill: root.colors.surfaceRaised
+		readonly property color hoverFill: root.colors.surfaceVariant
+		readonly property int radius: root.rounding.card
+		readonly property int borderWidth: 0
+		readonly property color borderColor: "transparent"
+	}
+
 	// Zenda palette. Neutrals: Noche, Grafito, Pizarra, Humo, Bruma.
 	// Accent: Abismo, Cobalto, Hielo, Escarcha.
 	component Colors: QtObject {

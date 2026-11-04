@@ -242,10 +242,11 @@ ZendaPanel {
 
         implicitHeight: rowLayout.implicitHeight + 24
         x: 0
-        radius: Theme.rounding.normal
-        color: rowHover.hovered ? Theme.colors.surfaceRaised : Theme.colors.surface
-        border.width: 1
-        border.color: Theme.colors.border
+        radius: Theme.card.radius
+        color: rowHover.hovered ? Theme.card.hoverFill : Theme.card.fill
+        Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+        border.width: Theme.card.borderWidth
+        border.color: Theme.card.borderColor
         transform: Translate {
             x: row.swipeOffset
         }

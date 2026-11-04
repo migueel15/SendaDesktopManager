@@ -16,12 +16,12 @@ Rectangle {
     signal powerMenuCloseRequested
 
     width: parent.width
-    color: Theme.colors.surface
+    color: Theme.card.fill
     height: 60
-    radius: Theme.rounding.normal
+    radius: Theme.card.radius
     // Square while the power menu is attached below.
-    bottomLeftRadius: attachedBelow ? 0 : Theme.rounding.normal
-    bottomRightRadius: attachedBelow ? 0 : Theme.rounding.normal
+    bottomLeftRadius: attachedBelow ? 0 : Theme.card.radius
+    bottomRightRadius: attachedBelow ? 0 : Theme.card.radius
     property bool attachedBelow: false
     border.width: 1
     border.color: Theme.colors.surfaceVariant
