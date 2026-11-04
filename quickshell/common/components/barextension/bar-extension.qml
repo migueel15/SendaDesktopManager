@@ -30,7 +30,7 @@ Item {
 	property string conflictGroup: ""
 	// Duration used when expandedHeight changes while open. Content that animates
 	// its own height should use 0, so the background follows it without lagging.
-	property int resizeDuration: 310
+	property int resizeDuration: Theme.motion.slow + 60
 	// True from an open or close until its height animation ends.
 	property bool toggling: false
 	property bool initialized: false
