@@ -10,6 +10,11 @@ Item {
 	default property alias content: contentArea.data
 
 	property bool expanded: false
+	// Edge the extension grows out of: "top" (the bar) or "bottom" (the
+	// bottom screen frame). Bottom mirrors the shape; place the item so its
+	// bottom stays on the frame, e.g. y: parent.height - height.
+	property string edge: "top"
+	readonly property bool fromBottom: edge === "bottom"
 	property real expandedHeight: Theme.barSize
 	property color backgroundColor: Theme.colors.background
 	readonly property int shadowSpace: 20
@@ -129,6 +134,7 @@ Item {
 
 	Loader {
 		anchors.fill: backgroundShape
+		transform: Scale { origin.y: root.height / 2; yScale: root.fromBottom ? -1 : 1 }
 		active: root.height > root.contentHideThreshold
 		sourceComponent: Component {
 			MultiEffect {
@@ -139,7 +145,7 @@ Item {
 				shadowColor: "#90000000"
 				blurMax: 24
 				shadowBlur: 1.0
-				shadowVerticalOffset: 4
+				shadowVerticalOffset: root.fromBottom ? -4 : 4
 			}
 		}
 	}
@@ -147,6 +153,7 @@ Item {
 	Shape {
 		id: backgroundShape
 		anchors.fill: parent
+		transform: Scale { origin.y: root.height / 2; yScale: root.fromBottom ? -1 : 1 }
 		preferredRendererType: Shape.CurveRenderer
 
 		ShapePath {
