@@ -1,0 +1,14 @@
+ZendaButton 1.0 button.qml
+ZendaExpandPanel 1.0 expand-panel.qml
+ZendaField 1.0 field.qml
+ZendaGroup 1.0 group.qml
+ZendaIconButton 1.0 icon-button.qml
+ZendaListItem 1.0 list-item.qml
+ZendaRow 1.0 row.qml
+ZendaSavedMark 1.0 saved-mark.qml
+ZendaSegments 1.0 segments.qml
+ZendaSelect 1.0 select.qml
+ZendaShortcut 1.0 shortcut.qml
+ZendaSlider 1.0 slider.qml
+ZendaStatus 1.0 status.qml
+ZendaSwitch 1.0 switch.qml

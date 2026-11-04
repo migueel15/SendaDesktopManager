@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Services.Pipewire
 
 import qs.common
+import qs.common.components.controls
 import qs.common.components.icons
 import qs.services
 
@@ -24,13 +25,10 @@ Item {
         Rectangle {
             width: parent.width
             height: outputColumn.implicitHeight + 24
-            radius: Theme.rounding.normal
-            // Square while its selector is attached below.
-            bottomLeftRadius: outputDropdown.attached ? 0 : Theme.rounding.normal
-            bottomRightRadius: outputDropdown.attached ? 0 : Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
+            radius: Theme.card.radius
+            color: Theme.card.fill
+            border.width: Theme.card.borderWidth
+            border.color: Theme.card.borderColor
 
             Column {
                 id: outputColumn
@@ -142,7 +140,7 @@ Item {
             }
         }
 
-        DropdownCard {
+        ZendaExpandPanel {
             id: outputDropdown
             expanded: root.expandedSection === "output"
             contentHeight: sinksColumn.implicitHeight + 20
@@ -156,48 +154,17 @@ Item {
                 Repeater {
                     model: Audio.sinks
 
-                    delegate: Rectangle {
+                    delegate: ZendaListItem {
                         required property var modelData
-                        readonly property bool validSink: modelData.isSink && !!modelData.audio
-                        readonly property bool activeSink: Audio.sink?.id === modelData.id
-
                         width: sinksColumn.width
-                        height: validSink ? 38 : 0
-                        visible: validSink
-                        radius: Theme.rounding.normal
-                        color: activeSink || sinkMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 10
-                            spacing: 0
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: Audio.getDisplayName(modelData)
-                                color: activeSink ? Theme.colors.primary : Theme.colors.text
-                                font: Theme.font.overlay
-                                elide: Text.ElideRight
-                            }
-
-                            IconSlot {
-                                icon: activeSink ? "" : ""
-                                iconColor: Theme.colors.primary
-                                gapBefore: 8
-                                gapAfter: 0
-                            }
-                        }
-
-                        MouseArea {
-                            id: sinkMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                Audio.setAudioSink(modelData);
-                                root.expandedSection = "";
-                            }
+                        visible: modelData.isSink && !!modelData.audio
+                        height: visible ? implicitHeight : 0
+                        selected: Audio.sink?.id === modelData.id
+                        leadingIcon: "󰓃"
+                        text: Audio.getDisplayName(modelData)
+                        onClicked: {
+                            Audio.setAudioSink(modelData);
+                            root.expandedSection = "";
                         }
                     }
                 }
@@ -212,13 +179,10 @@ Item {
         Rectangle {
             width: parent.width
             height: 64
-            radius: Theme.rounding.normal
-            // Square while its selector is attached below.
-            bottomLeftRadius: inputDropdown.attached ? 0 : Theme.rounding.normal
-            bottomRightRadius: inputDropdown.attached ? 0 : Theme.rounding.normal
-            color: Theme.colors.surface
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
+            radius: Theme.card.radius
+            color: Theme.card.fill
+            border.width: Theme.card.borderWidth
+            border.color: Theme.card.borderColor
 
             RowLayout {
                 anchors.fill: parent
@@ -270,7 +234,7 @@ Item {
             }
         }
 
-        DropdownCard {
+        ZendaExpandPanel {
             id: inputDropdown
             expanded: root.expandedSection === "input"
             contentHeight: sourcesColumn.implicitHeight + 20
@@ -284,48 +248,17 @@ Item {
                 Repeater {
                     model: Audio.sources
 
-                    delegate: Rectangle {
+                    delegate: ZendaListItem {
                         required property var modelData
-                        readonly property bool validSource: !modelData.isSink && !modelData.isStream && !!modelData.audio
-                        readonly property bool activeSource: Audio.source?.id === modelData.id
-
                         width: sourcesColumn.width
-                        height: validSource ? 38 : 0
-                        visible: validSource
-                        radius: Theme.rounding.normal
-                        color: activeSource || sourceMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 10
-                            spacing: 0
-
-                            Text {
-                                Layout.fillWidth: true
-                                text: Audio.getDisplayName(modelData)
-                                color: activeSource ? Theme.colors.primary : Theme.colors.text
-                                font: Theme.font.overlay
-                                elide: Text.ElideRight
-                            }
-
-                            IconSlot {
-                                icon: activeSource ? "" : ""
-                                iconColor: Theme.colors.primary
-                                gapBefore: 8
-                                gapAfter: 0
-                            }
-                        }
-
-                        MouseArea {
-                            id: sourceMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                Audio.setAudioSource(modelData);
-                                root.expandedSection = "";
-                            }
+                        visible: !modelData.isSink && !modelData.isStream && !!modelData.audio
+                        height: visible ? implicitHeight : 0
+                        selected: Audio.source?.id === modelData.id
+                        leadingIcon: "󰍬"
+                        text: Audio.getDisplayName(modelData)
+                        onClicked: {
+                            Audio.setAudioSource(modelData);
+                            root.expandedSection = "";
                         }
                     }
                 }

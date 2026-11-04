@@ -1,15 +1,6 @@
-SettingsGroup 1.0 settings-group.qml
-SettingsRow 1.0 settings-row.qml
-SettingsSwitch 1.0 settings-switch.qml
-SettingsSegments 1.0 settings-segments.qml
-SettingsSlider 1.0 settings-slider.qml
-SettingsShortcut 1.0 settings-shortcut.qml
-SettingsStatus 1.0 settings-status.qml
 AppearanceSettingsPage 1.0 AppearanceSettingsPage.qml
 BarSettingsPage 1.0 BarSettingsPage.qml
 CalendarSettingsPage 1.0 CalendarSettingsPage.qml
-SettingsButton 1.0 SettingsButton.qml
-SettingsField 1.0 SettingsField.qml
 SettingsPanel 1.0 SettingsPanel.qml
 SttSettingsPage 1.0 SttSettingsPage.qml
 UpdateSettingsPage 1.0 UpdateSettingsPage.qml
@@ -17,11 +8,9 @@ WeatherSettingsPage 1.0 WeatherSettingsPage.qml
 WidgetsSettingsPage 1.0 widgets-settings-page.qml
 SystemSettingsPage 1.0 system-settings-page.qml
 PowerSettingsPage 1.0 power-settings-page.qml
-SettingsSavedMark 1.0 settings-saved-mark.qml
 SettingsWindow 1.0 settings-window.qml
 DisplaySettingsPage 1.0 display-settings-page.qml
 InputSettingsPage 1.0 input-settings-page.qml
 StartupSettingsPage 1.0 startup-settings-page.qml
-SettingsSelect 1.0 settings-select.qml
 DisplayConfirmDialog 1.0 display-confirm-dialog.qml
 BluetoothPairDialog 1.0 bluetooth-pair-dialog.qml

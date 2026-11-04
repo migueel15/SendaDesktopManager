@@ -4,10 +4,11 @@ import Quickshell.Io
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 // Power menu, attached under the user card like the other selectors.
-DropdownCard {
+ZendaExpandPanel {
     id: systemMenu
 
     property bool isOpen: false
@@ -47,8 +48,9 @@ DropdownCard {
         anchors.margins: 10
         spacing: 3
 
-        SystemMenuItem {
-            icon: ""
+        ZendaListItem {
+            width: contentColumn.width
+            leadingIcon: ""
             text: "Apagar"
             onClicked: {
                 systemMenu.isOpen = false;
@@ -56,8 +58,9 @@ DropdownCard {
             }
         }
 
-        SystemMenuItem {
-            icon: "󰜉"
+        ZendaListItem {
+            width: contentColumn.width
+            leadingIcon: "󰜉"
             text: "Reiniciar"
             onClicked: {
                 systemMenu.isOpen = false;
@@ -65,8 +68,9 @@ DropdownCard {
             }
         }
 
-        SystemMenuItem {
-            icon: "󰒲"
+        ZendaListItem {
+            width: contentColumn.width
+            leadingIcon: "󰒲"
             text: "Suspender"
             onClicked: {
                 systemMenu.isOpen = false;
@@ -74,8 +78,9 @@ DropdownCard {
             }
         }
 
-        SystemMenuItem {
-            icon: ""
+        ZendaListItem {
+            width: contentColumn.width
+            leadingIcon: ""
             text: "Bloquear"
             onClicked: {
                 systemMenu.isOpen = false;
@@ -83,8 +88,9 @@ DropdownCard {
             }
         }
 
-        SystemMenuItem {
-            icon: ""
+        ZendaListItem {
+            width: contentColumn.width
+            leadingIcon: ""
             text: "Cerrar sesión"
             onClicked: {
                 systemMenu.isOpen = false;

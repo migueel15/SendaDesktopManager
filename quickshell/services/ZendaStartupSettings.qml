@@ -15,6 +15,7 @@ Singleton {
     property string notice: ""
     property bool noticeIsError: false
     property var pending: []
+    property var runningArgs: []
 
     function run(args) {
         root.pending = root.pending.concat([args]);
@@ -26,12 +27,18 @@ Singleton {
     }
     function add(kind, name, target) { root.run(["add", "--kind", kind, "--name", name, "--", target]); }
     function remove(target) { root.run(["remove", "--", target]); }
-    function setEnabled(target, enabled) { root.run([enabled ? "enable" : "disable", "--", target]); }
+    // Updates the entry at once, so the switch moves without waiting for the
+    // command; a failed write reloads the saved state.
+    function setEnabled(target, enabled) {
+        root.entries = root.entries.map(entry => entry.target === target ? Object.assign({}, entry, { enabled: enabled }) : entry);
+        root.run([enabled ? "enable" : "disable", "--", target]);
+    }
 
     function next() {
         if (process.running || root.pending.length === 0) return;
         const args = root.pending[0];
         root.pending = root.pending.slice(1);
+        root.runningArgs = args;
         process.command = [root.binaryPath, "startup", "--json"].concat(args);
         process.running = true;
     }
@@ -67,7 +74,8 @@ Singleton {
             } catch (e) {
                 root.notice = "No se pudo guardar: " + e.message;
                 root.noticeIsError = true;
-                root.entriesChanged();
+                if (root.runningArgs[0] !== "show") root.run(["show"]);
+                else root.entriesChanged();
             }
             root.next();
         }

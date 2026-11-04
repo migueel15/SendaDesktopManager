@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 // Update settings: the installed version, the newer one when there is one, and
@@ -18,20 +19,20 @@ Flickable {
         width: root.width
         spacing: 12
 
-        SettingsGroup {
+        ZendaGroup {
 
-            SettingsRow {
+            ZendaRow {
                 separator: false
                 label: ZendaUpdate.available
                     ? `${ZendaUpdate.current} → ${ZendaUpdate.latest}`
                     : `Versión ${ZendaUpdate.current || "sin comprobar"}`
                 description: ZendaUpdate.message
-                SettingsButton {
+                ZendaButton {
                     label: "Comprobar"
                     enabled: !ZendaUpdate.busy && !ZendaUpdate.installing
                     onClicked: ZendaUpdate.check()
                 }
-                SettingsButton {
+                ZendaButton {
                     label: ZendaUpdate.installing ? "Actualizando y reiniciando…" : "Actualizar"
                     primary: true
                     busy: ZendaUpdate.installing
@@ -41,7 +42,7 @@ Flickable {
             }
         }
 
-        SettingsGroup {
+        ZendaGroup {
             visible: ZendaUpdate.available && ZendaUpdate.changes.length > 0
 
             Text {

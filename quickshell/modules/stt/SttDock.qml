@@ -1,9 +1,9 @@
 import QtQuick
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import qs.common
 import qs.common.components
+import qs.common.components.barextension
 import qs.services
 
 Scope {
@@ -62,7 +62,7 @@ Scope {
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
             // The dock grows out of the bottom screen frame, like a drop.
-            readonly property int cornerSize: Theme.barBorderRadius
+            readonly property int cornerSize: extension.cornerRadius
             readonly property int shadowSpace: 20
 
             anchors.bottom: true
@@ -72,56 +72,22 @@ Scope {
             implicitWidth: Math.min(screen.width, maximumWidth + cornerSize * 2 + shadowSpace * 2)
             implicitHeight: maximumHeight + shadowSpace
             color: "transparent"
-            mask: Region { item: content }
+            mask: Region { item: extension }
 
-            // The shadow follows the pill and its joins without intercepting input.
-            Item {
-                id: shadowShape
+            // The dock is a BarExtension growing out of the bottom frame, so it
+            // shares its shape, joins and shadow with every bar extension.
+            BarExtension {
+                id: extension
+                edge: "bottom"
                 x: content.x - rootWindow.cornerSize
-                y: content.y
-                width: content.width + rootWindow.cornerSize * 2
-                height: content.height
-                opacity: content.opacity
-
-                Rectangle {
-                    x: rootWindow.cornerSize
-                    width: content.width
-                    height: parent.height
-                    radius: content.radius
-                    color: Theme.colors.background
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        height: Math.min(parent.radius, Math.floor(parent.height / 2))
-                        color: parent.color
-                    }
-                }
-                BarCorner {
-                    position: "bottom-right"
-                    cornerRadius: rootWindow.cornerSize
-                    shapeColor: Theme.colors.background
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
-                }
-                BarCorner {
-                    position: "bottom-left"
-                    cornerRadius: rootWindow.cornerSize
-                    shapeColor: Theme.colors.background
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                }
-            }
-
-            MultiEffect {
-                anchors.fill: shadowShape
-                source: shadowShape
-                opacity: content.opacity
-                shadowEnabled: true
-                shadowColor: "#b0000000"
-                blurMax: 16
-                shadowBlur: 0.8
-                shadowVerticalOffset: 0
+                width: content.width + 2 * rootWindow.cornerSize
+                y: rootWindow.height - height
+                expanded: rootWindow.entered && !ZendaStt.dockClosing
+                expandedHeight: content.animatedHeight
+                // The pill animates its own size, so the shape follows it.
+                resizeDuration: 0
+                contentFadeDistance: 0
+                autoHideOnPointerExit: false
             }
 
             Rectangle {
@@ -135,36 +101,20 @@ Scope {
                     ? Theme.spacing.xl + rootWindow.timerBlock
                         + (rootWindow.expanded ? Theme.spacing.xs + transcriptView.height : 0)
                     : Math.ceil(statusText.implicitHeight))
-                // Closing mirrors opening: the pill slides back into the frame.
-                property real slideOffset: rootWindow.entered && !ZendaStt.dockClosing
-                    ? 0 : Math.ceil(animatedHeight)
 
                 width: Math.round(animatedWidth)
                 height: Math.round(animatedHeight)
                 x: Math.round((rootWindow.width - width) / 2)
-                y: rootWindow.height - height + Math.round(slideOffset)
-                radius: rootWindow.expanded ? Theme.rounding.large : Theme.rounding.full
+                // Rides on the extension, which unfolds out of the frame.
+                y: rootWindow.height - extension.height
                 clip: true
-                // Same color as the screen frame, without a border, so both read as one shape.
-                color: Theme.colors.background
+                color: "transparent"
                 opacity: rootWindow.entered && !ZendaStt.dockClosing ? 1 : 0
-
-                // Squares the bottom corners where the dock meets the frame.
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    height: Math.min(parent.radius, Math.floor(parent.height / 2))
-                    color: parent.color
-                }
 
                 Behavior on animatedWidth {
                     NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easing }
                 }
                 Behavior on animatedHeight {
-                    NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easing }
-                }
-                Behavior on radius {
                     NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easing }
                 }
 
@@ -173,9 +123,6 @@ Scope {
                 }
 
                 Component.onCompleted: Qt.callLater(() => rootWindow.entered = true)
-                Behavior on slideOffset {
-                    NumberAnimation { duration: Theme.motion.slow; easing.type: Theme.motion.easing }
-                }
 
                 MouseArea {
                     anchors.fill: parent
@@ -316,25 +263,6 @@ Scope {
                         onTextChanged: Qt.callLater(transcriptView.followTranscript)
                     }
                 }
-            }
-
-            // Concave corners that join the dock sides to the frame below.
-            BarCorner {
-                position: "bottom-right"
-                cornerRadius: rootWindow.cornerSize
-                shapeColor: Theme.colors.background
-                x: content.x - width
-                y: rootWindow.height - height + Math.round(content.slideOffset)
-                opacity: content.opacity
-            }
-
-            BarCorner {
-                position: "bottom-left"
-                cornerRadius: rootWindow.cornerSize
-                shapeColor: Theme.colors.background
-                x: content.x + content.width
-                y: rootWindow.height - height + Math.round(content.slideOffset)
-                opacity: content.opacity
             }
 
             id: rootWindow

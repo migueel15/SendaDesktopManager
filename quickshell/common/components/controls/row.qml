@@ -30,7 +30,7 @@ Item {
         id: highlight
         // Follows the content, not the row, whose top holds the separator.
         anchors { fill: content; margins: -Theme.spacing.xs }
-        radius: Theme.rounding.small
+        radius: Theme.rounding.large
         color: Theme.colors.selection
         opacity: 0
         SequentialAnimation {
@@ -40,12 +40,16 @@ Item {
             NumberAnimation { target: highlight; property: "opacity"; to: 0; duration: 500 }
         }
     }
+    // Style B: no separator lines; the row is washed on hover instead.
+    // separator still keeps the gap between rows.
     Rectangle {
-        width: parent.width
-        height: 1
-        visible: root.separator
-        color: Theme.colors.border
+        anchors { fill: content; margins: -Theme.spacing.sm }
+        radius: Theme.rounding.large
+        color: Theme.colors.surfaceVariant
+        opacity: rowHover.hovered && root.enabled ? 0.5 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.motion.normal } }
     }
+    HoverHandler { id: rowHover }
     // Controls are anchored to the right edge so every row lines them up,
     // whatever the length of its label.
     Item {

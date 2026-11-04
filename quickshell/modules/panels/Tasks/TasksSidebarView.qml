@@ -285,9 +285,9 @@ Item {
         Layout.fillWidth: true
         Layout.preferredHeight: DorlabTasks.hasTrackedTask ? 118 : 0
         visible: DorlabTasks.hasTrackedTask
-        color: Theme.colors.surface
-        radius: Theme.rounding.normal
-        border.width: 1
+        color: Theme.card.fill
+        radius: Theme.card.radius
+        border.width: Theme.card.borderWidth
         border.color: DorlabTasks.hasActiveTask ? Theme.colors.primary : Theme.colors.warning
         clip: true
 
@@ -603,10 +603,10 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: hiddenTeamsContent.implicitHeight + 20
             visible: root.showHiddenTeams && root.hiddenTeams.length > 0
-            color: Theme.colors.surface
-            radius: Theme.rounding.normal
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
+            color: Theme.card.fill
+            radius: Theme.card.radius
+            border.width: Theme.card.borderWidth
+            border.color: Theme.card.borderColor
 
             ColumnLayout {
                 id: hiddenTeamsContent
@@ -685,9 +685,9 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: errorText.implicitHeight + 18
             visible: DorlabTasks.error.length > 0
-            color: Theme.colors.surface
-            radius: Theme.rounding.normal
-            border.width: 1
+            color: Theme.card.fill
+            radius: Theme.card.radius
+            border.width: Theme.card.borderWidth
             border.color: Theme.colors.error
 
             Text {

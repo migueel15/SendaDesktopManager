@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 
 import qs.common
+import qs.common.components.controls
 import qs.common.components
 import qs.common.components.icons
 import qs.modules.panels.ControlCenter.components
@@ -99,13 +100,10 @@ ZendaPanel {
             Rectangle {
                 width: parent.width
                 height: 92
-                radius: Theme.rounding.normal
-                // Square while its selector is attached below.
-                bottomLeftRadius: networksDropdown.attached ? 0 : Theme.rounding.normal
-                bottomRightRadius: networksDropdown.attached ? 0 : Theme.rounding.normal
-                color: Theme.colors.surface
-                border.width: 1
-                border.color: Theme.colors.surfaceVariant
+                radius: Theme.card.radius
+                color: Theme.card.fill
+                border.width: Theme.card.borderWidth
+                border.color: Theme.card.borderColor
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -196,7 +194,7 @@ ZendaPanel {
                 }
             }
 
-            DropdownCard {
+            ZendaExpandPanel {
                 id: networksDropdown
                 expanded: wifiControl.expanded
                 contentHeight: networksColumn.implicitHeight + 20
@@ -265,8 +263,9 @@ ZendaPanel {
 
                             width: networksColumn.width
                             height: needsPassword ? 78 : 40
-                            radius: Theme.rounding.normal
-                            color: connected || networkMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+                            radius: needsPassword ? Theme.rounding.large : height / 2
+                            color: connected ? Theme.colors.selection : networkMouse.containsMouse ? Theme.colors.surfaceRaised : "transparent"
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Column {
                                 anchors.fill: parent

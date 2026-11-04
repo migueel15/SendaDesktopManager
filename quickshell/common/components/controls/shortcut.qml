@@ -209,7 +209,7 @@ ColumnLayout {
             onActiveFocusChanged: if (!activeFocus && root.phase === "recording") root.stopRecording(false)
         }
 
-        SettingsButton {
+        ZendaButton {
             visible: root.phase === "recording" || root.phase === "starting"
             label: "Cancelar"
             onClicked: root.stopRecording(false)
@@ -257,11 +257,11 @@ ColumnLayout {
         }
         RowLayout {
             Layout.alignment: Qt.AlignRight
-            SettingsButton {
+            ZendaButton {
                 label: "Guardar igualmente"
                 onClicked: root.save(root.candidate)
             }
-            SettingsButton {
+            ZendaButton {
                 label: "Cancelar"
                 onClicked: { root.phase = "idle"; root.conflicts = []; }
             }

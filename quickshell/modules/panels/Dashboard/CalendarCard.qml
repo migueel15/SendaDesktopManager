@@ -18,10 +18,10 @@ Rectangle {
     readonly property date gridStart: new Date(root.shownMonth.getFullYear(), root.shownMonth.getMonth(), 1 - ((root.shownMonth.getDay() + 6) % 7))
     readonly property var selectedEvents: ZendaCalendar.eventsOn(root.selectedDay)
 
-    radius: Theme.rounding.normal
-    color: Theme.colors.surface
-    border.width: 1
-    border.color: Theme.colors.surfaceVariant
+    radius: Theme.card.radius
+    color: Theme.card.fill
+    border.width: Theme.card.borderWidth
+    border.color: Theme.card.borderColor
 
     function startOfDay(date) {
         return new Date(date.getFullYear(), date.getMonth(), date.getDate());

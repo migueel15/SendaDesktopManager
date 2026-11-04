@@ -190,7 +190,7 @@ Rectangle {
             anchor.rect.width: 1
             anchor.rect.height: 1
 
-            implicitWidth: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
+            implicitWidth: trayExtensionContent.width
             // Size the window for the open extension, so the unfold animates inside it
             // instead of resizing the Wayland surface on every frame. Growing the
             // window while shrinking keeps a resize animation from being cut off.
@@ -210,7 +210,8 @@ Rectangle {
                 id: trayExtensionContent
                 // Hide the last pixels under the bar, without moving the window.
                 y: -collapseLift
-                width: layout.implicitWidth + 24 + 2 * Theme.barBorderRadius
+                // Side margin inside the curves, so the icons do not touch the edges.
+                width: layout.implicitWidth + 2 * Theme.spacing.lg + 2 * cornerRadius
                 expanded: root.expanded
                 conflictGroup: "tray-popups"
                 autoHideStartsOnExpand: true

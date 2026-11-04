@@ -5,7 +5,7 @@ import QtQuick.Controls as Controls
 import Quickshell
 import qs.common
 
-// Reusable dropdown for lists too long for SettingsSegments. Give it options
+// Reusable dropdown for lists too long for ZendaSegments. Give it options
 // (strings) and value, and handle chosen(value). It works in any settings page.
 Rectangle {
     id: root
@@ -35,9 +35,10 @@ Rectangle {
 
     implicitWidth: Theme.scaled(220)
     implicitHeight: label.implicitHeight + 2 * Theme.spacing.sm
-    color: area.containsMouse && root.enabled ? Theme.colors.surfaceVariant : Theme.colors.base
-    border { width: 1; color: popup.visible ? Theme.colors.primary : Theme.colors.border }
-    radius: Theme.rounding.normal
+    color: (area.containsMouse && root.enabled) || popup.visible ? Theme.colors.surfaceVariant : Theme.colors.surface
+    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+    border { width: root.activeFocus ? 2 : 0; color: Theme.colors.focus }
+    radius: Theme.rounding.control
     opacity: enabled ? 1 : 0.4
     activeFocusOnTab: true
     Accessible.role: Accessible.ComboBox
@@ -61,6 +62,7 @@ Rectangle {
         font.family: Theme.iconFamily
         font.pixelSize: Theme.scaled(10)
         rotation: popup.visible ? 180 : 0
+        Behavior on rotation { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
     }
     MouseArea {
         id: area
@@ -93,11 +95,22 @@ Rectangle {
         }
 
         Rectangle {
+            id: popupCard
             anchors.fill: parent
-            color: Theme.colors.surface
-            border { width: 1; color: Theme.colors.border }
-            radius: Theme.rounding.normal
-            SettingsField {
+            color: Theme.colors.surfaceVariant
+            radius: Theme.rounding.large
+            // Unfolds from the top with a small overshoot each time it opens.
+            transformOrigin: Item.Top
+            Connections {
+                target: popup
+                function onVisibleChanged() { if (popup.visible) unfold.restart(); }
+            }
+            ParallelAnimation {
+                id: unfold
+                NumberAnimation { target: popupCard; property: "scale"; from: 0.9; to: 1; duration: Theme.motion.normal; easing.type: Easing.OutBack }
+                NumberAnimation { target: popupCard; property: "opacity"; from: 0; to: 1; duration: Theme.motion.fast }
+            }
+            ZendaField {
                 id: search
                 visible: root.searchable
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spacing.xs + 1 }
@@ -137,13 +150,13 @@ Rectangle {
                     readonly property bool current: modelData === root.value
                     width: ListView.view.width - (scrollBar.policy === Controls.ScrollBar.AlwaysOn ? scrollBar.width + Theme.spacing.xs : 0)
                     height: optionText.implicitHeight + 2 * Theme.spacing.xs
-                    radius: Theme.rounding.small
-                    color: current ? Theme.colors.primary : optionArea.containsMouse || (root.searchable && list.currentIndex === index) ? Theme.colors.surfaceVariant : "transparent"
+                    radius: Theme.rounding.normal
+                    color: current ? Theme.colors.selection : optionArea.containsMouse || (root.searchable && list.currentIndex === index) ? Theme.colors.surfaceRaised : "transparent"
                     Text {
                         id: optionText
                         anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }
                         text: option.modelData
-                        color: option.current ? Theme.colors.base : Theme.colors.text
+                        color: option.current ? Theme.colors.primary : Theme.colors.text
                         font: Theme.font.body
                         elide: Text.ElideRight
                     }

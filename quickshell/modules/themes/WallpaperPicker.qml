@@ -7,7 +7,9 @@ import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Widgets
 import qs.common
+import qs.common.components.controls
 import qs.services
 import qs.common.components.barextension as BarComponents
 
@@ -18,10 +20,13 @@ PanelWindow {
     required property var modelData
     readonly property bool onPickerScreen: WallpaperService.pickerScreen === modelData.name
         || (WallpaperService.pickerScreen === "" && modelData === Quickshell.screens[0])
-    readonly property bool open: onPickerScreen && WallpaperService.pickerOpen
+    // Debug keeps the picker open on the debug screen, without the backdrop
+    // or exclusive keyboard focus, so it can stay on screen while it changes.
+    readonly property bool debugOpen: Debug.enabled && Debug.panel === "wallpapers" && modelData.name === Debug.debugScreenName
+    readonly property bool open: onPickerScreen && WallpaperService.pickerOpen || debugOpen
     readonly property bool builtinTheme: ZendaTheme.active?.builtin !== false
     readonly property string selectedPath: list.currentItem?.filePath ?? ""
-    readonly property real panelHeight: Math.min(Theme.scaled(340), height - extension.shadowSpace)
+    readonly property real panelHeight: Math.min(Theme.scaled(400), height - extension.shadowSpace)
     readonly property bool retainWhenHidden: naming || importProcess.running || pendingCopy !== ""
     property bool browsing: false
     property bool naming: false
@@ -48,7 +53,7 @@ PanelWindow {
         if (builtinTheme) {
             naming = true;
             nameField.text = ZendaTheme.active.name + "-copia";
-            nameField.forceActiveFocus();
+            nameField.focusInput();
         } else {
             const name = ZendaTheme.active.name;
             pendingCopy = "";
@@ -66,10 +71,10 @@ PanelWindow {
     exclusiveZone: 0
     WlrLayershell.namespace: "Zenda:WallpaperPicker"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: open && !debugOpen ? WlrKeyboardFocus.Exclusive : debugOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     color: "transparent"
     visible: open || extension.height > 0.01
-    mask: Region { item: root.open ? backdrop : panel }
+    mask: Region { item: root.open && !root.debugOpen ? backdrop : panel }
 
     function prepareOpen() {
         if (!root.viewReady) return;
@@ -140,7 +145,7 @@ PanelWindow {
     MouseArea {
         id: backdrop
         anchors.fill: parent
-        enabled: root.open
+        enabled: root.open && !root.debugOpen
         onPressed: root.close()
     }
 
@@ -154,16 +159,16 @@ PanelWindow {
         // Swallows clicks on empty parts of the panel.
         MouseArea { anchors.fill: parent; enabled: root.open }
 
-        // The extension hangs from the top bar; mirrored, it rises from the bottom.
+        // A BarExtension that grows out of the bottom frame.
         BarComponents.BarExtension {
             id: extension
+            edge: "bottom"
             width: parent.width
             expanded: root.open
             expandedHeight: root.panelHeight
             autoHideOnPointerExit: false
             conflictGroup: "tray-popups"
             onCloseRequested: root.close()
-            transform: Scale { origin.y: extension.height / 2; yScale: -1 }
         }
 
         FocusScope {
@@ -171,8 +176,8 @@ PanelWindow {
             anchors { left: parent.left; right: parent.right; top: parent.top }
             anchors.leftMargin: extension.curveWidth + Theme.spacing.md
             anchors.rightMargin: extension.curveWidth + Theme.spacing.md
-            anchors.topMargin: Theme.spacing.md
-            height: root.panelHeight - Theme.spacing.md * 2
+            anchors.topMargin: Theme.spacing.lg
+            height: root.panelHeight - Theme.spacing.lg * 2
             opacity: extension.height / root.panelHeight
 
             Keys.onEscapePressed: event => {
@@ -193,7 +198,40 @@ PanelWindow {
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: Theme.spacing.sm
+                spacing: Theme.spacing.md
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.spacing.sm
+                    ColumnLayout {
+                        spacing: 0
+                        Text {
+                            text: root.browsing ? "Importar fondo" : "Fondos"
+                            font.family: Theme.textFamily
+                            font.pixelSize: Theme.scaled(20)
+                            font.weight: Font.DemiBold
+                            color: Theme.colors.text
+                        }
+                        Text {
+                            text: root.browsing ? "Elige una imagen" : folderModel.count === 1 ? "1 fondo" : `${folderModel.count} fondos`
+                            font: Theme.font.caption
+                            color: Theme.colors.overlay
+                        }
+                    }
+                    Item { Layout.fillWidth: true }
+                    ZendaButton {
+                        visible: !root.browsing
+                        label: importProcess.running ? "Importando…" : "Importar"
+                        busy: importProcess.running
+                        enabled: !importProcess.running
+                        onClicked: root.browsing = true
+                    }
+                    ZendaIconButton {
+                        icon: "\uf00d"
+                        accessibleLabel: "Cerrar"
+                        onClicked: root.browsing ? root.browsing = false : root.close()
+                    }
+                }
 
                 Loader {
                     Layout.fillWidth: true
@@ -220,6 +258,9 @@ PanelWindow {
                     visible: !root.browsing
                     orientation: ListView.Horizontal
                     spacing: Theme.spacing.md
+                    // Room for the selection ring, which sits outside the card.
+                    readonly property real ringRoom: Theme.spacing.md
+                    leftMargin: ringRoom; rightMargin: ringRoom
                     clip: true
                     model: folderModel
                     currentIndex: 0
@@ -227,7 +268,7 @@ PanelWindow {
                     preferredHighlightBegin: (width - Theme.scaled(300)) / 2
                     preferredHighlightEnd: (width + Theme.scaled(300)) / 2
                     highlightMoveDuration: Theme.motion.slow
-                    delegate: Rectangle {
+                    delegate: Item {
                         id: card
                         required property int index
                         required property string filePath
@@ -235,30 +276,62 @@ PanelWindow {
                         readonly property bool current: ListView.isCurrentItem
                         width: Theme.scaled(300)
                         height: ListView.view.height
-                        radius: Theme.rounding.normal
-                        color: Theme.colors.surface
-                        border.width: 2
-                        border.color: current ? Theme.colors.focus : Theme.colors.border
-                        opacity: current ? 1 : 0.65
-                        scale: current ? 1 : 0.9
-                        Behavior on scale { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: Theme.motion.slow } }
-                        Image {
+                        opacity: current ? 1 : hover.hovered ? 0.85 : 0.6
+                        scale: current ? 1 : 0.92
+                        Behavior on scale { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.OutQuint } }
+                        Behavior on opacity { NumberAnimation { duration: Theme.motion.normal } }
+
+                        // Inset from the list's top and bottom, so the ring around it
+                        // is never clipped. ListView places delegates at y = 0, so the
+                        // inset lives inside the delegate.
+                        ClippingRectangle {
+                            id: frame
                             anchors.fill: parent
-                            anchors.margins: 3
-                            source: card.fileUrl
-                            cache: false
-                            asynchronous: true
-                            fillMode: Image.PreserveAspectCrop
-                            sourceSize.width: Theme.scaled(600)
+                            anchors.topMargin: list.ringRoom
+                            anchors.bottomMargin: list.ringRoom
+                            radius: Theme.card.radius
+                            color: Theme.card.fill
+                            Image {
+                                anchors.fill: parent
+                                source: card.fileUrl
+                                cache: false
+                                asynchronous: true
+                                fillMode: Image.PreserveAspectCrop
+                                sourceSize.width: Theme.scaled(600)
+                            }
                         }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
+                        // Selection ring and check badge on the current wallpaper.
+                        Rectangle {
+                            anchors.fill: frame
+                            anchors.margins: -4
+                            radius: Theme.card.radius + 4
+                            color: "transparent"
+                            border.width: 3
+                            border.color: Theme.colors.primary
+                            opacity: card.current ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: Theme.motion.normal } }
+                        }
+                        Rectangle {
+                            anchors { top: frame.top; right: frame.right; margins: Theme.spacing.md }
+                            width: Theme.scaled(26); height: width; radius: width / 2
+                            color: Theme.colors.primary
+                            scale: card.current ? 1 : 0
+                            Behavior on scale { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
+                            Text {
+                                anchors.centerIn: parent
+                                text: "\uf00c"
+                                color: Theme.colors.base
+                                font.family: Theme.iconFamily
+                                font.pixelSize: Theme.scaled(12)
+                            }
+                        }
+                        HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }
+                        TapHandler {
+                            onTapped: {
                                 list.currentIndex = card.index;
                                 content.forceActiveFocus();
                             }
+                            onDoubleTapped: root.applySession()
                         }
                     }
                     Text {
@@ -287,69 +360,50 @@ PanelWindow {
                         font: Theme.font.body
                         color: Theme.colors.text
                     }
-                    TextField {
+                    ZendaField {
                         id: nameField
                         Layout.fillWidth: true
-                        font: Theme.font.body
-                        color: Theme.colors.text
-                        validator: RegularExpressionValidator { regularExpression: /[a-z0-9]+(-[a-z0-9]+)*/ }
+                        placeholder: "nombre-del-tema"
                         onAccepted: if (copyButton.enabled) root.saveCopy()
                     }
-                    ActionButton {
-                        id: copyButton
-                        text: "Crear copia"
-                        enabled: nameField.acceptableInput && nameField.length <= 40 && !ZendaTheme.busy
-                        onClicked: root.saveCopy()
-                    }
-                    ActionButton {
-                        text: "Cancelar"
+                    ZendaButton {
+                        label: "Cancelar"
                         onClicked: root.naming = false
+                    }
+                    ZendaButton {
+                        id: copyButton
+                        label: "Crear copia"
+                        primary: true
+                        enabled: /^[a-z0-9]+(-[a-z0-9]+)*$/.test(nameField.text) && nameField.text.length <= 40 && !ZendaTheme.busy
+                        onClicked: root.saveCopy()
                     }
                 }
 
                 RowLayout {
                     Layout.fillWidth: true
                     visible: !root.naming && !root.browsing
-                    ActionButton {
-                        text: importProcess.running ? "Importando…" : "Importar…"
-                        enabled: !importProcess.running
-                        onClicked: root.browsing = true
+                    spacing: Theme.spacing.sm
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.selectedPath.split("/").pop()
+                        font: Theme.font.caption
+                        color: Theme.colors.overlay
+                        elide: Text.ElideMiddle
                     }
-                    Item { Layout.fillWidth: true }
-                    ActionButton {
-                        text: "Solo esta sesión"
+                    ZendaButton {
+                        label: "Solo esta sesión"
                         enabled: root.selectedPath !== ""
                         onClicked: root.applySession()
                     }
-                    ActionButton {
-                        text: "Guardar en el tema"
+                    ZendaButton {
+                        label: "Guardar en el tema"
+                        primary: true
                         enabled: root.selectedPath !== "" && !!ZendaTheme.active && !ZendaTheme.busy
                         onClicked: root.saveToTheme()
-                    }
-                    ActionButton {
-                        text: "Cerrar"
-                        onClicked: root.close()
                     }
                 }
             }
         }
     }
 
-    component ActionButton: Button {
-        id: button
-        font: Theme.font.body
-        padding: Theme.spacing.sm
-        background: Rectangle {
-            radius: Theme.rounding.normal
-            color: button.hovered ? Theme.colors.surfaceVariant : Theme.colors.surface
-            opacity: button.enabled ? 1 : 0.5
-            border.width: 1
-            border.color: button.activeFocus ? Theme.colors.focus : Theme.colors.surfaceVariant
-        }
-        contentItem: Text {
-            text: button.text
-            font: button.font
-            color: button.enabled ? Theme.colors.text : Theme.colors.overlay
-        }
-    }
 }

@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 import "../../../common/components/lazy/lifetime.js" as Lifetime
 
@@ -178,7 +179,7 @@ Item {
                     font.weight: Font.Bold
                 }
 
-                SettingsField {
+                ZendaField {
                     id: searchField
                     Layout.fillWidth: true
                     Layout.bottomMargin: Theme.spacing.sm
@@ -301,7 +302,7 @@ Item {
                     visible: !root.searching
                 }
 
-                SettingsButton {
+                ZendaButton {
                     Layout.fillWidth: true
                     label: "Cerrar"
                     onClicked: ZendaSettings.closeWindow()
@@ -407,7 +408,7 @@ Item {
                         source: Qt.resolvedUrl("UpdateSettingsPage.qml")
                     }
                 }
-                SettingsStatus {
+                ZendaStatus {
                     id: feedback
                     Layout.fillWidth: true
                     Layout.preferredHeight: Theme.scaled(30)

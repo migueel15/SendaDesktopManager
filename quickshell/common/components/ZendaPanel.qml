@@ -24,7 +24,7 @@ Item {
 
     property int padding: 16
     // Duration of height changes while open; see BarExtension.resizeDuration.
-    property int resizeDuration: 310
+    property int resizeDuration: Theme.motion.slow + 60
 
     default property alias content: contentItem.data
 
@@ -38,7 +38,7 @@ Item {
     // Last name shown, kept while the panel folds back into the bar.
     property string activeName: root.names.length > 0 ? root.names[0] : ""
 
-    readonly property int animationDuration: 310
+    readonly property int animationDuration: Theme.motion.slow + 60
 
     function updateActiveName() {
         if (!root.open) return;
@@ -71,8 +71,9 @@ Item {
         }
     }
 
-    // The curve width is fixed so it does not depend on the panel width.
-    readonly property real curveWidth: Theme.barBorderRadius
+    // The curve width is fixed so it does not depend on the panel width. It is
+    // the BarExtension radius, so every panel joins the bar the same way.
+    readonly property real curveWidth: Theme.card.radius
 
     x: targetX ?? 0
     y: targetY ?? Theme.barSize
@@ -88,7 +89,7 @@ Item {
         enabled: extension.expanded && extension.height > 0.01
         NumberAnimation {
             duration: root.animationDuration
-            easing.type: Easing.OutCubic
+            easing.type: Easing.OutQuint
         }
     }
 

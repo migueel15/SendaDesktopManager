@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Flickable {
@@ -41,32 +42,32 @@ Flickable {
         id: column
         width: root.width
         spacing: Theme.spacing.md
-        SettingsGroup {
-            SettingsRow {
+        ZendaGroup {
+            ZendaRow {
                 separator: false
                 label: "Cuenta de Google"
                 description: ZendaSettings.connected ? "Cuenta conectada" : "Cuenta no conectada"
-                SettingsButton {
+                ZendaButton {
                     label: ZendaSettings.connected ? "Desconectar" : "Conectar con Google"
                     primary: !ZendaSettings.connected
                     enabled: !ZendaSettings.busy
                     onClicked: ZendaSettings.connected ? ZendaSettings.disconnectGoogle() : ZendaSettings.connectGoogle()
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 visible: !root.showOwnClient
                 label: "Cliente OAuth propio"
                 description: "Opcional si tu versión incluye las credenciales de Zenda."
-                SettingsButton {
+                ZendaButton {
                     label: "Crear credenciales"
                     onClicked: root.openOwnClient()
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 visible: root.showOwnClient
                 label: "ID de cliente"
                 description: "Cliente OAuth de escritorio. ID y secreto se guardan juntos."
-                SettingsField {
+                ZendaField {
                     id: clientIdField
                     Layout.preferredWidth: 220
                     Layout.fillWidth: true
@@ -75,11 +76,11 @@ Flickable {
                     onAccepted: clientSecretField.focusInput()
                 }
             }
-            SettingsRow {
+            ZendaRow {
                 visible: root.showOwnClient
                 label: "Secreto del cliente"
                 description: ZendaSettings.secretConfigured ? "Ya hay un secreto guardado; déjalo vacío para conservarlo." : "El secreto no se vuelve a mostrar."
-                SettingsField {
+                ZendaField {
                     id: clientSecretField
                     Layout.preferredWidth: 220
                     Layout.fillWidth: true
@@ -89,7 +90,7 @@ Flickable {
                     onAccepted: root.confirmClient()
                 }
             }
-            SettingsButton {
+            ZendaButton {
                 visible: root.showOwnClient
                 Layout.alignment: Qt.AlignRight
                 label: "Guardar credenciales"
@@ -98,21 +99,21 @@ Flickable {
                 onClicked: root.confirmClient()
             }
         }
-        SettingsGroup {
+        ZendaGroup {
             visible: ZendaSettings.connected && ZendaSettings.calendars.length > 0
-            SettingsRow {
+            ZendaRow {
                 separator: false
                 label: "Calendarios a mostrar"
                 description: "Cada cambio se guarda al instante. Debe quedar al menos un calendario seleccionado."
             }
             Repeater {
                 model: ZendaSettings.connected ? ZendaSettings.calendars : []
-                delegate: SettingsRow {
+                delegate: ZendaRow {
                     searchable: false
                     id: calendarRow
                     required property var modelData
                     label: modelData.summary || modelData.id
-                    SettingsSwitch {
+                    ZendaSwitch {
                         checkedValue: root.selectedCalendars.includes(calendarRow.modelData.id)
                         enabled: !ZendaSettings.busy && (!checkedValue || root.selectedCalendars.length > 1)
                         Accessible.name: calendarRow.label
