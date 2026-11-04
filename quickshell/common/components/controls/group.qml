@@ -6,15 +6,14 @@ Rectangle {
     id: root
     default property alias rows: column.data
     Layout.fillWidth: true
-    implicitHeight: column.implicitHeight + 2 * Theme.spacing.md
-    color: Theme.colors.surface
-    border { width: 1; color: Theme.colors.border }
-    radius: Theme.rounding.normal
+    implicitHeight: column.implicitHeight + 2 * Theme.spacing.lg
+    color: Theme.colors.surfaceRaised
+    radius: Theme.rounding.card
     ColumnLayout {
         id: column
-        x: Theme.spacing.md
-        y: Theme.spacing.md
-        width: parent.width - 2 * Theme.spacing.md
+        x: Theme.spacing.lg
+        y: Theme.spacing.lg
+        width: parent.width - 2 * Theme.spacing.lg
         spacing: Theme.spacing.md
     }
 }

@@ -13,8 +13,8 @@ Rectangle {
     implicitHeight: segments.implicitHeight + Theme.spacing.xs * 2
     Layout.fillWidth: true
     Layout.minimumWidth: 0
-    color: Theme.colors.base
-    radius: Theme.rounding.normal
+    color: Theme.colors.surface
+    radius: Theme.rounding.full
     opacity: enabled ? 1 : 0.4
     RowLayout {
         id: segments

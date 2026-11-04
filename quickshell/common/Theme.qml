@@ -88,6 +88,9 @@ QtObject {
 		readonly property int small: 6
 		readonly property int normal: 10
 		readonly property int large: 16
+		// Style B: inputs and buttons, and cards or groups.
+		readonly property int control: 12
+		readonly property int card: 24
 		readonly property int full: 1000
 	}
 
@@ -108,6 +111,10 @@ QtObject {
 		readonly property int normal: 180
 		readonly property int slow: 310
 		readonly property int easing: Easing.OutCubic
+		// Style B springs for thumbs, pills and presses.
+		readonly property real spring: 4
+		readonly property real damping: 0.3
+		readonly property real pressScale: 0.95
 	}
 
 	// Inter for text. Icons are Nerd Font glyphs: plain icons use Symbols

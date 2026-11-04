@@ -33,7 +33,7 @@ RowLayout {
             x: slider.leftPadding
             y: slider.topPadding + slider.availableHeight / 2 - height / 2
             width: slider.availableWidth
-            height: Theme.spacing.xs
+            height: Theme.scaled(12)
             radius: Theme.rounding.full
             color: Theme.colors.surfaceVariant
             Rectangle { width: slider.visualPosition * parent.width; height: parent.height; radius: parent.radius; color: Theme.colors.primary }
@@ -41,10 +41,12 @@ RowLayout {
         handle: Rectangle {
             x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
             y: slider.topPadding + slider.availableHeight / 2 - height / 2
-            implicitWidth: Theme.spacing.lg
-            implicitHeight: Theme.spacing.lg
+            // Thin vertical marker that stretches while dragged.
+            implicitWidth: Theme.scaled(4)
+            implicitHeight: slider.pressed ? Theme.scaled(26) : Theme.scaled(20)
             radius: Theme.rounding.full
-            color: slider.visualFocus ? Theme.colors.secondary : Theme.colors.primary
+            color: slider.visualFocus ? Theme.colors.secondary : Theme.colors.white
+            Behavior on implicitHeight { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
         }
     }
     Text { text: `${Math.round(slider.value)}${root.suffix}`; color: Theme.colors.text; font: Theme.font.body }

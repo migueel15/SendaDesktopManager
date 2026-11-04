@@ -28,18 +28,27 @@ Rectangle {
     function focusInput() { input.forceActiveFocus(); }
 
     implicitHeight: input.implicitHeight + Theme.spacing.lg
-    radius: Theme.rounding.small
-    color: Theme.colors.background
-    border.width: 1
-    border.color: input.activeFocus ? Theme.colors.primary : Theme.colors.surfaceVariant
+    radius: Theme.rounding.control
+    color: input.activeFocus ? Theme.colors.surfaceVariant : Theme.colors.surface
+    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+
+    // Focus underline that grows from the centre.
+    Rectangle {
+        anchors { bottom: parent.bottom; bottomMargin: 2; horizontalCenter: parent.horizontalCenter }
+        height: 2
+        radius: 1
+        color: Theme.colors.primary
+        width: input.activeFocus ? parent.width - 2 * Theme.rounding.control : 0
+        Behavior on width { NumberAnimation { duration: Theme.motion.slow; easing.type: Easing.OutQuint } }
+    }
 
     TextInput {
         id: input
         Keys.onUpPressed: root.arrowPressed(-1)
         Keys.onDownPressed: root.arrowPressed(1)
         anchors.fill: parent
-        anchors.leftMargin: 10
-        anchors.rightMargin: 10
+        anchors.leftMargin: Theme.spacing.md
+        anchors.rightMargin: Theme.spacing.md
         verticalAlignment: TextInput.AlignVCenter
         clip: true
         selectByMouse: true
@@ -64,7 +73,7 @@ Rectangle {
     Text {
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        anchors.leftMargin: 10
+        anchors.leftMargin: Theme.spacing.md
         visible: input.text === ""
         text: root.placeholder
         color: Theme.colors.overlay
