@@ -13,7 +13,9 @@ Item {
 	property real expandedHeight: Theme.barSize
 	property color backgroundColor: Theme.colors.background
 	readonly property int shadowSpace: 20
-	property real cornerRadius: Theme.barBorderRadius
+	// Style B: the same large radius as cards, so extensions read as cards
+	// growing out of the bar.
+	property real cornerRadius: Theme.card.radius
 	// False when nothing is drawn above the shape, as when a fullscreen window
 	// covers the bar: the top corners round inwards instead of joining the bar.
 	property bool attachedToBar: true
@@ -69,8 +71,8 @@ Item {
 	Behavior on height {
 		id: heightBehavior
 		NumberAnimation {
-			duration: root.toggling ? 310 : root.resizeDuration
-			easing.type: Easing.OutCubic
+			duration: root.toggling ? Theme.motion.slow + 60 : root.resizeDuration
+			easing.type: Easing.OutQuint
 			onRunningChanged: {
 				if (!running) root.toggling = false;
 			}
@@ -134,10 +136,10 @@ Item {
 				source: backgroundShape
 				visible: true
 				shadowEnabled: true
-				shadowColor: "#b0000000"
-				blurMax: 16
-				shadowBlur: 0.8
-				shadowVerticalOffset: 2
+				shadowColor: "#90000000"
+				blurMax: 24
+				shadowBlur: 1.0
+				shadowVerticalOffset: 4
 			}
 		}
 	}

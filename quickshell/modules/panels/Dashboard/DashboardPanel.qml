@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Services.Mpris
 
 import qs.common
+import qs.common.components.controls
 import qs.common.components
 import qs.modules.panels.Dashboard
 import qs.services
@@ -113,12 +114,6 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 44
                     }
-                }
-
-                Rectangle {
-                    Layout.preferredWidth: 1
-                    Layout.fillHeight: true
-                    color: Theme.colors.surfaceVariant
                 }
 
                 Item {
@@ -269,8 +264,8 @@ Item {
 
                                     Rectangle {
                                         Layout.fillWidth: true
-                                        Layout.preferredHeight: 4
-                                        radius: 2
+                                        Layout.preferredHeight: 6
+                                        radius: Theme.rounding.full
                                         color: Theme.colors.surfaceVariant
 
                                         Rectangle {
@@ -325,28 +320,16 @@ Item {
                                             { icon: "󰒭", enabled: !!root.player?.canGoNext, action: () => root.player?.next() }
                                         ]
 
-                                        delegate: Rectangle {
+                                        delegate: ZendaIconButton {
                                             required property var modelData
-                                            Layout.preferredWidth: 30
-                                            Layout.preferredHeight: 27
-                                            radius: Theme.rounding.small
-                                            color: controlMouse.pressed ? Theme.colors.surfaceVariant : "transparent"
-                                            opacity: modelData.enabled ? 1 : 0.35
-
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: modelData.icon
-                                                color: Theme.colors.text
-                                                font.family: Theme.font.title.family
-                                                font.pixelSize: Theme.scaled(17)
-                                            }
-                                            MouseArea {
-                                                id: controlMouse
-                                                anchors.fill: parent
-                                                enabled: modelData.enabled
-                                                cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                                onClicked: modelData.action()
-                                            }
+                                            required property int index
+                                            // Play/pause is the main action: larger and tonal.
+                                            size: index === 1 ? Theme.scaled(36) : Theme.scaled(30)
+                                            tonal: index === 1
+                                            active: index === 1 && root.player?.playbackState === MprisPlaybackState.Playing
+                                            enabled: modelData.enabled
+                                            icon: modelData.icon
+                                            onClicked: modelData.action()
                                         }
                                     }
                                 }

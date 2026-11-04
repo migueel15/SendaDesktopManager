@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Widgets
 
 import qs.common
+import qs.common.components.controls
 import qs.common.components
 import qs.services
 
@@ -49,28 +50,22 @@ ZendaPanel {
                 }
             }
 
-            PanelAction {
+            ZendaIconButton {
                 active: Notifications.dndEnabled
-                text: Notifications.dndEnabled ? Theme.notifications.icon.dnd_none : Theme.notifications.icon.none
+                icon: Notifications.dndEnabled ? Theme.notifications.icon.dnd_none : Theme.notifications.icon.none
                 accessibleLabel: Notifications.dndEnabled
                     ? "Desactivar no molestar"
                     : "Activar no molestar"
                 onClicked: Notifications.toggleDnd()
             }
 
-            PanelAction {
-                text: "󰆴"
+            ZendaIconButton {
+                icon: "󰆴"
                 accessibleLabel: "Borrar todas las notificaciones"
                 enabled: Notifications.unreadNotifications.length > 0
                 onClicked: Notifications.dismissAll()
             }
 
-        }
-
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: Theme.colors.border
         }
 
         Item {
@@ -191,46 +186,6 @@ ZendaPanel {
         }
     }
 
-    component PanelAction: Rectangle {
-        id: action
-
-        required property string text
-        required property string accessibleLabel
-        // Lit like a selected item, e.g. Do Not Disturb turned on.
-        property bool active: false
-        signal clicked
-
-        // Ghost icon button, the same size as the bar buttons.
-        implicitWidth: Theme.barButtonSize
-        implicitHeight: Theme.barButtonSize
-        radius: Theme.rounding.normal
-        color: action.active ? Theme.colors.selection
-            : (actionMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent")
-        opacity: enabled ? 1 : 0.45
-
-        Behavior on color {
-            ColorAnimation {
-                duration: 150
-            }
-        }
-
-        Text {
-            anchors.centerIn: parent
-            text: action.text
-            color: action.active ? Theme.colors.primary : Theme.colors.text
-            font: Theme.font.icon
-        }
-
-        MouseArea {
-            id: actionMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            enabled: action.enabled
-            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: action.clicked()
-        }
-    }
-
     component NotificationRow: Rectangle {
         id: row
 
@@ -318,10 +273,8 @@ ZendaPanel {
                 Layout.preferredWidth: 32
                 Layout.preferredHeight: 32
                 Layout.alignment: Qt.AlignTop
-                radius: Theme.rounding.small
-                color: Theme.colors.background
-                border.width: 1
-                border.color: Theme.colors.border
+                radius: Theme.rounding.control
+                color: Theme.colors.surfaceVariant
 
                 IconImage {
                     asynchronous: true
@@ -418,10 +371,11 @@ ZendaPanel {
             }
 
             // Shown on hover only, to keep the list calm.
-            PanelAction {
+            ZendaIconButton {
                 Layout.alignment: Qt.AlignTop
-                opacity: rowHover.hovered ? 1 : 0
-                text: "󰅖"
+                size: Theme.scaled(26)
+                visible: rowHover.hovered
+                icon: "󰅖"
                 accessibleLabel: "Descartar notificación"
                 onClicked: {
                     row.dismissing = true;
