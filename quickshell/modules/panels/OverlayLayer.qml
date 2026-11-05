@@ -100,7 +100,10 @@ PanelWindow {
                     ControlCenterPopup {
                         id: panelContent
                         screenName: overlayLayer.screenName
-                        targetX: parent.width - width - 5
+                        targetX: parent.width - width
+                        topRightCorner: "square"
+                        bottomLeftCorner: "square"
+                        bottomRightCorner: "wall"
                     }
                 }
             }
