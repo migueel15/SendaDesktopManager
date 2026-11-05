@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Hyprland
 
 import qs.common
 import qs.common.components.controls
@@ -52,17 +53,13 @@ Flickable {
                 label: "Tema"
                 modified: Theme.currentTheme !== "zenda-ice"
                 onResetRequested: ZendaTheme.apply("zenda-ice")
-                description: ZendaTheme.lastError !== "" ? ZendaTheme.lastError : "Colores y fondo de todo el escritorio."
-            }
-            Repeater {
-                model: ZendaTheme.themes.filter(theme => theme.valid)
-                delegate: ZendaButton {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    label: modelData.name
-                    primary: modelData.name === Theme.currentTheme
+                description: ZendaTheme.lastError !== "" ? ZendaTheme.lastError
+                    : `${Theme.currentTheme} · colores y fondo de todo el escritorio.`
+                ZendaButton {
+                    label: "Elegir tema"
                     enabled: !ZendaTheme.busy
-                    onClicked: ZendaTheme.apply(modelData.name)
+                    // Same picker as the top bar, on the focused monitor.
+                    onClicked: ZendaTheme.openPicker(Hyprland.focusedMonitor?.name ?? "")
                 }
             }
         }
