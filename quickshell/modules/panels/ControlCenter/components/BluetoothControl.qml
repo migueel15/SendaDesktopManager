@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Io
 
 import qs.common
 import qs.common.components.controls
@@ -115,14 +116,27 @@ Item {
                 anchors.margins: 10
                 spacing: 3
 
-                Text {
+                RowLayout {
                     width: devicesColumn.width
                     visible: Bluetooth.enabled
-                    height: visible ? 24 : 0
-                    text: Bluetooth.discovering ? "Buscando dispositivos…" : "Dispositivos disponibles"
-                    color: Theme.colors.overlay
-                    font: Theme.font.overlay
-                    verticalAlignment: Text.AlignVCenter
+                    height: visible ? 28 : 0
+                    spacing: Theme.spacing.sm
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: Bluetooth.discovering ? "Buscando dispositivos…" : "Dispositivos disponibles"
+                        color: Theme.colors.overlay
+                        font: Theme.font.overlay
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    // Opens the full Bluetooth manager.
+                    ZendaIconButton {
+                        icon: "󰂯"
+                        size: 28
+                        accessibleLabel: "Gestor de Bluetooth"
+                        onClicked: blueberry.startDetached()
+                    }
                 }
 
                 Text {
@@ -169,5 +183,10 @@ Item {
                 }
             }
         }
+    }
+
+    Process {
+        id: blueberry
+        command: ["blueberry"]
     }
 }

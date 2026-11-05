@@ -5,6 +5,7 @@ import Quickshell.Widgets
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 import qs.common.components
 
@@ -23,8 +24,8 @@ Rectangle {
     bottomLeftRadius: attachedBelow ? 0 : Theme.card.radius
     bottomRightRadius: attachedBelow ? 0 : Theme.card.radius
     property bool attachedBelow: false
-    border.width: 1
-    border.color: Theme.colors.surfaceVariant
+    border.width: Theme.card.borderWidth
+    border.color: Theme.card.borderColor
     z: 10
 
     function closeSystemMenu() {
@@ -105,18 +106,27 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 5
-                IconButtom {
+                // Same tonal icon buttons as the rest of the panels.
+                ZendaIconButton {
                     icon: ""
-                    onClick: () => LockService.lock()
+                    tonal: true
+                    size: 40
+                    accessibleLabel: "Bloquear"
+                    onClicked: LockService.lock()
                 }
-
-                IconButtom {
-                    icon: "󰂯"
-                    command: ["blueberry"]
+                ZendaIconButton {
+                    icon: "󰒓"
+                    tonal: true
+                    size: 40
+                    accessibleLabel: "Ajustes de Zenda"
+                    onClicked: ZendaSettings.showWindow()
                 }
-                IconButtom {
+                ZendaIconButton {
                     icon: ""
-                    onClick: () => userCard.powerMenuToggleRequested()
+                    tonal: true
+                    size: 40
+                    accessibleLabel: "Apagado"
+                    onClicked: userCard.powerMenuToggleRequested()
                 }
             }
         }
