@@ -1,2 +1,3 @@
 module qs.modules.panels.notifications
 NotificationsPanel 1.0 notifications-panel.qml
+NotificationCard 1.0 notification-card.qml
