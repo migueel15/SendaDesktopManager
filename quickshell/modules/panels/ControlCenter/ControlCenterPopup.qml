@@ -139,28 +139,11 @@ ZendaPanel {
                             }
                         }
 
-                        Rectangle {
+                        ZendaSwitch {
                             Layout.leftMargin: 8
-                            width: 38
-                            height: 22
-                            radius: Theme.rounding.full
-                            color: Network.wifiEnabled ? Theme.colors.primary : Theme.colors.surfaceVariant
-
-                            Rectangle {
-                                width: 16
-                                height: 16
-                                y: 3
-                                x: Network.wifiEnabled ? parent.width - width - 3 : 3
-                                radius: Theme.rounding.full
-                                color: Theme.colors.background
-                                Behavior on x { NumberAnimation { duration: 120 } }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: Network.toggleWifi()
-                            }
+                            checkedValue: Network.wifiEnabled
+                            Accessible.name: "Wi-Fi"
+                            onToggledValue: Network.toggleWifi()
                         }
                     }
 
@@ -179,7 +162,6 @@ ZendaPanel {
                         IconSlot {
                             icon: wifiControl.expanded ? "" : ""
                             iconColor: Theme.colors.overlay
-                            iconFont: Theme.font.icon
                             gapAfter: 0
                             interactive: true
                             onClicked: wifiControl.toggleExpanded()
@@ -263,8 +245,9 @@ ZendaPanel {
 
                             width: networksColumn.width
                             height: needsPassword ? 78 : 40
-                            radius: needsPassword ? Theme.rounding.large : height / 2
-                            color: connected ? Theme.colors.selection : networkMouse.containsMouse ? Theme.colors.surfaceRaised : "transparent"
+                            radius: needsPassword ? Theme.rounding.large : Theme.rounding.full
+                            color: connected ? Theme.colors.selection : "transparent"
+                            ZendaStateLayer { hovered: networkMouse.containsMouse; pressed: networkMouse.pressed }
                             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Column {
@@ -426,16 +409,15 @@ ZendaPanel {
 
         Rectangle {
             anchors.fill: parent
-            radius: Theme.rounding.normal
+            // Same radius as the other Control Center cards.
+            radius: Theme.card.radius
             color: dndControl.dndEnabled ? Theme.colors.selection : Theme.colors.surface
             Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
 
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
-                color: dndControl.activeFocus || dndToggle.visualFocus ? Theme.colors.focus : Theme.colors.primary
-                opacity: dndControl.activeFocus || dndToggle.visualFocus ? 0.12 : dndMouse.containsMouse ? 0.08 : 0
-                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+            ZendaStateLayer {
+                hovered: dndMouse.containsMouse
+                pressed: dndMouse.pressed
+                focused: dndControl.activeFocus || dndToggle.visualFocus
             }
 
             MouseArea {
@@ -503,7 +485,9 @@ ZendaPanel {
             }
         }
 
+        // Every way of toggling (card, switch, keyboard) animates the switch.
         function toggle() {
+            dndToggle.animateChange();
             Notifications.toggleDnd();
         }
     }

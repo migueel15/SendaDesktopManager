@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls as Controls
 import qs.common
+import qs.common.components.controls
 
 // Native button behavior with Zenda's tokens, including keyboard focus.
 Controls.AbstractButton {
@@ -64,10 +65,15 @@ Controls.AbstractButton {
     Behavior on scale { SpringAnimation { spring: Theme.motion.spring + 1; damping: Theme.motion.damping } }
     background: Rectangle {
         radius: Theme.rounding.full
-        color: root.destructive ? (root.hovered ? Qt.lighter(Theme.colors.error, 1.1) : Theme.colors.error)
-            : root.primary ? (root.hovered ? Theme.colors.secondary : Theme.colors.primary)
-            : root.down || root.hovered ? Theme.colors.surfaceVariant : Theme.colors.selection
-        Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+        color: root.destructive ? Theme.colors.error
+            : root.primary ? Theme.colors.primary
+            : Theme.colors.selection
+        // Filled buttons take a veil of the color drawn on them, as in Material 3.
+        ZendaStateLayer {
+            hovered: root.hovered && root.enabled
+            pressed: root.down
+            color: root.primary || root.destructive ? Theme.colors.base : Theme.stateLayer.color
+        }
         border.width: root.visualFocus ? 2 : 0
         border.color: Theme.colors.focus
     }

@@ -28,6 +28,16 @@ QtObject {
 		root.fontScale = valid ? value / 100 : 1.0;
 	}
 
+	// Corner radius scale, from 0 (square) to 1.0 (default). The settings
+	// panel changes it through ZENDA_UI_ROUNDING.
+	property real roundingScale: 1.0
+
+	function setRoundingScale(percent) {
+		const value = parseInt(percent, 10);
+		const valid = !isNaN(value) && value >= 0 && value <= 100;
+		root.roundingScale = valid ? value / 100 : 1.0;
+	}
+
 	function applyColors(map) {
 		const keys = ["base", "background", "surface", "border", "surfaceVariant",
 			"surfaceRaised", "surfaceRaisedBorder", "overlay", "textMuted", "white",
@@ -55,6 +65,13 @@ QtObject {
 		readonly property int radius: root.rounding.card
 		readonly property int borderWidth: 0
 		readonly property color borderColor: "transparent"
+	}
+
+	// Material 3 state layer: hover and press veil shared by every element.
+	readonly property QtObject stateLayer: QtObject {
+		readonly property color color: root.colors.primary
+		readonly property real hoverOpacity: 0.08
+		readonly property real pressedOpacity: 0.12
 	}
 
 	// Zenda palette. Neutrals: Noche, Grafito, Pizarra, Humo, Bruma.
@@ -95,13 +112,15 @@ QtObject {
 	}
 
 	component Rounding: QtObject {
-		readonly property int small: 6
-		readonly property int normal: 10
-		readonly property int large: 16
+		readonly property int small: Math.round(6 * root.roundingScale)
+		readonly property int normal: Math.round(10 * root.roundingScale)
+		readonly property int large: Math.round(16 * root.roundingScale)
 		// Style B: inputs and buttons, and cards or groups.
-		readonly property int control: 12
-		readonly property int card: 24
-		readonly property int full: 1000
+		readonly property int control: Math.round(12 * root.roundingScale)
+		readonly property int card: Math.round(24 * root.roundingScale)
+		// Pills at 100 %. Below that it shrinks from half a typical control
+		// height (40 px), so buttons and selected rows follow the setting.
+		readonly property int full: root.roundingScale >= 1 ? 1000 : Math.round(20 * root.roundingScale)
 	}
 
 	// Spacing scale for gaps, margins, and padding. Avoid values off the scale.
@@ -131,6 +150,8 @@ QtObject {
 	// Nerd Font, and mixed strings fall back to it through fontconfig.
 	readonly property string textFamily: "Inter"
 	readonly property string iconFamily: "Symbols Nerd Font"
+	// Icon size in pixels at 100 % interface scale.
+	readonly property int iconSize: 17
 
 	component Fonts: QtObject {
 		property font base: Qt.font({
@@ -180,9 +201,10 @@ QtObject {
 				pixelSize: root.scaled(13),
 				weight: Font.Normal
 		})
+		// Shared by every icon through ZendaIcon.
 		property font icon: Qt.font({
 				family: root.iconFamily,
-				pixelSize: root.scaled(13),
+				pixelSize: root.scaled(root.iconSize),
 				weight: Font.Normal
 		})
 	}

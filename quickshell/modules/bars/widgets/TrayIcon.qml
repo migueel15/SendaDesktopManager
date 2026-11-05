@@ -9,7 +9,7 @@ Item {
 
     property string source: ""
     property string fallbackSource: ""
-    property int iconSize: 18
+    property int iconSize: Theme.scaled(Theme.iconSize)
     readonly property bool usingFallback: !canvas.hasContent || picture.status !== Image.Ready
     property int retryCount: 0
     property int loadGeneration: 0

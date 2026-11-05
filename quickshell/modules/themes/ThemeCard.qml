@@ -20,7 +20,8 @@ Rectangle {
 
     implicitHeight: Theme.scaled(184)
     radius: Theme.card.radius
-    color: selected ? Theme.colors.selection : hover.hovered && valid ? Theme.card.hoverFill : Theme.card.fill
+    color: selected ? Theme.colors.selection : Theme.card.fill
+    ZendaStateLayer { hovered: hover.hovered && root.valid; pressed: tap.pressed }
     border.width: selected ? 2 : 0
     border.color: Theme.colors.primary
     scale: tap.pressed ? 0.98 : 1

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import QtQuick.Layouts
 import qs.common
+import qs.common.components.icons
 
 Item {
     id: root
@@ -23,11 +24,10 @@ Item {
             id: rowLayout
             anchors.centerIn: parent
             spacing: 2
-            Text {
+            ZendaIcon {
                 visible: root.icon !== null
                 text: root.icon
                 color: root.color
-                font: root.font
             }
 
             Text {

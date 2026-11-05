@@ -10,7 +10,11 @@ RowLayout {
     property real to: 150
     property real stepSize: 10
     property string suffix: " %"
+    // Hides the value label when the caller shows it elsewhere.
+    property bool showValue: true
     signal committed(real value)
+    // Fires on every change made by the user, for live controls like volume.
+    signal moved(real value)
     // Reconcile with persisted state after a save, including a failed write.
     onValueChanged: slider.value = root.value
     onEnabledChanged: if (enabled) slider.value = root.value
@@ -25,6 +29,7 @@ RowLayout {
         stepSize: root.stepSize
         snapMode: Controls.Slider.SnapAlways
         onPressedChanged: if (!pressed) root.committed(value)
+        onMoved: root.moved(value)
         Keys.onReleased: event => {
             if ([Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down, Qt.Key_Home, Qt.Key_End].includes(event.key))
                 root.committed(value);
@@ -42,12 +47,15 @@ RowLayout {
             x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
             y: slider.topPadding + slider.availableHeight / 2 - height / 2
             // Thin vertical marker that stretches while dragged.
+            // The implicit size is the stretched one, so the slider keeps its
+            // height while the marker animates and the layout never shifts.
             implicitWidth: Theme.scaled(4)
-            implicitHeight: slider.pressed ? Theme.scaled(26) : Theme.scaled(20)
+            implicitHeight: Theme.scaled(26)
+            height: slider.pressed ? Theme.scaled(26) : Theme.scaled(20)
             radius: Theme.rounding.full
             color: slider.visualFocus ? Theme.colors.secondary : Theme.colors.white
-            Behavior on implicitHeight { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
+            Behavior on height { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
         }
     }
-    Text { text: `${Math.round(slider.value)}${root.suffix}`; color: Theme.colors.text; font: Theme.font.body }
+    Text { visible: root.showValue; text: `${Math.round(slider.value)}${root.suffix}`; color: Theme.colors.text; font: Theme.font.body }
 }

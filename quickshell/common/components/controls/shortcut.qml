@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import Quickshell.Hyprland
 import Quickshell.Io
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 // Records a shortcut by pressing it. While recording, Hyprland is switched to
@@ -237,7 +238,8 @@ ColumnLayout {
             }
             background: Rectangle {
                 radius: Theme.rounding.small
-                color: resetButton.down || resetButton.hovered ? Theme.colors.surfaceVariant : Theme.colors.surface
+                color: Theme.colors.surface
+                ZendaStateLayer { hovered: resetButton.hovered; pressed: resetButton.down }
                 border.width: 1
                 border.color: resetButton.visualFocus ? Theme.colors.focus : Theme.colors.border
             }

@@ -3,6 +3,8 @@ import QtQuick.Layouts
 import Quickshell
 
 import qs.common
+import qs.common.components.icons
+import qs.common.components.controls
 import qs.services
 
 // Bar notice for a newer Zenda release. At rest it is a round download button;
@@ -35,8 +37,8 @@ Item {
         height: root.buttonSize
         width: root.expanded ? root.buttonSize + details.implicitWidth : root.buttonSize
         radius: Theme.rounding.full
-        color: ZendaUpdate.installing ? Theme.colors.surfaceVariant
-            : downloadMouse.containsMouse ? Theme.colors.primary : Theme.colors.surfaceVariant
+        color: Theme.colors.surfaceVariant
+        ZendaStateLayer { hovered: downloadMouse.containsMouse && !ZendaUpdate.installing; pressed: downloadMouse.pressed }
         clip: true
 
         Behavior on width {
@@ -50,7 +52,7 @@ Item {
             id: pillHover
         }
 
-        Text {
+        ZendaIcon {
             id: icon
             x: 0
             width: root.buttonSize
@@ -60,7 +62,6 @@ Item {
             text: ZendaUpdate.installing ? "󰔟" : String.fromCodePoint(0xF019)
             color: downloadMouse.containsMouse && !ZendaUpdate.installing
                 ? Theme.colors.background : Theme.colors.primary
-            font: Theme.font.icon
 
             RotationAnimator on rotation {
                 running: ZendaUpdate.installing

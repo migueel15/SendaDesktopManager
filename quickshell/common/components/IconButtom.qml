@@ -4,6 +4,7 @@ import Quickshell.Io
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 
 Rectangle {
     id: root
@@ -17,7 +18,8 @@ Rectangle {
     implicitWidth: 40
     implicitHeight: 40
     radius: Theme.rounding.full
-    color: isHovered ? Theme.colors.surfaceVariant : Theme.colors.surface
+    color: Theme.colors.surface
+    ZendaStateLayer { hovered: root.isHovered; pressed: mouseArea.pressed }
 
     Behavior on color {
         ColorAnimation {
@@ -50,7 +52,7 @@ Rectangle {
         anchors.centerIn: parent
         text: root.icon
         font: Theme.font.base
-        color: root.isHovered ? Theme.colors.white : Theme.colors.text
+        color: Theme.colors.text
 
         Behavior on color {
             ColorAnimation {

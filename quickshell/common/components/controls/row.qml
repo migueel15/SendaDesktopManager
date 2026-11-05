@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import qs.common
+import qs.common.components.controls
 
 Item {
     id: root
@@ -48,9 +49,8 @@ Item {
     Rectangle {
         anchors { fill: content; margins: -Theme.spacing.sm }
         radius: Theme.rounding.large
-        color: Theme.colors.surfaceVariant
-        opacity: rowHover.hovered && root.enabled ? 0.5 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.motion.normal } }
+        color: "transparent"
+        ZendaStateLayer { hovered: rowHover.hovered && root.enabled }
     }
     HoverHandler { id: rowHover }
     // Controls are anchored to the right edge so every row lines them up,

@@ -12,3 +12,4 @@ ZendaShortcut 1.0 shortcut.qml
 ZendaSlider 1.0 slider.qml
 ZendaStatus 1.0 status.qml
 ZendaSwitch 1.0 switch.qml
+ZendaStateLayer 1.0 state-layer.qml

@@ -1,6 +1,8 @@
 import QtQuick
 
 import qs.common
+import qs.common.components.icons
+import qs.common.components.controls
 
 // Material 3 style round icon button. Standard by default (transparent until
 // hovered); tonal gives it a resting fill; active lights it like a selected
@@ -21,7 +23,6 @@ Rectangle {
     implicitHeight: size
     radius: Theme.rounding.full
     color: active ? Theme.colors.selection
-        : hover.hovered && enabled ? Theme.colors.surfaceVariant
         : tonal ? Theme.colors.surfaceRaised : "transparent"
     opacity: enabled ? 1 : 0.4
     scale: tap.pressed ? Theme.motion.pressScale - 0.05 : 1
@@ -32,11 +33,12 @@ Rectangle {
     Accessible.role: Accessible.Button
     Accessible.name: accessibleLabel
 
-    Text {
+    ZendaStateLayer { hovered: hover.hovered && root.enabled; pressed: tap.pressed }
+
+    ZendaIcon {
         anchors.centerIn: parent
         text: root.icon
         color: root.iconColor
-        font: Theme.font.icon
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
     }
 

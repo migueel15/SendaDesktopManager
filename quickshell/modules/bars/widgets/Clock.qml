@@ -2,6 +2,7 @@ import Quickshell
 import QtQuick
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Rectangle {
@@ -12,7 +13,8 @@ Rectangle {
     readonly property bool open: OverlayService.isOpen("dashboard")
 
     // Same hover pill as the other bar buttons; stays lit while the dashboard is open.
-    color: clockMouse.containsMouse || open ? Theme.colors.surfaceVariant : "transparent"
+    color: "transparent"
+    ZendaStateLayer { hovered: clockMouse.containsMouse; pressed: clockBackground.open || clockMouse.pressed }
     radius: Theme.rounding.normal
     height: parent.height * 0.8
     width: clockRow.implicitWidth + 24

@@ -79,7 +79,6 @@ Item {
                         id: outputArrow
                         icon: root.expandedSection === "output" ? "" : ""
                         iconColor: Theme.colors.overlay
-                        iconFont: Theme.font.icon
                         gapBefore: 8
                         gapAfter: 0
                         interactive: true
@@ -90,45 +89,18 @@ Item {
                 Item {
                     x: outputIcon.x + outputIcon.width
                     width: outputPercentage.x + outputPercentage.width - x
-                    height: 14
+                    height: volumeSlider.implicitHeight
 
-                    Rectangle {
+                    // Same slider as Settings; the percentage is shown beside it.
+                    ZendaSlider {
+                        id: volumeSlider
+                        anchors.left: parent.left
+                        anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width
-                        height: 6
-                        radius: Theme.rounding.full
-                        color: Theme.colors.surfaceVariant
-
-                        Rectangle {
-                            width: parent.width * (Audio.volume || 0)
-                            height: parent.height
-                            radius: parent.radius
-                            color: Theme.colors.primary
-                        }
-                    }
-
-                    Rectangle {
-                        width: 14
-                        height: 14
-                        radius: Theme.rounding.full
-                        color: Theme.colors.white
-                        border.color: Theme.colors.primary
-                        border.width: 2
-                        x: (parent.width * (Audio.volume || 0)) - width / 2
-                        y: parent.height / 2 - height / 2
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onPressed: mouse => root.updateVolume(mouse.x, width)
-                        onPositionChanged: mouse => {
-                            if (pressed) root.updateVolume(mouse.x, width);
-                        }
-                        onWheel: wheel => {
-                            if (wheel.angleDelta.y > 0) Audio.increaseVolume();
-                            else Audio.decreaseVolume();
-                        }
+                        from: 0; to: 100; stepSize: 1
+                        showValue: false
+                        value: Math.round((Audio.volume || 0) * 100)
+                        onMoved: value => root.updateVolume(value, 100)
                     }
                 }
             }
@@ -219,7 +191,6 @@ Item {
                 IconSlot {
                     icon: root.expandedSection === "input" ? "" : ""
                     iconColor: Theme.colors.overlay
-                    iconFont: Theme.font.icon
                     gapBefore: 8
                     gapAfter: 0
                     interactive: true

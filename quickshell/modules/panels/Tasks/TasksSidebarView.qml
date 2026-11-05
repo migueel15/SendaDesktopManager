@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.icons
+import qs.common.components.controls
 import qs.services
 
 Item {
@@ -112,17 +114,17 @@ Item {
         Layout.preferredWidth: buttonSize
         Layout.preferredHeight: buttonSize
         radius: Theme.rounding.full
-        color: actionMouseArea.containsMouse && action.available ? Theme.colors.surfaceVariant : Theme.colors.surface
+        color: Theme.colors.surface
+        ZendaStateLayer { hovered: actionMouseArea.containsMouse && action.available; pressed: actionMouseArea.pressed; color: action.accent }
         border.width: 1
         border.color: actionMouseArea.containsMouse && action.available ? action.accent : Theme.colors.surfaceVariant
         opacity: action.available || action.busy ? 1 : 0.35
 
-        Text {
+        ZendaIcon {
             anchors.centerIn: parent
             anchors.horizontalCenterOffset: !action.busy && action.icon === "󰐊" ? 1 : 0
             text: action.busy ? "󰔟" : action.icon
             color: action.accent
-            font: Theme.font.icon
         }
 
         MouseArea {
@@ -244,10 +246,9 @@ Item {
             anchors.rightMargin: 12
             spacing: 10
 
-            Text {
+            ZendaIcon {
                 text: ""
                 color: Theme.colors.overlay
-                font: Theme.font.icon
             }
 
             TextInput {
@@ -393,7 +394,8 @@ Item {
         Layout.fillWidth: true
         height: 58
         radius: Theme.rounding.normal
-        color: rowMouseArea.containsMouse || isActive || isPaused ? Theme.colors.surfaceVariant : Theme.colors.background
+        color: isActive || isPaused ? Theme.colors.surfaceVariant : Theme.colors.background
+        ZendaStateLayer { hovered: rowMouseArea.containsMouse; pressed: rowMouseArea.pressed }
         border.width: 1
         border.color: isActive ? Theme.colors.primary : isPaused ? Theme.colors.warning : Theme.colors.surfaceVariant
         opacity: task.completed ? 0.62 : 1
@@ -419,11 +421,10 @@ Item {
                 border.color: task.completed ? Theme.colors.primary : Theme.colors.overlay
                 opacity: taskRow.isActive ? 0.4 : 1
 
-                Text {
+                ZendaIcon {
                     anchors.centerIn: parent
                     text: task.completed ? "" : ""
                     color: Theme.colors.background
-                    font: Theme.font.icon
                 }
 
                 MouseArea {
@@ -808,11 +809,10 @@ Item {
                                         Layout.preferredWidth: 28
                                         Layout.preferredHeight: 32
 
-                                        Text {
+                                        ZendaIcon {
                                             anchors.centerIn: parent
                                             text: ""
                                             color: dragArea.containsMouse || dragArea.drag.active ? Theme.colors.primary : Theme.colors.overlay
-                                            font: Theme.font.icon
                                         }
 
                                         MouseArea {

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 // Upcoming events from today, in start order. Clicking one opens it in Google
@@ -107,7 +108,8 @@ Rectangle {
                 width: ListView.view.width
                 implicitHeight: row.implicitHeight + 8
                 radius: Theme.rounding.small
-                color: eventMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+                color: "transparent"
+                ZendaStateLayer { hovered: eventMouse.containsMouse; pressed: eventMouse.pressed }
 
                 RowLayout {
                     id: row

@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.icons
+import qs.common.components.controls
 import qs.services
 
 Item {
@@ -29,15 +31,15 @@ Item {
 		Layout.preferredWidth: 24
 		Layout.preferredHeight: 24
 		radius: Theme.rounding.full
-		color: actionMouseArea.containsMouse && action.available ? action.accent : Theme.colors.surfaceVariant
+		color: Theme.colors.surfaceVariant
+		ZendaStateLayer { hovered: actionMouseArea.containsMouse && action.available; pressed: actionMouseArea.pressed; color: action.accent }
 		opacity: action.available || action.busy ? 1 : 0.45
 
-		Text {
+		ZendaIcon {
 			anchors.centerIn: parent
 			anchors.horizontalCenterOffset: !action.busy && action.icon === "󰐊" ? 1 : 0
 			text: action.busy ? "󰔟" : action.icon
-			color: actionMouseArea.containsMouse && action.available ? Theme.colors.background : action.accent
-			font: Theme.font.icon
+			color: action.accent
 		}
 
 		MouseArea {
@@ -59,7 +61,8 @@ Item {
 		height: Theme.barButtonSize
 		radius: Theme.rounding.normal
 		// Same hover pill as the tray button; stays lit while the panel is open.
-		color: containerMouseArea.containsMouse || root.open ? Theme.colors.surfaceVariant : "transparent"
+		color: "transparent"
+		ZendaStateLayer { hovered: containerMouseArea.containsMouse; pressed: root.open || containerMouseArea.pressed }
 
 		Behavior on color {
 			ColorAnimation {
@@ -87,11 +90,10 @@ Item {
 				Layout.preferredWidth: root.hasTask ? 24 : Theme.barButtonSize - 16
 				Layout.fillHeight: true
 
-				Text {
+				ZendaIcon {
 					anchors.centerIn: parent
 					text: "󰄭"
 					color: Theme.colors.text
-					font: Theme.font.base
 				}
 			}
 

@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.icons
+import qs.common.components.controls
 import qs.services
 
 Rectangle {
@@ -42,14 +44,14 @@ Rectangle {
             Layout.preferredWidth: 24
             Layout.preferredHeight: 24
             radius: Theme.rounding.full
-            color: mainActionMouseArea.containsMouse && mainActionMouseArea.enabled ? Theme.colors.primary : Theme.colors.surfaceVariant
+            color: Theme.colors.surfaceVariant
+            ZendaStateLayer { hovered: mainActionMouseArea.containsMouse && mainActionMouseArea.enabled; pressed: mainActionMouseArea.pressed }
             opacity: DorlabTasks.actionInProgress ? 0.5 : 1
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: DorlabTasks.actionInProgress ? "󰔟" : DorlabTasks.hasActiveTask ? "󰏤" : "󰐊"
-                color: mainActionMouseArea.containsMouse && mainActionMouseArea.enabled ? Theme.colors.background : Theme.colors.text
-                font: Theme.font.icon
+                color: Theme.colors.text
             }
 
             MouseArea {
@@ -72,14 +74,14 @@ Rectangle {
             Layout.preferredWidth: 24
             Layout.preferredHeight: 24
             radius: Theme.rounding.full
-            color: stopMouseArea.containsMouse && stopMouseArea.enabled ? Theme.colors.error : Theme.colors.surfaceVariant
+            color: Theme.colors.surfaceVariant
+            ZendaStateLayer { hovered: stopMouseArea.containsMouse && stopMouseArea.enabled; pressed: stopMouseArea.pressed; color: Theme.colors.error }
             opacity: DorlabTasks.actionInProgress ? 0.5 : 1
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: DorlabTasks.actionInProgress ? "󰔟" : ""
-                color: stopMouseArea.containsMouse && stopMouseArea.enabled ? Theme.colors.background : Theme.colors.text
-                font: Theme.font.icon
+                color: Theme.colors.text
             }
 
             MouseArea {

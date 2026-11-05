@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick
 import QtQuick.Shapes
 import qs.common
+import qs.common.components.controls
 import qs.services
 import qs.modules.bars.widgets
 import qs.modules.themes
@@ -137,7 +138,8 @@ Variants {
 					Layout.preferredHeight: Theme.barButtonSize
 					Layout.alignment: Qt.AlignVCenter
 					radius: Theme.rounding.normal
-					color: logoMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+					color: "transparent"
+					ZendaStateLayer { hovered: logoMouse.containsMouse; pressed: logoMouse.pressed }
 
 					Behavior on color {
 						ColorAnimation {

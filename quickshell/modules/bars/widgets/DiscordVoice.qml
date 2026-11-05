@@ -6,6 +6,7 @@ import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 
 import qs.common
+import qs.common.components.icons
 import qs.services
 import qs.common.components.barextension as BarComponents
 
@@ -175,11 +176,10 @@ Rectangle {
             radius: Theme.rounding.normal
             color: "transparent"
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: "󰙯"
                 color: Theme.colors.primary
-                font: Theme.font.base
             }
 
             MouseArea {
@@ -295,7 +295,7 @@ Rectangle {
                     Layout.preferredHeight: parent.height
                     color: "transparent"
 
-                    Text {
+                    ZendaIcon {
                         anchors.centerIn: parent
                         width: 24
                         height: 24
@@ -303,7 +303,6 @@ Rectangle {
                         verticalAlignment: Text.AlignVCenter
                         text: (root.voiceState.mute || root.voiceState.deaf) ? "󰍭" : "󰍬"
                         color: (root.voiceState.mute || root.voiceState.deaf) ? Theme.colors.error : Theme.colors.success
-                        font: Theme.font.base
                     }
 
                     MouseArea {
@@ -325,7 +324,7 @@ Rectangle {
                     Layout.preferredHeight: parent.height
                     color: "transparent"
 
-                    Text {
+                    ZendaIcon {
                         id: headphoneIcon
                         anchors.centerIn: parent
                         width: 24
@@ -334,7 +333,6 @@ Rectangle {
                         verticalAlignment: Text.AlignVCenter
                         text: "󰋋"
                         color: root.voiceState.deaf ? Theme.colors.error : Theme.colors.primary
-                        font: Theme.font.base
                     }
                     Rectangle {
                         visible: root.voiceState.deaf
@@ -366,7 +364,7 @@ Rectangle {
                     Layout.preferredHeight: parent.height
                     color: "transparent"
 
-                    Text {
+                    ZendaIcon {
                         anchors.centerIn: parent
                         width: 24
                         height: 24
@@ -374,7 +372,6 @@ Rectangle {
                         verticalAlignment: Text.AlignVCenter
                         text: "󰏵"
                         color: Theme.colors.error
-                        font: Theme.font.base
                     }
 
                     MouseArea {
@@ -582,11 +579,10 @@ Rectangle {
                                                 width: 16
                                                 height: 16
 
-                                                Text {
+                                                ZendaIcon {
                                                     anchors.centerIn: parent
                                                     text: "󰑐"
                                                     color: Theme.colors.overlay
-                                                    font: Theme.font.icon
                                                 }
 
                                                 MouseArea {
@@ -613,18 +609,16 @@ Rectangle {
                                             id: participantActions
                                             spacing: 4
 
-                                            Text {
+                                            ZendaIcon {
                                                 visible: participantRow.isSelfMuted || participantRow.isServerMuted
                                                 text: "󰍭"
                                                 color: participantRow.isServerMuted ? Theme.colors.error : Theme.colors.overlay
-                                                font: Theme.font.base
                                             }
 
-                                            Text {
+                                            ZendaIcon {
                                                 visible: participantRow.isSelfDeaf || participantRow.isServerDeaf
                                                 text: "󰋋"
                                                 color: participantRow.isServerDeaf ? Theme.colors.error : Theme.colors.overlay
-                                                font: Theme.font.base
                                             }
 
                                             Rectangle {
@@ -632,11 +626,10 @@ Rectangle {
                                                 Layout.preferredHeight: 22
                                                 color: "transparent"
 
-                                                Text {
+                                                ZendaIcon {
                                                     anchors.centerIn: parent
                                                     text: participantRow.isMuted ? "󰖁" : "󰕾"
                                                     color: participantRow.isMuted ? Theme.colors.error : Theme.colors.text
-                                                    font: Theme.font.base
                                                 }
 
                                                 MouseArea {

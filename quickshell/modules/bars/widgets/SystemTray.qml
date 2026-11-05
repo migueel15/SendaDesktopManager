@@ -4,6 +4,7 @@ import Quickshell.Services.SystemTray
 import Quickshell
 import QtQuick
 import qs.common
+import qs.common.components.controls
 import qs.services
 import qs.common.components
 import qs.common.components.icons
@@ -130,7 +131,8 @@ Rectangle {
         anchors.leftMargin: pinnedZone.width > 0 ? 4 : 0
 
         // Same hover pill as the other bar buttons; stays lit while expanded.
-        color: expandButtonHover.hovered || root.expanded ? Theme.colors.surfaceVariant : "transparent"
+        color: "transparent"
+        ZendaStateLayer { hovered: expandButtonHover.hovered; pressed: root.expanded }
 
         Behavior on color {
             ColorAnimation {
@@ -148,9 +150,6 @@ Rectangle {
             anchors.centerIn: parent
             icon: ""
             iconColor: Theme.colors.text
-            iconFont: Theme.font.icon
-            slotWidth: 24
-            slotHeight: 24
             gapAfter: 0
             rotation: root.expanded ? 180 : 0
 

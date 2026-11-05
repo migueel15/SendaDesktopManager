@@ -7,9 +7,8 @@ Item {
 
     property string icon: ""
     property color iconColor: Theme.colors.text
-    property font iconFont: Theme.font.title
-    property int slotWidth: 24
-    property int slotHeight: 24
+    property int slotWidth: Theme.scaled(24)
+    property int slotHeight: Theme.scaled(24)
     property int gapBefore: 0
     property int gapAfter: 8
     property bool interactive: false
@@ -21,16 +20,13 @@ Item {
     implicitWidth: width
     implicitHeight: height
 
-    Text {
+    ZendaIcon {
         x: root.gapBefore
         width: root.slotWidth
         height: root.slotHeight
         anchors.verticalCenter: parent.verticalCenter
         text: root.icon
         color: root.iconColor
-        font: root.iconFont
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
     }
 
     MouseArea {

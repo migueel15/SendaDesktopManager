@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Services.Mpris
 
 import qs.common
+import qs.common.components.icons
 import qs.services
 import qs.common.components.barextension as BarComponents
 
@@ -135,11 +136,10 @@ Rectangle {
             Layout.preferredHeight: parent.height
             color: "transparent"
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: ""
                 color: "#1DB954"
-                font: Theme.font.base
             }
 
             MouseArea {
@@ -157,11 +157,10 @@ Rectangle {
             Layout.preferredHeight: parent.height
             color: "transparent"
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: "󰒮"
                 color: root.activePlayer?.canGoPrevious ? Theme.colors.text : Theme.colors.overlay
-                font: Theme.font.base
             }
 
             MouseArea {
@@ -181,11 +180,10 @@ Rectangle {
             Layout.preferredHeight: parent.height
             color: "transparent"
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: root.isPlaying ? "󰏤" : "󰐊"
                 color: (root.activePlayer?.canPlay || root.activePlayer?.canPause) ? Theme.colors.text : Theme.colors.overlay
-                font: Theme.font.base
             }
 
             MouseArea {
@@ -211,11 +209,10 @@ Rectangle {
             Layout.preferredHeight: parent.height
             color: "transparent"
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: "󰒭"
                 color: root.activePlayer?.canGoNext ? Theme.colors.text : Theme.colors.overlay
-                font: Theme.font.base
             }
 
             MouseArea {
@@ -290,7 +287,7 @@ Rectangle {
                         Rectangle {
                             Layout.preferredWidth: 40
                             Layout.preferredHeight: 40
-                            radius: 6
+                            radius: Theme.rounding.small
                             color: Theme.colors.surfaceVariant
                             clip: true
 
@@ -313,7 +310,7 @@ Rectangle {
                                 maskSource: Rectangle {
                                     width: 40
                                     height: 40
-                                    radius: 6
+                                    radius: Theme.rounding.small
                                     color: "white"
                                 }
                                 visible: trackArt.status === Image.Ready
