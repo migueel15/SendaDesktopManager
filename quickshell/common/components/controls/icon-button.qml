@@ -1,6 +1,7 @@
 import QtQuick
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 
 // Material 3 style round icon button. Standard by default (transparent until
@@ -34,11 +35,10 @@ Rectangle {
 
     ZendaStateLayer { hovered: hover.hovered && root.enabled; pressed: tap.pressed }
 
-    Text {
+    ZendaIcon {
         anchors.centerIn: parent
         text: root.icon
         color: root.iconColor
-        font: Theme.font.icon
         Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
     }
 

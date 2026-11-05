@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 import qs.common.components
@@ -99,7 +100,6 @@ Rectangle {
                 delegate: IconLabel {
                     icon: modelData.icon ?? null
                     label: modelData.label ?? null
-                    font: Theme.font.base
                     color: Theme.colors.text
                 }
             }

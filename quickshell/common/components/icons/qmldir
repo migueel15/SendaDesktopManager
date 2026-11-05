@@ -1,2 +1,3 @@
 module qs.common.components.icons
 IconSlot 1.0 icon-slot.qml
+ZendaIcon 1.0 icon.qml

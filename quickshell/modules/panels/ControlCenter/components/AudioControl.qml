@@ -79,7 +79,6 @@ Item {
                         id: outputArrow
                         icon: root.expandedSection === "output" ? "" : ""
                         iconColor: Theme.colors.overlay
-                        iconFont: Theme.font.icon
                         gapBefore: 8
                         gapAfter: 0
                         interactive: true
@@ -192,7 +191,6 @@ Item {
                 IconSlot {
                     icon: root.expandedSection === "input" ? "" : ""
                     iconColor: Theme.colors.overlay
-                    iconFont: Theme.font.icon
                     gapBefore: 8
                     gapAfter: 0
                     interactive: true

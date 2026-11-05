@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -51,7 +52,7 @@ Item {
             id: pillHover
         }
 
-        Text {
+        ZendaIcon {
             id: icon
             x: 0
             width: root.buttonSize
@@ -61,7 +62,6 @@ Item {
             text: ZendaUpdate.installing ? "󰔟" : String.fromCodePoint(0xF019)
             color: downloadMouse.containsMouse && !ZendaUpdate.installing
                 ? Theme.colors.background : Theme.colors.primary
-            font: Theme.font.icon
 
             RotationAnimator on rotation {
                 running: ZendaUpdate.installing

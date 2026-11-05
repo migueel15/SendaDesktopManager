@@ -150,6 +150,8 @@ QtObject {
 	// Nerd Font, and mixed strings fall back to it through fontconfig.
 	readonly property string textFamily: "Inter"
 	readonly property string iconFamily: "Symbols Nerd Font"
+	// Icon size in pixels at 100 % interface scale.
+	readonly property int iconSize: 17
 
 	component Fonts: QtObject {
 		property font base: Qt.font({
@@ -199,9 +201,10 @@ QtObject {
 				pixelSize: root.scaled(13),
 				weight: Font.Normal
 		})
+		// Shared by every icon through ZendaIcon.
 		property font icon: Qt.font({
 				family: root.iconFamily,
-				pixelSize: root.scaled(13),
+				pixelSize: root.scaled(root.iconSize),
 				weight: Font.Normal
 		})
 	}

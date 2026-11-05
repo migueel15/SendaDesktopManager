@@ -1,6 +1,7 @@
 import QtQuick
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -29,13 +30,12 @@ Rectangle {
         }
     }
 
-	Text{
+	ZendaIcon {
 		id: textIcon
     anchors.centerIn: parent
 
 		text : ZendaManager.keyboardEnabled ? "󰌌": "󰌐"
 
-		font : Theme.font.base
 		color: Theme.colors.text
 
 

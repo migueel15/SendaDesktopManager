@@ -162,7 +162,6 @@ ZendaPanel {
                         IconSlot {
                             icon: wifiControl.expanded ? "" : ""
                             iconColor: Theme.colors.overlay
-                            iconFont: Theme.font.icon
                             gapAfter: 0
                             interactive: true
                             onClicked: wifiControl.toggleExpanded()

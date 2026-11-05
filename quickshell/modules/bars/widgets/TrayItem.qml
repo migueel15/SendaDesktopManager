@@ -11,7 +11,7 @@ MouseArea {
 
     required property SystemTrayItem modelData
 
-    property int iconSize: 18
+    property int iconSize: Theme.scaled(Theme.iconSize)
     property bool pinned: false
     property bool pinDragEnabled: false
     property bool pinDragging: false

@@ -5,6 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -319,7 +320,7 @@ Flickable {
             id: chipRow
             anchors.centerIn: parent
             spacing: Theme.spacing.xs
-            Text { text: chip.icon; color: chip.tint; font: Theme.font.icon; anchors.verticalCenter: parent.verticalCenter }
+            ZendaIcon { text: chip.icon; color: chip.tint; anchors.verticalCenter: parent.verticalCenter }
             Text { text: chip.label; color: Theme.colors.textMuted; font: Theme.font.caption; anchors.verticalCenter: parent.verticalCenter }
         }
         HoverHandler { id: chipHover; cursorShape: chip.link ? Qt.PointingHandCursor : Qt.ArrowCursor }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -47,11 +48,10 @@ Rectangle {
             ZendaStateLayer { hovered: mainActionMouseArea.containsMouse && mainActionMouseArea.enabled; pressed: mainActionMouseArea.pressed }
             opacity: DorlabTasks.actionInProgress ? 0.5 : 1
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: DorlabTasks.actionInProgress ? "󰔟" : DorlabTasks.hasActiveTask ? "󰏤" : "󰐊"
                 color: Theme.colors.text
-                font: Theme.font.icon
             }
 
             MouseArea {
@@ -78,11 +78,10 @@ Rectangle {
             ZendaStateLayer { hovered: stopMouseArea.containsMouse && stopMouseArea.enabled; pressed: stopMouseArea.pressed; color: Theme.colors.error }
             opacity: DorlabTasks.actionInProgress ? 0.5 : 1
 
-            Text {
+            ZendaIcon {
                 anchors.centerIn: parent
                 text: DorlabTasks.actionInProgress ? "󰔟" : ""
                 color: Theme.colors.text
-                font: Theme.font.icon
             }
 
             MouseArea {

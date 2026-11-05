@@ -89,7 +89,6 @@ Item {
                     IconSlot {
                         icon: root.devicesExpanded ? "" : ""
                         iconColor: Theme.colors.overlay
-                        iconFont: Theme.font.icon
                         gapBefore: 0
                         gapAfter: 0
                         interactive: true

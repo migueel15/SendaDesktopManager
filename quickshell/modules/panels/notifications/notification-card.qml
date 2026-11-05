@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Widgets
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -136,11 +137,10 @@ Item {
                 visible: status === Image.Ready
             }
 
-            Text {
+            ZendaIcon {
                 anchors.fill: parent
                 text: "󰂚"
                 color: Theme.colors.primary
-                font: Theme.font.icon
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 visible: !appIcon.visible

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -119,12 +120,11 @@ Item {
         border.color: actionMouseArea.containsMouse && action.available ? action.accent : Theme.colors.surfaceVariant
         opacity: action.available || action.busy ? 1 : 0.35
 
-        Text {
+        ZendaIcon {
             anchors.centerIn: parent
             anchors.horizontalCenterOffset: !action.busy && action.icon === "󰐊" ? 1 : 0
             text: action.busy ? "󰔟" : action.icon
             color: action.accent
-            font: Theme.font.icon
         }
 
         MouseArea {
@@ -246,10 +246,9 @@ Item {
             anchors.rightMargin: 12
             spacing: 10
 
-            Text {
+            ZendaIcon {
                 text: ""
                 color: Theme.colors.overlay
-                font: Theme.font.icon
             }
 
             TextInput {
@@ -422,11 +421,10 @@ Item {
                 border.color: task.completed ? Theme.colors.primary : Theme.colors.overlay
                 opacity: taskRow.isActive ? 0.4 : 1
 
-                Text {
+                ZendaIcon {
                     anchors.centerIn: parent
                     text: task.completed ? "" : ""
                     color: Theme.colors.background
-                    font: Theme.font.icon
                 }
 
                 MouseArea {
@@ -811,11 +809,10 @@ Item {
                                         Layout.preferredWidth: 28
                                         Layout.preferredHeight: 32
 
-                                        Text {
+                                        ZendaIcon {
                                             anchors.centerIn: parent
                                             text: ""
                                             color: dragArea.containsMouse || dragArea.drag.active ? Theme.colors.primary : Theme.colors.overlay
-                                            font: Theme.font.icon
                                         }
 
                                         MouseArea {

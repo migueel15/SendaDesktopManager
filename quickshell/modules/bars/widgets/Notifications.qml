@@ -1,6 +1,7 @@
 import QtQuick
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -49,11 +50,10 @@ Item {
         }
     }
 
-    Text {
+    ZendaIcon {
         id: iconText
         anchors.centerIn: parent
         color: Theme.colors.text
-        font: Theme.font.base
         text: root.currentIcon
     }
 }

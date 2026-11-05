@@ -150,9 +150,6 @@ Rectangle {
             anchors.centerIn: parent
             icon: ""
             iconColor: Theme.colors.text
-            iconFont: Theme.font.icon
-            slotWidth: 24
-            slotHeight: 24
             gapAfter: 0
             rotation: root.expanded ? 180 : 0
 

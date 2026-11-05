@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -34,12 +35,11 @@ Item {
 		ZendaStateLayer { hovered: actionMouseArea.containsMouse && action.available; pressed: actionMouseArea.pressed; color: action.accent }
 		opacity: action.available || action.busy ? 1 : 0.45
 
-		Text {
+		ZendaIcon {
 			anchors.centerIn: parent
 			anchors.horizontalCenterOffset: !action.busy && action.icon === "󰐊" ? 1 : 0
 			text: action.busy ? "󰔟" : action.icon
 			color: action.accent
-			font: Theme.font.icon
 		}
 
 		MouseArea {
@@ -90,11 +90,10 @@ Item {
 				Layout.preferredWidth: root.hasTask ? 24 : Theme.barButtonSize - 16
 				Layout.fillHeight: true
 
-				Text {
+				ZendaIcon {
 					anchors.centerIn: parent
 					text: "󰄭"
 					color: Theme.colors.text
-					font: Theme.font.base
 				}
 			}
 

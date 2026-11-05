@@ -7,6 +7,7 @@ import QtCore
 import Qt.labs.folderlistmodel
 import Quickshell.Widgets
 import qs.common
+import qs.common.components.icons
 import qs.common.components.controls
 import qs.services
 
@@ -92,10 +93,9 @@ Rectangle {
             id: pillRow
             anchors.centerIn: parent
             spacing: Theme.spacing.xs
-            Text {
+            ZendaIcon {
                 visible: pill.icon !== ""
                 text: pill.icon
-                font: Theme.font.icon
                 color: pill.current ? Theme.colors.primary : Theme.colors.overlay
                 anchors.verticalCenter: parent.verticalCenter
             }
