@@ -255,10 +255,19 @@ Scope {
                     Text {
                         id: transcriptText
                         width: transcriptView.width
-                        text: ZendaStt.transcript
+                        // The stable prefix in the usual color; the words the end of the
+                        // dictation may still revise, dimmed.
+                        readonly property string stable: ZendaStt.transcript.startsWith(ZendaStt.stableTranscript)
+                            ? ZendaStt.stableTranscript : ""
+                        readonly property string tentative: ZendaStt.transcript.slice(transcriptText.stable.length)
+                        function escaped(value) {
+                            return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        }
+                        text: transcriptText.escaped(transcriptText.stable) + (transcriptText.tentative === "" ? ""
+                            : "<font color=\"" + Theme.colors.overlay + "\">" + transcriptText.escaped(transcriptText.tentative) + "</font>")
                         color: Theme.colors.textMuted
                         font: Theme.font.body
-                        textFormat: Text.PlainText
+                        textFormat: Text.StyledText
                         wrapMode: Text.Wrap
                         onTextChanged: Qt.callLater(transcriptView.followTranscript)
                     }

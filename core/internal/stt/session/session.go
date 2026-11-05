@@ -466,13 +466,13 @@ func Run(ctx context.Context, deps Deps, stdin io.Reader, stdout io.Writer) (ret
 			}
 			var results <-chan stt.Result
 			var activity <-chan bool
-			last := ""
+			var last stt.Result
 			partial := func(r stt.Result) error {
-				if r.Text == last {
+				if r == last {
 					return nil
 				}
-				last = r.Text
-				return emit(stt.Event{Type: stt.EventPartial, Text: r.Text})
+				last = r
+				return emit(stt.Event{Type: stt.EventPartial, Text: r.Text, Stable: r.Stable})
 			}
 			for {
 				if ctx.Err() != nil {
