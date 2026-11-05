@@ -404,7 +404,14 @@ ZendaPanel {
         id: dndControl
 
         width: parent.width
-        implicitHeight: 62
+        implicitHeight: Theme.scaled(62)
+        activeFocusOnTab: true
+        Keys.onSpacePressed: toggle()
+        Keys.onReturnPressed: toggle()
+        Accessible.role: Accessible.CheckBox
+        Accessible.name: "No molestar"
+        Accessible.checked: dndEnabled
+        Accessible.onToggleAction: toggle()
         property bool dndEnabled: false
 
         Component.onCompleted: dndControl.dndEnabled = Notifications.dndEnabled
@@ -420,22 +427,37 @@ ZendaPanel {
         Rectangle {
             anchors.fill: parent
             radius: Theme.rounding.normal
-            color: dndControl.dndEnabled ? Theme.colors.accentDeep : Theme.colors.surface
-            border.width: 1
-            border.color: dndControl.dndEnabled ? Theme.colors.primary : Theme.colors.surfaceVariant
+            color: dndControl.dndEnabled ? Theme.colors.selection : Theme.colors.surface
+            Behavior on color { ColorAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                color: dndControl.activeFocus || dndToggle.visualFocus ? Theme.colors.focus : Theme.colors.primary
+                opacity: dndControl.activeFocus || dndToggle.visualFocus ? 0.12 : dndMouse.containsMouse ? 0.08 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutCubic } }
+            }
+
+            MouseArea {
+                id: dndMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: dndControl.toggle()
+            }
 
             RowLayout {
                 id: dndRow
                 anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
+                anchors.leftMargin: Theme.spacing.md
+                anchors.rightMargin: Theme.spacing.md
                 spacing: 0
 
                 Item {
                     id: dndIcon
                     width: 24
                     height: 24
-                    Layout.rightMargin: 8
+                    Layout.rightMargin: Theme.spacing.sm
 
                     IconSlot {
                         anchors.fill: parent
@@ -448,8 +470,8 @@ ZendaPanel {
                 Column {
                     id: dndText
                     Layout.fillWidth: true
-                    Layout.rightMargin: 8
-                    spacing: 1
+                    Layout.rightMargin: Theme.spacing.sm
+                    spacing: Theme.spacing.xxs
 
                     Text {
                         width: parent.width
@@ -466,41 +488,18 @@ ZendaPanel {
                         width: parent.width
                         text: dndControl.dndEnabled ? "Notificaciones silenciadas" : "Notificaciones activas"
                         color: Theme.colors.overlay
-                        font: Theme.font.overlay
+                        font: Theme.font.caption
                         elide: Text.ElideRight
                     }
                 }
 
-                Rectangle {
+                ZendaSwitch {
                     id: dndToggle
-                    Layout.leftMargin: 8
-                    width: 42
-                    height: 24
-                    radius: Theme.rounding.full
-                    color: dndControl.dndEnabled ? Theme.colors.primary : Theme.colors.surfaceVariant
-
-                    Rectangle {
-                        width: 18
-                        height: 18
-                        y: 3
-                        x: dndControl.dndEnabled ? parent.width - width - 3 : 3
-                        radius: Theme.rounding.full
-                        color: Theme.colors.background
-                        Behavior on x { NumberAnimation { duration: 120 } }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: dndControl.toggle()
-                    }
+                    Layout.leftMargin: Theme.spacing.sm
+                    checkedValue: dndControl.dndEnabled
+                    Accessible.name: "No molestar"
+                    onToggledValue: dndControl.toggle()
                 }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                z: -1
-                onClicked: dndControl.toggle()
             }
         }
 
