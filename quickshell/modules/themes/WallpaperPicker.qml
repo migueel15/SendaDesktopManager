@@ -34,6 +34,29 @@ PanelWindow {
     // Theme copy to apply once saved, and the image to select once imported.
     property string pendingCopy: ""
     property string pendingSelection: ""
+    // Wallpaper waiting for a second click on its delete button.
+    property string confirmDelete: ""
+
+    // Themes whose wallpaper is this file; deleting it would make them invalid.
+    function themesUsing(path) {
+        return ZendaTheme.themes.filter(theme => theme.wallpaper === path).map(theme => theme.name);
+    }
+    function requestDelete(path) {
+        const users = root.themesUsing(path);
+        if (users.length > 0) {
+            root.message = `No se puede borrar: lo usa el tema ${users.join(", ")}`;
+            return;
+        }
+        if (root.confirmDelete !== path) {
+            root.confirmDelete = path;
+            return;
+        }
+        root.confirmDelete = "";
+        root.message = "";
+        // Only files listed from the wallpapers folder reach this point.
+        deleteProcess.command = ["rm", "--", path];
+        deleteProcess.running = true;
+    }
 
     function close() { WallpaperService.closePicker(); }
     function selectPending() {
@@ -82,6 +105,7 @@ PanelWindow {
             return;
         browsing = false;
         message = "";
+        confirmDelete = "";
         folderProcess.running = true;
         ZendaTheme.refresh();
         Qt.callLater(() => content.forceActiveFocus());
@@ -98,6 +122,15 @@ PanelWindow {
         id: folderProcess
         command: ["mkdir", "-p", WallpaperService.wallpapersDirectory]
         onExited: folderModel.folder = "file://" + WallpaperService.wallpapersDirectory
+    }
+
+    Process {
+        id: deleteProcess
+        stderr: StdioCollector { id: deleteErrors }
+        onExited: exitCode => {
+            if (exitCode !== 0)
+                root.message = deleteErrors.text.trim() || "No se pudo borrar el fondo";
+        }
     }
 
     Process {
@@ -325,6 +358,46 @@ PanelWindow {
                                 font.pixelSize: Theme.scaled(12)
                             }
                         }
+                        // Delete badge, mirrored on the left; a second click confirms.
+                        Rectangle {
+                            id: deleteBadge
+                            readonly property bool confirming: root.confirmDelete === card.filePath
+                            anchors { top: frame.top; left: frame.left; margins: Theme.spacing.md }
+                            z: 1
+                            width: confirming ? deleteRow.implicitWidth + 2 * Theme.spacing.sm : Theme.scaled(26)
+                            height: Theme.scaled(26); radius: height / 2
+                            color: confirming || deleteHover.hovered ? Theme.colors.error : Qt.alpha(Theme.colors.base, 0.75)
+                            scale: card.current ? 1 : 0
+                            enabled: card.current && !deleteProcess.running
+                            Behavior on scale { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
+                            Behavior on width { NumberAnimation { duration: Theme.motion.fast } }
+                            Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
+                            Accessible.role: Accessible.Button
+                            Accessible.name: confirming ? "Confirmar borrado del fondo" : "Borrar fondo"
+                            Row {
+                                id: deleteRow
+                                anchors.centerIn: parent
+                                spacing: Theme.spacing.xs
+                                Text {
+                                    text: "\uf1f8"
+                                    color: deleteBadge.confirming || deleteHover.hovered ? Theme.colors.base : Theme.colors.error
+                                    font.family: Theme.iconFamily
+                                    font.pixelSize: Theme.scaled(12)
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    visible: deleteBadge.confirming
+                                    text: "¿Borrar?"
+                                    color: Theme.colors.base
+                                    font: Theme.font.caption
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                            HoverHandler { id: deleteHover; cursorShape: Qt.PointingHandCursor }
+                            // Exclusive grab, so the card never sees this tap or a double tap.
+                            TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: root.requestDelete(card.filePath) }
+                        }
+                        onCurrentChanged: if (!current && root.confirmDelete === filePath) root.confirmDelete = ""
                         HoverHandler { id: hover; cursorShape: Qt.PointingHandCursor }
                         TapHandler {
                             onTapped: {
