@@ -277,3 +277,31 @@ func StopExternalIdle() string {
 	}
 	return ""
 }
+
+// IdleManaged reports whether the instance recorded by Zenda is still alive
+// and running Zenda's configuration.
+func IdleManaged() bool {
+	runtime := os.Getenv("XDG_RUNTIME_DIR")
+	if !filepath.IsAbs(runtime) {
+		return false
+	}
+	data, err := os.ReadFile(filepath.Join(runtime, "zenda", "hypridle.pid"))
+	if err != nil {
+		return false
+	}
+	fields := strings.Fields(string(data))
+	if len(fields) != 2 {
+		return false
+	}
+	pid, err := strconv.Atoi(fields[0])
+	return err == nil && pid > 0 && processStart(pid) == fields[1] && processUsesIdle(pid, IdlePath())
+}
+
+// StopUnmanagedIdle stops same-user instances running Zenda's configuration
+// that Zenda did not record, so that ApplyIdle can start a managed one.
+func StopUnmanagedIdle() string {
+	if w := StopIdle(); w != "" {
+		return w
+	}
+	return stopIdleUsing(IdlePath())
+}
