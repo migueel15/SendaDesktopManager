@@ -188,3 +188,23 @@ func TestCatppuccinNamesFollowThemeVariables(t *testing.T) {
 		}
 	}
 }
+
+func TestExportSkipsDanglingUserTemplateLink(t *testing.T) {
+	value := builtinThemes(t)[0]
+	dirs := Dirs{Templates: t.TempDir(), Output: t.TempDir()}
+	if err := os.MkdirAll(filepath.Join(dirs.Templates, "t3code"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(t.TempDir(), "missing.json"), filepath.Join(dirs.Templates, "t3code", "old.json")); err != nil {
+		t.Fatal(err)
+	}
+	written, err := Export(value.Name, value.Colors, dirs)
+	if err != nil {
+		t.Fatalf("export failed: %v", err)
+	}
+	for _, path := range written {
+		if filepath.Base(path) == "old.json" {
+			t.Fatalf("dangling link was rendered: %s", path)
+		}
+	}
+}

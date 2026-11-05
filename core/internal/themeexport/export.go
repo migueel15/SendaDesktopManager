@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"github.com/migueel15/Zenda/core/internal/hyprland/hyprctl"
 	"io/fs"
@@ -64,12 +65,17 @@ var funcs = template.FuncMap{
 func templateSources(userDir string) (map[string]string, error) {
 	sources := map[string]string{}
 	root, _ := fs.Sub(builtinTemplates, "templates")
-	collect := func(fsys fs.FS) error {
+	collect := func(fsys fs.FS, skipMissing bool) error {
 		return fs.WalkDir(fsys, ".", func(path string, entry fs.DirEntry, err error) error {
 			if err != nil || entry.IsDir() {
 				return err
 			}
 			data, err := fs.ReadFile(fsys, path)
+			if skipMissing && errors.Is(err, fs.ErrNotExist) {
+				// A dangling symlink must not block the whole export.
+				fmt.Fprintf(os.Stderr, "aviso: se ignora la plantilla %s: el enlace no apunta a ningún archivo\n", path)
+				return nil
+			}
 			if err != nil {
 				return err
 			}
@@ -77,11 +83,11 @@ func templateSources(userDir string) (map[string]string, error) {
 			return nil
 		})
 	}
-	if err := collect(root); err != nil {
+	if err := collect(root, false); err != nil {
 		return nil, err
 	}
 	if stat, err := os.Stat(userDir); err == nil && stat.IsDir() {
-		if err := collect(os.DirFS(userDir)); err != nil {
+		if err := collect(os.DirFS(userDir), true); err != nil {
 			return nil, fmt.Errorf("templates: %w", err)
 		}
 	}

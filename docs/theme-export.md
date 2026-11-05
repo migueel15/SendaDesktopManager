@@ -157,7 +157,7 @@ Las plantillas también reciben `orange`, una mezcla de `error` y `warning`.
 
 ## Plantillas propias
 
-Puedes añadir o sustituir plantillas en `$XDG_CONFIG_HOME/zenda/templates/`. Cada archivo se renderiza en la misma ruta relativa dentro de `generated/`. Si coincide con una plantilla integrada (por ejemplo `kitty/zenda.conf`), la sustituye. Una plantilla con errores cancela la exportación y no escribe ningún archivo.
+Puedes añadir o sustituir plantillas en `$XDG_CONFIG_HOME/zenda/templates/`. Cada archivo se renderiza en la misma ruta relativa dentro de `generated/`. Si coincide con una plantilla integrada (por ejemplo `kitty/zenda.conf`), la sustituye. Una plantilla con errores cancela la exportación y no escribe ningún archivo. Un enlace simbólico roto se ignora con un aviso.
 
 Las plantillas usan `text/template` de Go:
 
