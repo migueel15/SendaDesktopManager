@@ -214,8 +214,8 @@ Flickable {
                             }
                             ModelChip {
                                 icon: modelCard.modelData.streaming ? "󱐋" : "󰔟"
-                                label: modelCard.modelData.streaming ? "En vivo" : "Al terminar"
-                                tip: modelCard.modelData.streaming ? "Muestra el texto mientras hablas" : "Muestra el texto al terminar de hablar"
+                                label: modelCard.modelData.streaming ? "En vivo" : "Por rondas"
+                                tip: modelCard.modelData.streaming ? "Muestra el texto mientras hablas" : "Muestra el texto mientras hablas, retranscribiendo por rondas"
                             }
                             ModelChip {
                                 icon: "󰋊"
