@@ -10,7 +10,11 @@ RowLayout {
     property real to: 150
     property real stepSize: 10
     property string suffix: " %"
+    // Hides the value label when the caller shows it elsewhere.
+    property bool showValue: true
     signal committed(real value)
+    // Fires on every change made by the user, for live controls like volume.
+    signal moved(real value)
     // Reconcile with persisted state after a save, including a failed write.
     onValueChanged: slider.value = root.value
     onEnabledChanged: if (enabled) slider.value = root.value
@@ -25,6 +29,7 @@ RowLayout {
         stepSize: root.stepSize
         snapMode: Controls.Slider.SnapAlways
         onPressedChanged: if (!pressed) root.committed(value)
+        onMoved: root.moved(value)
         Keys.onReleased: event => {
             if ([Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down, Qt.Key_Home, Qt.Key_End].includes(event.key))
                 root.committed(value);
@@ -49,5 +54,5 @@ RowLayout {
             Behavior on implicitHeight { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
         }
     }
-    Text { text: `${Math.round(slider.value)}${root.suffix}`; color: Theme.colors.text; font: Theme.font.body }
+    Text { visible: root.showValue; text: `${Math.round(slider.value)}${root.suffix}`; color: Theme.colors.text; font: Theme.font.body }
 }

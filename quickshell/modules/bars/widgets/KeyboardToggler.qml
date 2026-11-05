@@ -1,6 +1,7 @@
 import QtQuick
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Rectangle {
@@ -18,7 +19,8 @@ Rectangle {
         width: parent.width
         height: Theme.barButtonSize
         radius: Theme.rounding.normal
-        color: keyboardMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+        color: "transparent"
+        ZendaStateLayer { hovered: keyboardMouse.containsMouse; pressed: keyboardMouse.pressed }
 
         Behavior on color {
             ColorAnimation {

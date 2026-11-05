@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Item {
@@ -29,14 +30,15 @@ Item {
 		Layout.preferredWidth: 24
 		Layout.preferredHeight: 24
 		radius: Theme.rounding.full
-		color: actionMouseArea.containsMouse && action.available ? action.accent : Theme.colors.surfaceVariant
+		color: Theme.colors.surfaceVariant
+		ZendaStateLayer { hovered: actionMouseArea.containsMouse && action.available; pressed: actionMouseArea.pressed; color: action.accent }
 		opacity: action.available || action.busy ? 1 : 0.45
 
 		Text {
 			anchors.centerIn: parent
 			anchors.horizontalCenterOffset: !action.busy && action.icon === "󰐊" ? 1 : 0
 			text: action.busy ? "󰔟" : action.icon
-			color: actionMouseArea.containsMouse && action.available ? Theme.colors.background : action.accent
+			color: action.accent
 			font: Theme.font.icon
 		}
 
@@ -59,7 +61,8 @@ Item {
 		height: Theme.barButtonSize
 		radius: Theme.rounding.normal
 		// Same hover pill as the tray button; stays lit while the panel is open.
-		color: containerMouseArea.containsMouse || root.open ? Theme.colors.surfaceVariant : "transparent"
+		color: "transparent"
+		ZendaStateLayer { hovered: containerMouseArea.containsMouse; pressed: root.open || containerMouseArea.pressed }
 
 		Behavior on color {
 			ColorAnimation {

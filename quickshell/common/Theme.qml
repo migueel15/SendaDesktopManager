@@ -67,6 +67,13 @@ QtObject {
 		readonly property color borderColor: "transparent"
 	}
 
+	// Material 3 state layer: hover and press veil shared by every element.
+	readonly property QtObject stateLayer: QtObject {
+		readonly property color color: root.colors.primary
+		readonly property real hoverOpacity: 0.08
+		readonly property real pressedOpacity: 0.12
+	}
+
 	// Zenda palette. Neutrals: Noche, Grafito, Pizarra, Humo, Bruma.
 	// Accent: Abismo, Cobalto, Hielo, Escarcha.
 	component Colors: QtObject {

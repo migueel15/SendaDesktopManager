@@ -312,7 +312,8 @@ Flickable {
         implicitWidth: chipRow.implicitWidth + 2 * Theme.spacing.sm
         implicitHeight: chipRow.implicitHeight + Theme.spacing.xs * 2
         radius: Theme.rounding.full
-        color: chipHover.hovered && chip.link ? Theme.colors.surfaceVariant : Qt.alpha(chip.tint, 0.12)
+        color: Qt.alpha(chip.tint, 0.12)
+        ZendaStateLayer { hovered: chipHover.hovered && chip.link !== "" }
         Accessible.name: chip.tip || chip.label
         Row {
             id: chipRow

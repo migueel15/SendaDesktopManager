@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Widgets
 import qs.common
+import qs.common.components.controls
 
 // Context menu of a tray item, drawn with the Zenda theme instead of the
 // native Qt menu. Submenus open in place, with a back entry on top.
@@ -213,7 +214,8 @@ PopupWindow {
         implicitWidth: rowLayout.implicitWidth + 20
         implicitHeight: 30
         radius: Theme.rounding.small
-        color: mouse.containsMouse && enabledEntry ? Theme.colors.surfaceVariant : "transparent"
+        color: "transparent"
+        ZendaStateLayer { hovered: mouse.containsMouse && enabledEntry; pressed: mouse.pressed && enabledEntry }
 
         Behavior on color {
             ColorAnimation {

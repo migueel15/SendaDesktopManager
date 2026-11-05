@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 Item {
@@ -112,7 +113,8 @@ Item {
         Layout.preferredWidth: buttonSize
         Layout.preferredHeight: buttonSize
         radius: Theme.rounding.full
-        color: actionMouseArea.containsMouse && action.available ? Theme.colors.surfaceVariant : Theme.colors.surface
+        color: Theme.colors.surface
+        ZendaStateLayer { hovered: actionMouseArea.containsMouse && action.available; pressed: actionMouseArea.pressed; color: action.accent }
         border.width: 1
         border.color: actionMouseArea.containsMouse && action.available ? action.accent : Theme.colors.surfaceVariant
         opacity: action.available || action.busy ? 1 : 0.35
@@ -393,7 +395,8 @@ Item {
         Layout.fillWidth: true
         height: 58
         radius: Theme.rounding.normal
-        color: rowMouseArea.containsMouse || isActive || isPaused ? Theme.colors.surfaceVariant : Theme.colors.background
+        color: isActive || isPaused ? Theme.colors.surfaceVariant : Theme.colors.background
+        ZendaStateLayer { hovered: rowMouseArea.containsMouse; pressed: rowMouseArea.pressed }
         border.width: 1
         border.color: isActive ? Theme.colors.primary : isPaused ? Theme.colors.warning : Theme.colors.surfaceVariant
         opacity: task.completed ? 0.62 : 1

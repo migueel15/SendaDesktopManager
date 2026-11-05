@@ -264,7 +264,8 @@ ZendaPanel {
                             width: networksColumn.width
                             height: needsPassword ? 78 : 40
                             radius: needsPassword ? Theme.rounding.large : height / 2
-                            color: connected ? Theme.colors.selection : networkMouse.containsMouse ? Theme.colors.surfaceRaised : "transparent"
+                            color: connected ? Theme.colors.selection : "transparent"
+                            ZendaStateLayer { hovered: networkMouse.containsMouse; pressed: networkMouse.pressed }
                             Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
 
                             Column {

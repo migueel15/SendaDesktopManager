@@ -82,8 +82,8 @@ Rectangle {
         implicitWidth: pillRow.implicitWidth + 2 * Theme.spacing.sm
         implicitHeight: pillRow.implicitHeight + 2 * Theme.spacing.xs
         radius: Theme.rounding.full
-        color: pill.current ? Theme.colors.selection
-            : pillHover.hovered ? Theme.colors.surfaceVariant : "transparent"
+        color: pill.current ? Theme.colors.selection : "transparent"
+        ZendaStateLayer { hovered: pillHover.hovered }
         border.width: pill.current ? 0 : 1
         border.color: Theme.colors.border
         Accessible.role: Accessible.Button

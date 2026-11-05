@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.common.components.controls
 import qs.services
 import qs.common.components
 
@@ -78,7 +79,8 @@ Rectangle {
 
         radius: Theme.rounding.normal
 
-        color: mouseArea.containsMouse ? Theme.colors.surfaceVariant : Theme.colors.background
+        color: Theme.colors.background
+        ZendaStateLayer { hovered: mouseArea.containsMouse; pressed: mouseArea.pressed }
 
         Behavior on color {
             ColorAnimation {
@@ -98,7 +100,7 @@ Rectangle {
                     icon: modelData.icon ?? null
                     label: modelData.label ?? null
                     font: Theme.font.base
-                    color: mouseArea.containsMouse ? Theme.colors.white : Theme.colors.text
+                    color: Theme.colors.text
                 }
             }
         }

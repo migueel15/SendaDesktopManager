@@ -4,6 +4,7 @@ import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import Quickshell
 import qs.common
+import qs.common.components.controls
 import qs.services
 
 FloatingWindow {
@@ -39,8 +40,8 @@ FloatingWindow {
         }
         background: Rectangle {
             radius: Theme.rounding.normal
-            color: button.primary ? (button.hovered ? Theme.colors.secondary : Theme.colors.primary)
-                : (button.hovered ? Theme.colors.surfaceVariant : Theme.colors.surface)
+            color: button.primary ? Theme.colors.primary : Theme.colors.surface
+            ZendaStateLayer { hovered: button.hovered; pressed: button.down; color: button.primary ? Theme.colors.base : Theme.stateLayer.color }
             border.width: 1
             border.color: button.visualFocus ? Theme.colors.focus : Theme.colors.surfaceVariant
             opacity: button.enabled ? 1 : 0.5

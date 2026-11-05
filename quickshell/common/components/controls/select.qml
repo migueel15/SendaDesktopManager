@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls as Controls
 import Quickshell
 import qs.common
+import qs.common.components.controls
 
 // Reusable dropdown for lists too long for ZendaSegments. Give it options
 // (strings) and value, and handle chosen(value). It works in any settings page.
@@ -35,8 +36,7 @@ Rectangle {
 
     implicitWidth: Theme.scaled(220)
     implicitHeight: label.implicitHeight + 2 * Theme.spacing.sm
-    color: (area.containsMouse && root.enabled) || popup.visible ? Theme.colors.surfaceVariant : Theme.colors.surface
-    Behavior on color { ColorAnimation { duration: Theme.motion.normal } }
+    color: Theme.colors.surface
     border { width: root.activeFocus ? 2 : 0; color: Theme.colors.focus }
     radius: Theme.rounding.control
     opacity: enabled ? 1 : 0.4
@@ -45,6 +45,8 @@ Rectangle {
     Accessible.name: root.value || root.placeholder
     Keys.onSpacePressed: popup.open()
     Keys.onReturnPressed: popup.open()
+
+    ZendaStateLayer { hovered: area.containsMouse && root.enabled; pressed: popup.visible }
 
     Text {
         id: label
@@ -151,7 +153,11 @@ Rectangle {
                     width: ListView.view.width - (scrollBar.policy === Controls.ScrollBar.AlwaysOn ? scrollBar.width + Theme.spacing.xs : 0)
                     height: optionText.implicitHeight + 2 * Theme.spacing.xs
                     radius: Theme.rounding.normal
-                    color: current ? Theme.colors.selection : optionArea.containsMouse || (root.searchable && list.currentIndex === index) ? Theme.colors.surfaceRaised : "transparent"
+                    color: current ? Theme.colors.selection : "transparent"
+                    ZendaStateLayer {
+                        hovered: optionArea.containsMouse || (root.searchable && option.index === list.currentIndex)
+                        pressed: optionArea.pressed
+                    }
                     Text {
                         id: optionText
                         anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spacing.sm }

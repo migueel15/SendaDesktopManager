@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import qs.common
+import qs.common.components.controls
 
 // Material 3 style list row for selectors and menus: optional leading icon,
 // title, optional supporting text, trailing text and trailing icon. Selected
@@ -24,13 +25,15 @@ Rectangle {
     width: parent ? parent.width : 0
     implicitHeight: supportingText !== "" ? Theme.scaled(52) : Theme.scaled(40)
     radius: Theme.rounding.full
-    color: selected ? Theme.colors.selection : hover.hovered && interactive ? Theme.colors.surfaceRaised : "transparent"
+    color: selected ? Theme.colors.selection : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
     scale: tap.pressed ? 0.98 : 1
     Behavior on scale { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutBack } }
 
     Accessible.role: Accessible.ListItem
     Accessible.name: text
+
+    ZendaStateLayer { hovered: hover.hovered && root.interactive; pressed: tap.pressed }
 
     RowLayout {
         anchors.fill: parent

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import qs.common
+import qs.common.components.controls
 import qs.common.components
 import qs.services
 import "search.js" as Search
@@ -155,7 +156,8 @@ ZendaPanel {
             width: list.width
             height: Theme.scaled(56)
             radius: Theme.rounding.normal
-            color: list.currentIndex === index ? Theme.colors.selection : rowMouse.containsMouse ? Theme.colors.surfaceVariant : "transparent"
+            color: list.currentIndex === index ? Theme.colors.selection : "transparent"
+            ZendaStateLayer { hovered: rowMouse.containsMouse; pressed: rowMouse.pressed }
             Item {
                 id: appIcon
                 anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
