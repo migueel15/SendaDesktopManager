@@ -47,11 +47,14 @@ RowLayout {
             x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
             y: slider.topPadding + slider.availableHeight / 2 - height / 2
             // Thin vertical marker that stretches while dragged.
+            // The implicit size is the stretched one, so the slider keeps its
+            // height while the marker animates and the layout never shifts.
             implicitWidth: Theme.scaled(4)
-            implicitHeight: slider.pressed ? Theme.scaled(26) : Theme.scaled(20)
+            implicitHeight: Theme.scaled(26)
+            height: slider.pressed ? Theme.scaled(26) : Theme.scaled(20)
             radius: Theme.rounding.full
             color: slider.visualFocus ? Theme.colors.secondary : Theme.colors.white
-            Behavior on implicitHeight { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
+            Behavior on height { NumberAnimation { duration: Theme.motion.normal; easing.type: Easing.OutBack } }
         }
     }
     Text { visible: root.showValue; text: `${Math.round(slider.value)}${root.suffix}`; color: Theme.colors.text; font: Theme.font.body }

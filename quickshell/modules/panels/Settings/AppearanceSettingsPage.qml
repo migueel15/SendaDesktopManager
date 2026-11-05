@@ -99,6 +99,8 @@ Flickable {
                     suffix: " %"
                     value: root.currentRounding
                     enabled: !ZendaSettings.busy
+                    // Previews while dragging; the value is saved on release.
+                    onMoved: value => Theme.setRoundingScale(value)
                     onCommitted: value => root.changeRounding(value)
                 }
             }
