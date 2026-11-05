@@ -37,7 +37,8 @@ PanelWindow {
     // Map only after currentPanelUpdated, once keyboardFocus below already has
     // its final value: a layer mapped with OnDemand and switched to Exclusive
     // afterwards does not get the keyboard until the pointer moves over it.
-    property bool panelRequested: false
+    // The layer is created on demand, so it starts with the panel already requested.
+    property bool panelRequested: OverlayService.currentPanel !== ""
     Connections {
         target: OverlayService
         function onCurrentPanelUpdated() { overlayLayer.panelRequested = OverlayService.currentPanel !== ""; }
@@ -45,6 +46,8 @@ PanelWindow {
 
     // Stay mapped while a panel folds back into the bar.
     visible: panelRequested || popupContent.anyPanelVisible
+    // Keeps the on-demand layer while a panel folds back or holds a draft.
+    readonly property bool keepLoaded: popupContent.anyPanelVisible || popupContent.anyPanelRetained
     color: "transparent"
 
     aboveWindows: true
@@ -81,6 +84,13 @@ PanelWindow {
         id: popupContent
         anchors.fill: parent
         focus: OverlayService.currentPanel !== ""
+
+        readonly property bool anyPanelRetained: {
+            for (const child of children) {
+                if (child.retained) return true;
+            }
+            return false;
+        }
 
         readonly property bool anyPanelVisible: {
             for (const child of children) {

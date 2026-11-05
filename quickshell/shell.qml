@@ -62,7 +62,14 @@ ShellRoot {
 		id: panelCtrl
 		model: Quickshell.screens
 
-		OverlayLayer {}
+		// Created when a panel opens and destroyed once every panel has folded
+		// back without a draft, so an idle monitor keeps no full-screen layer.
+		LazyLoader {
+			id: overlayLoader
+			required property var modelData
+			active: OverlayService.currentPanel !== "" || Debug.enabled || (item?.keepLoaded ?? false)
+			OverlayLayer { modelData: overlayLoader.modelData }
+		}
 	}
 
 	WallpaperLayer {}

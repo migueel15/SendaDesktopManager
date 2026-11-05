@@ -165,6 +165,7 @@ ZendaPanel {
                     visible: !!row.modelData.icon
                     asynchronous: true
                     source: row.modelData.icon ? Quickshell.iconPath(row.modelData.icon, true) : ""
+                    sourceSize: Qt.size(Math.ceil(width * (QsWindow.window?.screen?.devicePixelRatio ?? 1)), Math.ceil(height * (QsWindow.window?.screen?.devicePixelRatio ?? 1)))
                     fillMode: Image.PreserveAspectFit
                 }
                 Text {
