@@ -1,6 +1,9 @@
 //@ pragma UseQApplication
 //@ pragma RespectSystemStyle
 //@ pragma DefaultEnv QT_QPA_PLATFORMTHEME=qt6ct
+// One render thread and GL context for every window instead of one per window.
+// Set QSG_RENDER_LOOP=threaded in the environment to go back.
+//@ pragma DefaultEnv QSG_RENDER_LOOP=basic
 import Quickshell
 import QtQuick
 import QtQuick.Controls.Material
