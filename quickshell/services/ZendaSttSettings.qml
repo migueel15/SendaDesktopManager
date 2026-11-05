@@ -28,6 +28,13 @@ Singleton {
         || modelsProcess.running
 
     readonly property bool preloadEnabled: ZendaStt.preloadEnabled
+    readonly property string preloadState: ZendaStt.preloadState
+    readonly property string preloadError: ZendaStt.preloadError
+    readonly property bool audioDuckingEnabled: String(ZendaSettings.values.ZENDA_STT_AUDIO_DUCKING || "").trim() !== "false"
+    readonly property int audioVolume: {
+        const value = Number(String(ZendaSettings.values.ZENDA_STT_AUDIO_VOLUME || "").trim());
+        return Number.isInteger(value) && value >= 0 && value <= 100 && String(ZendaSettings.values.ZENDA_STT_AUDIO_VOLUME || "").trim() !== "" ? value : 10;
+    }
 
     function setAudioDucking(enabled) {
         ZendaSettings.save({ ZENDA_STT_AUDIO_DUCKING: enabled ? "true" : "false" }, "Atenuación de volumen guardada");

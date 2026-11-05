@@ -14,6 +14,8 @@ Flickable {
     contentHeight: column.implicitHeight
     clip: true
 
+    property bool showAllModels: false
+    readonly property int otherModelCount: ZendaSttSettings.models.filter(model => !model.active).length
 
     function formatSize(bytes) {
         if (!bytes || bytes <= 0) return "Tamaño desconocido";
@@ -41,81 +43,6 @@ Flickable {
                 }
             }
         }
-        Text { text: "Modelos"; color: Theme.colors.primary; font: Theme.font.heading }
-        Repeater {
-            model: ZendaSttSettings.models
-
-            delegate: ZendaGroup {
-                id: modelCard
-                required property var modelData
-                Layout.fillWidth: true
-
-                ColumnLayout {
-                    id: modelColumn
-                    Layout.fillWidth: true
-                    spacing: Theme.spacing.sm
-
-                    ZendaRow {
-                        separator: false
-                        label: modelCard.modelData.name
-                        description: `${(modelCard.modelData.languages || []).join(", ")} · ${modelCard.modelData.streaming ? "Streaming · texto en vivo" : "Sin streaming · texto al terminar"} · ${root.formatSize(modelCard.modelData.sizeBytes)} · ${modelCard.modelData.installed ? "Instalado" : "No instalado"}${modelCard.modelData.active ? " · Activo" : ""}`
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        text: modelCard.modelData.licenseUrl ? `<a href="${modelCard.modelData.licenseUrl}" style="color:${Theme.colors.primary}">${modelCard.modelData.license}</a>` : modelCard.modelData.license
-                        textFormat: Text.RichText
-                        color: Theme.colors.overlay
-                        font.family: Theme.font.overlay.family
-                        font.pixelSize: Theme.scaled(11)
-                        onLinkActivated: link => AppRunner.open(link)
-                    }
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 5
-                        visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
-                        radius: Theme.rounding.full
-                        color: Theme.colors.surfaceVariant
-                        Rectangle {
-                            width: parent.width * ZendaSttSettings.progress
-                            height: parent.height
-                            radius: parent.radius
-                            color: Theme.colors.accent
-                        }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacing.sm
-                        Item { Layout.fillWidth: true }
-                        ZendaButton {
-                            visible: !modelCard.modelData.installed
-                            label: "Instalar"
-                            primary: true
-                            enabled: !ZendaSttSettings.busy
-                            onClicked: ZendaSttSettings.installModel(modelCard.modelData.id)
-                        }
-                        ZendaButton {
-                            visible: modelCard.modelData.installed && !modelCard.modelData.active
-                            label: "Activar"
-                            enabled: !ZendaSttSettings.busy
-                            onClicked: ZendaSttSettings.useModel(modelCard.modelData.id)
-                        }
-                        ZendaButton {
-                            visible: modelCard.modelData.installed
-                            label: "Borrar"
-                            enabled: !ZendaSttSettings.busy
-                            onClicked: ZendaSttSettings.removeModel(modelCard.modelData.id)
-                        }
-                        ZendaButton {
-                            visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
-                            label: "Cancelar"
-                            enabled: !ZendaSttSettings.cancelRequested
-                            onClicked: ZendaSttSettings.cancelInstall()
-                        }
-                    }
-                }
-            }
-        }
-
         ZendaGroup {
             ZendaRow {
                 separator: false
@@ -222,5 +149,98 @@ Flickable {
                 }
             }
         }
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: Theme.spacing.sm
+            Text { text: "Modelos"; color: Theme.colors.primary; font: Theme.font.heading; Layout.fillWidth: true }
+            ZendaButton {
+                visible: root.otherModelCount > 0
+                label: root.showAllModels ? "Ocultar otros modelos" : `Ver otros modelos (${root.otherModelCount})`
+                onClicked: root.showAllModels = !root.showAllModels
+            }
+        }
+        Text {
+            visible: !root.showAllModels && root.otherModelCount === ZendaSttSettings.models.length && ZendaSttSettings.models.length > 0
+            text: "Ningún modelo activo. Abre la lista para instalar uno."
+            color: Theme.colors.overlay
+            font.family: Theme.font.overlay.family
+        }
+        Repeater {
+            model: ZendaSttSettings.models
+
+            delegate: ZendaGroup {
+                id: modelCard
+                required property var modelData
+                Layout.fillWidth: true
+                // The active model, or one being installed, stays visible when the list is collapsed.
+                visible: root.showAllModels || modelCard.modelData.active
+                    || ZendaSttSettings.installingId === modelCard.modelData.id
+
+                ColumnLayout {
+                    id: modelColumn
+                    Layout.fillWidth: true
+                    spacing: Theme.spacing.sm
+
+                    ZendaRow {
+                        separator: false
+                        label: modelCard.modelData.name
+                        description: `${(modelCard.modelData.languages || []).join(", ")} · ${modelCard.modelData.streaming ? "Streaming · texto en vivo" : "Sin streaming · texto al terminar"} · ${root.formatSize(modelCard.modelData.sizeBytes)} · ${modelCard.modelData.installed ? "Instalado" : "No instalado"}${modelCard.modelData.active ? " · Activo" : ""}`
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: modelCard.modelData.licenseUrl ? `<a href="${modelCard.modelData.licenseUrl}" style="color:${Theme.colors.primary}">${modelCard.modelData.license}</a>` : modelCard.modelData.license
+                        textFormat: Text.RichText
+                        color: Theme.colors.overlay
+                        font.family: Theme.font.overlay.family
+                        font.pixelSize: Theme.scaled(11)
+                        onLinkActivated: link => AppRunner.open(link)
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 5
+                        visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
+                        radius: Theme.rounding.full
+                        color: Theme.colors.surfaceVariant
+                        Rectangle {
+                            width: parent.width * ZendaSttSettings.progress
+                            height: parent.height
+                            radius: parent.radius
+                            color: Theme.colors.accent
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacing.sm
+                        Item { Layout.fillWidth: true }
+                        ZendaButton {
+                            visible: !modelCard.modelData.installed
+                            label: "Instalar"
+                            primary: true
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.installModel(modelCard.modelData.id)
+                        }
+                        ZendaButton {
+                            visible: modelCard.modelData.installed && !modelCard.modelData.active
+                            label: "Activar"
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.useModel(modelCard.modelData.id)
+                        }
+                        ZendaButton {
+                            visible: modelCard.modelData.installed
+                            label: "Borrar"
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.removeModel(modelCard.modelData.id)
+                        }
+                        ZendaButton {
+                            visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
+                            label: "Cancelar"
+                            enabled: !ZendaSttSettings.cancelRequested
+                            onClicked: ZendaSttSettings.cancelInstall()
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }
