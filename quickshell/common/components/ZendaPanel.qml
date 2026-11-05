@@ -23,6 +23,11 @@ Item {
     property var targetHeight
 
     property int padding: 16
+    // Corner shapes; see BarExtension.topLeftCorner.
+    property string topLeftCorner: "bar"
+    property string topRightCorner: "bar"
+    property string bottomLeftCorner: "round"
+    property string bottomRightCorner: "round"
     // Duration of height changes while open; see BarExtension.resizeDuration.
     property int resizeDuration: Theme.motion.slow + 60
 
@@ -78,7 +83,7 @@ Item {
     x: targetX ?? 0
     y: targetY ?? Theme.barSize
 
-    width: (targetWidth ?? 0) + 2 * curveWidth
+    width: (targetWidth ?? 0) + extension.leftSpace + extension.rightSpace
     height: extension.height
     // True while open or folding back into the bar.
     readonly property bool shown: root.open || extension.height > 0.01
@@ -115,9 +120,13 @@ Item {
             x: extension.shadowSpace
             width: root.width
             cornerRadius: root.curveWidth
+            topLeftCorner: root.topLeftCorner
+            topRightCorner: root.topRightCorner
+            bottomLeftCorner: root.bottomLeftCorner
+            bottomRightCorner: root.bottomRightCorner
             attachedToBar: !root.barCovered
             expanded: root.open
-            expandedHeight: (root.targetHeight ?? 0) + 2 * root.padding
+            expandedHeight: (root.targetHeight ?? 0) + 2 * root.padding + extension.bottomSpace
             autoHideOnPointerExit: false
             resizeDuration: root.resizeDuration
 

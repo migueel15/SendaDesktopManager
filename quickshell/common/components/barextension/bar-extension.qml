@@ -24,7 +24,40 @@ Item {
 	// False when nothing is drawn above the shape, as when a fullscreen window
 	// covers the bar: the top corners round inwards instead of joining the bar.
 	property bool attachedToBar: true
-	readonly property real topInset: attachedToBar ? 0 : curveWidth + curveHeight
+	// Shape of each corner: "bar" joins the bar above with a concave curve,
+	// "round" is a convex corner, "square" is a right angle and "wall" joins
+	// a screen edge on that side with a concave curve (bottom right corner only).
+	property string topLeftCorner: "bar"
+	property string topRightCorner: "bar"
+	property string bottomLeftCorner: "round"
+	property string bottomRightCorner: "round"
+	// Horizontal space a side takes for its curves; it needs no space when
+	// its corners are square or join a wall. Independent of the width, so
+	// parents can size the extension from it.
+	readonly property real leftSpace: ["bar", "round"].indexOf(topLeftCorner) !== -1
+		|| ["bar", "round"].indexOf(bottomLeftCorner) !== -1 ? cornerRadius : 0
+	readonly property real rightSpace: ["bar", "round"].indexOf(topRightCorner) !== -1
+		|| ["bar", "round"].indexOf(bottomRightCorner) !== -1 ? cornerRadius : 0
+	// Height a wall curve takes below the body; parents add it to the height.
+	readonly property real bottomSpace: bottomRightCorner === "wall" ? cornerRadius : 0
+	readonly property bool bottomRightIsWall: bottomRightCorner === "wall"
+	readonly property real leftEdge: leftSpace > 0 ? curveWidth : 0
+	readonly property real rightEdge: width - (rightSpace > 0 ? curveWidth : 0)
+	// Bottom of the body: a wall curve takes the last bit of the height.
+	readonly property real bodyBottom: bottomRightIsWall ? height - curveHeight : height
+	// Where each corner meets the top edge (x), the side (y) and the bottom.
+	readonly property bool topLeftFlat: topLeftCorner === "square" || topLeftCorner === "wall"
+	readonly property bool topRightFlat: topRightCorner === "square" || topRightCorner === "wall"
+	readonly property real topLeftX: topLeftFlat ? leftEdge
+		: topLeftCorner === "bar" && attachedToBar ? 0 : leftEdge + curveHeight
+	readonly property real topLeftY: topLeftFlat ? 0 : curveHeight
+	readonly property real topRightX: topRightFlat ? rightEdge
+		: topRightCorner === "bar" && attachedToBar ? width : rightEdge - curveHeight
+	readonly property real topRightY: topRightFlat ? 0 : curveHeight
+	readonly property real bottomLeftX: bottomLeftCorner === "round" ? curveWidth : 0
+	readonly property real bottomLeftY: bottomLeftCorner === "round" ? curveHeight : 0
+	readonly property real bottomRightX: bottomRightCorner === "round" ? curveWidth : 0
+	readonly property real bottomRightY: bottomRightCorner === "round" ? curveHeight : 0
 	property real contentFadeDistance: 50
 	property real contentHideThreshold: 3
 	property bool autoHideOnPointerExit: true
@@ -160,38 +193,38 @@ Item {
 			strokeColor: "transparent"
 			strokeWidth: -1
 			fillColor: root.backgroundColor
-			startX: root.topInset
+			startX: root.topLeftX
 			startY: 0
 
-			PathLine { x: root.width - root.topInset; y: 0 }
+			PathLine { x: root.topRightX; y: 0 }
 			PathQuad {
-				x: root.width - root.curveWidth
-				y: root.curveHeight
-				controlX: root.width - root.curveWidth
+				x: root.rightEdge
+				y: root.topRightY
+				controlX: root.rightEdge
 				controlY: 0
 			}
 			PathLine {
-				x: root.width - root.curveWidth
-				y: root.height - root.curveHeight
+				x: root.rightEdge
+				y: root.bottomRightIsWall ? root.height : root.bodyBottom - root.bottomRightY
 			}
 			PathQuad {
-				x: root.width - 2 * root.curveWidth
-				y: root.height
-				controlX: root.width - root.curveWidth
-				controlY: root.height
+				x: root.bottomRightIsWall ? root.rightEdge - root.curveWidth : root.rightEdge - root.bottomRightX
+				y: root.bottomRightIsWall ? root.bodyBottom : root.bodyBottom
+				controlX: root.rightEdge
+				controlY: root.bodyBottom
 			}
-			PathLine { x: 2 * root.curveWidth; y: root.height }
+			PathLine { x: root.leftEdge + root.bottomLeftX; y: root.bodyBottom }
 			PathQuad {
-				x: root.curveWidth
-				y: root.height - root.curveHeight
-				controlX: root.curveWidth
-				controlY: root.height
+				x: root.leftEdge
+				y: root.bodyBottom - root.bottomLeftY
+				controlX: root.leftEdge
+				controlY: root.bodyBottom
 			}
-			PathLine { x: root.curveWidth; y: root.curveHeight }
+			PathLine { x: root.leftEdge; y: root.topLeftY }
 			PathQuad {
-				x: root.topInset
+				x: root.topLeftX
 				y: 0
-				controlX: root.curveWidth
+				controlX: root.leftEdge
 				controlY: 0
 			}
 		}
@@ -200,9 +233,9 @@ Item {
 	Item {
 		id: contentArea
 		clip: true
-		x: root.curveWidth
-		width: Math.max(0, root.width - 2 * root.curveWidth)
-		height: root.height
+		x: root.leftEdge
+		width: Math.max(0, root.rightEdge - root.leftEdge)
+		height: root.bodyBottom
 		opacity: root.contentFadeDistance <= 0
 		? 1
 		: Math.max(0, Math.min(1, root.height / Math.min(root.contentFadeDistance, Math.max(1, root.expandedHeight))))
