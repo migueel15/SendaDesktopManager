@@ -183,6 +183,7 @@ Item {
                                     width: parent.width
                                     height: parent.height
                                     source: root.player?.trackArtUrl ?? ""
+                                    sourceSize: Qt.size(Math.ceil(width * (QsWindow.window?.screen?.devicePixelRatio ?? 1)), Math.ceil(height * (QsWindow.window?.screen?.devicePixelRatio ?? 1)))
                                     fillMode: Image.PreserveAspectCrop
                                     asynchronous: true
                                     visible: false

@@ -50,6 +50,7 @@ Rectangle {
                 Image {
                     source: "/var/lib/AccountsService/icons/miguel"
                     anchors.fill: parent
+                    sourceSize: Qt.size(Math.ceil(width * (QsWindow.window?.screen?.devicePixelRatio ?? 1)), Math.ceil(height * (QsWindow.window?.screen?.devicePixelRatio ?? 1)))
                     fillMode: Image.PreserveAspectCrop
                     smooth: true
                     asynchronous: true

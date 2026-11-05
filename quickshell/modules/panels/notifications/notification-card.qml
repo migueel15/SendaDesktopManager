@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Widgets
 
 import qs.common
@@ -238,7 +239,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.topMargin: Theme.spacing.sm
                 Layout.preferredHeight: visible
-                    ? Math.min(180, previewImage.sourceSize.height * width / Math.max(1, previewImage.sourceSize.width))
+                    ? Math.min(180, previewImage.implicitHeight * width / Math.max(1, previewImage.implicitWidth))
                     : 0
                 visible: previewImage.source.toString().length > 0 && previewImage.status === Image.Ready
                 radius: Theme.rounding.control
@@ -248,6 +249,9 @@ Item {
                     id: previewImage
                     anchors.fill: parent
                     source: card.notification?.screenshotPath ? card.notification.image : ""
+                    // Decode at the card width, which does not depend on this hidden-until-ready
+                    // preview; height 0 keeps the aspect ratio.
+                    sourceSize: Qt.size(Math.ceil(Math.max(1, card.width) * (QsWindow.window?.screen?.devicePixelRatio ?? 1)), 0)
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                 }
