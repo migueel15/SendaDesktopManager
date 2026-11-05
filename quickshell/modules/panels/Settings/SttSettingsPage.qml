@@ -282,10 +282,9 @@ Flickable {
                             enabled: !ZendaSttSettings.busy
                             onClicked: ZendaSttSettings.useModel(modelCard.modelData.id)
                         }
-                        ZendaIconButton {
+                        ZendaButton {
                             visible: modelCard.modelData.installed
-                            icon: "󰆴"
-                            accessibleLabel: "Desinstalar y liberar espacio"
+                            label: "Borrar"
                             enabled: !ZendaSttSettings.busy
                             onClicked: ZendaSttSettings.removeModel(modelCard.modelData.id)
                         }
