@@ -97,12 +97,11 @@ Item {
         function onNoticeChanged() { feedback.show(ZendaStartupSettings.notice, ZendaStartupSettings.noticeIsError); }
     }
 
-    // Same card style as the dashboard and the control center.
+    // Material 3 content container: one large tonal card, no border, holding
+    // the option groups, which sit a tone lighter.
     component SettingsCard: Rectangle {
-        radius: Theme.rounding.normal
+        radius: Theme.rounding.card + Theme.spacing.xs
         color: Theme.colors.surface
-        border.width: 1
-        border.color: Theme.colors.border
     }
 
     Shortcut {
@@ -158,19 +157,19 @@ Item {
         anchors.fill: parent
         spacing: Theme.spacing.md
 
-        // Material 3 navigation drawer: tonal surface, large corners, no border.
-        Rectangle {
+        // Material 3 standard navigation drawer: no container of its own, it
+        // sits on the window background next to the content card.
+        Item {
             // Reserve room for the longest label at the active text scale.
             Layout.preferredWidth: Math.max(root.width * 0.24, Theme.scaled(170))
             Layout.minimumWidth: Math.max(root.width * 0.24, Theme.scaled(170))
             Layout.maximumWidth: Math.max(root.width * 0.24, Theme.scaled(170))
             Layout.fillHeight: true
-            radius: Theme.rounding.large
-            color: Theme.colors.surface
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Theme.spacing.md
+                anchors.topMargin: Theme.spacing.md
+                anchors.bottomMargin: Theme.spacing.md
                 spacing: Theme.spacing.xs
 
                 RowLayout {
