@@ -19,7 +19,7 @@ Item {
     readonly property var sections: ZendaSettings.sections
     property int currentSection: ZendaSettings.currentSection
     onCurrentSectionChanged: ZendaSettings.currentSection = currentSection
-    readonly property var pageLoaders: [page0, page1, page2, page3, page4, page5, page6, page7, page8, page9, page10, page11]
+    readonly property var pageLoaders: [page0, page1, page2, page3, page4, page5, page6, page7, page8, page9, page10]
     readonly property bool retainWhenHidden: pageLoaders.some(loader => loader.retained)
 
     component SettingsPageLoader: Loader {
@@ -31,17 +31,12 @@ Item {
         onLoaded: root.refreshSection(sectionIndex)
     }
 
-    Connections {
-        target: page5.item
-        function onOpenSystemRequested() { root.currentSection = root.sections.findIndex(section => section.label === "Sistema"); }
-    }
-
     function refreshSection(index) {
-        if (index === 5) ZendaSttSettings.refresh();
-        if (index === 5 || index === 9 || index === 10) ZendaHyprlandSettings.refresh();
-        if (index === 6) ZendaDisplaySettings.refresh();
-        if (index === 7) ZendaInputSettings.refresh();
-        if (index === 8) ZendaStartupSettings.refresh();
+        if (index === 3) ZendaSttSettings.refresh();
+        if (index === 6 || index === 8) ZendaHyprlandSettings.refresh();
+        if (index === 4) ZendaDisplaySettings.refresh();
+        if (index === 0 || index === 5) ZendaInputSettings.refresh();
+        if (index === 7) ZendaStartupSettings.refresh();
     }
 
     Connections {
@@ -97,12 +92,11 @@ Item {
         function onNoticeChanged() { feedback.show(ZendaStartupSettings.notice, ZendaStartupSettings.noticeIsError); }
     }
 
-    // Same card style as the dashboard and the control center.
+    // Material 3 content container: one large tonal card, no border, holding
+    // the option groups, which sit a tone lighter.
     component SettingsCard: Rectangle {
-        radius: Theme.rounding.normal
+        radius: Theme.rounding.card + Theme.spacing.xs
         color: Theme.colors.surface
-        border.width: 1
-        border.color: Theme.colors.border
     }
 
     Shortcut {
@@ -158,19 +152,19 @@ Item {
         anchors.fill: parent
         spacing: Theme.spacing.md
 
-        // Material 3 navigation drawer: tonal surface, large corners, no border.
-        Rectangle {
+        // Material 3 standard navigation drawer: no container of its own, it
+        // sits on the window background next to the content card.
+        Item {
             // Reserve room for the longest label at the active text scale.
             Layout.preferredWidth: Math.max(root.width * 0.24, Theme.scaled(170))
             Layout.minimumWidth: Math.max(root.width * 0.24, Theme.scaled(170))
             Layout.maximumWidth: Math.max(root.width * 0.24, Theme.scaled(170))
             Layout.fillHeight: true
-            radius: Theme.rounding.large
-            color: Theme.colors.surface
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: Theme.spacing.md
+                anchors.topMargin: Theme.spacing.md
+                anchors.bottomMargin: Theme.spacing.md
                 spacing: Theme.spacing.xs
 
                 RowLayout {
@@ -244,7 +238,14 @@ Item {
                     }
                 }
 
-                Repeater {
+                // Scrolls when the window is too short for every section.
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: !root.searching
+                    clip: true
+                    spacing: Theme.spacing.xs
+                    boundsBehavior: Flickable.StopAtBounds
                     model: root.sections
 
                     delegate: ZendaListItem {
@@ -252,8 +253,7 @@ Item {
                         required property var modelData
                         required property int index
 
-                        visible: !root.searching
-                        Layout.fillWidth: true
+                        width: ListView.view.width
                         implicitHeight: Theme.scaled(48)
                         leadingIcon: modelData.icon
                         text: modelData.label
@@ -261,11 +261,6 @@ Item {
                         selected: root.currentSection === index
                         onClicked: root.currentSection = index
                     }
-                }
-
-                Item {
-                    Layout.fillHeight: true
-                    visible: !root.searching
                 }
             }
         }
@@ -278,6 +273,8 @@ Item {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Theme.spacing.lg
+                // The corner radius already leaves room under the last group.
+                anchors.bottomMargin: Theme.spacing.sm
                 spacing: 10
 
                 Text {
@@ -317,61 +314,74 @@ Item {
                     SettingsPageLoader {
                         id: page3
                         sectionIndex: 3
-                        source: Qt.resolvedUrl("CalendarSettingsPage.qml")
+                        source: Qt.resolvedUrl("SttSettingsPage.qml")
                     }
 
                     SettingsPageLoader {
                         id: page4
                         sectionIndex: 4
-                        source: Qt.resolvedUrl("WeatherSettingsPage.qml")
+                        source: Qt.resolvedUrl("display-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page5
                         sectionIndex: 5
-                        source: Qt.resolvedUrl("SttSettingsPage.qml")
+                        source: Qt.resolvedUrl("input-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page6
                         sectionIndex: 6
-                        source: Qt.resolvedUrl("display-settings-page.qml")
+                        source: Qt.resolvedUrl("shortcuts-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page7
                         sectionIndex: 7
-                        source: Qt.resolvedUrl("input-settings-page.qml")
+                        source: Qt.resolvedUrl("startup-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page8
                         sectionIndex: 8
-                        source: Qt.resolvedUrl("startup-settings-page.qml")
+                        source: Qt.resolvedUrl("power-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page9
                         sectionIndex: 9
-                        source: Qt.resolvedUrl("power-settings-page.qml")
+                        source: Qt.resolvedUrl("system-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page10
                         sectionIndex: 10
-                        source: Qt.resolvedUrl("system-settings-page.qml")
-                    }
-
-                    SettingsPageLoader {
-                        id: page11
-                        sectionIndex: 11
                         source: Qt.resolvedUrl("UpdateSettingsPage.qml")
                     }
                 }
+            }
+
+            // Feedback floats over the page bottom, so the page can use the
+            // whole card height and is never pushed when a notice appears.
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Theme.spacing.md
+                width: Math.min(feedback.implicitWidth + Theme.spacing.xl * 2, parent.width - Theme.spacing.xl * 2)
+                height: feedback.implicitHeight + Theme.spacing.sm * 2
+                radius: Theme.rounding.full
+                color: Theme.colors.surfaceRaised
+                border.width: 1
+                border.color: Theme.colors.surfaceRaisedBorder
+                visible: feedback.message !== ""
+
                 ZendaStatus {
                     id: feedback
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Theme.scaled(30)
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.spacing.xl
+                    anchors.rightMargin: Theme.spacing.xl
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
         }

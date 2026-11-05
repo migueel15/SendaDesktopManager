@@ -14,7 +14,6 @@ Flickable {
     contentHeight: column.implicitHeight
     clip: true
 
-    signal openSystemRequested()
 
     function formatSize(bytes) {
         if (!bytes || bytes <= 0) return "Tamaño desconocido";
@@ -220,18 +219,6 @@ Flickable {
                     text: ZendaSettings.values.ZENDA_STT_TERMINALS || "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty"
                     enabled: !ZendaSettings.busy
                     onCommitted: ZendaSettings.save({ ZENDA_STT_TERMINALS: text.trim() }, "Terminales guardadas")
-                }
-            }
-        }
-        ZendaGroup {
-            ZendaRow {
-                separator: false
-                label: "Atajo de dictado"
-                description: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.dictationShortcut
-                    : ZendaHyprlandSettings.busy ? "Consultando ajustes del sistema…" : "No se pudo consultar el atajo"
-                ZendaButton {
-                    label: "Abrir Sistema"
-                    onClicked: root.openSystemRequested()
                 }
             }
         }

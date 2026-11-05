@@ -197,35 +197,6 @@ Flickable {
             }
         }
 
-        ZendaGroup {
-            ZendaRow {
-                separator: false
-                label: "Tema de cursor"
-                modified: root.modified_("cursorTheme")
-                onResetRequested: ZendaInputSettings.set("cursor-theme", "")
-                description: root.note("cursorTheme", "Se aplica al momento")
-                ZendaSelect {
-                    enabled: !root.managed("cursorTheme")
-                    options: ZendaInputSettings.cursorThemes
-                    value: ZendaInputSettings.current.cursorTheme || ""
-                    onChosen: value => ZendaInputSettings.set("cursor-theme", value)
-                }
-            }
-            ZendaRow {
-                label: "Tamaño del cursor"
-                modified: root.modified_("cursorSize")
-                onResetRequested: ZendaInputSettings.set("cursor-size", "")
-                description: root.note("cursorSize", "Se aplica al momento")
-                ZendaSlider {
-                    implicitWidth: Theme.scaled(200)
-                    enabled: !root.managed("cursorSize")
-                    from: 16; to: 64; stepSize: 2
-                    suffix: " px"
-                    value: Number(ZendaInputSettings.current.cursorSize || 24)
-                    onCommitted: value => ZendaInputSettings.set("cursor-size", Math.round(value))
-                }
-            }
-        }
 
         ZendaStatus {
             Layout.fillWidth: true

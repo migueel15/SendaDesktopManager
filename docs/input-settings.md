@@ -1,6 +1,6 @@
 # Teclado, ratón y cursor
 
-La sección **Teclado y ratón** de Ajustes define la distribución de teclado, la velocidad del ratón (en porcentaje; 0–100 % equivale a -1…1 en Hyprland), la aceleración, el foco con el ratón, el touchpad (tocar para hacer clic, desplazamiento natural, desactivar al escribir, velocidad de desplazamiento) y el tema y tamaño de cursor. Se guarda y se aplica al cambiar, y persiste tras recargar y reiniciar.
+La sección **Teclado y ratón** de Ajustes define la distribución de teclado, la velocidad del ratón (en porcentaje; 0–100 % equivale a -1…1 en Hyprland), la aceleración, el foco con el ratón, el touchpad (tocar para hacer clic, desplazamiento natural, desactivar al escribir, velocidad de desplazamiento). El tema y el tamaño del cursor están en **Apariencia**. Se guarda y se aplica al cambiar, y persiste tras recargar y reiniciar.
 
 ## Comandos
 

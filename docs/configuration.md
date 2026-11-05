@@ -61,7 +61,7 @@ Si no hay localidad elegida, el clima usa la capital del país de tu zona horari
 
 Estas claves las escribe la ventana de ajustes con `zenda config set`. La ventana se abre con `zenda settings`, desde el dashboard o desde el aviso de actualización, y aparece flotante y centrada en el monitor con el foco: `zenda settings` registra antes la regla de ventana en Hyprland, y el módulo de Zenda también la incluye. En Apariencia se elige también el tema. En Ajustes, los interruptores y selectores guardan al cambiar; el deslizador de texto guarda al soltar y los campos editados con Enter o al perder el foco. Las credenciales de Google se confirman juntas desde el segundo campo o con «Guardar credenciales». El resultado aparece en el pie de la ventana sin desplazar las opciones. También puedes editarlas a mano; el archivo se mantiene con permisos `0600`.
 
-En Ajustes → Widgets se pueden habilitar o deshabilitar los controles de Spotify y Discord de la barra. Ambos están habilitados por defecto. Sus preferencias se guardan como `ZENDA_WIDGET_SPOTIFY` y `ZENDA_WIDGET_DISCORD`, con valores `true` o `false`; un valor vacío restaura el comportamiento predeterminado. Al deshabilitar Discord se detiene su puente; si hay un dictado en curso, se espera a que termine para permitir la restauración del micrófono. Sin el puente, el dictado no silencia Discord automáticamente. El widget de Spotify utiliza MPRIS y no inicia un proceso propio.
+En Ajustes → Widgets están el calendario, el tiempo y los controles de la barra; ahí se pueden habilitar o deshabilitar los controles de Spotify y Discord de la barra. Ambos están habilitados por defecto. Sus preferencias se guardan como `ZENDA_WIDGET_SPOTIFY` y `ZENDA_WIDGET_DISCORD`, con valores `true` o `false`; un valor vacío restaura el comportamiento predeterminado. Al deshabilitar Discord se detiene su puente; si hay un dictado en curso, se espera a que termine para permitir la restauración del micrófono. Sin el puente, el dictado no silencia Discord automáticamente. El widget de Spotify utiliza MPRIS y no inicia un proceso propio.
 
 ## Secretos
 
@@ -120,7 +120,7 @@ Además de aplicaciones, el lanzador sirve para tareas rápidas:
 
 - **Acciones de Zenda.** Al escribir aparecen, mezcladas con las aplicaciones por
   coincidencia, «Ajustes» y sus secciones («Ajustes: Apariencia», «Ajustes:
-  Tiempo»…), que abren la ventana de ajustes en esa sección; «Selector de temas»;
+  Widgets»…), que abren la ventana de ajustes en esa sección; «Selector de temas»;
   «Selector de fondos»;
   «Emojis»; «Captura de pantalla» y «Bloquear pantalla». Todas se declaran en un
   único registro, `quickshell/services/LauncherActions.qml`, y las secciones de
@@ -147,7 +147,7 @@ su propio monitor. `--query <texto>` abre el launcher con esa búsqueda ya
 escrita; por ejemplo, `zenda launcher toggle --query :` lo abre en modo emoji.
 
 Zenda genera en `binds.lua` los atajos del launcher (`SUPER + d`) y del modo
-emoji (`SUPER + period`). Se cambian en Ajustes → Sistema o con
+emoji (`SUPER + period`). Se cambian en Ajustes → Atajos o con
 `zenda hyprland set --launcher-shortcut` y `--emoji-shortcut`. Si al actualizar
 la tecla por defecto ya la usa otro atajo de Zenda, ese atajo queda sin asignar
 hasta que elijas uno. Si tu configuración de Hyprland ya tiene un atajo propio

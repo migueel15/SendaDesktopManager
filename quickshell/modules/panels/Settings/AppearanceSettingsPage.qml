@@ -5,7 +5,7 @@ import qs.common
 import qs.common.components.controls
 import qs.services
 
-// Appearance settings: the theme and the size of the interface text.
+// Appearance settings: the theme, the size of the interface text and the cursor.
 Flickable {
     id: root
 
@@ -28,9 +28,24 @@ Flickable {
 
     Component.onCompleted: ZendaTheme.refresh()
 
+    // Cursor values live in the input service, with the same user overrides.
+    function managed(field) { return ZendaInputSettings.user[field] !== undefined; }
+    function modified_(field) {
+        const saved = ZendaInputSettings.saved[field] || "";
+        if (root.managed(field) || saved === "") return false;
+        const fallback = ZendaInputSettings.defaults[field] || "";
+        return isNaN(Number(saved)) ? saved !== fallback : Number(saved) !== Number(fallback === "" ? NaN : fallback);
+    }
+    function note(field, text) {
+        const user = ZendaInputSettings.user[field];
+        if (!user) return text;
+        return "Gestionado por el usuario en " + user.file.split("/").pop();
+    }
+
     ColumnLayout {
         id: column
         width: root.width
+        spacing: Theme.spacing.md
         ZendaGroup {
             ZendaRow {
                 separator: false
@@ -62,6 +77,35 @@ Flickable {
                     value: root.currentPercent
                     enabled: !ZendaSettings.busy
                     onCommitted: value => root.changeTo(value)
+                }
+            }
+        }
+        ZendaGroup {
+            ZendaRow {
+                separator: false
+                label: "Tema de cursor"
+                modified: root.modified_("cursorTheme")
+                onResetRequested: ZendaInputSettings.set("cursor-theme", "")
+                description: root.note("cursorTheme", "Se aplica al momento")
+                ZendaSelect {
+                    enabled: !root.managed("cursorTheme")
+                    options: ZendaInputSettings.cursorThemes
+                    value: ZendaInputSettings.current.cursorTheme || ""
+                    onChosen: value => ZendaInputSettings.set("cursor-theme", value)
+                }
+            }
+            ZendaRow {
+                label: "Tamaño del cursor"
+                modified: root.modified_("cursorSize")
+                onResetRequested: ZendaInputSettings.set("cursor-size", "")
+                description: root.note("cursorSize", "Se aplica al momento")
+                ZendaSlider {
+                    implicitWidth: Theme.scaled(200)
+                    enabled: !root.managed("cursorSize")
+                    from: 16; to: 64; stepSize: 2
+                    suffix: " px"
+                    value: Number(ZendaInputSettings.current.cursorSize || 24)
+                    onCommitted: value => ZendaInputSettings.set("cursor-size", Math.round(value))
                 }
             }
         }
