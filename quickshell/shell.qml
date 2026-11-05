@@ -6,7 +6,6 @@ import QtQuick
 import QtQuick.Controls.Material
 
 import qs.modules.bars
-import qs.modules.bars.components
 import qs.common.components
 import qs.modules.panels
 import qs.modules.panels.Settings
@@ -36,13 +35,8 @@ ShellRoot {
 		panelController: panelCtrl
 	}
 
-	// The frame goes before the corners so they are placed inside it.
+	// After the bar, so the frame strips are placed below it.
 	ScreenFrame {}
-
-	TopRightCorner {}
-	TopLeftCorner {}
-	BottomLeftCorner {}
-	BottomRightCorner {}
 
 	VolumeOSD {}
 	BrightnessOSD {}

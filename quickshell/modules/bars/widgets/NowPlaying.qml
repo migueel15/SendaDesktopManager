@@ -244,9 +244,8 @@ Rectangle {
                 return root.itemXInWindow(root, window.contentItem)
                     + root.width / 2 - trackExtension.width / 2;
             }
-            anchor.rect.y: root.QsWindow.window
-                    ? root.QsWindow.window.contentItem.height
-                    : 0
+            // The bar window reaches below the bar; open right under the bar itself.
+            anchor.rect.y: Theme.barSize
             anchor.rect.width: 1
             anchor.rect.height: 1
 
