@@ -106,7 +106,7 @@ Flickable {
                     required property var modelData
                     required property int index
                     searchable: false
-                    separator: index < ZendaStartupSettings.entries.length - 1
+                    separator: index > 0
                     // Live entry for this target: ScriptModel keeps the delegate,
                     // so read changes such as enabled from the service.
                     readonly property var entry: ZendaStartupSettings.entries.find(e => e.target === row.modelData.target) ?? row.modelData
@@ -149,7 +149,7 @@ Flickable {
                     required property var modelData
                     required property int index
                     searchable: false
-                    separator: index < ZendaStartupSettings.externalEntries.length - 1
+                    separator: index > 0
                     label: modelData.name
                     description: modelData.target
                 }
