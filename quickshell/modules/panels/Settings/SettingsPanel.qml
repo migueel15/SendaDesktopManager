@@ -359,7 +359,6 @@ Item {
                         source: Qt.resolvedUrl("UpdateSettingsPage.qml")
                     }
                 }
-                }
             }
 
             // Feedback floats over the page bottom, so the page can use the
