@@ -24,6 +24,8 @@ Item {
     }
     signal resetRequested()
     default property alias controls: controlLayout.data
+    // Narrow rows put the controls under the text instead of squeezing both.
+    readonly property bool stacked: root.width < controlLayout.implicitWidth + resetButton.width + Theme.scaled(220)
     Layout.fillWidth: true
     implicitHeight: content.implicitHeight + (separator ? Theme.spacing.md + 1 : 0)
     Rectangle {
@@ -56,13 +58,16 @@ Item {
         id: content
         width: root.width
         y: root.separator ? Theme.spacing.md + 1 : 0
-        implicitHeight: Math.max(textColumn.implicitHeight, controlLayout.implicitHeight)
+        implicitHeight: root.stacked
+            ? textColumn.implicitHeight + Theme.spacing.sm + Math.max(controlLayout.implicitHeight, resetButton.height)
+            : Math.max(textColumn.implicitHeight, controlLayout.implicitHeight)
         ColumnLayout {
             id: textColumn
             anchors.left: parent.left
-            anchors.right: resetButton.left
-            anchors.rightMargin: controlLayout.width > 0 || root.modified ? Theme.spacing.md : 0
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: root.stacked ? parent.right : resetButton.left
+            anchors.rightMargin: !root.stacked && (controlLayout.width > 0 || root.modified) ? Theme.spacing.md : 0
+            anchors.top: root.stacked ? parent.top : undefined
+            anchors.verticalCenter: root.stacked ? undefined : parent.verticalCenter
             spacing: Theme.spacing.xs
             Text {
                 Layout.fillWidth: true
@@ -84,7 +89,7 @@ Item {
             id: resetButton
             anchors.right: controlLayout.left
             anchors.rightMargin: root.modified ? Theme.spacing.sm : 0
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenter: root.stacked ? controlLayout.verticalCenter : parent.verticalCenter
             visible: root.modified
             width: visible ? Theme.scaled(22) : 0
             height: Theme.scaled(22)
@@ -104,8 +109,9 @@ Item {
         RowLayout {
             id: controlLayout
             anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(implicitWidth, root.width * 0.6)
+            anchors.verticalCenter: root.stacked ? undefined : parent.verticalCenter
+            anchors.bottom: root.stacked ? parent.bottom : undefined
+            width: Math.min(implicitWidth, root.stacked ? root.width - resetButton.width - resetButton.anchors.rightMargin : root.width * 0.6)
             spacing: Theme.spacing.sm
         }
     }

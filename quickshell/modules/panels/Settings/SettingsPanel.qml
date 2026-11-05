@@ -243,7 +243,14 @@ Item {
                     }
                 }
 
-                Repeater {
+                // Scrolls when the window is too short for every section.
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    visible: !root.searching
+                    clip: true
+                    spacing: Theme.spacing.xs
+                    boundsBehavior: Flickable.StopAtBounds
                     model: root.sections
 
                     delegate: ZendaListItem {
@@ -251,8 +258,7 @@ Item {
                         required property var modelData
                         required property int index
 
-                        visible: !root.searching
-                        Layout.fillWidth: true
+                        width: ListView.view.width
                         implicitHeight: Theme.scaled(48)
                         leadingIcon: modelData.icon
                         text: modelData.label
@@ -260,11 +266,6 @@ Item {
                         selected: root.currentSection === index
                         onClicked: root.currentSection = index
                     }
-                }
-
-                Item {
-                    Layout.fillHeight: true
-                    visible: !root.searching
                 }
             }
         }
