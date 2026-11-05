@@ -28,6 +28,16 @@ QtObject {
 		root.fontScale = valid ? value / 100 : 1.0;
 	}
 
+	// Corner radius scale, from 0 (square) to 1.0 (default). The settings
+	// panel changes it through ZENDA_UI_ROUNDING.
+	property real roundingScale: 1.0
+
+	function setRoundingScale(percent) {
+		const value = parseInt(percent, 10);
+		const valid = !isNaN(value) && value >= 0 && value <= 100;
+		root.roundingScale = valid ? value / 100 : 1.0;
+	}
+
 	function applyColors(map) {
 		const keys = ["base", "background", "surface", "border", "surfaceVariant",
 			"surfaceRaised", "surfaceRaisedBorder", "overlay", "textMuted", "white",
@@ -95,12 +105,12 @@ QtObject {
 	}
 
 	component Rounding: QtObject {
-		readonly property int small: 6
-		readonly property int normal: 10
-		readonly property int large: 16
+		readonly property int small: Math.round(6 * root.roundingScale)
+		readonly property int normal: Math.round(10 * root.roundingScale)
+		readonly property int large: Math.round(16 * root.roundingScale)
 		// Style B: inputs and buttons, and cards or groups.
-		readonly property int control: 12
-		readonly property int card: 24
+		readonly property int control: Math.round(12 * root.roundingScale)
+		readonly property int card: Math.round(24 * root.roundingScale)
 		readonly property int full: 1000
 	}
 

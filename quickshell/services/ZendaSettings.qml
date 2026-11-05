@@ -234,6 +234,7 @@ Singleton {
                 root.embeddedClient = data.embeddedGoogleClient;
                 root.defaultWeatherLocation = data.defaultWeatherLocation ?? "";
                 Theme.setFontScale(data.values.ZENDA_UI_FONT_SCALE);
+                Theme.setRoundingScale(data.values.ZENDA_UI_ROUNDING);
             } catch (error) {
                 root.configLoaded = true;
                 root.showError("La configuración no es válida", "");

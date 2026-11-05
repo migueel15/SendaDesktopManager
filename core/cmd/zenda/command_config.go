@@ -26,6 +26,7 @@ const (
 	keyWeatherLat         = "ZENDA_WEATHER_LAT"
 	keyWeatherLon         = "ZENDA_WEATHER_LON"
 	keyUIFontScale        = "ZENDA_UI_FONT_SCALE"
+	keyUIRounding         = "ZENDA_UI_ROUNDING"
 	keyWidgetSpotify      = "ZENDA_WIDGET_SPOTIFY"
 	keyScreenshotDir      = "ZENDA_SCREENSHOT_DIR"
 	keyWidgetDiscord      = "ZENDA_WIDGET_DISCORD"
@@ -56,6 +57,7 @@ var editableSettings = map[string]bool{
 	keyWeatherLat:         true,
 	keyWeatherLon:         true,
 	keyUIFontScale:        true,
+	keyUIRounding:         true,
 	keyWidgetSpotify:      true,
 	keyWidgetDiscord:      true,
 	keyBatteryWarning:     true,
@@ -102,6 +104,7 @@ func configGetCmd() *cobra.Command {
 					keyWeatherLat:        values[keyWeatherLat],
 					keyWeatherLon:        values[keyWeatherLon],
 					keyUIFontScale:       values[keyUIFontScale],
+					keyUIRounding:        values[keyUIRounding],
 					keyWidgetSpotify:     values[keyWidgetSpotify],
 					keyWidgetDiscord:     values[keyWidgetDiscord],
 					keyBatteryWarning:    values[keyBatteryWarning],
@@ -220,6 +223,14 @@ func validateSetting(key, value string) error {
 		return validateCoordinate(key, strings.TrimSpace(value), 180)
 	case keyUIFontScale:
 		return validateFontScale(strings.TrimSpace(value))
+	case keyUIRounding:
+		// Percentage of the default corner radius; empty restores 100.
+		if value = strings.TrimSpace(value); value != "" {
+			percent, err := strconv.Atoi(value)
+			if err != nil || percent < 0 || percent > 100 {
+				return fmt.Errorf("%s must be a whole number between 0 and 100", key)
+			}
+		}
 	case keyBatteryWarning:
 		if value != "" {
 			percent, err := strconv.Atoi(value)

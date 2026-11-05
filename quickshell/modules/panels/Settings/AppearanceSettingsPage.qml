@@ -27,6 +27,16 @@ Flickable {
         );
     }
 
+    readonly property int currentRounding: Math.round(Theme.roundingScale * 100)
+
+    function changeRounding(percent) {
+        const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+        ZendaSettings.save(
+            { ZENDA_UI_ROUNDING: clamped === 100 ? "" : String(clamped) },
+            "Redondeo guardado"
+        );
+    }
+
     Component.onCompleted: ZendaTheme.refresh()
 
     // Cursor values live in the input service, with the same user overrides.
@@ -74,6 +84,22 @@ Flickable {
                     value: root.currentPercent
                     enabled: !ZendaSettings.busy
                     onCommitted: value => root.changeTo(value)
+                }
+            }
+        }
+        ZendaGroup {
+            ZendaRow {
+                separator: false
+                label: "Redondeo de esquinas"
+                modified: root.currentRounding !== 100
+                onResetRequested: root.changeRounding(100)
+                description: "Reduce el redondeo de cartas, grupos y controles."
+                ZendaSlider {
+                    from: 0; to: 100; stepSize: 10
+                    suffix: " %"
+                    value: root.currentRounding
+                    enabled: !ZendaSettings.busy
+                    onCommitted: value => root.changeRounding(value)
                 }
             }
         }
