@@ -174,7 +174,7 @@ Item {
                             Rectangle {
                                 Layout.preferredWidth: 118
                                 Layout.preferredHeight: 118
-                                radius: 24
+                                radius: Theme.rounding.card
                                 color: Theme.colors.surfaceVariant
                                 clip: true
 
@@ -194,7 +194,7 @@ Item {
                                     maskSource: Rectangle {
                                         width: 118
                                         height: 118
-                                        radius: 24
+                                        radius: Theme.rounding.card
                                         color: "white"
                                     }
                                     visible: albumArt.status === Image.Ready

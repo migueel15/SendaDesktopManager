@@ -290,7 +290,7 @@ Rectangle {
                         Rectangle {
                             Layout.preferredWidth: 40
                             Layout.preferredHeight: 40
-                            radius: 6
+                            radius: Theme.rounding.small
                             color: Theme.colors.surfaceVariant
                             clip: true
 
@@ -313,7 +313,7 @@ Rectangle {
                                 maskSource: Rectangle {
                                     width: 40
                                     height: 40
-                                    radius: 6
+                                    radius: Theme.rounding.small
                                     color: "white"
                                 }
                                 visible: trackArt.status === Image.Ready

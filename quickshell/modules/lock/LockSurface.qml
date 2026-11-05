@@ -55,7 +55,7 @@ WlSessionLockSurface {
                 cursorDelegate: Item { visible: false }
                 transform: Translate { id: errorOffset }
                 background: Rectangle {
-                    radius: 18; color: "#33fafafa"; border.width: 2
+                    radius: Theme.rounding.large; color: "#33fafafa"; border.width: 2
                     border.color: LockService.errorMessage ? Theme.colors.error : "#4dfafafa"
                     Behavior on border.color { ColorAnimation { duration: Theme.motion.normal } }
                 }
