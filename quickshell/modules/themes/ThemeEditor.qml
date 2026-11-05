@@ -102,10 +102,30 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            contentWidth: availableWidth
+            // Content leaves a gutter for the bar, so it never covers the color swatches.
+            readonly property real gutter: editorBar.visible ? editorBar.width + Theme.spacing.sm : 0
+            contentWidth: availableWidth - gutter
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            ScrollBar.vertical: ScrollBar {
+                id: editorBar
+                parent: scroll
+                x: scroll.width - width
+                y: scroll.topPadding
+                height: scroll.availableHeight
+                width: Theme.spacing.xs + 2
+                padding: 0
+                visible: scroll.contentHeight > scroll.availableHeight
+                policy: ScrollBar.AlwaysOn
+                background: Rectangle { radius: Theme.rounding.full; color: Theme.colors.surfaceVariant; opacity: 0.5 }
+                contentItem: Rectangle {
+                    implicitWidth: editorBar.width
+                    radius: Theme.rounding.full
+                    color: editorBar.pressed ? Theme.colors.primary : Theme.colors.overlay
+                    opacity: editorBar.pressed || editorBar.hovered ? 1 : 0.7
+                }
+            }
             ColumnLayout {
-                width: scroll.availableWidth
+                width: scroll.availableWidth - scroll.gutter
                 spacing: Theme.spacing.sm
                 enabled: !root.pendingSave
                 Text {
