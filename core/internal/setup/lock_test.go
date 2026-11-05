@@ -23,6 +23,14 @@ func isolate(t *testing.T, external int) string {
 		return integration.Processes{External: external}, nil
 	}
 	t.Cleanup(func() { idleProcesses = previous })
+	prevCtl, prevExt, prevOwn, prevManaged := systemctlUser, stopExternalIdle, stopUnmanagedIdle, idleManaged
+	systemctlUser = func(...string) (string, error) { return "inactive", nil }
+	stopExternalIdle = func() string { return "" }
+	stopUnmanagedIdle = func() string { return "" }
+	idleManaged = func() bool { return false }
+	t.Cleanup(func() {
+		systemctlUser, stopExternalIdle, stopUnmanagedIdle, idleManaged = prevCtl, prevExt, prevOwn, prevManaged
+	})
 	return home
 }
 

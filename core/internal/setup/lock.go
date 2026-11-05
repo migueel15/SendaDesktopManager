@@ -61,12 +61,10 @@ func ensureLockIntegration(ctx context.Context, executable string, in *bufio.Rea
 		warnings = append(warnings, warning)
 	}
 	fmt.Fprintln(out, "Módulo de Zenda:", integration.ModulePath())
+	if s.IdleMode == integration.IdleModeZenda {
+		warnings = append(warnings, resolveIdleConflicts(in, out, chosen, integration.InSession())...)
+	}
 	if s.IdleMode == integration.IdleModeZenda && integration.InSession() {
-		if chosen {
-			if w := integration.StopExternalIdle(); w != "" {
-				warnings = append(warnings, w)
-			}
-		}
 		if w := integration.ApplyIdle(); w != "" {
 			warnings = append(warnings, w)
 		}
@@ -114,7 +112,6 @@ func chooseIdleMode(in *bufio.Reader, out io.Writer) string {
 	line, _ := in.ReadString('\n')
 	if strings.EqualFold(strings.TrimSpace(line), "s") {
 		fmt.Fprintln(out, "Se usará la configuración de hypridle de Zenda; Zenda lo inicia al arrancar Hyprland.")
-		fmt.Fprintln(out, "Quita el arranque de tu hypridle de la configuración de Hyprland para no ejecutar dos instancias.")
 		return integration.IdleModeZenda
 	}
 	fmt.Fprintln(out, "Se conserva tu configuración de hypridle; puedes cambiarlo con `zenda hyprland set --idle-mode zenda`.")
