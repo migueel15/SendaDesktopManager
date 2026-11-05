@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Widgets
 import Quickshell.Wayland
 
 import qs.common
@@ -80,7 +79,7 @@ Variants {
                 property bool belongsToScreen: String(model.screenName) === String(root.screen.name)
 
                 width: popupList.width
-                height: belongsToScreen ? notificationCard.implicitHeight + 10 : 0
+                height: belongsToScreen ? notificationCard.implicitHeight + Theme.spacing.sm : 0
 
                 NotificationPopupCard {
                     id: notificationCard
@@ -94,22 +93,17 @@ Variants {
         }
     }
 
-    component NotificationPopupCard: Item {
+    component NotificationPopupCard: NotificationCard {
         id: card
 
         property string notificationId: ""
-        property var notification: Notifications.notificationForId(notificationId)
         property double expiresAt: 0
         property bool expiring: false
-        signal dismissRequested(string id)
-        property bool dismissing: false
-        property real swipeOffset: 0
-        property int swipeExitDuration: 280
 
-        implicitHeight: popupColumn.implicitHeight + 26
-        transform: Translate {
-            x: card.swipeOffset
-        }
+        notification: Notifications.notificationForId(notificationId)
+        summaryLines: 2
+        bodyLines: 4
+        showDismissButton: false
 
         onExpiringChanged: {
             if (expiring) {
@@ -122,29 +116,37 @@ Variants {
             }
         }
 
-        Rectangle {
-            anchors.fill: parent
-            radius: Theme.card.radius
-            color: Theme.colors.background
-            border.width: 1
-            border.color: Theme.colors.surfaceVariant
+        // A swipe takes over from the fade-out.
+        onDismissingChanged: {
+            if (dismissing) {
+                expireAnimation.stop();
+                card.opacity = 1;
+            }
         }
 
-        // Remaining lifetime of the popup. Full while hovered, since hovering
-        // pauses the timeout.
+        onHoveredChanged: {
+            Notifications.setPopupHovered(card.notificationId, hovered);
+            lifetimeBar.restart();
+        }
+
+        onExpiresAtChanged: lifetimeBar.restart()
+
+        // Remaining lifetime of the popup, kept inside the straight part of
+        // the bottom edge. Full while hovered, since hovering pauses the
+        // timeout.
         Rectangle {
             id: lifetimeBar
             anchors {
                 left: parent.left
                 bottom: parent.bottom
-                leftMargin: Theme.rounding.normal
-                bottomMargin: 1
+                leftMargin: Theme.card.radius
+                bottomMargin: Theme.spacing.xs
             }
-            readonly property real fullWidth: card.width - 2 * Theme.rounding.normal
+            readonly property real fullWidth: card.width - 2 * Theme.card.radius
             property real progress: 1
             width: fullWidth * progress
-            height: 2
-            radius: 1
+            height: 3
+            radius: height / 2
             color: Theme.colors.primary
             opacity: 0.7
 
@@ -158,183 +160,13 @@ Variants {
                 lifetimeAnimation.stop();
                 const remaining = card.expiresAt - Date.now();
                 progress = Math.max(0, Math.min(1, remaining / Notifications.popupLifetimeMs));
-                if (cardHover.hovered || remaining <= 0)
+                if (card.hovered || remaining <= 0)
                     return;
                 lifetimeAnimation.duration = remaining;
                 lifetimeAnimation.start();
             }
 
             Component.onCompleted: restart()
-        }
-
-        onExpiresAtChanged: lifetimeBar.restart()
-
-        // Keep card activation below the content so hyperlinks retain their
-        // own target and the swipe handler can still take over a drag.
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            hoverEnabled: true
-            cursorShape: card.notification
-                && Notifications.canActivateNotification(String(card.notification.id))
-                ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: {
-                if (card.notification)
-                    Notifications.activate(String(card.notification.id));
-            }
-        }
-
-        HoverHandler {
-            id: cardHover
-            onHoveredChanged: {
-                Notifications.setPopupHovered(card.notificationId, hovered);
-                lifetimeBar.restart();
-            }
-        }
-
-        DragHandler {
-            id: swipeHandler
-            target: null
-            yAxis.enabled: false
-
-            onTranslationChanged: {
-                if (active && !card.dismissing)
-                    card.swipeOffset = Math.max(0, translation.x);
-            }
-
-            onActiveChanged: {
-                if (!active) {
-                    if (card.swipeOffset >= Math.max(90, card.width * 0.25)) {
-                        expireAnimation.stop();
-                        card.opacity = 1;
-                        card.dismissing = true;
-                        const remainingDistance = card.width + 32 - card.swipeOffset;
-                        const releaseSpeed = Math.max(700, Math.min(2200, swipeHandler.centroid.velocity.x));
-                        card.swipeExitDuration = Math.max(90, Math.round(remainingDistance * 1000 / releaseSpeed));
-                        dismissAnimation.start();
-                    } else {
-                        card.swipeOffset = 0;
-                    }
-                }
-            }
-        }
-
-        Column {
-            id: popupColumn
-            anchors {
-                fill: parent
-                margins: 12
-                bottomMargin: 14
-            }
-            spacing: 2
-
-            RowLayout {
-                width: parent.width
-                spacing: 8
-
-                // App icon on a small tile, so every app gets the same frame.
-                Rectangle {
-                    Layout.preferredWidth: 22
-                    Layout.preferredHeight: 22
-                    radius: Theme.rounding.small
-                    color: Theme.colors.surfaceVariant
-
-                    IconImage {
-                        asynchronous: true
-                        id: popupAppIcon
-                        anchors.fill: parent
-                        anchors.margins: 3
-                        source: Notifications.applicationIconSource(card.notification)
-                        visible: status === Image.Ready
-                    }
-
-                    Text {
-                        anchors.fill: parent
-                        text: "󰂚"
-                        color: Theme.colors.primary
-                        font: Theme.font.icon
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        visible: !popupAppIcon.visible
-                    }
-                }
-
-                Text {
-                    id: applicationName
-                    Layout.fillWidth: true
-                    text: card.notification ? (card.notification.appName || "Notificación") : ""
-                    color: Theme.colors.overlay
-                    font: Theme.font.caption
-                    elide: Text.ElideRight
-
-                    HoverHandler {
-                        enabled: card.notification
-                            && Notifications.canFocusApplication(String(card.notification.id))
-                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    }
-                }
-
-                Text {
-                    text: card.notification ? card.timestampLabel(card.notification.receivedAt) : ""
-                    color: Theme.colors.overlay
-                    font: Theme.font.caption
-                }
-            }
-
-            Item {
-                width: 1
-                height: 6
-            }
-
-            Text {
-                width: parent.width
-                text: card.notification ? (card.notification.summary || "") : ""
-                color: Theme.colors.text
-                font: Theme.font.heading
-                wrapMode: Text.Wrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
-
-                HoverHandler {
-                    enabled: card.notification
-                        && Notifications.canActivateNotification(String(card.notification.id))
-                    cursorShape: Qt.PointingHandCursor
-                }
-            }
-
-            Text {
-                width: parent.width
-                visible: text.length > 0
-                text: card.notification ? (card.notification.body || "") : ""
-                color: Theme.colors.textMuted
-                font: Theme.font.body
-                lineHeight: 1.15
-                wrapMode: Text.Wrap
-                maximumLineCount: 4
-                elide: Text.ElideRight
-                textFormat: Text.RichText
-                linkColor: Theme.colors.primary
-                onLinkActivated: link => Notifications.openBodyLink(link)
-            }
-
-            Image {
-                width: parent.width
-                height: visible ? Math.min(180, sourceSize.height * width / Math.max(1, sourceSize.width)) : 0
-                visible: source.toString().length > 0 && status !== Image.Error
-                source: card.notification?.screenshotPath ? card.notification.image : ""
-                fillMode: Image.PreserveAspectFit
-            }
-
-        }
-
-        NumberAnimation {
-            id: dismissAnimation
-            target: card
-            property: "swipeOffset"
-            to: card.width + 32
-            duration: card.swipeExitDuration
-            easing.type: Easing.Linear
-            onFinished: card.dismissRequested(String(card.notification.id))
         }
 
         NumberAnimation {
@@ -345,12 +177,6 @@ Variants {
             to: 0
             duration: Notifications.popupFadeDurationMs
             easing.type: Easing.OutCubic
-        }
-
-        function timestampLabel(value) {
-            if (value === undefined || value === null || value === "") return "";
-            const date = new Date(value);
-            return isNaN(date.getTime()) ? "" : Theme.locale.toString(date, "HH:mm");
         }
     }
 }
