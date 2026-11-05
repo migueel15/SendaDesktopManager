@@ -1,0 +1,13 @@
+{
+  "background": "{{.C.surface}}",
+  "foreground": "{{.C.text}}",
+  "selection": "{{.C.selection}}",
+  "cursor": "{{.C.primary}}",
+  "ansi": [{{range $i, $c := .ANSI}}{{if $i}}, {{end}}"{{$c}}"{{end}}],
+  "colors": {
+    "canvas": "{{.C.background}}",
+    "chrome": "{{.C.base}}",
+    "accent": "{{.C.primary}}",
+    "border": "{{.C.border}}"
+  }
+}

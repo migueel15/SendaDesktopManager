@@ -48,7 +48,7 @@ func TestDeriveGivesSixteenDistinctColors(t *testing.T) {
 }
 
 func TestRenderBuiltinTemplates(t *testing.T) {
-	want := []string{"kitty/zenda.conf", "gtk-3.0/gtk.css", "gtk-4.0/gtk.css", "qt/zenda.conf", "hyprland/colors.conf", "nvim/colors/zenda.lua", "nvim/lua/lualine/themes/zenda.lua", "kde/zenda.colors", "t3code/zenda.json"}
+	want := []string{"kitty/zenda.conf", "gtk-3.0/gtk.css", "gtk-4.0/gtk.css", "qt/zenda.conf", "hyprland/colors.conf", "nvim/colors/zenda.lua", "nvim/lua/lualine/themes/zenda.lua", "kde/zenda.colors", "t3code/zenda.json", "herdr/zenda.json"}
 	for _, value := range builtinThemes(t) {
 		rendered, err := Render(Derive(value.Name, value.Colors), "")
 		if err != nil {
@@ -59,7 +59,7 @@ func TestRenderBuiltinTemplates(t *testing.T) {
 			if content == "" || strings.Contains(content, "{{") || strings.Contains(content, "<no value>") {
 				t.Fatalf("%s %s:\n%s", value.Name, path, content)
 			}
-			if path != "t3code/zenda.json" && !strings.Contains(content, value.Name) {
+			if !strings.HasSuffix(path, ".json") && !strings.Contains(content, value.Name) {
 				t.Fatalf("%s %s: missing theme name", value.Name, path)
 			}
 		}
@@ -70,6 +70,14 @@ func TestRenderBuiltinTemplates(t *testing.T) {
 		}
 		if err := json.Unmarshal(rendered[filepath.FromSlash("t3code/zenda.json")], &t3); err != nil || t3.Name != "Zenda" || t3.Appearance != "dark" || t3.Canvas != value.Colors["background"] || t3.Accent != value.Colors["primary"] || t3.Colors["error"] != value.Colors["error"] {
 			t.Fatalf("%s: invalid T3 theme: %+v, %v", value.Name, t3, err)
+		}
+		var herdr struct {
+			Background, Foreground, Selection, Cursor string
+			ANSI                                      []string
+			Colors                                    map[string]string
+		}
+		if err := json.Unmarshal(rendered[filepath.FromSlash("herdr/zenda.json")], &herdr); err != nil || len(herdr.ANSI) != 16 || herdr.Background != value.Colors["surface"] || herdr.Colors["accent"] != value.Colors["primary"] {
+			t.Fatalf("%s: invalid herdr theme: %+v, %v", value.Name, herdr, err)
 		}
 		for _, line := range strings.Split(qt, "\n") {
 			if strings.Contains(line, "_colors=") && strings.Count(line, "#ff") != 21 {
@@ -98,7 +106,7 @@ func TestExportUserTemplatesOverrideAndExtend(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(written) != 10 {
+	if len(written) != 11 {
 		t.Fatal(written)
 	}
 	kitty, _ := os.ReadFile(filepath.Join(dirs.Output, "kitty", "zenda.conf"))

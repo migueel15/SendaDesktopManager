@@ -33,8 +33,21 @@ Se escriben en `$XDG_CONFIG_HOME/zenda/generated/` (por defecto `~/.config/zenda
 | KDE (Dolphin…) | `kde/zenda.colors` | Enlace en `~/.local/share/color-schemes/Zenda.colors` y esquema **Zenda** (ver Qt) | Al abrir de nuevo la aplicación |
 | Neovim | `nvim/colors/zenda.lua` y `nvim/lua/lualine/themes/zenda.lua` | Ver más abajo | Automática en las instancias que usan `zenda` |
 | T3 Code | `t3code/zenda.json` | Ver más abajo | Automática en clientes compatibles que usen el tema publicado |
+| herdr (app de escritorio) | `herdr/zenda.json` | Ver más abajo | Automática con el tema `zenda` elegido |
 
 Hyprland define además una variable `$zenda_<color>` por cada color del tema, que puedes usar en tu propia configuración, y ajusta los bordes de ventanas y grupos.
+
+### herdr
+
+herdr recarga en vivo los archivos de `~/.config/herdr-app/themes/`. Enlaza ese directorio como salida de Zenda, igual que con T3 Code. Si `generated/herdr` ya existe como directorio, revisa su contenido y muévelo antes; no lo sobrescribas.
+
+```sh
+mkdir -p ~/.config/herdr-app/themes ~/.config/zenda/generated
+ln -s ~/.config/herdr-app/themes ~/.config/zenda/generated/herdr
+zenda theme export --no-reload
+```
+
+Después elige el tema **zenda** en el selector de temas de herdr. El tema define los colores de las terminales y, con `colors`, el lienzo, la barra lateral, el acento y los bordes de la interfaz.
 
 ### T3 Code
 
