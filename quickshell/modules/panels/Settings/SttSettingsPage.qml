@@ -185,21 +185,6 @@ Flickable {
                     Layout.fillWidth: true
                     spacing: Theme.spacing.md
 
-                    Rectangle {
-                        Layout.alignment: Qt.AlignTop
-                        implicitWidth: Theme.scaled(36)
-                        implicitHeight: implicitWidth
-                        radius: Theme.rounding.full
-                        color: modelCard.modelData.active ? Theme.colors.selection : Theme.colors.surfaceVariant
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰍬"
-                            color: modelCard.modelData.active ? Theme.colors.primary : Theme.colors.overlay
-                            font.family: Theme.font.icon.family
-                            font.pixelSize: Theme.scaled(17)
-                        }
-                    }
-
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: Theme.spacing.sm
@@ -213,17 +198,6 @@ Flickable {
                                 elide: Text.ElideRight
                                 color: Theme.colors.text
                                 font: Theme.font.heading
-                            }
-                            ModelChip {
-                                visible: modelCard.modelData.active
-                                icon: "󰄬"
-                                label: "Activo"
-                                tint: Theme.colors.success
-                            }
-                            ModelChip {
-                                visible: modelCard.modelData.installed && !modelCard.modelData.active
-                                icon: "󰗠"
-                                label: "Instalado"
                             }
                         }
 
@@ -282,8 +256,19 @@ Flickable {
                     }
 
                     RowLayout {
-                        Layout.alignment: Qt.AlignTop
-                        spacing: Theme.spacing.xs
+                        Layout.alignment: Qt.AlignVCenter
+                        spacing: Theme.spacing.sm
+                        ModelChip {
+                            visible: modelCard.modelData.active
+                            icon: "󰄬"
+                            label: "Activo"
+                            tint: Theme.colors.success
+                        }
+                        ModelChip {
+                            visible: modelCard.modelData.installed && !modelCard.modelData.active
+                            icon: "󰗠"
+                            label: "Instalado"
+                        }
                         ZendaButton {
                             visible: !modelCard.modelData.installed && !modelCard.installing
                             label: "Instalar"
