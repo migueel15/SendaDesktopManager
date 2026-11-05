@@ -278,6 +278,8 @@ Item {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: Theme.spacing.lg
+                // The corner radius already leaves room under the last group.
+                anchors.bottomMargin: Theme.spacing.sm
                 spacing: 10
 
                 Text {
@@ -368,10 +370,29 @@ Item {
                         source: Qt.resolvedUrl("UpdateSettingsPage.qml")
                     }
                 }
+            }
+
+            // Feedback floats over the page bottom, so the page can use the
+            // whole card height and is never pushed when a notice appears.
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Theme.spacing.md
+                width: Math.min(feedback.implicitWidth + Theme.spacing.xl * 2, parent.width - Theme.spacing.xl * 2)
+                height: feedback.implicitHeight + Theme.spacing.sm * 2
+                radius: Theme.rounding.full
+                color: Theme.colors.surfaceRaised
+                border.width: 1
+                border.color: Theme.colors.surfaceRaisedBorder
+                visible: feedback.message !== ""
+
                 ZendaStatus {
                     id: feedback
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Theme.scaled(30)
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.spacing.xl
+                    anchors.rightMargin: Theme.spacing.xl
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
         }
