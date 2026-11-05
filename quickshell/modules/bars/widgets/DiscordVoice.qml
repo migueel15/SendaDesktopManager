@@ -403,9 +403,8 @@ Rectangle {
                 return root.itemXInWindow(participantAvatars, window.contentItem)
                     + participantAvatars.width / 2 - participantsExtension.width / 2;
             }
-            anchor.rect.y: root.QsWindow.window
-                ? root.QsWindow.window.contentItem.height
-                : 0
+            // The bar window reaches below the bar; open right under the bar itself.
+            anchor.rect.y: Theme.barSize
             anchor.rect.width: 1
             anchor.rect.height: 1
 

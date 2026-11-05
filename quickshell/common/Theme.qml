@@ -193,6 +193,11 @@ QtObject {
 	// Width of the frame on the left, right, and bottom edges of each screen.
 	property int frameSize: 6
 	property int barBorderRadius: Theme.rounding.normal
+	// How far the frame shadow falls into the desktop.
+	readonly property int frameShadowSize: 24
+	// Band inside the frame that the bar and frame windows cover beyond their
+	// reserved space, holding the edge corners and the shadow.
+	readonly property int frameShadowReach: Math.max(frameShadowSize, barBorderRadius)
 
 	component Workspaces: QtObject {
 		property string icon: ""
