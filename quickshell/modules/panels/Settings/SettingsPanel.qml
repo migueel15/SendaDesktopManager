@@ -252,6 +252,17 @@ Item {
                     spacing: Theme.spacing.xs
                     boundsBehavior: Flickable.StopAtBounds
                     model: root.sections
+                    currentIndex: root.currentSection
+                    // One pill slides to the chosen section, like ZendaSegments.
+                    highlightFollowsCurrentItem: false
+                    highlight: Rectangle {
+                        width: ListView.view.width
+                        height: ListView.view.currentItem?.height ?? 0
+                        y: ListView.view.currentItem?.y ?? 0
+                        radius: Theme.rounding.full
+                        color: Theme.colors.selection
+                        Behavior on y { SpringAnimation { spring: Theme.motion.spring; damping: Theme.motion.damping } }
+                    }
 
                     delegate: ZendaListItem {
                         id: sectionEntry
@@ -263,6 +274,7 @@ Item {
                         leadingIcon: modelData.icon
                         text: modelData.label
                         trailingIcon: ""
+                        showFill: false
                         selected: root.currentSection === index
                         onClicked: root.currentSection = index
                     }
