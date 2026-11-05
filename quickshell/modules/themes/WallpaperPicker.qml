@@ -358,11 +358,13 @@ PanelWindow {
                                 font.pixelSize: Theme.scaled(12)
                             }
                         }
-                        // Delete badge, mirrored on the left; a second click confirms.
+                        // Delete badge, just left of the check badge; a second click confirms.
                         Rectangle {
                             id: deleteBadge
                             readonly property bool confirming: root.confirmDelete === card.filePath
-                            anchors { top: frame.top; left: frame.left; margins: Theme.spacing.md }
+                            // Grows to the left when it asks for confirmation.
+                            anchors { top: frame.top; right: frame.right; topMargin: Theme.spacing.md
+                                rightMargin: Theme.spacing.md + Theme.scaled(26) + Theme.spacing.sm }
                             z: 1
                             width: confirming ? deleteRow.implicitWidth + 2 * Theme.spacing.sm : Theme.scaled(26)
                             height: Theme.scaled(26); radius: height / 2
