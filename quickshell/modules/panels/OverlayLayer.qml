@@ -102,7 +102,6 @@ PanelWindow {
                         screenName: overlayLayer.screenName
                         targetX: parent.width - width
                         topRightCorner: "square"
-                        bottomLeftCorner: "square"
                         bottomRightCorner: "wall"
                     }
                 }

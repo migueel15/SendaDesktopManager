@@ -38,6 +38,8 @@ Item {
 		|| ["bar", "round"].indexOf(bottomLeftCorner) !== -1 ? cornerRadius : 0
 	readonly property real rightSpace: ["bar", "round"].indexOf(topRightCorner) !== -1
 		|| ["bar", "round"].indexOf(bottomRightCorner) !== -1 ? cornerRadius : 0
+	// Height a wall curve takes below the body; parents add it to the height.
+	readonly property real bottomSpace: bottomRightCorner === "wall" ? cornerRadius : 0
 	readonly property bool bottomRightIsWall: bottomRightCorner === "wall"
 	readonly property real leftEdge: leftSpace > 0 ? curveWidth : 0
 	readonly property real rightEdge: width - (rightSpace > 0 ? curveWidth : 0)

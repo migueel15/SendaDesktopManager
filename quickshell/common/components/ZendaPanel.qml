@@ -126,7 +126,7 @@ Item {
             bottomRightCorner: root.bottomRightCorner
             attachedToBar: !root.barCovered
             expanded: root.open
-            expandedHeight: (root.targetHeight ?? 0) + 2 * root.padding
+            expandedHeight: (root.targetHeight ?? 0) + 2 * root.padding + extension.bottomSpace
             autoHideOnPointerExit: false
             resizeDuration: root.resizeDuration
 
