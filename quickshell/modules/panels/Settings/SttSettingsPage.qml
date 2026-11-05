@@ -195,6 +195,19 @@ Flickable {
                         font.pixelSize: Theme.scaled(11)
                         onLinkActivated: link => AppRunner.open(link)
                     }
+                    Text {
+                        Layout.fillWidth: true
+                        visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
+                        text: ZendaSttSettings.cancelRequested ? "Cancelando…"
+                            : ZendaSttSettings.installPhase === "extract"
+                                ? `Paso 2 de 2 · Descomprimiendo e instalando · ${Math.round(ZendaSttSettings.progress * 100)} %`
+                            : ZendaSttSettings.installPhase === "download"
+                                ? `Paso 1 de 2 · Descargando · ${Math.round(ZendaSttSettings.progress * 100)} %`
+                            : "Preparando la descarga…"
+                        color: Theme.colors.overlay
+                        font.family: Theme.font.overlay.family
+                        font.pixelSize: Theme.scaled(11)
+                    }
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 5

@@ -62,7 +62,7 @@ func TestInstallCancellationCleansUp(t *testing.T) {
 	store := &Store{Dir: dir, Client: server.Client(), Catalog: []Entry{{ID: "tiny", Archive: "arch", URL: server.URL, SHA256: hex.EncodeToString(sum[:]), SizeBytes: int64(len(data))}}}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err = store.Install(ctx, "tiny", func(int64, int64) { cancel() })
+	err = store.Install(ctx, "tiny", func(string, int64, int64) { cancel() })
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("Install = %v", err)
 	}

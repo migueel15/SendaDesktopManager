@@ -15,6 +15,8 @@ Singleton {
     property var models: []
     property string installingId: ""
     property real progress: 0
+    // download, extract, or empty before the first event.
+    property string installPhase: ""
     property string notice: ""
     property bool noticeIsError: false
 
@@ -103,6 +105,7 @@ Singleton {
         }
         root.installingId = id;
         root.progress = 0;
+        root.installPhase = "";
     }
 
     function cancelInstall() {
@@ -177,6 +180,7 @@ Singleton {
                 try {
                     const event = JSON.parse(line);
                     if (event.event === "progress" && event.total > 0) {
+                        root.installPhase = event.phase || "download";
                         root.progress = Math.max(0, Math.min(1, event.done / event.total));
                     }
                 } catch (error) {
@@ -203,6 +207,7 @@ Singleton {
             root.operation = "";
             root.installingId = "";
             root.progress = 0;
+            root.installPhase = "";
             root.cancelRequested = false;
             root.refresh();
         }

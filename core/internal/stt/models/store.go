@@ -64,7 +64,15 @@ func (s *Store) Remove(id string) error {
 	return os.RemoveAll(s.ModelDir(id))
 }
 
-func (s *Store) Install(ctx context.Context, id string, progress func(int64, int64)) error {
+// Install phases reported to the progress callback.
+const (
+	PhaseDownload = "download"
+	PhaseExtract  = "extract"
+)
+
+// Install downloads, verifies and extracts a model. progress receives the phase
+// and the bytes processed: downloaded bytes, then compressed bytes extracted.
+func (s *Store) Install(ctx context.Context, id string, progress func(phase string, done, total int64)) error {
 	e, ok := s.entry(id)
 	if !ok {
 		return ErrUnknownModel
@@ -118,7 +126,7 @@ func (s *Store) Install(ctx context.Context, id string, progress func(int64, int
 			}
 			done += int64(n)
 			if progress != nil {
-				progress(done, total)
+				progress(PhaseDownload, done, total)
 			}
 		}
 		if err := ctx.Err(); err != nil {
@@ -145,7 +153,12 @@ func (s *Store) Install(ctx context.Context, id string, progress func(int64, int
 		return err
 	}
 	defer os.RemoveAll(staging)
-	if err := extract(ctx, archive, staging, e.Archive); err != nil {
+	var source io.Reader = archive
+	if progress != nil {
+		progress(PhaseExtract, 0, done)
+		source = &countingReader{reader: archive, total: done, report: progress}
+	}
+	if err := extract(ctx, source, staging, e.Archive); err != nil {
 		return err
 	}
 	if err := verifyFiles(staging, e.Files); err != nil {
@@ -256,4 +269,26 @@ func (r *contextReader) Read(p []byte) (int, error) {
 		return 0, err
 	}
 	return r.reader.Read(p)
+}
+
+// countingReader reports how much of the compressed archive extraction has read.
+type countingReader struct {
+	reader   io.Reader
+	done     int64
+	reported int64
+	total    int64
+	report   func(string, int64, int64)
+}
+
+func (r *countingReader) Read(p []byte) (int, error) {
+	n, err := r.reader.Read(p)
+	if n > 0 {
+		r.done += int64(n)
+		// Report every 1 MiB so the shell is not flooded with small reads.
+		if r.done-r.reported >= 1<<20 || r.done == r.total {
+			r.reported = r.done
+			r.report(PhaseExtract, r.done, r.total)
+		}
+	}
+	return n, err
 }
