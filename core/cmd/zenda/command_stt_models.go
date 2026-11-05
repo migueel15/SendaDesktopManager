@@ -57,8 +57,8 @@ func sttModelsCmd() *cobra.Command {
 		cmd.SilenceUsage = true
 		store := models.NewStore(stt.ModelsDir())
 		enc := json.NewEncoder(cmd.OutOrStdout())
-		err := store.Install(cmd.Context(), args[0], func(done, total int64) {
-			_ = enc.Encode(map[string]any{"event": "progress", "done": done, "total": total})
+		err := store.Install(cmd.Context(), args[0], func(phase string, done, total int64) {
+			_ = enc.Encode(map[string]any{"event": "progress", "phase": phase, "done": done, "total": total})
 		})
 		if err != nil {
 			return err

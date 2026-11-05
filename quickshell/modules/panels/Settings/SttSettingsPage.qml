@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 import qs.common
@@ -14,6 +15,8 @@ Flickable {
     contentHeight: column.implicitHeight
     clip: true
 
+    property bool showAllModels: false
+    readonly property int otherModelCount: ZendaSttSettings.models.filter(model => !model.active).length
 
     function formatSize(bytes) {
         if (!bytes || bytes <= 0) return "Tamaño desconocido";
@@ -41,81 +44,6 @@ Flickable {
                 }
             }
         }
-        Text { text: "Modelos"; color: Theme.colors.primary; font: Theme.font.heading }
-        Repeater {
-            model: ZendaSttSettings.models
-
-            delegate: ZendaGroup {
-                id: modelCard
-                required property var modelData
-                Layout.fillWidth: true
-
-                ColumnLayout {
-                    id: modelColumn
-                    Layout.fillWidth: true
-                    spacing: Theme.spacing.sm
-
-                    ZendaRow {
-                        separator: false
-                        label: modelCard.modelData.name
-                        description: `${(modelCard.modelData.languages || []).join(", ")} · ${modelCard.modelData.streaming ? "Streaming · texto en vivo" : "Sin streaming · texto al terminar"} · ${root.formatSize(modelCard.modelData.sizeBytes)} · ${modelCard.modelData.installed ? "Instalado" : "No instalado"}${modelCard.modelData.active ? " · Activo" : ""}`
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        text: modelCard.modelData.licenseUrl ? `<a href="${modelCard.modelData.licenseUrl}" style="color:${Theme.colors.primary}">${modelCard.modelData.license}</a>` : modelCard.modelData.license
-                        textFormat: Text.RichText
-                        color: Theme.colors.overlay
-                        font.family: Theme.font.overlay.family
-                        font.pixelSize: Theme.scaled(11)
-                        onLinkActivated: link => AppRunner.open(link)
-                    }
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 5
-                        visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
-                        radius: Theme.rounding.full
-                        color: Theme.colors.surfaceVariant
-                        Rectangle {
-                            width: parent.width * ZendaSttSettings.progress
-                            height: parent.height
-                            radius: parent.radius
-                            color: Theme.colors.accent
-                        }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacing.sm
-                        Item { Layout.fillWidth: true }
-                        ZendaButton {
-                            visible: !modelCard.modelData.installed
-                            label: "Instalar"
-                            primary: true
-                            enabled: !ZendaSttSettings.busy
-                            onClicked: ZendaSttSettings.installModel(modelCard.modelData.id)
-                        }
-                        ZendaButton {
-                            visible: modelCard.modelData.installed && !modelCard.modelData.active
-                            label: "Activar"
-                            enabled: !ZendaSttSettings.busy
-                            onClicked: ZendaSttSettings.useModel(modelCard.modelData.id)
-                        }
-                        ZendaButton {
-                            visible: modelCard.modelData.installed
-                            label: "Borrar"
-                            enabled: !ZendaSttSettings.busy
-                            onClicked: ZendaSttSettings.removeModel(modelCard.modelData.id)
-                        }
-                        ZendaButton {
-                            visible: ZendaSttSettings.operation === "installModel" && ZendaSttSettings.installingId === modelCard.modelData.id
-                            label: "Cancelar"
-                            enabled: !ZendaSttSettings.cancelRequested
-                            onClicked: ZendaSttSettings.cancelInstall()
-                        }
-                    }
-                }
-            }
-        }
-
         ZendaGroup {
             ZendaRow {
                 separator: false
@@ -222,5 +150,180 @@ Flickable {
                 }
             }
         }
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: Theme.spacing.sm
+            Text { text: "Modelos"; color: Theme.colors.primary; font: Theme.font.heading; Layout.fillWidth: true }
+            ZendaButton {
+                visible: root.otherModelCount > 0
+                label: root.showAllModels ? "Ocultar otros modelos" : `Ver otros modelos (${root.otherModelCount})`
+                onClicked: root.showAllModels = !root.showAllModels
+            }
+        }
+        Text {
+            visible: !root.showAllModels && root.otherModelCount === ZendaSttSettings.models.length && ZendaSttSettings.models.length > 0
+            text: "Ningún modelo activo. Abre la lista para instalar uno."
+            color: Theme.colors.overlay
+            font.family: Theme.font.overlay.family
+        }
+        Repeater {
+            model: ZendaSttSettings.models
+
+            delegate: ZendaGroup {
+                id: modelCard
+                required property var modelData
+                readonly property bool installing: ZendaSttSettings.operation === "installModel"
+                    && ZendaSttSettings.installingId === modelCard.modelData.id
+                readonly property var languages: modelCard.modelData.languages || []
+                Layout.fillWidth: true
+                // The active model, or one being installed, stays visible when the list is collapsed.
+                visible: root.showAllModels || modelCard.modelData.active || modelCard.installing
+                border.width: modelCard.modelData.active ? 1 : 0
+                border.color: Theme.colors.accent
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.spacing.md
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacing.sm
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacing.sm
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelCard.modelData.name
+                                elide: Text.ElideRight
+                                color: Theme.colors.text
+                                font: Theme.font.heading
+                            }
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacing.sm
+                            ModelChip {
+                                icon: "󰗊"
+                                label: modelCard.languages.length > 3
+                                    ? `${modelCard.languages.slice(0, 3).join(" · ")} +${modelCard.languages.length - 3}`
+                                    : modelCard.languages.join(" · ")
+                                tip: modelCard.languages.join(", ")
+                            }
+                            ModelChip {
+                                icon: modelCard.modelData.streaming ? "󱐋" : "󰔟"
+                                label: modelCard.modelData.streaming ? "En vivo" : "Al terminar"
+                                tip: modelCard.modelData.streaming ? "Muestra el texto mientras hablas" : "Muestra el texto al terminar de hablar"
+                            }
+                            ModelChip {
+                                icon: "󰋊"
+                                label: root.formatSize(modelCard.modelData.sizeBytes)
+                            }
+                            ModelChip {
+                                visible: !!modelCard.modelData.license
+                                icon: "󰗑"
+                                label: modelCard.modelData.license || ""
+                                link: modelCard.modelData.licenseUrl || ""
+                            }
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            visible: modelCard.installing
+                            text: ZendaSttSettings.cancelRequested ? "Cancelando…"
+                                : ZendaSttSettings.installPhase === "extract"
+                                    ? `Paso 2 de 2 · Descomprimiendo e instalando · ${Math.round(ZendaSttSettings.progress * 100)} %`
+                                : ZendaSttSettings.installPhase === "download"
+                                    ? `Paso 1 de 2 · Descargando · ${Math.round(ZendaSttSettings.progress * 100)} %`
+                                : "Preparando la descarga…"
+                            color: Theme.colors.overlay
+                            font: Theme.font.caption
+                        }
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 5
+                            visible: modelCard.installing
+                            radius: Theme.rounding.full
+                            color: Theme.colors.surfaceVariant
+                            Rectangle {
+                                width: parent.width * ZendaSttSettings.progress
+                                height: parent.height
+                                radius: parent.radius
+                                color: Theme.colors.accent
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.alignment: Qt.AlignVCenter
+                        spacing: Theme.spacing.sm
+                        ModelChip {
+                            visible: modelCard.modelData.active
+                            icon: "󰄬"
+                            label: "Activo"
+                            tint: Theme.colors.success
+                        }
+                        ModelChip {
+                            visible: modelCard.modelData.installed && !modelCard.modelData.active
+                            icon: "󰗠"
+                            label: "Instalado"
+                        }
+                        ZendaButton {
+                            visible: !modelCard.modelData.installed && !modelCard.installing
+                            label: "Instalar"
+                            primary: true
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.installModel(modelCard.modelData.id)
+                        }
+                        ZendaButton {
+                            visible: modelCard.modelData.installed && !modelCard.modelData.active
+                            label: "Usar"
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.useModel(modelCard.modelData.id)
+                        }
+                        ZendaButton {
+                            visible: modelCard.modelData.installed
+                            label: "Borrar"
+                            enabled: !ZendaSttSettings.busy
+                            onClicked: ZendaSttSettings.removeModel(modelCard.modelData.id)
+                        }
+                        ZendaIconButton {
+                            visible: modelCard.installing
+                            icon: "󰅖"
+                            accessibleLabel: "Cancelar instalación"
+                            enabled: !ZendaSttSettings.cancelRequested
+                            onClicked: ZendaSttSettings.cancelInstall()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Small pill with an icon and a short value; opens link when given.
+    component ModelChip: Rectangle {
+        id: chip
+        property string icon: ""
+        property string label: ""
+        property string tip: ""
+        property string link: ""
+        property color tint: Theme.colors.overlay
+        implicitWidth: chipRow.implicitWidth + 2 * Theme.spacing.sm
+        implicitHeight: chipRow.implicitHeight + Theme.spacing.xs * 2
+        radius: Theme.rounding.full
+        color: chipHover.hovered && chip.link ? Theme.colors.surfaceVariant : Qt.alpha(chip.tint, 0.12)
+        Accessible.name: chip.tip || chip.label
+        Row {
+            id: chipRow
+            anchors.centerIn: parent
+            spacing: Theme.spacing.xs
+            Text { text: chip.icon; color: chip.tint; font: Theme.font.icon; anchors.verticalCenter: parent.verticalCenter }
+            Text { text: chip.label; color: Theme.colors.textMuted; font: Theme.font.caption; anchors.verticalCenter: parent.verticalCenter }
+        }
+        HoverHandler { id: chipHover; cursorShape: chip.link ? Qt.PointingHandCursor : Qt.ArrowCursor }
+        TapHandler { enabled: !!chip.link; onTapped: AppRunner.open(chip.link) }
+        ToolTip.visible: !!chip.tip && chipHover.hovered
+        ToolTip.text: chip.tip
     }
 }

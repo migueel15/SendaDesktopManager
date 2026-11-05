@@ -15,6 +15,8 @@ Singleton {
     property var models: []
     property string installingId: ""
     property real progress: 0
+    // download, extract, or empty before the first event.
+    property string installPhase: ""
     property string notice: ""
     property bool noticeIsError: false
 
@@ -28,6 +30,13 @@ Singleton {
         || modelsProcess.running
 
     readonly property bool preloadEnabled: ZendaStt.preloadEnabled
+    readonly property string preloadState: ZendaStt.preloadState
+    readonly property string preloadError: ZendaStt.preloadError
+    readonly property bool audioDuckingEnabled: String(ZendaSettings.values.ZENDA_STT_AUDIO_DUCKING || "").trim() !== "false"
+    readonly property int audioVolume: {
+        const value = Number(String(ZendaSettings.values.ZENDA_STT_AUDIO_VOLUME || "").trim());
+        return Number.isInteger(value) && value >= 0 && value <= 100 && String(ZendaSettings.values.ZENDA_STT_AUDIO_VOLUME || "").trim() !== "" ? value : 10;
+    }
 
     function setAudioDucking(enabled) {
         ZendaSettings.save({ ZENDA_STT_AUDIO_DUCKING: enabled ? "true" : "false" }, "Atenuación de volumen guardada");
@@ -96,6 +105,7 @@ Singleton {
         }
         root.installingId = id;
         root.progress = 0;
+        root.installPhase = "";
     }
 
     function cancelInstall() {
@@ -170,6 +180,7 @@ Singleton {
                 try {
                     const event = JSON.parse(line);
                     if (event.event === "progress" && event.total > 0) {
+                        root.installPhase = event.phase || "download";
                         root.progress = Math.max(0, Math.min(1, event.done / event.total));
                     }
                 } catch (error) {
@@ -196,6 +207,7 @@ Singleton {
             root.operation = "";
             root.installingId = "";
             root.progress = 0;
+            root.installPhase = "";
             root.cancelRequested = false;
             root.refresh();
         }

@@ -52,6 +52,15 @@ echo "Compilando $bin..."
 mkdir -p "$dev_home"
 ln -sfn "$repo_dir/quickshell" "$dev_home/quickshell"
 ln -sfn "$core_dir/scripts" "$dev_home/scripts"
+# Share the release STT runtime and models: the Hyprland shortcut runs the
+# installed binary, which only sees the release data directory.
+release_stt="${XDG_DATA_HOME:-$HOME/.local/share}/zenda/stt"
+mkdir -p "$release_stt"
+if [ -d "$dev_home/stt" ] && [ ! -L "$dev_home/stt" ]; then
+  echo "Aviso: $dev_home/stt es una carpeta propia; bórrala para compartir los modelos de la release." >&2
+else
+  ln -sfn "$release_stt" "$dev_home/stt"
+fi
 
 # 3. Restart the shell with the development binary.
 stop_shell

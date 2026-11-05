@@ -49,7 +49,10 @@ func TestAC6InstallDownloadsVerifiesAndWritesManifest(t *testing.T) {
 	store, _ := fixture(t, "")
 	var last, total, calls int64
 	increasing := true
-	err := store.Install(context.Background(), "tiny", func(done, size int64) {
+	err := store.Install(context.Background(), "tiny", func(phase string, done, size int64) {
+		if phase != PhaseDownload {
+			return
+		}
 		if done < last {
 			increasing = false
 		}
@@ -107,7 +110,7 @@ func TestAC6ListMarksActive(t *testing.T) {
 
 func TestAC6ChecksumMismatchInstallsNothing(t *testing.T) {
 	store, _ := fixture(t, strings.Repeat("0", 64))
-	err := store.Install(context.Background(), "tiny", func(int64, int64) {})
+	err := store.Install(context.Background(), "tiny", func(string, int64, int64) {})
 	if !errors.Is(err, ErrChecksum) {
 		t.Fatalf("Install = %v, want ErrChecksum", err)
 	}
@@ -137,7 +140,7 @@ func TestAC6UnknownModel(t *testing.T) {
 
 func TestAC6RemoveDeletesDirectory(t *testing.T) {
 	store, _ := fixture(t, "")
-	if err := store.Install(context.Background(), "tiny", func(int64, int64) {}); err != nil {
+	if err := store.Install(context.Background(), "tiny", func(string, int64, int64) {}); err != nil {
 		t.Fatalf("Install = %v", err)
 	}
 	dir := store.ModelDir("tiny")
