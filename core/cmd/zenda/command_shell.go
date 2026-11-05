@@ -255,5 +255,10 @@ func quickshellEnv() []string {
 	} else {
 		log.Println(dorlabAPIKeyEnv, "not set in the environment or the secret store")
 	}
+
+	if egl := nvidiaOnlyEGLEnv(); egl != nil {
+		log.Println("all outputs on NVIDIA; using only its EGL vendor")
+		env = append(env, egl...)
+	}
 	return env
 }
