@@ -1,6 +1,6 @@
 # Energía
 
-La sección **Energía** de Ajustes reúne el aviso de batería baja y el tiempo de inactividad. Sin batería, el aviso no se muestra ni se comprueba.
+La sección **Energía y bloqueo** de Ajustes reúne el aviso de batería baja, el tiempo de inactividad y el desenfoque de la pantalla de bloqueo. Sin batería, el aviso no se muestra ni se comprueba.
 
 ## Aviso de batería baja
 

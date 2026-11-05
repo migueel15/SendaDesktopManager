@@ -19,7 +19,7 @@ El archivo usa `inhibit_sleep = 3`, `lock_cmd`, `before_sleep_cmd` y `after_slee
 
 ## Cambiar los atajos
 
-En Ajustes → Sistema, cada atajo (bloqueo, dictado y capturas) se cambia haciendo clic en el campo (o con Enter o Espacio si tiene el foco) y pulsando después la combinación. Mientras graba, Zenda pone Hyprland en el submap `zenda_capture`, que solo tiene Escape, para que los atajos existentes no se ejecuten; el atajo de dictado es universal y sí se ejecuta. La grabación termina con la combinación, con Escape, con «Cancelar», al perder el foco o a los 10 segundos, y siempre vuelve al mapa normal. Los modificadores admitidos son Super, Ctrl, Alt y Shift; las teclas, letras, números, F1–F24, Ñ, Impr Pant y teclas de navegación.
+En Ajustes → Atajos, cada atajo (bloqueo, dictado y capturas) se cambia haciendo clic en el campo (o con Enter o Espacio si tiene el foco) y pulsando después la combinación. Mientras graba, Zenda pone Hyprland en el submap `zenda_capture`, que solo tiene Escape, para que los atajos existentes no se ejecuten; el atajo de dictado es universal y sí se ejecuta. La grabación termina con la combinación, con Escape, con «Cancelar», al perder el foco o a los 10 segundos, y siempre vuelve al mapa normal. Los modificadores admitidos son Super, Ctrl, Alt y Shift; las teclas, letras, números, F1–F24, Ñ, Impr Pant y teclas de navegación.
 
 Antes de guardar, Zenda comprueba con `zenda hyprland check --for lock|dictation|screenshot --shortcut <combo>` si otro atajo de Hyprland usa la combinación. Si es otro atajo de Zenda, no se guarda; si es uno tuyo, pide confirmación. «Restablecer» vuelve al atajo por defecto. `zenda hyprland capture start|stop` entra y sale del submap.
 
@@ -28,5 +28,5 @@ Antes de guardar, Zenda comprueba con `zenda hyprland check --for lock|dictation
 El módulo `zenda/` también genera `Print` → `zenda screenshot`.
 `ZENDA_SCREENSHOT_SHORTCUT` se configura con
 `zenda hyprland set --screenshot-shortcut 'Print'` o con el grabador de
-**Ajustes → Sistema**. Los tres atajos de bloqueo, dictado y capturas deben ser
+**Ajustes → Atajos**. Los tres atajos de bloqueo, dictado y capturas deben ser
 distintos. Consulta [Capturas de pantalla](screenshots.md).

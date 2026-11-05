@@ -15,7 +15,8 @@ Item {
     // Scrolls the row into view inside its page and highlights it.
     function reveal() {
         let page = root.parent;
-        while (page && page.contentY === undefined) page = page.parent;
+        // Embedded pages do not scroll; the page around them does.
+        while (page && (page.contentY === undefined || page.interactive === false)) page = page.parent;
         if (page) {
             const y = root.mapToItem(page.contentItem, 0, 0).y;
             page.contentY = Math.max(0, Math.min(y - Theme.spacing.md, page.contentHeight - page.height));

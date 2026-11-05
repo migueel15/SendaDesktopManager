@@ -28,19 +28,6 @@ Flickable {
         width: root.width
         spacing: Theme.spacing.md
 
-        Text {
-            Layout.fillWidth: true
-            visible: !ZendaHyprlandSettings.busy && !ZendaHyprlandSettings.loaded
-            text: "No se han podido cargar los ajustes."
-            color: Theme.colors.overlay
-            font: Theme.font.caption
-            wrapMode: Text.WordWrap
-        }
-        ZendaButton {
-            visible: !ZendaHyprlandSettings.loaded && !ZendaHyprlandSettings.busy
-            label: "Reintentar"
-            onClicked: ZendaHyprlandSettings.refresh()
-        }
         ZendaGroup {
             ZendaRow {
                 separator: false
@@ -80,51 +67,6 @@ Flickable {
         ZendaGroup {
             ZendaRow {
                 separator: false
-                label: "Atajo de bloqueo"
-                ZendaShortcut {
-                    target: "lock"
-                    enabled: ZendaHyprlandSettings.loaded
-                    value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.lockShortcut : ""
-                    defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultLockShortcut : ""
-                }
-            }
-            ZendaRow {
-                label: "Atajo de dictado"
-                ZendaShortcut {
-                    target: "dictation"
-                    enabled: ZendaHyprlandSettings.loaded
-                    value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.dictationShortcut : ""
-                    defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultDictationShortcut : ""
-                }
-            }
-            ZendaRow {
-                label: "Atajo de captura"
-                ZendaShortcut {
-                    target: "screenshot"
-                    enabled: ZendaHyprlandSettings.loaded
-                    value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.screenshotShortcut : ""
-                    defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultScreenshotShortcut : ""
-                }
-            }
-            ZendaRow {
-                label: "Atajo del launcher"
-                ZendaShortcut {
-                    target: "launcher"
-                    enabled: ZendaHyprlandSettings.loaded
-                    value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.launcherShortcut : ""
-                    defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultLauncherShortcut : ""
-                }
-            }
-            ZendaRow {
-                label: "Atajo de emojis"
-                ZendaShortcut {
-                    target: "emoji"
-                    enabled: ZendaHyprlandSettings.loaded
-                    value: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.emojiShortcut : ""
-                    defaultValue: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.defaultEmojiShortcut : ""
-                }
-            }
-            ZendaRow {
                 label: "Carpeta de capturas"
                 modified: (ZendaSettings.values.ZENDA_SCREENSHOT_DIR || "") !== ""
                 onResetRequested: { screenshotDirField.text = ""; ZendaSettings.save({ ZENDA_SCREENSHOT_DIR: "" }, "Carpeta de capturas restablecida"); }
@@ -136,37 +78,6 @@ Flickable {
                     placeholder: screenshotDefaultDir.path
                     onCommitted: ZendaSettings.save({ ZENDA_SCREENSHOT_DIR: text.trim() }, "Carpeta de capturas guardada")
                 }
-            }
-            ZendaRow {
-                label: "Desenfocar pantalla de bloqueo"
-                modified: ZendaHyprlandSettings.loaded && !ZendaHyprlandSettings.values.blur
-                onResetRequested: ZendaHyprlandSettings.save("--blur", true)
-                ZendaSavedMark { flag: "--blur" }
-                ZendaSwitch {
-                    checkedValue: ZendaHyprlandSettings.loaded && ZendaHyprlandSettings.values.blur
-                    enabled: ZendaHyprlandSettings.loaded
-                    Accessible.name: "Desenfocar pantalla de bloqueo"
-                    onToggledValue: value => ZendaHyprlandSettings.save("--blur", value)
-                }
-            }
-        }
-        Text {
-            Layout.fillWidth: true
-            visible: ZendaHyprlandSettings.loaded
-            text: ZendaHyprlandSettings.loaded ? (ZendaHyprlandSettings.values.moduleActive ? "Módulo activo en Hyprland" : "Módulo no activo en Hyprland") : ""
-            color: ZendaHyprlandSettings.loaded && ZendaHyprlandSettings.values.moduleActive ? Theme.colors.overlay : Theme.colors.warning
-            font: Theme.font.caption
-            wrapMode: Text.WordWrap
-        }
-        Repeater {
-            model: ZendaHyprlandSettings.loaded ? ZendaHyprlandSettings.values.warnings : []
-            delegate: Text {
-                required property string modelData
-                Layout.fillWidth: true
-                text: modelData
-                color: Theme.colors.warning
-                font: Theme.font.caption
-                wrapMode: Text.WrapAnywhere
             }
         }
     }

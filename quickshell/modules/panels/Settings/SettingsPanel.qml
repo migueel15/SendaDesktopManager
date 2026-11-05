@@ -19,7 +19,7 @@ Item {
     readonly property var sections: ZendaSettings.sections
     property int currentSection: ZendaSettings.currentSection
     onCurrentSectionChanged: ZendaSettings.currentSection = currentSection
-    readonly property var pageLoaders: [page0, page1, page2, page3, page4, page5, page6, page7, page8, page9, page10, page11]
+    readonly property var pageLoaders: [page0, page1, page2, page3, page4, page5, page6, page7, page8, page9, page10]
     readonly property bool retainWhenHidden: pageLoaders.some(loader => loader.retained)
 
     component SettingsPageLoader: Loader {
@@ -31,17 +31,12 @@ Item {
         onLoaded: root.refreshSection(sectionIndex)
     }
 
-    Connections {
-        target: page5.item
-        function onOpenSystemRequested() { root.currentSection = root.sections.findIndex(section => section.label === "Sistema"); }
-    }
-
     function refreshSection(index) {
-        if (index === 5) ZendaSttSettings.refresh();
-        if (index === 5 || index === 9 || index === 10) ZendaHyprlandSettings.refresh();
-        if (index === 6) ZendaDisplaySettings.refresh();
-        if (index === 7) ZendaInputSettings.refresh();
-        if (index === 8) ZendaStartupSettings.refresh();
+        if (index === 3) ZendaSttSettings.refresh();
+        if (index === 6 || index === 8) ZendaHyprlandSettings.refresh();
+        if (index === 4) ZendaDisplaySettings.refresh();
+        if (index === 0 || index === 5) ZendaInputSettings.refresh();
+        if (index === 7) ZendaStartupSettings.refresh();
     }
 
     Connections {
@@ -319,56 +314,51 @@ Item {
                     SettingsPageLoader {
                         id: page3
                         sectionIndex: 3
-                        source: Qt.resolvedUrl("CalendarSettingsPage.qml")
+                        source: Qt.resolvedUrl("SttSettingsPage.qml")
                     }
 
                     SettingsPageLoader {
                         id: page4
                         sectionIndex: 4
-                        source: Qt.resolvedUrl("WeatherSettingsPage.qml")
+                        source: Qt.resolvedUrl("display-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page5
                         sectionIndex: 5
-                        source: Qt.resolvedUrl("SttSettingsPage.qml")
+                        source: Qt.resolvedUrl("input-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page6
                         sectionIndex: 6
-                        source: Qt.resolvedUrl("display-settings-page.qml")
+                        source: Qt.resolvedUrl("shortcuts-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page7
                         sectionIndex: 7
-                        source: Qt.resolvedUrl("input-settings-page.qml")
+                        source: Qt.resolvedUrl("startup-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page8
                         sectionIndex: 8
-                        source: Qt.resolvedUrl("startup-settings-page.qml")
+                        source: Qt.resolvedUrl("power-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page9
                         sectionIndex: 9
-                        source: Qt.resolvedUrl("power-settings-page.qml")
+                        source: Qt.resolvedUrl("system-settings-page.qml")
                     }
 
                     SettingsPageLoader {
                         id: page10
                         sectionIndex: 10
-                        source: Qt.resolvedUrl("system-settings-page.qml")
-                    }
-
-                    SettingsPageLoader {
-                        id: page11
-                        sectionIndex: 11
                         source: Qt.resolvedUrl("UpdateSettingsPage.qml")
                     }
+                }
                 }
             }
 

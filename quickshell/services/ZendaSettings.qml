@@ -27,17 +27,16 @@ Singleton {
     // Settings sections, in sidebar order. Adding one here also adds it to the
     // launcher; the settings panel needs its page in the same position.
     readonly property var sections: [
-        { label: "Apariencia", icon: "󰏘", keywords: "tema escala fuente appearance" },
-        { label: "Barra", icon: "󰍜", keywords: "bar" },
-        { label: "Widgets", icon: "󰕮", keywords: "spotify discord" },
-        { label: "Calendario", icon: "󰃭", keywords: "google calendar agenda" },
-        { label: "Tiempo", icon: "󰖐", keywords: "weather clima ubicacion" },
+        { label: "Apariencia", icon: "󰏘", keywords: "tema escala fuente cursor appearance" },
+        { label: "Barra", icon: "󰍜", keywords: "bar bandeja tray" },
+        { label: "Widgets", icon: "󰕮", keywords: "spotify discord calendario google calendar agenda tiempo weather clima ubicacion" },
         { label: "Dictado", icon: "󰍬", keywords: "stt voz voice" },
         { label: "Pantallas", icon: "󰍹", keywords: "displays monitores resolucion" },
-        { label: "Teclado y ratón", icon: "󰌌", keywords: "keyboard mouse raton input" },
+        { label: "Teclado y ratón", icon: "󰌌", keywords: "keyboard mouse raton touchpad input" },
+        { label: "Atajos", icon: "󰌓", keywords: "shortcuts teclas atajos keybinds" },
         { label: "Inicio", icon: "󰐥", keywords: "aplicaciones arranque startup autostart" },
-        { label: "Energía", icon: "󰂏", keywords: "power batería bateria inactividad" },
-        { label: "Sistema", icon: "󰒓", keywords: "system atajos portapapeles clipboard" },
+        { label: "Energía y bloqueo", icon: "󰂏", keywords: "power batería bateria inactividad bloqueo lock" },
+        { label: "Sistema", icon: "󰒓", keywords: "system portapapeles clipboard capturas" },
         { label: "Actualización", icon: "󰚰", keywords: "update actualizar" }
     ]
     // Section label the settings panel shows next; it clears it once applied.

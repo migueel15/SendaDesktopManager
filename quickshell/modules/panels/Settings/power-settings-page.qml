@@ -58,6 +58,18 @@ Flickable {
                     onCommitted: if (!ZendaHyprlandSettings.save("--idle-seconds", text.trim())) text = String(ZendaHyprlandSettings.values.idleSeconds)
                 }
             }
+            ZendaRow {
+                label: "Desenfocar pantalla de bloqueo"
+                modified: ZendaHyprlandSettings.loaded && !ZendaHyprlandSettings.values.blur
+                onResetRequested: ZendaHyprlandSettings.save("--blur", true)
+                ZendaSavedMark { flag: "--blur" }
+                ZendaSwitch {
+                    checkedValue: ZendaHyprlandSettings.loaded && ZendaHyprlandSettings.values.blur
+                    enabled: ZendaHyprlandSettings.loaded
+                    Accessible.name: "Desenfocar pantalla de bloqueo"
+                    onToggledValue: value => ZendaHyprlandSettings.save("--blur", value)
+                }
+            }
         }
     }
 }

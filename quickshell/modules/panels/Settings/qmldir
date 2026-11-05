@@ -14,3 +14,4 @@ InputSettingsPage 1.0 input-settings-page.qml
 StartupSettingsPage 1.0 startup-settings-page.qml
 DisplayConfirmDialog 1.0 display-confirm-dialog.qml
 BluetoothPairDialog 1.0 bluetooth-pair-dialog.qml
+ShortcutsSettingsPage 1.0 shortcuts-settings-page.qml
