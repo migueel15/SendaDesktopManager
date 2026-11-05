@@ -245,7 +245,6 @@ Item {
 
                 // Scrolls when the window is too short for every section.
                 ListView {
-                    id: sectionList
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     visible: !root.searching
@@ -253,17 +252,6 @@ Item {
                     spacing: Theme.spacing.xs
                     boundsBehavior: Flickable.StopAtBounds
                     model: root.sections
-                    currentIndex: root.currentSection
-                    // One pill slides to the chosen section, like ZendaSegments.
-                    highlightFollowsCurrentItem: false
-                    highlight: Rectangle {
-                        width: sectionList.width
-                        height: sectionList.currentItem?.height ?? 0
-                        y: sectionList.currentItem?.y ?? 0
-                        radius: Theme.rounding.full
-                        color: Theme.colors.selection
-                        Behavior on y { SpringAnimation { spring: Theme.motion.spring; damping: Theme.motion.damping } }
-                    }
 
                     delegate: ZendaListItem {
                         id: sectionEntry
@@ -275,7 +263,6 @@ Item {
                         leadingIcon: modelData.icon
                         text: modelData.label
                         trailingIcon: ""
-                        showFill: false
                         selected: root.currentSection === index
                         onClicked: root.currentSection = index
                     }

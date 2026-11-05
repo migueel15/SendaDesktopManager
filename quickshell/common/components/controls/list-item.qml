@@ -18,15 +18,13 @@ Rectangle {
     property string trailingIcon: selected ? "" : ""
     property bool selected: false
     property bool interactive: true
-    // False when the list draws its own moving selection pill.
-    property bool showFill: true
 
     signal clicked
 
     width: parent ? parent.width : 0
     implicitHeight: supportingText !== "" ? Theme.scaled(52) : Theme.scaled(40)
     radius: Theme.rounding.full
-    color: !showFill ? "transparent" : selected ? Theme.colors.selection : hover.hovered && interactive ? Theme.colors.surfaceRaised : "transparent"
+    color: selected ? Theme.colors.selection : hover.hovered && interactive ? Theme.colors.surfaceRaised : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.motion.fast } }
     scale: tap.pressed ? 0.98 : 1
     Behavior on scale { NumberAnimation { duration: Theme.motion.fast; easing.type: Easing.OutBack } }
