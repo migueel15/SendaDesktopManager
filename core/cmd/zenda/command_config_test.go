@@ -84,7 +84,7 @@ func TestConfigSTTDefaultsAndPersistence(t *testing.T) {
 		return result.Values
 	}
 	defaults := map[string]string{stt.KeyModel: stt.DefaultModelID, stt.KeyLanguage: "es",
-		stt.KeyPreload: "false", stt.KeyPasteMode: "paste", stt.KeyShortcut: stt.DefaultShortcut, stt.KeyTerminals: strings.Join(stt.DefaultTerminals, ",")}
+		stt.KeyPreload: "false", stt.KeyLiveText: "true", stt.KeyPasteMode: "paste", stt.KeyShortcut: stt.DefaultShortcut, stt.KeyTerminals: strings.Join(stt.DefaultTerminals, ",")}
 	for key, want := range defaults {
 		if got := get()[key]; got != want {
 			t.Errorf("default %s = %q, want %q", key, got, want)
@@ -236,6 +236,32 @@ func TestConfigSTTPreload(t *testing.T) {
 		if got := result.Values[stt.KeyPreload]; got != want {
 			t.Fatalf("get preload = %q, want %q", got, want)
 		}
+	}
+}
+
+func TestConfigSTTLiveText(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	for value, want := range map[string]bool{"": true, "true": true, "false": false} {
+		cmd := configSetCmd()
+		cmd.SetIn(strings.NewReader(`{"ZENDA_STT_LIVE_TEXT":"` + value + `"}`))
+		cmd.SetOut(io.Discard)
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("set live text %q: %v", value, err)
+		}
+		values, err := config.Load(paths.ConfigFile())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := stt.LoadSettings(values).LiveText; got != want {
+			t.Fatalf("loaded live text = %v for %q", got, value)
+		}
+	}
+	cmd := configSetCmd()
+	cmd.SetIn(strings.NewReader(`{"ZENDA_STT_LIVE_TEXT":"no"}`))
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err == nil {
+		t.Fatal("accepted live text \"no\"")
 	}
 }
 

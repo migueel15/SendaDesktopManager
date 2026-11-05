@@ -96,6 +96,18 @@ Flickable {
                     onToggledValue: value => ZendaSttSettings.setPreload(value)
                 }
             }
+            ZendaRow {
+                label: "Mostrar texto en vivo"
+                modified: !ZendaSttSettings.liveTextEnabled
+                onResetRequested: ZendaSettings.save({ ZENDA_STT_LIVE_TEXT: "" }, "Texto en vivo restablecido")
+                description: "El dock muestra lo que vas diciendo. Desactivado, solo muestra las barras; el texto se entrega igual al terminar."
+                ZendaSwitch {
+                    checkedValue: ZendaSttSettings.liveTextEnabled
+                    enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
+                    Accessible.name: "Mostrar texto en vivo"
+                    onToggledValue: value => ZendaSttSettings.setLiveText(value)
+                }
+            }
         }
         ZendaGroup {
             ZendaRow {

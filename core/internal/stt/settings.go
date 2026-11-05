@@ -13,6 +13,7 @@ const (
 	KeyAudioDucking = "ZENDA_STT_AUDIO_DUCKING"
 	KeyAudioVolume  = "ZENDA_STT_AUDIO_VOLUME"
 	KeyPreload      = "ZENDA_STT_PRELOAD"
+	KeyLiveText     = "ZENDA_STT_LIVE_TEXT"
 	KeyModel        = "ZENDA_STT_MODEL"
 	KeyLanguage     = "ZENDA_STT_LANGUAGE"
 	KeyPasteMode    = "ZENDA_STT_PASTE_MODE"
@@ -38,8 +39,10 @@ type Settings struct {
 	Shortcut          string
 	Terminals         []string
 	Preload           bool
-	AudioDucking      bool
-	AudioVolume       int
+	// LiveText shows the transcript in the dock while dictating; only the shell reads it.
+	LiveText     bool
+	AudioDucking bool
+	AudioVolume  int
 }
 
 var modelPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
@@ -50,7 +53,7 @@ var terminalPattern = regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`)
 // LoadSettings substitutes defaults for empty or invalid values. Terminal
 // classes are comma-separated; returned slices never alias DefaultTerminals.
 func LoadSettings(values map[string]string) Settings {
-	s := Settings{AudioDucking: true, AudioVolume: 10, ModelID: DefaultModelID, Language: DefaultLanguage, PasteMode: PasteDirect,
+	s := Settings{AudioDucking: true, LiveText: true, AudioVolume: 10, ModelID: DefaultModelID, Language: DefaultLanguage, PasteMode: PasteDirect,
 		Shortcut: DefaultShortcut, Terminals: append([]string(nil), DefaultTerminals...)}
 	if v := strings.TrimSpace(values[KeyModel]); modelPattern.MatchString(v) {
 		s.ModelID = v
@@ -69,6 +72,7 @@ func LoadSettings(values map[string]string) Settings {
 		s.AudioVolume = v
 	}
 	s.Preload = strings.TrimSpace(values[KeyPreload]) == "true"
+	s.LiveText = strings.TrimSpace(values[KeyLiveText]) != "false"
 	var terminals []string
 	for _, v := range strings.Split(values[KeyTerminals], ",") {
 		v = strings.TrimSpace(v)

@@ -63,6 +63,7 @@ var editableSettings = map[string]bool{
 	keyBatteryWarning:     true,
 	stt.KeyLanguage:       true,
 	stt.KeyPreload:        true,
+	stt.KeyLiveText:       true,
 	stt.KeyAudioDucking:   true,
 	stt.KeyAudioVolume:    true,
 	stt.KeyPasteMode:      true,
@@ -111,6 +112,7 @@ func configGetCmd() *cobra.Command {
 					clipboard.KeyEnabled: values[clipboard.KeyEnabled],
 					clipboard.KeyMax:     values[clipboard.KeyMax],
 					stt.KeyPreload:       strconv.FormatBool(sttSettings.Preload),
+					stt.KeyLiveText:      strconv.FormatBool(sttSettings.LiveText),
 					stt.KeyAudioDucking:  strconv.FormatBool(sttSettings.AudioDucking),
 					stt.KeyAudioVolume:   strconv.Itoa(sttSettings.AudioVolume),
 					stt.KeyModel:         sttSettings.ModelID,
@@ -238,7 +240,7 @@ func validateSetting(key, value string) error {
 				return fmt.Errorf("%s must be a whole number between %d and %d", key, minBatteryWarning, maxBatteryWarning)
 			}
 		}
-	case stt.KeyPreload, stt.KeyAudioDucking, keyWidgetSpotify, keyWidgetDiscord, clipboard.KeyEnabled:
+	case stt.KeyPreload, stt.KeyAudioDucking, stt.KeyLiveText, keyWidgetSpotify, keyWidgetDiscord, clipboard.KeyEnabled:
 		if value != "" && value != "true" && value != "false" {
 			return fmt.Errorf("%s must be true or false", key)
 		}

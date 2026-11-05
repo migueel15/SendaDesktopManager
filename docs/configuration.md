@@ -40,6 +40,7 @@ Una variable de entorno con el mismo nombre tiene prioridad sobre el archivo. Si
 | `ZENDA_STT_MODEL` | ID del modelo de dictado activo. Predeterminado: `nemotron-3.5-streaming-0.6b-int8`. |
 | `ZENDA_STT_AUDIO_DUCKING` | Atenúa el volumen durante el dictado. `false` lo desactiva; predeterminado: `true`. |
 | `ZENDA_STT_AUDIO_VOLUME` | Volumen de salida durante el dictado: entero de 0 a 100. Predeterminado: `10`. Solo se baja si la salida no está silenciada y su volumen es mayor; se restaura el anterior al terminar. |
+| `ZENDA_STT_LIVE_TEXT` | Muestra en el dock el texto que se va reconociendo. `false` lo oculta y deja solo las barras; predeterminado: `true`. |
 | `ZENDA_STT_PRELOAD` | Precarga del modelo en la shell: `true` la activa; cualquier otro valor la deja desactivada. Predeterminado: desactivada. |
 | `ZENDA_STT_LANGUAGE` | Idioma del reconocimiento. Predeterminado `es`; también admite `auto` y códigos de idioma. |
 | `ZENDA_STT_PASTE_MODE` | Entrega del resultado: `paste` (predeterminado) o `clipboard`. |

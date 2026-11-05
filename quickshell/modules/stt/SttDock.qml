@@ -20,7 +20,7 @@ Scope {
             // Bars stay while the dictation finishes; only loading and errors show text.
             readonly property bool showBars: ZendaStt.phase !== "preparing"
                 && ZendaStt.phase !== "starting" && ZendaStt.phase !== "error"
-            readonly property bool expanded: listening && ZendaStt.transcript !== ""
+            readonly property bool expanded: listening && ZendaSttSettings.liveTextEnabled && ZendaStt.transcript !== ""
             // The elapsed time appears under the bars once the dictation passes this mark.
             readonly property int timerDelay: 60
             property real listenStart: 0
