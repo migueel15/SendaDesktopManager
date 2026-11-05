@@ -118,7 +118,9 @@ QtObject {
 		// Style B: inputs and buttons, and cards or groups.
 		readonly property int control: Math.round(12 * root.roundingScale)
 		readonly property int card: Math.round(24 * root.roundingScale)
-		readonly property int full: 1000
+		// Pills at 100 %. Below that it shrinks from half a typical control
+		// height (40 px), so buttons and selected rows follow the setting.
+		readonly property int full: root.roundingScale >= 1 ? 1000 : Math.round(20 * root.roundingScale)
 	}
 
 	// Spacing scale for gaps, margins, and padding. Avoid values off the scale.
