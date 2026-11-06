@@ -162,6 +162,7 @@ if resident:
     assert all(e["text"] == "hola mundo final" for e in events if e["event"] == "final"), events
 elif mode == "normal":
     assert [e.get("text") for e in events[1:]] == ["hola", "hola mundo", "hola mundo final"], events
+    assert [e.get("stable") for e in events[1:3]] == ["", "hola"], events
     assert events[-1]["event"] == "final", events
 elif mode == "cancel":
     assert not any(e["event"] == "final" for e in events), events

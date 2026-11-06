@@ -20,7 +20,7 @@ Scope {
             // Bars stay while the dictation finishes; only loading and errors show text.
             readonly property bool showBars: ZendaStt.phase !== "preparing"
                 && ZendaStt.phase !== "starting" && ZendaStt.phase !== "error"
-            readonly property bool expanded: listening && ZendaStt.transcript !== ""
+            readonly property bool expanded: listening && ZendaSttSettings.liveTextEnabled && ZendaStt.transcript !== ""
             // The elapsed time appears under the bars once the dictation passes this mark.
             readonly property int timerDelay: 60
             property real listenStart: 0
@@ -222,12 +222,12 @@ Scope {
                     x: Math.round((rootWindow.width - width) / 2) - content.x
                     y: Theme.spacing.md + Theme.spacing.xl + rootWindow.timerBlock + Theme.spacing.xs
                     width: rootWindow.maximumWidth - Theme.spacing.md * 2
-                    height: Math.ceil(Math.min(transcriptText.implicitHeight, transcriptMetrics.height * 3))
+                    height: Math.ceil(Math.min(transcriptText.shownHeight, transcriptMetrics.height * 3))
                     opacity: rootWindow.expanded ? 1 : 0
                     visible: opacity > 0
                     interactive: rootWindow.expanded
                     contentWidth: width
-                    contentHeight: transcriptText.implicitHeight
+                    contentHeight: transcriptText.shownHeight
                     clip: true
                     flickableDirection: Flickable.VerticalFlick
                     boundsBehavior: Flickable.StopAtBounds
@@ -255,12 +255,32 @@ Scope {
                     Text {
                         id: transcriptText
                         width: transcriptView.width
-                        text: ZendaStt.transcript
+                        // The stable prefix in the usual color; the words the end of the
+                        // dictation may still revise, dimmed.
+                        readonly property string stable: ZendaStt.transcript.startsWith(ZendaStt.stableTranscript)
+                            ? ZendaStt.stableTranscript : ""
+                        readonly property string tentative: ZendaStt.transcript.slice(transcriptText.stable.length)
+                        function escaped(value) {
+                            return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        }
+                        text: transcriptText.escaped(transcriptText.stable) + (transcriptText.tentative === "" ? ""
+                            : "<font color=\"" + Theme.colors.overlay + "\">" + transcriptText.escaped(transcriptText.tentative) + "</font>")
                         color: Theme.colors.textMuted
                         font: Theme.font.body
-                        textFormat: Text.PlainText
+                        textFormat: Text.StyledText
                         wrapMode: Text.Wrap
-                        onTextChanged: Qt.callLater(transcriptView.followTranscript)
+                        // The tentative tail can wrap onto one line less and back from one round to
+                        // the next; the tallest height of this dictation keeps the view from jumping.
+                        property real peakHeight: 0
+                        readonly property real shownHeight: Math.max(implicitHeight, peakHeight)
+                        function updatePeak() {
+                            peakHeight = ZendaStt.transcript === "" ? 0 : Math.max(peakHeight, implicitHeight);
+                        }
+                        onImplicitHeightChanged: updatePeak()
+                        onTextChanged: {
+                            updatePeak();
+                            Qt.callLater(transcriptView.followTranscript);
+                        }
                     }
                 }
             }

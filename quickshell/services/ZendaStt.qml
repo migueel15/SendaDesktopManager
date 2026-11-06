@@ -16,6 +16,8 @@ Singleton {
     // without releasing the engine; cancel in preparing/standby ends the process.
     property string phase: "idle"
     property string transcript: ""
+    // Prefix of transcript the final text is not expected to revise; the rest is still tentative.
+    property string stableTranscript: ""
     // Kept in memory until the next final event or shell shutdown.
     property bool audioActive: false
     onPhaseChanged: if (phase !== "listening") audioActive = false
@@ -137,6 +139,7 @@ Singleton {
             root.dictationRequested = true;
             root.queuedDictation = root.standbySession;
             root.transcript = "";
+            root.stableTranscript = "";
             root.errorMessage = "";
             root.dockClosing = false;
             root.dockVisible = true;
@@ -196,6 +199,7 @@ Singleton {
     function closeDock() {
         if (!root.sessionActive) root.phase = "idle";
         root.transcript = "";
+        root.stableTranscript = "";
         root.errorMessage = "";
         root.dockClosing = false;
         root.dockVisible = false;
@@ -273,6 +277,7 @@ Singleton {
                             closeTimer.stop();
                             root.dockClosing = false;
                             root.transcript = "";
+                            root.stableTranscript = "";
                             root.beginDictation();
                         }
                         break;
@@ -284,6 +289,7 @@ Singleton {
                         break;
                     case "partial":
                         root.transcript = event.text || "";
+                        root.stableTranscript = event.stable || "";
                         if (root.phase === "starting") root.phase = "listening";
                         break;
                     case "activity":
@@ -294,6 +300,7 @@ Singleton {
                         break;
                     case "final":
                         root.transcript = event.text || root.transcript;
+                        root.stableTranscript = root.transcript;
                         root.phase = "delivering";
                         break;
                     case "delivered":

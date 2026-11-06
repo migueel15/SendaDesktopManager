@@ -197,7 +197,7 @@ func (p *process) read(stdout io.ReadCloser, stderr *diagnostics) {
 			case <-d.results:
 			default:
 			}
-			d.results <- stt.Result{Text: e.Text}
+			d.results <- stt.Result{Text: e.Text, Stable: e.Stable}
 			if d.finalSeen && p.standby {
 				d.complete(nil)
 			}

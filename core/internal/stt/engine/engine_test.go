@@ -93,6 +93,23 @@ func TestPythonProtocolWithoutSherpa(t *testing.T) {
 	}
 }
 
+func TestPythonRollingTranscription(t *testing.T) {
+	python, err := exec.LookPath("python3")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exec.Command(python, "-c", "import numpy").Run() != nil {
+		t.Skip("python3 without numpy")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, python, "testdata/rolling.py")
+	cmd.Env = append(os.Environ(), "PYTHONDONTWRITEBYTECODE=1")
+	if out, err := cmd.CombinedOutput(); err != nil || !strings.Contains(string(out), "PASS") {
+		t.Fatalf("%v\n%s", err, out)
+	}
+}
+
 func TestEnginePrepareUsesStandby(t *testing.T) {
 	dir := t.TempDir()
 	bin := filepath.Join(dir, "bin")
