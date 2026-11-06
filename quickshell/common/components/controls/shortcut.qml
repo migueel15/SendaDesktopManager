@@ -118,7 +118,6 @@ ColumnLayout {
             color: Theme.colors.background
             border.width: 1
             border.color: root.phase === "recording" || (activeFocus && root.phase === "idle") ? Theme.colors.primary
-                : savedPulse.running ? Theme.colors.success
                 : fieldMouse.containsMouse ? Theme.colors.primary : Theme.colors.surfaceVariant
             Behavior on border.color { ColorAnimation { duration: 150 } }
             opacity: root.enabled ? 1 : 0.4
@@ -133,7 +132,7 @@ ColumnLayout {
                 id: displayText
                 anchors.fill: parent
                 anchors.leftMargin: 10
-                anchors.rightMargin: 10 + savedMark.width
+                anchors.rightMargin: 10
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
                 text: root.phase === "recording" ? "Pulsa la combinación…"
@@ -153,30 +152,6 @@ ColumnLayout {
                 hoverEnabled: true
                 cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
                 onClicked: root.startRecording()
-            }
-
-            // Confirms a save without text: green border and a fading check.
-            Text {
-                id: savedMark
-                anchors.right: parent.right
-                anchors.rightMargin: 8
-                anchors.verticalCenter: parent.verticalCenter
-                text: "\uf00c"
-                color: Theme.colors.success
-                font.family: Theme.iconFamily
-                font.pixelSize: Theme.scaled(12)
-                opacity: 0
-                Accessible.ignored: true
-            }
-            SequentialAnimation {
-                id: savedPulse
-                NumberAnimation { target: savedMark; property: "opacity"; to: 1; duration: 120 }
-                PauseAnimation { duration: 900 }
-                NumberAnimation { target: savedMark; property: "opacity"; to: 0; duration: 400 }
-            }
-            Connections {
-                target: ZendaHyprlandSettings
-                function onSaved(flag) { if (flag === root.flag) savedPulse.restart(); }
             }
 
             Keys.onPressed: event => {
