@@ -54,7 +54,7 @@ Flickable {
                 description: "Al terminar o cancelar se recupera el volumen anterior. Se aplica al siguiente dictado."
                 ZendaSwitch {
                     checkedValue: ZendaSttSettings.audioDuckingEnabled
-                    enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     Accessible.name: "Atenuar volumen durante el dictado"
                     onToggledValue: value => ZendaSttSettings.setAudioDucking(value)
                 }
@@ -69,7 +69,7 @@ Flickable {
                     id: dictationVolumeField
                     Layout.preferredWidth: 90
                     text: String(ZendaSttSettings.audioVolume)
-                    enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     placeholder: "0–100"
                     onCommitted: {
                         const value = text.trim();
@@ -91,7 +91,7 @@ Flickable {
                     : ZendaSttSettings.preloadState === "error" ? `Error: ${ZendaSttSettings.preloadError}` : "Inactivo"
                 ZendaSwitch {
                     checkedValue: ZendaSttSettings.preloadEnabled
-                    enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     Accessible.name: "Precargar modelo"
                     onToggledValue: value => ZendaSttSettings.setPreload(value)
                 }
@@ -103,7 +103,7 @@ Flickable {
                 description: "El dock muestra lo que vas diciendo. Desactivado, solo muestra las barras; el texto se entrega igual al terminar."
                 ZendaSwitch {
                     checkedValue: ZendaSttSettings.liveTextEnabled
-                    enabled: !ZendaSettings.busy && !ZendaSttSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     Accessible.name: "Mostrar texto en vivo"
                     onToggledValue: value => ZendaSttSettings.setLiveText(value)
                 }
@@ -119,7 +119,7 @@ Flickable {
                 ZendaSegments {
                     value: ZendaSettings.values.ZENDA_STT_LANGUAGE || "es"
                     options: [{ label: "Español", value: "es" }, { label: "Detectar", value: "auto" }]
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     onChosen: value => ZendaSettings.save({ ZENDA_STT_LANGUAGE: value }, "Idioma guardado")
                 }
             }
@@ -130,7 +130,7 @@ Flickable {
                     id: languageField
                     Layout.preferredWidth: 120
                     text: ZendaSettings.values.ZENDA_STT_LANGUAGE || "es"
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     onCommitted: {
                         if (text.trim()) ZendaSettings.save({ ZENDA_STT_LANGUAGE: text.trim() }, "Idioma guardado");
                     }
@@ -143,7 +143,7 @@ Flickable {
                 ZendaSegments {
                     value: ZendaSettings.values.ZENDA_STT_PASTE_MODE || "paste"
                     options: [{ label: "Pegar directamente", value: "paste" }, { label: "Solo portapapeles", value: "clipboard" }]
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     onChosen: value => ZendaSettings.save({ ZENDA_STT_PASTE_MODE: value }, "Modo de pegado guardado")
                 }
             }
@@ -158,7 +158,7 @@ Flickable {
                     Layout.fillWidth: true
                     placeholder: "kitty, foot, Alacritty"
                     text: ZendaSettings.values.ZENDA_STT_TERMINALS || "kitty, foot, Alacritty, org.wezfurlong.wezterm, com.mitchellh.ghostty"
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     onCommitted: ZendaSettings.save({ ZENDA_STT_TERMINALS: text.trim() }, "Terminales guardadas")
                 }
             }

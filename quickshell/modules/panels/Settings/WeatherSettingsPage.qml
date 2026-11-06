@@ -32,12 +32,12 @@ Flickable {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 140
                     placeholder: "Busca tu localidad"
-                    enabled: !ZendaSettings.busy
-                    onAccepted: if (!ZendaSettings.busy) ZendaSettings.searchPlaces(text)
+                    enabled: !ZendaSettings.searching
+                    onAccepted: if (!ZendaSettings.searching) ZendaSettings.searchPlaces(text)
                 }
                 ZendaButton {
                     label: "Buscar"
-                    enabled: !ZendaSettings.busy && searchField.text.trim().length >= 2
+                    enabled: !ZendaSettings.searching && searchField.text.trim().length >= 2
                     onClicked: ZendaSettings.searchPlaces(searchField.text)
                 }
             }
@@ -51,7 +51,7 @@ Flickable {
                     description: [modelData.admin, modelData.country].filter(part => part).join(", ")
                     ZendaButton {
                         label: "Elegir"
-                        enabled: !ZendaSettings.busy
+                        enabled: ZendaSettings.configLoaded
                         onClicked: ZendaSettings.saveLocation(placeRow.modelData)
                     }
                 }

@@ -40,7 +40,7 @@ Flickable {
                 ZendaSwitch {
                     Accessible.name: "Habilitar widget de Spotify"
                     checkedValue: ZendaSettings.values.ZENDA_WIDGET_SPOTIFY !== "false"
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     onToggledValue: value => ZendaSettings.save({ ZENDA_WIDGET_SPOTIFY: String(value) }, "Widget de Spotify guardado")
                 }
             }
@@ -52,7 +52,7 @@ Flickable {
                 ZendaSwitch {
                     Accessible.name: "Habilitar widget de Discord"
                     checkedValue: ZendaSettings.values.ZENDA_WIDGET_DISCORD !== "false"
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     onToggledValue: value => ZendaSettings.save({ ZENDA_WIDGET_DISCORD: String(value) }, "Widget de Discord guardado")
                 }
             }

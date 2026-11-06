@@ -26,7 +26,7 @@ Flickable {
         root.showOwnClient = true;
     }
     function confirmClient() {
-        if (ZendaSettings.busy || clientIdField.text.trim() === "") return;
+        if (ZendaSettings.googleBusy || clientIdField.text.trim() === "") return;
         ZendaSettings.saveGoogleClient(clientIdField.text, clientSecretField.text);
         clientSecretField.text = "";
     }
@@ -50,7 +50,7 @@ Flickable {
                 ZendaButton {
                     label: ZendaSettings.connected ? "Desconectar" : "Conectar con Google"
                     primary: !ZendaSettings.connected
-                    enabled: !ZendaSettings.busy
+                    enabled: !ZendaSettings.googleBusy
                     onClicked: ZendaSettings.connected ? ZendaSettings.disconnectGoogle() : ZendaSettings.connectGoogle()
                 }
             }
@@ -71,7 +71,7 @@ Flickable {
                     id: clientIdField
                     Layout.preferredWidth: 220
                     Layout.fillWidth: true
-                    enabled: !ZendaSettings.busy
+                    enabled: !ZendaSettings.googleBusy
                     placeholder: "ID de cliente"
                     onAccepted: clientSecretField.focusInput()
                 }
@@ -84,7 +84,7 @@ Flickable {
                     id: clientSecretField
                     Layout.preferredWidth: 220
                     Layout.fillWidth: true
-                    enabled: !ZendaSettings.busy
+                    enabled: !ZendaSettings.googleBusy
                     secret: true
                     placeholder: "Secreto del cliente"
                     onAccepted: root.confirmClient()
@@ -95,7 +95,7 @@ Flickable {
                 Layout.alignment: Qt.AlignRight
                 label: "Guardar credenciales"
                 primary: true
-                enabled: !ZendaSettings.busy && clientIdField.text.trim() !== ""
+                enabled: !ZendaSettings.googleBusy && clientIdField.text.trim() !== ""
                 onClicked: root.confirmClient()
             }
         }
@@ -115,7 +115,7 @@ Flickable {
                     label: modelData.summary || modelData.id
                     ZendaSwitch {
                         checkedValue: root.selectedCalendars.includes(calendarRow.modelData.id)
-                        enabled: !ZendaSettings.busy && (!checkedValue || root.selectedCalendars.length > 1)
+                        enabled: ZendaSettings.configLoaded && (!checkedValue || root.selectedCalendars.length > 1)
                         Accessible.name: calendarRow.label
                         onToggledValue: root.toggleCalendar(calendarRow.modelData.id)
                     }
