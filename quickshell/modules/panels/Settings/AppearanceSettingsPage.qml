@@ -82,7 +82,7 @@ Flickable {
                 description: "Escala toda la interfaz entre 80 y 150 %."
                 ZendaSlider {
                     value: root.currentPercent
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     onCommitted: value => root.changeTo(value)
                 }
             }
@@ -98,7 +98,7 @@ Flickable {
                     from: 0; to: 100; stepSize: 10
                     suffix: " %"
                     value: root.currentRounding
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     // Previews while dragging; the value is saved on release.
                     onMoved: value => Theme.setRoundingScale(value)
                     onCommitted: value => root.changeRounding(value)

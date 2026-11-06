@@ -90,8 +90,14 @@ Singleton {
     // JSON sent on stdin by the save process, once it has started.
     property string pendingInput: ""
 
-    readonly property bool busy: configProcess.running || statusProcess.running || calendarsProcess.running
-        || saveProcess.running || loginProcess.running || logoutProcess.running || searchProcess.running
+    // Controls stay enabled while a save or a reload runs, so a change in one
+    // setting does not dim or redraw the rest of the page. Only the Google
+    // account and the place search block their own controls.
+    readonly property bool googleBusy: loginProcess.running || logoutProcess.running
+    readonly property bool searching: searchProcess.running
+    // A queued or running save changed the Google client or calendars, so the
+    // account status is read again once the saves finish.
+    property bool googleChanged: false
 
     function start(process, command) {
         process.command = command;
@@ -131,11 +137,15 @@ Singleton {
     }
 
     function refresh() {
-        if (!configProcess.running) {
-            root.start(configProcess, [root.binaryPath, "config", "get"]);
-        }
+        root.reloadConfig();
         if (!statusProcess.running) {
             root.start(statusProcess, [root.binaryPath, "calendar", "status"]);
+        }
+    }
+
+    function reloadConfig() {
+        if (!configProcess.running) {
+            root.start(configProcess, [root.binaryPath, "config", "get"]);
         }
     }
 
@@ -147,6 +157,7 @@ Singleton {
     }
 
     function save(changes, successMessage) {
+        if (Object.keys(changes).some(key => key.startsWith("ZENDA_GOOGLE_"))) root.googleChanged = true;
         if (saveProcess.running) {
             saveQueue.pending = saveQueue.pending.concat([{ changes: changes, message: successMessage }]);
             return;
@@ -271,7 +282,9 @@ Singleton {
                 return;
             }
             try {
-                root.calendars = JSON.parse(calendarsOutput.text).calendars;
+                const calendars = JSON.parse(calendarsOutput.text).calendars;
+                // A new list rebuilds every calendar row, so keep an equal one.
+                if (JSON.stringify(calendars) !== JSON.stringify(root.calendars)) root.calendars = calendars;
             } catch (error) {
                 root.showError("La lista de calendarios no es válida", "");
             }
@@ -299,8 +312,11 @@ Singleton {
                 const next = saveQueue.pending[0];
                 saveQueue.pending = saveQueue.pending.slice(1);
                 root.save(next.changes, next.message);
-            } else {
+            } else if (root.googleChanged) {
+                root.googleChanged = false;
                 root.refresh();
+            } else {
+                root.reloadConfig();
             }
         }
     }

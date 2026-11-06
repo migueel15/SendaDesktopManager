@@ -48,7 +48,6 @@ Flickable {
                 modified: ZendaHyprlandSettings.loaded && ZendaHyprlandSettings.values.idleSeconds !== 600
                 onResetRequested: { idleField.text = "600"; ZendaHyprlandSettings.save("--idle-seconds", 600); }
                 description: "Segundos, de 0 a 86400. 0 desactiva el bloqueo automático."
-                ZendaSavedMark { flag: "--idle-seconds" }
                 ZendaField {
                     id: idleField
                     Layout.preferredWidth: 100
@@ -62,7 +61,6 @@ Flickable {
                 label: "Desenfocar pantalla de bloqueo"
                 modified: ZendaHyprlandSettings.loaded && !ZendaHyprlandSettings.values.blur
                 onResetRequested: ZendaHyprlandSettings.save("--blur", true)
-                ZendaSavedMark { flag: "--blur" }
                 ZendaSwitch {
                     checkedValue: ZendaHyprlandSettings.loaded && ZendaHyprlandSettings.values.blur
                     enabled: ZendaHyprlandSettings.loaded

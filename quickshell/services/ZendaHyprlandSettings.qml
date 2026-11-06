@@ -15,11 +15,6 @@ Singleton {
     property bool recording: false
     property bool refreshQueued: false
     property string notice: ""
-    // Flag of the write in progress, reported by saved() on success.
-    property string pendingFlag: ""
-
-    // Emitted after a successful write; controls show it without text.
-    signal saved(string flag)
     property bool noticeIsError: false
     readonly property bool busy: writing || readProcess.running
 
@@ -57,7 +52,6 @@ Singleton {
         root.writing = true;
         root.notice = "";
         root.noticeIsError = false;
-        root.pendingFlag = flag;
         writeProcess.command = [root.binaryPath, "hyprland", "set", flag, String(value).trim(), "--json"];
         writeProcess.running = true;
         return true;
@@ -100,7 +94,6 @@ Singleton {
             if (exitCode === 0) {
                 root.noticeIsError = false;
                 root.notice = "";
-                root.saved(root.pendingFlag);
             } else {
                 root.showError("No se pudieron guardar los ajustes del sistema: " + (writeErrors.text.trim() || "error desconocido"));
             }

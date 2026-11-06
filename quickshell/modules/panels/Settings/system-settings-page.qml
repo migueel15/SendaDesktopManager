@@ -37,7 +37,7 @@ Flickable {
                 onResetRequested: ZendaSettings.save({ ZENDA_CLIPBOARD_ENABLED: "" }, "Historial del portapapeles restablecido")
                 ZendaSwitch {
                     checkedValue: ZendaSettings.values.ZENDA_CLIPBOARD_ENABLED !== "false"
-                    enabled: !ZendaSettings.busy
+                    enabled: ZendaSettings.configLoaded
                     Accessible.name: "Historial del portapapeles"
                     onToggledValue: value => ZendaSettings.save({ ZENDA_CLIPBOARD_ENABLED: String(value) }, "Historial del portapapeles guardado")
                 }
