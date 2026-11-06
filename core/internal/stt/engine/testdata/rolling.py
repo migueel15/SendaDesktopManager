@@ -11,6 +11,7 @@ spec.loader.exec_module(engine)
 engine.np = np
 RATE, STEP = engine.RATE, 0.5  # a 0.3 s burst every 0.5 s
 windows = []
+flicker = False  # like a real decoder, words near the window's end change between rounds
 
 
 def transcribe(x, offset):
@@ -23,7 +24,10 @@ def transcribe(x, offset):
             while j < len(loud) and loud[j]:
                 j += 1
             start = offset + i / RATE
-            words.append((f"w{round(start / STEP)}", start))
+            word = f"w{round(start / STEP)}"
+            if flicker and start > offset + len(x) / RATE - 4 and len(windows) % 2:
+                word += ","
+            words.append((word, start))
             i = j
         i += 1
     return words
@@ -51,8 +55,14 @@ def run(seconds, silence, late=0.0):
             shown.append(out)
     rounds = len(windows)
     final = rolling.finish()
-    assert final == expected, (final, expected)
     assert shown and all(text.startswith(stable) for text, stable in shown), shown
+    # the frozen prefix only grows
+    assert all(b[1].startswith(a[1]) for a, b in zip(shown, shown[1:])), shown
+    if flicker:
+        assert len(shown[-1][1].split()) >= len(expected.split()) - 12, shown[-1]
+        return rounds, windows[rounds:]
+    assert final == expected, (final, expected)
+    assert shown[-1][1] and expected.startswith(shown[-1][1]), shown[-1]
     limit = engine.BEFORE_S + engine.SOFT_MAX_S + 0.2
     assert max(windows) <= limit, (max(windows), limit)
     return rounds, windows[rounds:]
@@ -64,4 +74,6 @@ limit = engine.RELEASE_BEFORE_S + max(engine.RELEASE_OVERLAP_S, engine.SOFT_OVER
 assert len(release) == 1 and release[0] <= limit, (release, limit)
 rounds, release = run(12, 2)  # trailing silence: the stop reuses the last round
 assert release == [], release
+flicker = True
+run(45, 0, late=0.4)
 print("PASS rolling")

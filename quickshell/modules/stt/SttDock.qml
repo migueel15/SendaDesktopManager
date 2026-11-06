@@ -222,12 +222,12 @@ Scope {
                     x: Math.round((rootWindow.width - width) / 2) - content.x
                     y: Theme.spacing.md + Theme.spacing.xl + rootWindow.timerBlock + Theme.spacing.xs
                     width: rootWindow.maximumWidth - Theme.spacing.md * 2
-                    height: Math.ceil(Math.min(transcriptText.implicitHeight, transcriptMetrics.height * 3))
+                    height: Math.ceil(Math.min(transcriptText.shownHeight, transcriptMetrics.height * 3))
                     opacity: rootWindow.expanded ? 1 : 0
                     visible: opacity > 0
                     interactive: rootWindow.expanded
                     contentWidth: width
-                    contentHeight: transcriptText.implicitHeight
+                    contentHeight: transcriptText.shownHeight
                     clip: true
                     flickableDirection: Flickable.VerticalFlick
                     boundsBehavior: Flickable.StopAtBounds
@@ -269,7 +269,18 @@ Scope {
                         font: Theme.font.body
                         textFormat: Text.StyledText
                         wrapMode: Text.Wrap
-                        onTextChanged: Qt.callLater(transcriptView.followTranscript)
+                        // The tentative tail can wrap onto one line less and back from one round to
+                        // the next; the tallest height of this dictation keeps the view from jumping.
+                        property real peakHeight: 0
+                        readonly property real shownHeight: Math.max(implicitHeight, peakHeight)
+                        function updatePeak() {
+                            peakHeight = ZendaStt.transcript === "" ? 0 : Math.max(peakHeight, implicitHeight);
+                        }
+                        onImplicitHeightChanged: updatePeak()
+                        onTextChanged: {
+                            updatePeak();
+                            Qt.callLater(transcriptView.followTranscript);
+                        }
                     }
                 }
             }

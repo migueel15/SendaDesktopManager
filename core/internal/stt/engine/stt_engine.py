@@ -28,6 +28,7 @@ RELEASE_BEFORE_S = 6.0  # left context of the window transcribed at stop
 RELEASE_OVERLAP_S = 2.0  # last seconds of a round the stop may still revise
 ROUND_GAP_S = 0.4
 QUIET_REUSE_S = 0.1  # stop reuses the last round when only silence followed it
+FREEZE_AFTER_S = 5.0  # the dock freezes a word this old even if two rounds never agreed on it
 
 
 def emit(event, **fields):
@@ -50,13 +51,24 @@ def words_of(result, offset):
     return [(w.strip(), s) for w, s in out if w.strip()]
 
 
-def select(words, start_f, end_f):
+def span(words, start_f, end_f):
     a, b = start_f * FRAME_S, end_f * FRAME_S
-    return " ".join(w for w, s in words if a <= s < b)
+    return [(w, t) for w, t in words if a <= t < b]
 
 
-def join(texts):
-    return " ".join(t.strip() for t in texts if t and t.strip())
+def text_of(words):
+    return " ".join(w for w, _ in words)
+
+
+def after(words, edge):
+    """The words after the one starting at `edge`: a later round's timestamps for the same word
+    may move a frame or two, so the closest word within 0.25 s stands for it."""
+    if edge is None:
+        return words
+    near = min(range(len(words)), key=lambda i: abs(words[i][1] - edge), default=None)
+    if near is not None and abs(words[near][1] - edge) <= 0.25:
+        return words[near + 1:]
+    return [w for w in words if w[1] > edge]
 
 
 class Levels:
@@ -96,17 +108,24 @@ class Levels:
 class Rolling:
     """Live text from an offline recognizer. Each round transcribes the pending audio with left
     context; past SOFT_MAX_S of pending audio a round commits its words. The stop keeps the last
-    round's words up to RELEASE_OVERLAP_S before its end and transcribes only what follows."""
+    round's words up to RELEASE_OVERLAP_S before its end and transcribes only what follows.
+
+    Rounds re-decode the pending audio, so a word can change from one round to the next (a comma,
+    its case). The dock shows as stable only words two rounds in a row agree on, and keeps them
+    unchanged until the end of the dictation, or freezes a word after FREEZE_AFTER_S anyway; the
+    final text still comes from the best decode."""
 
     def __init__(self, transcribe):
         self.transcribe = transcribe  # (samples, offset s) -> [(word, absolute start s)]
         self.audio = np.zeros(RATE * 30, dtype=np.float32)
         self.n = 0
         self.levels = Levels()
-        self.pieces = []  # committed texts, contiguous from the start
+        self.pieces = []  # committed word lists, contiguous from the start
         self.pend = 0  # frame where the committed audio ends
         self.last = None  # (pend, end frame, words, committed pieces) of the last round
         self.next_at = 0.0
+        self.frozen = []  # words shown as stable; they never change during the dictation
+        self.candidates = []  # the previous round's stable words after the frozen ones
 
     def feed(self, samples):
         need = self.n + len(samples)
@@ -122,7 +141,7 @@ class Rolling:
         return (self.n + FRAME - 1) // FRAME
 
     def committed(self, k=None):
-        return join(self.pieces[:k])
+        return [w for piece in self.pieces[:k] for w in piece]
 
     def words(self, start, end):
         x = self.audio[start * FRAME:min(end * FRAME, self.n)]
@@ -141,21 +160,34 @@ class Rolling:
         return bool(lv[f:].max() < lo + 0.1 * (hi - lo))
 
     def round(self, now):
-        """A round when one is due: (text so far, its prefix the stop will not revise), else None."""
+        """A round when one is due: (text to show, its frozen prefix), else None."""
         have, pend = self.frames(), self.pend
         if now < self.next_at or have - pend < 25 or not self.levels.heard or self.quiet():
             return None
         k = len(self.pieces)
         words = self.words(max(0, pend - frames_of(BEFORE_S)), have)
         self.last = (pend, have, words, k)
-        text = join([self.committed(k), select(words, pend, have)])
-        stable = join([self.committed(k), select(words, pend, have - frames_of(RELEASE_OVERLAP_S))])
+        current = self.committed(k) + span(words, pend, have)
+        stable = self.committed(k) + span(words, pend, have - frames_of(RELEASE_OVERLAP_S))
         cut = have - frames_of(SOFT_OVERLAP_S)
         if have - pend > frames_of(SOFT_MAX_S):
-            self.pieces.append(select(words, pend, cut))
+            self.pieces.append(span(words, pend, cut))
             self.pend = cut
         self.next_at = time.monotonic() + ROUND_GAP_S
-        return text, stable
+        return self.show(current, stable, have * FRAME_S)
+
+    def show(self, current, stable, now_s):
+        edge = self.frozen[-1][1] if self.frozen else None
+        tail = after(stable, edge)
+        n = 0
+        while n < len(tail) and n < len(self.candidates) and tail[n][0] == self.candidates[n][0]:
+            n += 1
+        while n < len(tail) and tail[n][1] < now_s - FREEZE_AFTER_S:
+            n += 1  # a word rounds keep disagreeing on must not hold back the rest
+        self.frozen += tail[:n]
+        self.candidates = tail[n:]
+        edge = self.frozen[-1][1] if self.frozen else None
+        return text_of(self.frozen + after(current, edge)), text_of(self.frozen)
 
     def finish(self):
         end = self.frames()
@@ -164,13 +196,13 @@ class Rolling:
             t_cut = f1 - frames_of(RELEASE_OVERLAP_S)
             if t_cut - pend >= 25:
                 if self.quiet():
-                    return join([self.committed(k), select(words, pend, end)])
+                    return text_of(self.committed(k) + span(words, pend, end))
                 rel = self.words(max(0, t_cut - frames_of(RELEASE_BEFORE_S)), end)
-                return join([self.committed(k), select(words, pend, t_cut), select(rel, t_cut, end)])
+                return text_of(self.committed(k) + span(words, pend, t_cut) + span(rel, t_cut, end))
         if end > self.pend:  # no round past the last commit: only the open stretch
             words = self.words(max(0, self.pend - frames_of(RELEASE_BEFORE_S)), end)
-            return join([self.committed(), select(words, self.pend, end)])
-        return self.committed()
+            return text_of(self.committed() + span(words, self.pend, end))
+        return text_of(self.committed())
 
 
 def main():
