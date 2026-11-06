@@ -4,6 +4,7 @@ import QtQuick
 import QtQml
 import Quickshell
 import Quickshell.Services.SystemTray
+import qs.common
 import qs.services
 
 MouseArea {
